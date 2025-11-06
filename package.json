@@ -1,0 +1,94 @@
+{
+  "name": "pos-system",
+  "version": "1.0.0",
+  "description": "نظام نقاط البيع المتقدم - شركة الإبداع الرقمي",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder",
+    "build-win": "electron-builder --win",
+    "build-all": "electron-builder -mwl"
+  },
+  "keywords": [
+    "pos",
+    "point-of-sale",
+    "invoice",
+    "printing",
+    "electron"
+  ],
+  "author": {
+    "name": "شركة الإبداع الرقمي",
+    "email": "info@digital-creativity.iq",
+    "url": "https://digital-creativity.iq"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.9.1"
+  },
+  "dependencies": {
+    "electron-store": "^8.1.0"
+  },
+  "build": {
+    "appId": "com.digitalcreativity.pos",
+    "productName": "نظام نقاط البيع",
+    "copyright": "Copyright © 2025 شركة الإبداع الرقمي - إدارة كرار الشعبري",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "splash.html",
+      "index.html",
+      "_sdk/**/*",
+      "node_modules/**/*"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64",
+            "ia32"
+          ]
+        }
+      ],
+      "icon": "build/icon.ico",
+      "requestedExecutionLevel": "requireAdministrator"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico",
+      "installerHeaderIcon": "build/icon.ico",
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "نظام نقاط البيع",
+      "artifactName": "POS-System-Setup-${version}.${ext}",
+      "deleteAppDataOnUninstall": false,
+      "language": "1025",
+      "installerLanguages": [
+        "ar_SA",
+        "en_US"
+      ],
+      "license": "LICENSE.txt",
+      "warningsAsErrors": false
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "icon": "build/icon.png",
+      "category": "Office"
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "build/icon.icns",
+      "category": "public.app-category.business"
+    }
+  }
+}

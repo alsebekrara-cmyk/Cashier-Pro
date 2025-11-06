@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اختبار قاعدة البيانات</title>
+    <script src="./_sdk/data_sdk.js"></script>
+    <script src="./_sdk/element_sdk.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            color: #667eea;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .test-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .test-section h2 {
+            color: #495057;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+            transition: transform 0.2s;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .result {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            border-left: 4px solid #667eea;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .result pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            direction: ltr;
+            text-align: left;
+        }
+        
+        .status {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 اختبار نظام قاعدة البيانات</h1>
+        
+        <div class="test-section">
+            <h2>1️⃣ اختبار Data SDK (IndexedDB)</h2>
+            <button class="btn" onclick="testCreateCategory()">إضافة تصنيف تجريبي</button>
+            <button class="btn" onclick="testCreateProduct()">إضافة منتج تجريبي</button>
+            <button class="btn" onclick="testLoadData()">عرض جميع البيانات</button>
+            <button class="btn" onclick="testClearData()">مسح جميع البيانات</button>
+            <div id="dataResult" class="result" style="display: none;"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>2️⃣ اختبار Element SDK (الإعدادات)</h2>
+            <button class="btn" onclick="testLoadConfig()">عرض الإعدادات</button>
+            <button class="btn" onclick="testUpdateConfig()">تحديث الإعدادات</button>
+            <button class="btn" onclick="testResetConfig()">إعادة تعيين الإعدادات</button>
+            <div id="configResult" class="result" style="display: none;"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>3️⃣ معلومات النظام</h2>
+            <div id="systemInfo" class="result"></div>
+        </div>
+    </div>
+
+    <script>
+        // عرض معلومات النظام
+        window.addEventListener('load', async () => {
+            const systemInfo = document.getElementById('systemInfo');
+            systemInfo.innerHTML = `
+                <div class="status info">النظام جاهز ✓</div>
+                <p><strong>Data SDK:</strong> ${window.dataSdk ? '✅ محمّل' : '❌ غير محمّل'}</p>
+                <p><strong>Element SDK:</strong> ${window.elementSdk ? '✅ محمّل' : '❌ غير محمّل'}</p>
+                <p><strong>IndexedDB:</strong> ${window.indexedDB ? '✅ مدعوم' : '❌ غير مدعوم'}</p>
+                <p><strong>localStorage:</strong> ${window.localStorage ? '✅ مدعوم' : '❌ غير مدعوم'}</p>
+            `;
+            
+            // تهيئة Data SDK
+            if (window.dataSdk) {
+                const result = await window.dataSdk.init({
+                    onDataChanged: (data) => {
+                        console.log('تم تحديث البيانات:', data.length, 'سجل');
+                    }
+                });
+                
+                if (result.isOk) {
+                    console.log('✅ Data SDK تم تهيئته بنجاح');
+                }
+            }
+            
+            // تهيئة Element SDK
+            if (window.elementSdk) {
+                const result = await window.elementSdk.init({
+                    defaultConfig: {
+                        store_name: 'متجر تجريبي',
+                        tax_rate: 15,
+                        currency: 'ر.س'
+                    }
+                });
+                
+                if (result.isOk) {
+                    console.log('✅ Element SDK تم تهيئته بنجاح');
+                }
+            }
+        });
+        
+        // اختبار إضافة تصنيف
+        async function testCreateCategory() {
+            const result = await window.dataSdk.create({
+                type: 'category',
+                category_id: 'cat_' + Date.now(),
+                category_name: 'تصنيف تجريبي ' + new Date().toLocaleTimeString('ar-SA'),
+                category_icon: 'fas fa-box',
+                timestamp: new Date().toISOString()
+            });
+            
+            showResult('dataResult', result.isOk ? 'success' : 'error', 
+                result.isOk ? '✅ تم إضافة التصنيف بنجاح!' : '❌ فشل إضافة التصنيف',
+                result
+            );
+        }
+        
+        // اختبار إضافة منتج
+        async function testCreateProduct() {
+            const result = await window.dataSdk.create({
+                type: 'product',
+                product_id: 'prod_' + Date.now(),
+                product_name: 'منتج تجريبي ' + new Date().toLocaleTimeString('ar-SA'),
+                product_price: Math.floor(Math.random() * 1000) + 100,
+                product_quantity: Math.floor(Math.random() * 50) + 10,
+                product_barcode: Date.now().toString(),
+                category_id: 'cat_general',
+                timestamp: new Date().toISOString()
+            });
+            
+            showResult('dataResult', result.isOk ? 'success' : 'error',
+                result.isOk ? '✅ تم إضافة المنتج بنجاح!' : '❌ فشل إضافة المنتج',
+                result
+            );
+        }
+        
+        // عرض جميع البيانات
+        async function testLoadData() {
+            const data = window.dataSdk.getAll();
+            
+            showResult('dataResult', 'info',
+                `📊 إجمالي السجلات: ${data.length}`,
+                {
+                    total: data.length,
+                    categories: data.filter(d => d.type === 'category').length,
+                    products: data.filter(d => d.type === 'product').length,
+                    sales: data.filter(d => d.type === 'sale').length,
+                    data: data
+                }
+            );
+        }
+        
+        // مسح جميع البيانات
+        async function testClearData() {
+            if (!confirm('هل أنت متأكد من مسح جميع البيانات؟')) {
+                return;
+            }
+            
+            const result = await window.dataSdk.clearAll();
+            
+            showResult('dataResult', result.isOk ? 'success' : 'error',
+                result.isOk ? '✅ تم مسح جميع البيانات' : '❌ فشل مسح البيانات',
+                result
+            );
+        }
+        
+        // عرض الإعدادات
+        async function testLoadConfig() {
+            const config = window.elementSdk.getConfig();
+            
+            showResult('configResult', 'info', '⚙️ الإعدادات الحالية', config);
+        }
+        
+        // تحديث الإعدادات
+        async function testUpdateConfig() {
+            const result = await window.elementSdk.updateConfig({
+                store_name: 'متجر محدّث ' + new Date().toLocaleTimeString('ar-SA'),
+                tax_rate: Math.floor(Math.random() * 20) + 5
+            });
+            
+            showResult('configResult', result.isOk ? 'success' : 'error',
+                result.isOk ? '✅ تم تحديث الإعدادات' : '❌ فشل تحديث الإعدادات',
+                result
+            );
+        }
+        
+        // إعادة تعيين الإعدادات
+        async function testResetConfig() {
+            const result = await window.elementSdk.resetConfig();
+            
+            showResult('configResult', result.isOk ? 'success' : 'error',
+                result.isOk ? '✅ تم إعادة تعيين الإعدادات' : '❌ فشل إعادة التعيين',
+                result
+            );
+        }
+        
+        // عرض النتيجة
+        function showResult(elementId, status, message, data) {
+            const element = document.getElementById(elementId);
+            element.style.display = 'block';
+            element.innerHTML = `
+                <div class="status ${status}">${message}</div>
+                <pre>${JSON.stringify(data, null, 2)}</pre>
+            `;
+            element.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+    </script>
+</body>
+</html>

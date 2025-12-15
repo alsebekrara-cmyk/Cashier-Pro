@@ -1,0 +1,795 @@
+/**
+ * 💰 نظام إدارة المصاريف والمشتريات الشامل
+ * شركة الإبداع الرقمي - كرار الشعبري
+ * Digital Creativity Company
+ */
+
+// ==================== دوال التبديل بين التبويبات ====================
+
+/**
+ * التبديل بين تبويبات صفحة المصاريف
+ */
+function switchExpenseTab(tabName) {
+    // إزالة active من جميع الأزرار والمحتوى
+    document.querySelectorAll('.expense-tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    document.querySelectorAll('.expense-tab-content').forEach(content => {
+        content.classList.remove('active');
+    });
+
+    // إضافة active للتبويب المحدد
+    event.target.closest('.expense-tab-btn').classList.add('active');
+    
+    // عرض المحتوى المناسب
+    if (tabName === 'general') {
+        document.getElementById('generalExpensesTab').classList.add('active');
+        loadExpenses();
+    } else if (tabName === 'purchases') {
+        document.getElementById('purchasesTab').classList.add('active');
+        loadPurchases();
+    } else if (tabName === 'reports') {
+        document.getElementById('reportsTab').classList.add('active');
+        updateExpensesReports();
+    }
+    
+    currentExpenseTab = tabName;
+}
+
+// ==================== دوال النوافذ المنبثقة ====================
+
+/**
+ * فتح نافذة إضافة مصروف
+ */
+function showAddExpenseModal() {
+    const modal = document.getElementById('addExpenseModal');
+    modal.style.display = 'flex';
+    
+    // تعيين التاريخ الحالي
+    document.getElementById('expenseDate').valueAsDate = new Date();
+    
+    // تفريغ الحقول
+    document.getElementById('expenseType').value = '';
+    document.getElementById('expenseAmount').value = '';
+    document.getElementById('expenseDescription').value = '';
+}
+
+/**
+ * إغلاق نافذة إضافة مصروف
+ */
+function closeAddExpenseModal() {
+    document.getElementById('addExpenseModal').style.display = 'none';
+}
+
+/**
+ * فتح نافذة إضافة فاتورة مشتريات
+ */
+function showAddPurchaseModal() {
+    const modal = document.getElementById('addPurchaseModal');
+    modal.style.display = 'flex';
+    
+    // تعيين التاريخ الحالي
+    document.getElementById('purchaseDate').valueAsDate = new Date();
+    
+    // تفريغ الحقول
+    document.getElementById('supplierName').value = '';
+    document.getElementById('supplierPhone').value = '';
+    document.getElementById('invoiceNumber').value = '';
+    
+    // إعادة تعيين المنتجات
+    purchaseItems = [];
+    document.getElementById('purchaseItemsContainer').innerHTML = '';
+    addPurchaseItem(); // إضافة صف واحد افتراضي
+    updatePurchaseTotal();
+}
+
+/**
+ * إغلاق نافذة إضافة فاتورة مشتريات
+ */
+function closeAddPurchaseModal() {
+    document.getElementById('addPurchaseModal').style.display = 'none';
+}
+
+/**
+ * إغلاق نافذة عرض تفاصيل الفاتورة
+ */
+function closeViewPurchaseModal() {
+    document.getElementById('viewPurchaseModal').style.display = 'none';
+}
+
+// ==================== دوال إدارة المصاريف ====================
+
+/**
+ * حفظ مصروف جديد
+ */
+async function saveExpense() {
+    const type = document.getElementById('expenseType').value;
+    const amount = parseFloat(document.getElementById('expenseAmount').value);
+    const description = document.getElementById('expenseDescription').value;
+    const date = document.getElementById('expenseDate').value;
+    
+    // التحقق من البيانات
+    if (!type || !amount || !date) {
+        showNotification('يرجى ملء جميع الحقول المطلوبة', 'error');
+        return;
+    }
+    
+    if (amount <= 0) {
+        showNotification('المبلغ يجب أن يكون أكبر من صفر', 'error');
+        return;
+    }
+    
+    // إنشاء كائن المصروف
+    const expense = {
+        id: Date.now(),
+        type: type,
+        amount: amount,
+        description: description,
+        date: date,
+        createdAt: new Date().toISOString(),
+        createdBy: window.currentUser?.username || 'Admin'
+    };
+    
+    try {
+        // حفظ في قاعدة البيانات
+        await window.electronAPI.insertData('expenses', expense);
+        
+        // إضافة إلى المصفوفة المحلية
+        expensesData.push(expense);
+        
+        // إعادة تحميل البيانات
+        loadExpenses();
+        updateExpensesStats();
+        
+        // إغلاق النافذة
+        closeAddExpenseModal();
+        
+        showNotification('تم إضافة المصروف بنجاح', 'success');
+    } catch (error) {
+        console.error('خطأ في حفظ المصروف:', error);
+        showNotification('حدث خطأ أثناء حفظ المصروف', 'error');
+    }
+}
+
+/**
+ * حذف مصروف
+ */
+async function deleteExpense(expenseId) {
+    if (!confirm('هل أنت متأكد من حذف هذا المصروف؟')) {
+        return;
+    }
+    
+    try {
+        await window.electronAPI.deleteData('expenses', expenseId);
+        expensesData = expensesData.filter(e => e.id !== expenseId);
+        loadExpenses();
+        updateExpensesStats();
+        showNotification('تم حذف المصروف بنجاح', 'success');
+    } catch (error) {
+        console.error('خطأ في حذف المصروف:', error);
+        showNotification('حدث خطأ أثناء حذف المصروف', 'error');
+    }
+}
+
+/**
+ * تحميل المصاريف
+ */
+async function loadExpenses() {
+    try {
+        const expenses = await window.electronAPI.getAllData('expenses');
+        expensesData = expenses || [];
+        
+        const tbody = document.getElementById('generalExpensesTableBody');
+        tbody.innerHTML = '';
+        
+        if (expensesData.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 3rem; color: var(--theme-text-tertiary);">لا توجد مصاريف مسجلة</td></tr>';
+            return;
+        }
+        
+        // ترتيب حسب التاريخ (الأحدث أولاً)
+        expensesData.sort((a, b) => new Date(b.date) - new Date(a.date));
+        
+        expensesData.forEach((expense, index) => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${index + 1}</td>
+                <td>
+                    <span class="expense-type-badge expense-type-${expense.type}">
+                        ${getExpenseTypeLabel(expense.type)}
+                    </span>
+                </td>
+                <td class="expense-amount-cell expense-amount-negative">${expense.amount.toLocaleString()} دينار</td>
+                <td>${new Date(expense.date).toLocaleDateString('ar-IQ')}</td>
+                <td>${expense.description || '-'}</td>
+                <td>${expense.createdBy || '-'}</td>
+                <td>
+                    <button class="action-btn delete-btn" onclick="deleteExpense(${expense.id})" title="حذف">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+    } catch (error) {
+        console.error('خطأ في تحميل المصاريف:', error);
+        showNotification('حدث خطأ أثناء تحميل المصاريف', 'error');
+    }
+}
+
+/**
+ * الحصول على تسمية نوع المصروف
+ */
+function getExpenseTypeLabel(type) {
+    const labels = {
+        'rent': '🏠 إيجار',
+        'utilities': '⚡ كهرباء/ماء',
+        'salary': '💰 رواتب',
+        'maintenance': '🔧 صيانة',
+        'transportation': '🚗 نقل ومواصلات',
+        'supplies': '📦 لوازم مكتبية',
+        'marketing': '📢 تسويق وإعلان',
+        'insurance': '🛡️ تأمينات',
+        'taxes': '📊 ضرائب ورسوم',
+        'other': '📝 أخرى'
+    };
+    return labels[type] || type;
+}
+
+// ==================== دوال إدارة فواتير المشتريات ====================
+
+/**
+ * إضافة صف منتج جديد في فاتورة المشتريات
+ */
+function addPurchaseItem() {
+    const container = document.getElementById('purchaseItemsContainer');
+    const itemIndex = purchaseItems.length;
+    
+    const itemDiv = document.createElement('div');
+    itemDiv.className = 'purchase-item';
+    itemDiv.style.cssText = 'display: flex; gap: 1rem; align-items: center; margin-bottom: 1rem; padding: 1rem; background: var(--theme-bg-card); border-radius: 8px;';
+    itemDiv.innerHTML = `
+        <div style="flex: 2;">
+            <label style="font-size: 0.85rem; color: var(--theme-text-secondary); margin-bottom: 0.3rem; display: block;">اسم المنتج</label>
+            <input type="text" class="form-control" id="itemName${itemIndex}" placeholder="اسم المنتج" required>
+        </div>
+        <div style="flex: 1;">
+            <label style="font-size: 0.85rem; color: var(--theme-text-secondary); margin-bottom: 0.3rem; display: block;">الكمية</label>
+            <input type="number" class="form-control" id="itemQuantity${itemIndex}" placeholder="الكمية" min="1" value="1" onchange="updatePurchaseTotal()" required>
+        </div>
+        <div style="flex: 1;">
+            <label style="font-size: 0.85rem; color: var(--theme-text-secondary); margin-bottom: 0.3rem; display: block;">السعر</label>
+            <input type="number" class="form-control" id="itemPrice${itemIndex}" placeholder="السعر" min="0" onchange="updatePurchaseTotal()" required>
+        </div>
+        <div style="display: flex; align-items: end; padding-bottom: 0.5rem;">
+            <button type="button" class="action-btn delete-btn" onclick="removePurchaseItem(${itemIndex})" title="حذف">
+                <i class="fas fa-trash"></i>
+            </button>
+        </div>
+    `;
+    
+    container.appendChild(itemDiv);
+    purchaseItems.push({ index: itemIndex });
+}
+
+/**
+ * إزالة صف منتج من فاتورة المشتريات
+ */
+function removePurchaseItem(itemIndex) {
+    const container = document.getElementById('purchaseItemsContainer');
+    const items = container.querySelectorAll('.purchase-item');
+    
+    if (items.length <= 1) {
+        showNotification('يجب أن تحتوي الفاتورة على منتج واحد على الأقل', 'warning');
+        return;
+    }
+    
+    items[itemIndex].remove();
+    purchaseItems = purchaseItems.filter(item => item.index !== itemIndex);
+    updatePurchaseTotal();
+}
+
+/**
+ * تحديث المجموع الإجمالي لفاتورة المشتريات
+ */
+function updatePurchaseTotal() {
+    let total = 0;
+    const container = document.getElementById('purchaseItemsContainer');
+    const items = container.querySelectorAll('.purchase-item');
+    
+    items.forEach((item, index) => {
+        const quantity = parseFloat(document.getElementById(`itemQuantity${index}`)?.value) || 0;
+        const price = parseFloat(document.getElementById(`itemPrice${index}`)?.value) || 0;
+        total += quantity * price;
+    });
+    
+    document.getElementById('purchaseTotalAmount').textContent = total.toLocaleString() + ' دينار';
+}
+
+/**
+ * حفظ فاتورة مشتريات
+ */
+async function savePurchase() {
+    const supplierName = document.getElementById('supplierName').value;
+    const supplierPhone = document.getElementById('supplierPhone').value;
+    const invoiceNumber = document.getElementById('invoiceNumber').value;
+    const date = document.getElementById('purchaseDate').value;
+    
+    // التحقق من البيانات
+    if (!supplierName || !date) {
+        showNotification('يرجى ملء المعلومات الأساسية', 'error');
+        return;
+    }
+    
+    // جمع بيانات المنتجات
+    const items = [];
+    const container = document.getElementById('purchaseItemsContainer');
+    const itemElements = container.querySelectorAll('.purchase-item');
+    
+    let hasError = false;
+    itemElements.forEach((item, index) => {
+        const name = document.getElementById(`itemName${index}`)?.value;
+        const quantity = parseFloat(document.getElementById(`itemQuantity${index}`)?.value);
+        const price = parseFloat(document.getElementById(`itemPrice${index}`)?.value);
+        
+        if (!name || !quantity || !price) {
+            hasError = true;
+            return;
+        }
+        
+        items.push({
+            name: name,
+            quantity: quantity,
+            price: price,
+            total: quantity * price
+        });
+    });
+    
+    if (hasError || items.length === 0) {
+        showNotification('يرجى ملء جميع بيانات المنتجات', 'error');
+        return;
+    }
+    
+    // حساب المجموع الإجمالي
+    const totalAmount = items.reduce((sum, item) => sum + item.total, 0);
+    
+    // إنشاء كائن الفاتورة
+    const purchase = {
+        id: Date.now(),
+        invoiceNumber: invoiceNumber || `INV-${Date.now()}`,
+        supplierName: supplierName,
+        supplierPhone: supplierPhone,
+        date: date,
+        items: items,
+        totalAmount: totalAmount,
+        itemsCount: items.length,
+        createdAt: new Date().toISOString(),
+        createdBy: window.currentUser?.username || 'Admin'
+    };
+    
+    try {
+        // حفظ في قاعدة البيانات
+        await window.electronAPI.insertData('purchases', purchase);
+        
+        // إضافة إلى المصفوفة المحلية
+        purchasesData.push(purchase);
+        
+        // إعادة تحميل البيانات
+        loadPurchases();
+        updateExpensesStats();
+        
+        // إغلاق النافذة
+        closeAddPurchaseModal();
+        
+        showNotification('تم إضافة فاتورة المشتريات بنجاح', 'success');
+    } catch (error) {
+        console.error('خطأ في حفظ فاتورة المشتريات:', error);
+        showNotification('حدث خطأ أثناء حفظ الفاتورة', 'error');
+    }
+}
+
+/**
+ * حذف فاتورة مشتريات
+ */
+async function deletePurchase(purchaseId) {
+    if (!confirm('هل أنت متأكد من حذف فاتورة المشتريات؟')) {
+        return;
+    }
+    
+    try {
+        await window.electronAPI.deleteData('purchases', purchaseId);
+        purchasesData = purchasesData.filter(p => p.id !== purchaseId);
+        loadPurchases();
+        updateExpensesStats();
+        showNotification('تم حذف فاتورة المشتريات بنجاح', 'success');
+    } catch (error) {
+        console.error('خطأ في حذف فاتورة المشتريات:', error);
+        showNotification('حدث خطأ أثناء حذف الفاتورة', 'error');
+    }
+}
+
+/**
+ * عرض تفاصيل فاتورة مشتريات
+ */
+function viewPurchaseDetails(purchaseId) {
+    const purchase = purchasesData.find(p => p.id === purchaseId);
+    if (!purchase) return;
+    
+    const modal = document.getElementById('viewPurchaseModal');
+    const content = document.getElementById('purchaseDetailsContent');
+    
+    let itemsHtml = '';
+    purchase.items.forEach((item, index) => {
+        itemsHtml += `
+            <tr>
+                <td>${index + 1}</td>
+                <td>${item.name}</td>
+                <td>${item.quantity}</td>
+                <td>${item.price.toLocaleString()} دينار</td>
+                <td class="expense-amount-cell expense-amount-negative">${item.total.toLocaleString()} دينار</td>
+            </tr>
+        `;
+    });
+    
+    content.innerHTML = `
+        <div style="background: var(--theme-bg-secondary); padding: 1.5rem; border-radius: var(--border-radius); margin-bottom: 1.5rem;">
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem;">
+                <div>
+                    <div style="color: var(--theme-text-tertiary); font-size: 0.9rem; margin-bottom: 0.3rem;">رقم الفاتورة</div>
+                    <div style="font-size: 1.1rem; font-weight: 600;">${purchase.invoiceNumber}</div>
+                </div>
+                <div>
+                    <div style="color: var(--theme-text-tertiary); font-size: 0.9rem; margin-bottom: 0.3rem;">التاريخ</div>
+                    <div style="font-size: 1.1rem; font-weight: 600;">${new Date(purchase.date).toLocaleDateString('ar-IQ')}</div>
+                </div>
+                <div>
+                    <div style="color: var(--theme-text-tertiary); font-size: 0.9rem; margin-bottom: 0.3rem;">اسم المورد</div>
+                    <div style="font-size: 1.1rem; font-weight: 600;">${purchase.supplierName}</div>
+                </div>
+                <div>
+                    <div style="color: var(--theme-text-tertiary); font-size: 0.9rem; margin-bottom: 0.3rem;">رقم الهاتف</div>
+                    <div style="font-size: 1.1rem; font-weight: 600;">${purchase.supplierPhone || '-'}</div>
+                </div>
+            </div>
+        </div>
+        
+        <h4 style="margin-bottom: 1rem; color: var(--primary-color);"><i class="fas fa-boxes"></i> المنتجات</h4>
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>اسم المنتج</th>
+                        <th>الكمية</th>
+                        <th>السعر</th>
+                        <th>الإجمالي</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${itemsHtml}
+                </tbody>
+            </table>
+        </div>
+        
+        <div style="background: var(--theme-bg-secondary); padding: 1.5rem; border-radius: var(--border-radius); margin-top: 1.5rem; text-align: center;">
+            <div style="font-size: 1.1rem; color: var(--theme-text-secondary); margin-bottom: 0.5rem;">المجموع الإجمالي</div>
+            <div style="font-size: 2rem; font-weight: bold; color: var(--primary-color);">${purchase.totalAmount.toLocaleString()} دينار</div>
+        </div>
+    `;
+    
+    modal.style.display = 'flex';
+}
+
+/**
+ * تحميل فواتير المشتريات
+ */
+async function loadPurchases() {
+    try {
+        const purchases = await window.electronAPI.getAllData('purchases');
+        purchasesData = purchases || [];
+        
+        const tbody = document.getElementById('purchasesTableBody');
+        tbody.innerHTML = '';
+        
+        if (purchasesData.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 3rem; color: var(--theme-text-tertiary);">لا توجد فواتير مشتريات مسجلة</td></tr>';
+            return;
+        }
+        
+        // ترتيب حسب التاريخ (الأحدث أولاً)
+        purchasesData.sort((a, b) => new Date(b.date) - new Date(a.date));
+        
+        purchasesData.forEach(purchase => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${purchase.invoiceNumber}</td>
+                <td>${purchase.supplierName}</td>
+                <td>${purchase.supplierPhone || '-'}</td>
+                <td class="expense-amount-cell expense-amount-negative">${purchase.totalAmount.toLocaleString()} دينار</td>
+                <td>${purchase.itemsCount}</td>
+                <td>${new Date(purchase.date).toLocaleDateString('ar-IQ')}</td>
+                <td>
+                    <button class="action-btn view-btn" onclick="viewPurchaseDetails(${purchase.id})" title="عرض التفاصيل">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button class="action-btn delete-btn" onclick="deletePurchase(${purchase.id})" title="حذف">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+    } catch (error) {
+        console.error('خطأ في تحميل فواتير المشتريات:', error);
+        showNotification('حدث خطأ أثناء تحميل الفواتير', 'error');
+    }
+}
+
+// ==================== دوال الإحصائيات ====================
+
+/**
+ * تحديث إحصائيات المصاريف
+ */
+async function updateExpensesStats() {
+    try {
+        // جلب البيانات
+        const expenses = await window.electronAPI.getAllData('expenses') || [];
+        const purchases = await window.electronAPI.getAllData('purchases') || [];
+        
+        // حساب المجاميع
+        const totalExpenses = expenses.reduce((sum, exp) => sum + exp.amount, 0);
+        const totalPurchases = purchases.reduce((sum, pur) => sum + pur.totalAmount, 0);
+        
+        // حساب مصاريف هذا الشهر
+        const currentMonth = new Date().getMonth();
+        const currentYear = new Date().getFullYear();
+        const monthlyExpenses = expenses
+            .filter(exp => {
+                const expDate = new Date(exp.date);
+                return expDate.getMonth() === currentMonth && expDate.getFullYear() === currentYear;
+            })
+            .reduce((sum, exp) => sum + exp.amount, 0);
+        
+        // تحديث العناصر
+        document.getElementById('totalExpensesAmount').textContent = totalExpenses.toLocaleString() + ' دينار';
+        document.getElementById('totalPurchasesAmount').textContent = totalPurchases.toLocaleString() + ' دينار';
+        document.getElementById('monthlyExpensesAmount').textContent = monthlyExpenses.toLocaleString() + ' دينار';
+        document.getElementById('totalExpensesCount').textContent = (expenses.length + purchases.length).toLocaleString();
+    } catch (error) {
+        console.error('خطأ في تحديث إحصائيات المصاريف:', error);
+    }
+}
+
+/**
+ * تحديث تقارير المصاريف
+ */
+async function updateExpensesReports() {
+    const period = document.getElementById('reportsPeriodFilter').value;
+    let dateFrom, dateTo;
+    
+    // تحديد الفترة الزمنية
+    const now = new Date();
+    dateTo = now;
+    
+    switch (period) {
+        case 'today':
+            dateFrom = new Date(now.setHours(0, 0, 0, 0));
+            break;
+        case 'week':
+            dateFrom = new Date(now.setDate(now.getDate() - 7));
+            break;
+        case 'month':
+            dateFrom = new Date(now.setMonth(now.getMonth() - 1));
+            break;
+        case 'year':
+            dateFrom = new Date(now.setFullYear(now.getFullYear() - 1));
+            break;
+        case 'custom':
+            const customFrom = document.getElementById('reportsDateFrom').value;
+            const customTo = document.getElementById('reportsDateTo').value;
+            if (!customFrom || !customTo) {
+                showNotification('يرجى تحديد الفترة الزمنية', 'warning');
+                return;
+            }
+            dateFrom = new Date(customFrom);
+            dateTo = new Date(customTo);
+            break;
+    }
+    
+    // عرض/إخفاء حقول التاريخ المخصص
+    document.getElementById('customDateRangeGroup').style.display = 
+        period === 'custom' ? 'flex' : 'none';
+    
+    try {
+        // جلب البيانات المفلترة
+        const expenses = await window.electronAPI.getAllData('expenses') || [];
+        const purchases = await window.electronAPI.getAllData('purchases') || [];
+        
+        const filteredExpenses = expenses.filter(exp => {
+            const expDate = new Date(exp.date);
+            return expDate >= dateFrom && expDate <= dateTo;
+        });
+        
+        const filteredPurchases = purchases.filter(pur => {
+            const purDate = new Date(pur.date);
+            return purDate >= dateFrom && purDate <= dateTo;
+        });
+        
+        // حساب المجاميع
+        const totalExpenses = filteredExpenses.reduce((sum, exp) => sum + exp.amount, 0);
+        const totalPurchases = filteredPurchases.reduce((sum, pur) => sum + pur.totalAmount, 0);
+        
+        // حساب مصاريف محددة
+        const rentExpenses = filteredExpenses
+            .filter(exp => exp.type === 'rent')
+            .reduce((sum, exp) => sum + exp.amount, 0);
+        
+        const utilitiesExpenses = filteredExpenses
+            .filter(exp => exp.type === 'utilities')
+            .reduce((sum, exp) => sum + exp.amount, 0);
+        
+        // تحديث الإحصائيات
+        document.getElementById('reportTotalExpenses').textContent = totalExpenses.toLocaleString() + ' دينار';
+        document.getElementById('reportTotalPurchases').textContent = totalPurchases.toLocaleString() + ' دينار';
+        document.getElementById('reportRentExpenses').textContent = rentExpenses.toLocaleString() + ' دينار';
+        document.getElementById('reportUtilitiesExpenses').textContent = utilitiesExpenses.toLocaleString() + ' دينار';
+        
+        // تحديث جدول المصاريف حسب النوع
+        updateExpensesByTypeTable(filteredExpenses);
+        
+        // تحديث جدول المنتجات المشتراة
+        updatePurchasedProductsTable(filteredPurchases);
+    } catch (error) {
+        console.error('خطأ في تحديث تقارير المصاريف:', error);
+        showNotification('حدث خطأ أثناء تحديث التقارير', 'error');
+    }
+}
+
+/**
+ * تحديث جدول المصاريف حسب النوع
+ */
+function updateExpensesByTypeTable(expenses) {
+    const tbody = document.getElementById('expensesByTypeTableBody');
+    tbody.innerHTML = '';
+    
+    // تجميع المصاريف حسب النوع
+    const expensesByType = {};
+    expenses.forEach(exp => {
+        if (!expensesByType[exp.type]) {
+            expensesByType[exp.type] = {
+                count: 0,
+                total: 0
+            };
+        }
+        expensesByType[exp.type].count++;
+        expensesByType[exp.type].total += exp.amount;
+    });
+    
+    // حساب المجموع الكلي
+    const grandTotal = Object.values(expensesByType).reduce((sum, type) => sum + type.total, 0);
+    
+    // عرض البيانات
+    Object.keys(expensesByType).forEach(type => {
+        const data = expensesByType[type];
+        const percentage = grandTotal > 0 ? ((data.total / grandTotal) * 100).toFixed(1) : 0;
+        
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>
+                <span class="expense-type-badge expense-type-${type}">
+                    ${getExpenseTypeLabel(type)}
+                </span>
+            </td>
+            <td>${data.count}</td>
+            <td class="expense-amount-cell expense-amount-negative">${data.total.toLocaleString()} دينار</td>
+            <td>
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <div style="flex: 1; height: 8px; background: var(--theme-bg-secondary); border-radius: 4px; overflow: hidden;">
+                        <div style="width: ${percentage}%; height: 100%; background: var(--primary-gradient);"></div>
+                    </div>
+                    <span style="font-weight: 600;">${percentage}%</span>
+                </div>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+    
+    if (Object.keys(expensesByType).length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 2rem; color: var(--theme-text-tertiary);">لا توجد مصاريف في الفترة المحددة</td></tr>';
+    }
+}
+
+/**
+ * تحديث جدول المنتجات المشتراة
+ */
+function updatePurchasedProductsTable(purchases) {
+    const tbody = document.getElementById('purchasedProductsTableBody');
+    tbody.innerHTML = '';
+    
+    // جمع جميع المنتجات من جميع الفواتير
+    const allProducts = [];
+    purchases.forEach(purchase => {
+        purchase.items.forEach(item => {
+            allProducts.push({
+                name: item.name,
+                supplier: purchase.supplierName,
+                quantity: item.quantity,
+                price: item.price,
+                total: item.total,
+                date: purchase.date
+            });
+        });
+    });
+    
+    // ترتيب حسب التاريخ (الأحدث أولاً)
+    allProducts.sort((a, b) => new Date(b.date) - new Date(a.date));
+    
+    if (allProducts.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2rem; color: var(--theme-text-tertiary);">لا توجد منتجات مشتراة في الفترة المحددة</td></tr>';
+        return;
+    }
+    
+    allProducts.forEach(product => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${product.name}</td>
+            <td>${product.supplier}</td>
+            <td>${product.quantity}</td>
+            <td>${product.price.toLocaleString()} دينار</td>
+            <td class="expense-amount-cell expense-amount-negative">${product.total.toLocaleString()} دينار</td>
+            <td>${new Date(product.date).toLocaleDateString('ar-IQ')}</td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+// ==================== دوال البحث والتصفية ====================
+
+/**
+ * تصفية المصاريف
+ */
+function filterExpenses() {
+    const searchTerm = document.getElementById('expensesSearchInput').value.toLowerCase();
+    const tbody = document.getElementById('generalExpensesTableBody');
+    const rows = tbody.getElementsByTagName('tr');
+    
+    Array.from(rows).forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(searchTerm) ? '' : 'none';
+    });
+}
+
+// ==================== دالة التهيئة ====================
+
+/**
+ * تهيئة صفحة المصاريف عند التحميل
+ */
+async function initExpensesPage() {
+    try {
+        await loadExpenses();
+        await loadPurchases();
+        await updateExpensesStats();
+        
+        // تعيين التاريخ الحالي في فلتر التقارير
+        const today = new Date().toISOString().split('T')[0];
+        if (document.getElementById('reportsDateFrom')) {
+            document.getElementById('reportsDateFrom').value = today;
+        }
+        if (document.getElementById('reportsDateTo')) {
+            document.getElementById('reportsDateTo').value = today;
+        }
+        
+        console.log('✅ تم تهيئة صفحة المصاريف بنجاح');
+    } catch (error) {
+        console.error('❌ خطأ في تهيئة صفحة المصاريف:', error);
+    }
+}
+
+// تشغيل التهيئة عند تحميل الصفحة
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initExpensesPage);
+} else {
+    initExpensesPage();
+}
+
+console.log('💰 تم تحميل نظام إدارة المصاريف - شركة الإبداع الرقمي');

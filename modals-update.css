@@ -1,0 +1,406 @@
+/* 
+ * تحديث النوافذ المنبثقة - نظام نقاط البيع
+ * شركة الإبداع الرقمي - كرار الشعبري
+ * التحديثات: النوافذ في الوسط + قابلة للسحب
+ */
+
+/* ===== النوافذ المنبثقة الرئيسية ===== */
+.modal,
+.debt-modal,
+.expense-modal,
+.purchase-modal {
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    right: auto !important;
+    margin: 0 !important;
+    width: 95% !important;
+    max-width: 900px !important;
+    max-height: 90vh !important;
+    overflow-y: auto !important;
+    z-index: 10000 !important;
+    background: #fff !important;
+    border-radius: 12px !important;
+    box-shadow: 0 10px 50px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* النوافذ المظلمة */
+body.dark-mode .modal,
+body.dark-mode .debt-modal,
+body.dark-mode .expense-modal,
+body.dark-mode .purchase-modal {
+    background: #1e293b !important;
+    box-shadow: 0 10px 50px rgba(0, 0, 0, 0.6) !important;
+}
+
+/* ===== رأس النافذة القابل للسحب ===== */
+.modal-header,
+.debt-modal-header,
+.expense-modal-header,
+.purchase-modal-header {
+    cursor: move !important;
+    user-select: none !important;
+    padding: 20px !important;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    color: white !important;
+    border-radius: 12px 12px 0 0 !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    position: relative !important;
+}
+
+.modal-header::before {
+    content: '⋮⋮';
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 20px;
+    opacity: 0.6;
+    letter-spacing: 2px;
+}
+
+.modal-header h3,
+.debt-modal-header h3,
+.expense-modal-header h3,
+.purchase-modal-header h3 {
+    margin: 0 !important;
+    font-size: 20px !important;
+    font-weight: 600 !important;
+    color: white !important;
+}
+
+/* زر الإغلاق */
+.modal-close,
+.debt-modal-close,
+.expense-modal-close,
+.purchase-modal-close {
+    background: rgba(255, 255, 255, 0.2) !important;
+    border: none !important;
+    width: 35px !important;
+    height: 35px !important;
+    border-radius: 50% !important;
+    color: white !important;
+    font-size: 24px !important;
+    cursor: pointer !important;
+    transition: all 0.3s ease !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.modal-close:hover,
+.debt-modal-close:hover,
+.expense-modal-close:hover,
+.purchase-modal-close:hover {
+    background: rgba(255, 255, 255, 0.3) !important;
+    transform: rotate(90deg) !important;
+}
+
+/* ===== محتوى النافذة ===== */
+.modal-body,
+.debt-modal-body,
+.expense-modal-body,
+.purchase-modal-body {
+    padding: 25px !important;
+    max-height: calc(90vh - 180px) !important;
+    overflow-y: auto !important;
+}
+
+/* ===== جدول المنتجات في نافذة الديون ===== */
+.debt-products-section {
+    margin: 25px 0;
+    padding: 20px;
+    background: #f8fafc;
+    border: 2px dashed #cbd5e1;
+    border-radius: 12px;
+}
+
+body.dark-mode .debt-products-section {
+    background: #0f172a;
+    border-color: #334155;
+}
+
+.debt-products-section h4 {
+    margin: 0 0 15px 0;
+    color: #1e293b;
+    font-size: 18px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+body.dark-mode .debt-products-section h4 {
+    color: #f1f5f9;
+}
+
+.debt-products-section h4::before {
+    content: '🛍️';
+    font-size: 22px;
+}
+
+.debt-products-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 15px 0;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+body.dark-mode .debt-products-table {
+    background: #1e293b;
+}
+
+.debt-products-table thead {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.debt-products-table th {
+    padding: 12px;
+    text-align: center;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.debt-products-table td {
+    padding: 12px;
+    text-align: center;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+body.dark-mode .debt-products-table td {
+    border-bottom-color: #334155;
+}
+
+.debt-products-table tbody tr:hover {
+    background: #f1f5f9;
+}
+
+body.dark-mode .debt-products-table tbody tr:hover {
+    background: #0f172a;
+}
+
+.debt-products-table input,
+.debt-products-table select {
+    width: 100%;
+    padding: 8px 12px;
+    border: 2px solid #e2e8f0;
+    border-radius: 6px;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+body.dark-mode .debt-products-table input,
+body.dark-mode .debt-products-table select {
+    background: #0f172a;
+    border-color: #334155;
+    color: #f1f5f9;
+}
+
+.debt-products-table input:focus,
+.debt-products-table select:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.debt-product-remove-btn {
+    background: #ef4444;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.debt-product-remove-btn:hover {
+    background: #dc2626;
+    transform: scale(1.05);
+}
+
+.debt-add-product-btn {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+    margin-top: 15px;
+}
+
+.debt-add-product-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(16, 185, 129, 0.3);
+}
+
+.debt-add-product-btn::before {
+    content: '+';
+    font-size: 20px;
+    font-weight: bold;
+}
+
+/* ===== إجمالي الدين ===== */
+.debt-total-section {
+    margin-top: 20px;
+    padding: 15px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 8px;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.debt-total-section h4 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.debt-total-amount {
+    font-size: 24px;
+    font-weight: bold;
+}
+
+/* ===== أزرار التذييل ===== */
+.modal-footer,
+.debt-modal-footer,
+.expense-modal-footer,
+.purchase-modal-footer {
+    padding: 20px !important;
+    background: #f8fafc !important;
+    border-top: 1px solid #e2e8f0 !important;
+    display: flex !important;
+    gap: 15px !important;
+    justify-content: flex-end !important;
+    border-radius: 0 0 12px 12px !important;
+}
+
+body.dark-mode .modal-footer,
+body.dark-mode .debt-modal-footer,
+body.dark-mode .expense-modal-footer,
+body.dark-mode .purchase-modal-footer {
+    background: #0f172a !important;
+    border-top-color: #334155 !important;
+}
+
+/* ===== Overlay ===== */
+.modal-overlay,
+.debt-modal-overlay,
+.expense-modal-overlay,
+.purchase-modal-overlay {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    background: rgba(0, 0, 0, 0.6) !important;
+    z-index: 9999 !important;
+    backdrop-filter: blur(4px) !important;
+}
+
+/* ===== مؤشر السحب ===== */
+.modal.dragging,
+.debt-modal.dragging,
+.expense-modal.dragging,
+.purchase-modal.dragging {
+    cursor: move !important;
+    user-select: none !important;
+    opacity: 0.9 !important;
+}
+
+/* ===== التجاوب مع الجوال ===== */
+@media (max-width: 768px) {
+    .modal,
+    .debt-modal,
+    .expense-modal,
+    .purchase-modal {
+        width: 98% !important;
+        max-width: none !important;
+        max-height: 95vh !important;
+    }
+    
+    .modal-body,
+    .debt-modal-body,
+    .expense-modal-body,
+    .purchase-modal-body {
+        padding: 15px !important;
+        max-height: calc(95vh - 150px) !important;
+    }
+    
+    .debt-products-table {
+        font-size: 12px;
+    }
+    
+    .debt-products-table th,
+    .debt-products-table td {
+        padding: 8px 4px;
+    }
+    
+    .debt-total-section {
+        flex-direction: column;
+        gap: 10px;
+        text-align: center;
+    }
+}
+
+/* ===== تحسينات إضافية ===== */
+.modal-animate-in {
+    animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -60%);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, -50%);
+    }
+}
+
+/* التمرير السلس */
+.modal-body::-webkit-scrollbar,
+.debt-modal-body::-webkit-scrollbar,
+.expense-modal-body::-webkit-scrollbar,
+.purchase-modal-body::-webkit-scrollbar {
+    width: 8px;
+}
+
+.modal-body::-webkit-scrollbar-track,
+.debt-modal-body::-webkit-scrollbar-track,
+.expense-modal-body::-webkit-scrollbar-track,
+.purchase-modal-body::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 10px;
+}
+
+.modal-body::-webkit-scrollbar-thumb,
+.debt-modal-body::-webkit-scrollbar-thumb,
+.expense-modal-body::-webkit-scrollbar-thumb,
+.purchase-modal-body::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
+}
+
+.modal-body::-webkit-scrollbar-thumb:hover,
+.debt-modal-body::-webkit-scrollbar-thumb:hover,
+.expense-modal-body::-webkit-scrollbar-thumb:hover,
+.purchase-modal-body::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}

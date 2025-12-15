@@ -1,0 +1,463 @@
+/**
+ * ================================================
+ * ملف التصميم المتجاوب النهائي الشامل
+ * شركة الإبداع الرقمي - كرار الشعبري
+ * ================================================
+ */
+
+/* ==================== إصلاحات عامة ==================== */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    overflow-x: hidden;
+    height: 100%;
+}
+
+body {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+    min-height: 100vh;
+    position: relative;
+}
+
+/* منع التمرير عند فتح القائمة */
+body.sidebar-open {
+    overflow: hidden !important;
+    position: fixed !important;
+    width: 100% !important;
+    height: 100% !important;
+}
+
+.main-content {
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    min-height: calc(100vh - 60px);
+    padding-bottom: 2rem;
+}
+
+/* ==================== الشريط الجانبي - الديسكتوب ==================== */
+#sidebar {
+    position: fixed;
+    top: 0;
+    right: 0;
+    height: 100vh;
+    width: 260px;
+    background: var(--theme-bg-primary, #ffffff);
+    border-left: 1px solid var(--border-color, #e0e0e0);
+    z-index: 999;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* ==================== الشريط الجانبي - الجوال ==================== */
+@media screen and (max-width: 768px) {
+    #sidebar {
+        transform: translateX(100%);
+        right: 0;
+        width: 280px;
+        max-width: 85vw;
+        box-shadow: -4px 0 24px rgba(0, 0, 0, 0.2);
+        will-change: transform;
+    }
+    
+    #sidebar.active {
+        transform: translateX(0) !important;
+    }
+    
+    .main-content {
+        margin-right: 0 !important;
+        width: 100% !important;
+    }
+}
+
+/* ==================== Overlay للجوال ==================== */
+.sidebar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 9998;
+    display: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.sidebar-overlay.active {
+    display: block;
+    opacity: 1;
+}
+
+/* ==================== زر القائمة للجوال ==================== */
+.sidebar-toggle-btn {
+    position: fixed !important;
+    top: 10px !important;
+    right: 10px !important;
+    width: 50px !important;
+    height: 50px !important;
+    border-radius: 50% !important;
+    background: var(--primary-color, #6366f1) !important;
+    color: white !important;
+    border: none !important;
+    cursor: pointer !important;
+    z-index: 10000 !important;
+    display: none !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 1.5rem !important;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4) !important;
+    transition: all 0.3s ease !important;
+}
+
+.sidebar-toggle-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 16px rgba(99, 102, 241, 0.6);
+}
+
+.sidebar-toggle-btn:active {
+    transform: scale(0.95);
+}
+
+@media screen and (max-width: 768px) {
+    .sidebar-toggle-btn {
+        display: flex !important;
+    }
+}
+
+/* ==================== إصلاح التمرير في صفحة البيع ==================== */
+.products-grid,
+.cart-items,
+.product-search-results {
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    max-height: calc(100vh - 200px) !important;
+}
+
+/* ==================== إصلاح ارتفاع iOS ==================== */
+@supports (-webkit-touch-callout: none) {
+    body {
+        min-height: -webkit-fill-available;
+    }
+    
+    .main-content {
+        min-height: calc(var(--vh, 1vh) * 100 - 60px);
+    }
+}
+
+/* ==================== تحسينات للجداول ==================== */
+.table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin: 1rem 0;
+}
+
+table {
+    width: 100%;
+    min-width: 600px;
+}
+
+@media screen and (max-width: 768px) {
+    table {
+        font-size: 0.9rem;
+    }
+    
+    th, td {
+        padding: 0.5rem !important;
+    }
+}
+
+/* ==================== أزرار الإجراءات في الديون ==================== */
+.debt-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.debt-actions .btn {
+    flex: 1;
+    min-width: 80px;
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+}
+
+@media screen and (max-width: 768px) {
+    .debt-actions {
+        flex-direction: column;
+    }
+    
+    .debt-actions .btn {
+        width: 100%;
+    }
+}
+
+/* ==================== زر التعديل الجديد ==================== */
+.btn-edit {
+    background: var(--warning-color, #f59e0b);
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 500;
+}
+
+.btn-edit:hover {
+    background: #d97706;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+}
+
+.btn-edit:active {
+    transform: translateY(0);
+}
+
+/* ==================== تحسينات النماذج ==================== */
+.form-control, input, select, textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--border-color, #ddd);
+    border-radius: 8px;
+    font-size: 1rem;
+    font-family: inherit;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus, input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: var(--primary-color, #6366f1);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+/* ==================== تحسينات الأزرار ==================== */
+.btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.btn-primary {
+    background: var(--primary-color, #6366f1);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #4f46e5;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.btn-success {
+    background: var(--success-color, #10b981);
+    color: white;
+}
+
+.btn-success:hover {
+    background: #059669;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.btn-danger {
+    background: var(--danger-color, #ef4444);
+    color: white;
+}
+
+.btn-danger:hover {
+    background: #dc2626;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.btn-secondary {
+    background: var(--theme-bg-secondary, #f3f4f6);
+    color: var(--theme-text-primary, #333);
+}
+
+.btn-secondary:hover {
+    background: #e5e7eb;
+}
+
+/* ==================== تحسينات البطاقات ==================== */
+.card {
+    background: var(--theme-bg-primary, #ffffff);
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    transform: translateY(-2px);
+}
+
+/* ==================== تحسينات النوافذ المنبثقة ==================== */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.modal-content {
+    background: var(--theme-bg-primary, #ffffff);
+    border-radius: 12px;
+    max-width: 600px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+.modal-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--border-color, #e0e0e0);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-body {
+    padding: 1.5rem;
+}
+
+.modal-footer {
+    padding: 1.5rem;
+    border-top: 1px solid var(--border-color, #e0e0e0);
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+}
+
+/* ==================== استجابة الهاتف ==================== */
+@media screen and (max-width: 480px) {
+    .modal-content {
+        max-width: 95%;
+    }
+    
+    .modal-header,
+    .modal-body,
+    .modal-footer {
+        padding: 1rem;
+    }
+    
+    .btn {
+        padding: 0.65rem 1rem;
+        font-size: 0.9rem;
+    }
+    
+    h1 {
+        font-size: 1.5rem;
+    }
+    
+    h2 {
+        font-size: 1.3rem;
+    }
+    
+    h3 {
+        font-size: 1.1rem;
+    }
+    
+    h4 {
+        font-size: 1rem;
+    }
+}
+
+/* ==================== تحسينات الطباعة ==================== */
+@media print {
+    #sidebar,
+    .sidebar-toggle-btn,
+    .sidebar-overlay,
+    .btn,
+    button {
+        display: none !important;
+    }
+    
+    .main-content {
+        margin-right: 0 !important;
+        width: 100% !important;
+    }
+    
+    body {
+        overflow: visible !important;
+    }
+}
+
+/* ==================== تحسينات إضافية ==================== */
+.settings-section {
+    margin-bottom: 2rem;
+}
+
+.settings-tab-content {
+    display: none;
+}
+
+.settings-tab-content.active {
+    display: block;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--theme-bg-secondary, #f3f4f6);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--primary-color, #6366f1);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #4f46e5;
+}
+
+/* ==================== تحسينات الأداء ==================== */
+.will-change-transform {
+    will-change: transform;
+}
+
+.will-change-opacity {
+    will-change: opacity;
+}
+
+/* Hardware acceleration */
+.hw-accelerated {
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+}

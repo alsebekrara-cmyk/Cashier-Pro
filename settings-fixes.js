@@ -11,105 +11,159 @@
 function initSecurityPrivacyTab() {
     console.log('🔒 تهيئة تبويب الأمن والخصوصية...');
     
-    const container = document.getElementById('securityPrivacyContent');
+    // البحث عن العنصر بطرق متعددة
+    let container = document.getElementById('securityPrivacyContent');
     if (!container) {
-        console.warn('⚠️ عنصر securityPrivacyContent غير موجود');
-        return;
+        container = document.getElementById('security-content');
     }
+    if (!container) {
+        container = document.querySelector('[data-tab="security"]');
+    }
+    if (!container) {
+        // البحث في جميع divs داخل تبويبات الإعدادات
+        const settingsTabs = document.querySelectorAll('.settings-tab-content');
+        settingsTabs.forEach(tab => {
+            if (tab.id && (tab.id.includes('security') || tab.id.includes('privacy'))) {
+                container = tab;
+            }
+        });
+    }
+    
+    if (!container) {
+        console.warn('⚠️ لم يتم العثور على عنصر الأمن والخصوصية - سيتم البحث عن البديل');
+        // محاولة إنشاء العنصر ديناميكياً
+        const settingsContent = document.querySelector('.settings-content');
+        if (settingsContent) {
+            container = document.createElement('div');
+            container.id = 'securityPrivacyContent';
+            container.className = 'settings-tab-content';
+            container.style.display = 'block';
+            settingsContent.appendChild(container);
+            console.log('✅ تم إنشاء عنصر الأمن والخصوصية ديناميكياً');
+        } else {
+            console.error('❌ فشل في إنشاء عنصر الأمن والخصوصية');
+            return;
+        }
+    }
+    
+    // إظهار العنصر
+    container.style.display = 'block';
     
     container.innerHTML = `
         <div style="padding: 1.5rem;">
             <!-- تغيير كلمة المرور -->
-            <div class="settings-section" style="margin-bottom: 2rem;">
-                <h4 style="color: var(--primary-color); margin-bottom: 1rem;">
+            <div class="settings-section" style="background: var(--theme-bg-secondary); padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem;">
+                <h4 style="color: var(--primary-color); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
                     <i class="fas fa-key"></i> تغيير كلمة المرور
                 </h4>
-                <div class="form-group">
-                    <label>كلمة المرور الحالية</label>
-                    <input type="password" id="currentPassword" class="form-control" placeholder="أدخل كلمة المرور الحالية">
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">كلمة المرور الحالية</label>
+                    <input type="password" id="currentPassword" class="form-control" placeholder="أدخل كلمة المرور الحالية" style="width: 100%;">
                 </div>
-                <div class="form-group">
-                    <label>كلمة المرور الجديدة</label>
-                    <input type="password" id="newPassword" class="form-control" placeholder="أدخل كلمة المرور الجديدة">
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">كلمة المرور الجديدة</label>
+                    <input type="password" id="newPassword" class="form-control" placeholder="أدخل كلمة المرور الجديدة (6 أحرف على الأقل)" style="width: 100%;">
                 </div>
-                <div class="form-group">
-                    <label>تأكيد كلمة المرور الجديدة</label>
-                    <input type="password" id="confirmPassword" class="form-control" placeholder="أعد إدخال كلمة المرور الجديدة">
+                <div class="form-group" style="margin-bottom: 1.5rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">تأكيد كلمة المرور الجديدة</label>
+                    <input type="password" id="confirmPassword" class="form-control" placeholder="أعد إدخال كلمة المرور الجديدة" style="width: 100%;">
                 </div>
-                <button class="btn btn-primary" onclick="changePassword()">
+                <button class="btn btn-primary" onclick="changePassword()" style="width: 100%;">
                     <i class="fas fa-save"></i> تحديث كلمة المرور
                 </button>
             </div>
             
             <!-- جلسات النشاط -->
-            <div class="settings-section" style="margin-bottom: 2rem;">
-                <h4 style="color: var(--primary-color); margin-bottom: 1rem;">
+            <div class="settings-section" style="background: var(--theme-bg-secondary); padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem;">
+                <h4 style="color: var(--primary-color); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
                     <i class="fas fa-history"></i> جلسات النشاط
                 </h4>
-                <div style="background: var(--theme-bg-secondary); padding: 1rem; border-radius: 8px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                <div style="background: var(--theme-bg-primary); padding: 1rem; border-radius: 8px; border: 2px solid var(--border-color);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
                         <div>
-                            <div style="font-weight: 600;">الجلسة الحالية</div>
-                            <div style="font-size: 0.85rem; color: var(--theme-text-tertiary);">
-                                متصل منذ: ${new Date().toLocaleString('ar-IQ')}
+                            <div style="font-weight: 600; color: var(--theme-text-primary); margin-bottom: 0.5rem;">
+                                <i class="fas fa-circle" style="color: var(--success-color); font-size: 0.5rem; margin-left: 0.5rem;"></i>
+                                الجلسة الحالية
+                            </div>
+                            <div style="font-size: 0.9rem; color: var(--theme-text-tertiary);">
+                                <i class="fas fa-clock"></i> متصل منذ: ${new Date().toLocaleString('ar-IQ')}
+                            </div>
+                            <div style="font-size: 0.9rem; color: var(--theme-text-tertiary); margin-top: 0.25rem;">
+                                <i class="fas fa-user"></i> المستخدم: ${window.currentUser?.username || 'Admin'}
                             </div>
                         </div>
-                        <span class="badge badge-success">نشط</span>
+                        <span class="badge badge-success" style="padding: 0.5rem 1rem; font-size: 0.9rem;">
+                            <i class="fas fa-check-circle"></i> نشط
+                        </span>
                     </div>
                 </div>
             </div>
             
             <!-- خيارات الأمان -->
-            <div class="settings-section" style="margin-bottom: 2rem;">
-                <h4 style="color: var(--primary-color); margin-bottom: 1rem;">
+            <div class="settings-section" style="background: var(--theme-bg-secondary); padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem;">
+                <h4 style="color: var(--primary-color); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
                     <i class="fas fa-shield-alt"></i> خيارات الأمان
                 </h4>
-                <div class="form-group">
-                    <label class="checkbox-label">
-                        <input type="checkbox" id="autoLogout" checked>
-                        <span>تسجيل الخروج التلقائي بعد فترة عدم النشاط</span>
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label class="checkbox-label" style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer; padding: 0.75rem; border-radius: 8px; transition: background 0.2s;">
+                        <input type="checkbox" id="autoLogout" checked style="width: 20px; height: 20px; cursor: pointer;">
+                        <span style="flex: 1;">تسجيل الخروج التلقائي بعد فترة عدم النشاط (30 دقيقة)</span>
                     </label>
                 </div>
-                <div class="form-group">
-                    <label class="checkbox-label">
-                        <input type="checkbox" id="requirePasswordOnSensitive" checked>
-                        <span>طلب كلمة المرور عند العمليات الحساسة</span>
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label class="checkbox-label" style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer; padding: 0.75rem; border-radius: 8px; transition: background 0.2s;">
+                        <input type="checkbox" id="requirePasswordOnSensitive" checked style="width: 20px; height: 20px; cursor: pointer;">
+                        <span style="flex: 1;">طلب كلمة المرور عند العمليات الحساسة (حذف، تصدير)</span>
                     </label>
                 </div>
-                <div class="form-group">
-                    <label class="checkbox-label">
-                        <input type="checkbox" id="enableAuditLog">
-                        <span>تفعيل سجل التدقيق لجميع العمليات</span>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label class="checkbox-label" style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer; padding: 0.75rem; border-radius: 8px; transition: background 0.2s;">
+                        <input type="checkbox" id="enableAuditLog" style="width: 20px; height: 20px; cursor: pointer;">
+                        <span style="flex: 1;">تفعيل سجل التدقيق لجميع العمليات</span>
                     </label>
                 </div>
             </div>
             
             <!-- الخصوصية -->
-            <div class="settings-section">
-                <h4 style="color: var(--primary-color); margin-bottom: 1rem;">
+            <div class="settings-section" style="background: var(--theme-bg-secondary); padding: 1.5rem; border-radius: 12px; margin-bottom: 1rem;">
+                <h4 style="color: var(--primary-color); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
                     <i class="fas fa-user-secret"></i> إعدادات الخصوصية
                 </h4>
-                <div class="form-group">
-                    <label class="checkbox-label">
-                        <input type="checkbox" id="showInReports" checked>
-                        <span>إظهار اسمي في التقارير</span>
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label class="checkbox-label" style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer; padding: 0.75rem; border-radius: 8px; transition: background 0.2s;">
+                        <input type="checkbox" id="showInReports" checked style="width: 20px; height: 20px; cursor: pointer;">
+                        <span style="flex: 1;">إظهار اسمي في التقارير والسجلات</span>
                     </label>
                 </div>
-                <div class="form-group">
-                    <label class="checkbox-label">
-                        <input type="checkbox" id="shareAnalytics">
-                        <span>مشاركة بيانات الاستخدام لتحسين التطبيق</span>
+                <div class="form-group" style="margin-bottom: 1.5rem;">
+                    <label class="checkbox-label" style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer; padding: 0.75rem; border-radius: 8px; transition: background 0.2s;">
+                        <input type="checkbox" id="shareAnalytics" style="width: 20px; height: 20px; cursor: pointer;">
+                        <span style="flex: 1;">مشاركة بيانات الاستخدام لتحسين التطبيق</span>
                     </label>
                 </div>
-                <button class="btn btn-success" onclick="saveSecuritySettings()">
-                    <i class="fas fa-save"></i> حفظ الإعدادات
+                <button class="btn btn-success" onclick="saveSecuritySettings()" style="width: 100%;">
+                    <i class="fas fa-save"></i> حفظ جميع الإعدادات
                 </button>
             </div>
         </div>
     `;
     
+    // إضافة أنماط للتحويم
+    const style = document.createElement('style');
+    style.textContent = `
+        .checkbox-label:hover {
+            background: rgba(99, 102, 241, 0.1) !important;
+        }
+    `;
+    if (!document.getElementById('security-styles')) {
+        style.id = 'security-styles';
+        document.head.appendChild(style);
+    }
+    
     // تحميل الإعدادات المحفوظة
     loadSecuritySettings();
+    
+    console.log('✅ تم تهيئة تبويب الأمن والخصوصية بنجاح');
 }
 
 /**
@@ -118,118 +172,197 @@ function initSecurityPrivacyTab() {
 function initNotificationsTab() {
     console.log('🔔 تهيئة تبويب الإشعارات...');
     
-    const container = document.getElementById('notificationsContent');
+    // البحث عن العنصر بطرق متعددة
+    let container = document.getElementById('notificationsContent');
     if (!container) {
-        console.warn('⚠️ عنصر notificationsContent غير موجود');
-        return;
+        container = document.getElementById('notifications-content');
     }
+    if (!container) {
+        container = document.querySelector('[data-tab="notifications"]');
+    }
+    if (!container) {
+        // البحث في جميع divs داخل تبويبات الإعدادات
+        const settingsTabs = document.querySelectorAll('.settings-tab-content');
+        settingsTabs.forEach(tab => {
+            if (tab.id && tab.id.includes('notification')) {
+                container = tab;
+            }
+        });
+    }
+    
+    if (!container) {
+        console.warn('⚠️ لم يتم العثور على عنصر الإشعارات - سيتم البحث عن البديل');
+        // محاولة إنشاء العنصر ديناميكياً
+        const settingsContent = document.querySelector('.settings-content');
+        if (settingsContent) {
+            container = document.createElement('div');
+            container.id = 'notificationsContent';
+            container.className = 'settings-tab-content';
+            container.style.display = 'block';
+            settingsContent.appendChild(container);
+            console.log('✅ تم إنشاء عنصر الإشعارات ديناميكياً');
+        } else {
+            console.error('❌ فشل في إنشاء عنصر الإشعارات');
+            return;
+        }
+    }
+    
+    // إظهار العنصر
+    container.style.display = 'block';
     
     container.innerHTML = `
         <div style="padding: 1.5rem;">
             <!-- إشعارات النظام -->
-            <div class="settings-section" style="margin-bottom: 2rem;">
-                <h4 style="color: var(--primary-color); margin-bottom: 1rem;">
+            <div class="settings-section" style="background: var(--theme-bg-secondary); padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem;">
+                <h4 style="color: var(--primary-color); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
                     <i class="fas fa-bell"></i> إشعارات النظام
                 </h4>
-                <div class="form-group">
-                    <label class="checkbox-label">
-                        <input type="checkbox" id="notifyOnSale" checked>
-                        <span>إشعار عند إتمام عملية بيع</span>
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label class="checkbox-label" style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer; padding: 0.75rem; border-radius: 8px; transition: background 0.2s;">
+                        <input type="checkbox" id="notifyOnSale" checked style="width: 20px; height: 20px; cursor: pointer;">
+                        <span style="flex: 1;">
+                            <i class="fas fa-shopping-cart" style="color: var(--success-color); margin-left: 0.5rem;"></i>
+                            إشعار عند إتمام عملية بيع
+                        </span>
                     </label>
                 </div>
-                <div class="form-group">
-                    <label class="checkbox-label">
-                        <input type="checkbox" id="notifyOnPayment" checked>
-                        <span>إشعار عند استلام دفعة</span>
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label class="checkbox-label" style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer; padding: 0.75rem; border-radius: 8px; transition: background 0.2s;">
+                        <input type="checkbox" id="notifyOnPayment" checked style="width: 20px; height: 20px; cursor: pointer;">
+                        <span style="flex: 1;">
+                            <i class="fas fa-money-bill-wave" style="color: var(--success-color); margin-left: 0.5rem;"></i>
+                            إشعار عند استلام دفعة
+                        </span>
                     </label>
                 </div>
-                <div class="form-group">
-                    <label class="checkbox-label">
-                        <input type="checkbox" id="notifyOnLowStock" checked>
-                        <span>إشعار عند نفاد المخزون</span>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label class="checkbox-label" style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer; padding: 0.75rem; border-radius: 8px; transition: background 0.2s;">
+                        <input type="checkbox" id="notifyOnLowStock" checked style="width: 20px; height: 20px; cursor: pointer;">
+                        <span style="flex: 1;">
+                            <i class="fas fa-exclamation-triangle" style="color: var(--warning-color); margin-left: 0.5rem;"></i>
+                            إشعار عند نفاد المخزون
+                        </span>
                     </label>
                 </div>
             </div>
             
             <!-- إشعارات الديون -->
-            <div class="settings-section" style="margin-bottom: 2rem;">
-                <h4 style="color: var(--primary-color); margin-bottom: 1rem;">
+            <div class="settings-section" style="background: var(--theme-bg-secondary); padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem;">
+                <h4 style="color: var(--primary-color); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
                     <i class="fas fa-credit-card"></i> إشعارات الديون والأقساط
                 </h4>
-                <div class="form-group">
-                    <label class="checkbox-label">
-                        <input type="checkbox" id="notifyOnDebtDue" checked>
-                        <span>إشعار عند اقتراب موعد استحقاق قسط</span>
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label class="checkbox-label" style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer; padding: 0.75rem; border-radius: 8px; transition: background 0.2s;">
+                        <input type="checkbox" id="notifyOnDebtDue" checked style="width: 20px; height: 20px; cursor: pointer;">
+                        <span style="flex: 1;">
+                            <i class="fas fa-calendar-check" style="color: var(--primary-color); margin-left: 0.5rem;"></i>
+                            إشعار عند اقتراب موعد استحقاق قسط
+                        </span>
                     </label>
                 </div>
-                <div class="form-group">
-                    <label class="checkbox-label">
-                        <input type="checkbox" id="notifyOnOverdueDebt" checked>
-                        <span>إشعار عند تأخر سداد قسط</span>
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label class="checkbox-label" style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer; padding: 0.75rem; border-radius: 8px; transition: background 0.2s;">
+                        <input type="checkbox" id="notifyOnOverdueDebt" checked style="width: 20px; height: 20px; cursor: pointer;">
+                        <span style="flex: 1;">
+                            <i class="fas fa-clock" style="color: var(--danger-color); margin-left: 0.5rem;"></i>
+                            إشعار عند تأخر سداد قسط
+                        </span>
                     </label>
                 </div>
-                <div class="form-group">
-                    <label>تنبيه قبل الاستحقاق بـ</label>
-                    <select class="form-select" id="debtNotifyDays">
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">
+                        <i class="fas fa-bell"></i> تنبيه قبل الاستحقاق بـ
+                    </label>
+                    <select class="form-select" id="debtNotifyDays" style="width: 100%; padding: 0.75rem; border-radius: 8px;">
                         <option value="1">يوم واحد</option>
                         <option value="3" selected>3 أيام</option>
                         <option value="5">5 أيام</option>
                         <option value="7">أسبوع</option>
+                        <option value="14">أسبوعين</option>
                     </select>
                 </div>
             </div>
             
             <!-- إشعارات التقارير -->
-            <div class="settings-section" style="margin-bottom: 2rem;">
-                <h4 style="color: var(--primary-color); margin-bottom: 1rem;">
+            <div class="settings-section" style="background: var(--theme-bg-secondary); padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem;">
+                <h4 style="color: var(--primary-color); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
                     <i class="fas fa-chart-bar"></i> إشعارات التقارير
                 </h4>
-                <div class="form-group">
-                    <label class="checkbox-label">
-                        <input type="checkbox" id="dailyReport">
-                        <span>إرسال تقرير يومي</span>
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label class="checkbox-label" style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer; padding: 0.75rem; border-radius: 8px; transition: background 0.2s;">
+                        <input type="checkbox" id="dailyReport" style="width: 20px; height: 20px; cursor: pointer;">
+                        <span style="flex: 1;">
+                            <i class="fas fa-calendar-day" style="color: var(--primary-color); margin-left: 0.5rem;"></i>
+                            إرسال تقرير يومي
+                        </span>
                     </label>
                 </div>
-                <div class="form-group">
-                    <label class="checkbox-label">
-                        <input type="checkbox" id="weeklyReport" checked>
-                        <span>إرسال تقرير أسبوعي</span>
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label class="checkbox-label" style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer; padding: 0.75rem; border-radius: 8px; transition: background 0.2s;">
+                        <input type="checkbox" id="weeklyReport" checked style="width: 20px; height: 20px; cursor: pointer;">
+                        <span style="flex: 1;">
+                            <i class="fas fa-calendar-week" style="color: var(--primary-color); margin-left: 0.5rem;"></i>
+                            إرسال تقرير أسبوعي
+                        </span>
                     </label>
                 </div>
-                <div class="form-group">
-                    <label class="checkbox-label">
-                        <input type="checkbox" id="monthlyReport" checked>
-                        <span>إرسال تقرير شهري</span>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label class="checkbox-label" style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer; padding: 0.75rem; border-radius: 8px; transition: background 0.2s;">
+                        <input type="checkbox" id="monthlyReport" checked style="width: 20px; height: 20px; cursor: pointer;">
+                        <span style="flex: 1;">
+                            <i class="fas fa-calendar-alt" style="color: var(--primary-color); margin-left: 0.5rem;"></i>
+                            إرسال تقرير شهري
+                        </span>
                     </label>
                 </div>
             </div>
             
             <!-- طريقة الإشعار -->
-            <div class="settings-section">
-                <h4 style="color: var(--primary-color); margin-bottom: 1rem;">
+            <div class="settings-section" style="background: var(--theme-bg-secondary); padding: 1.5rem; border-radius: 12px; margin-bottom: 1rem;">
+                <h4 style="color: var(--primary-color); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
                     <i class="fas fa-paper-plane"></i> طريقة الإشعار
                 </h4>
-                <div class="form-group">
-                    <label class="checkbox-label">
-                        <input type="checkbox" id="notifyInApp" checked>
-                        <span>إشعارات داخل التطبيق</span>
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label class="checkbox-label" style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer; padding: 0.75rem; border-radius: 8px; transition: background 0.2s;">
+                        <input type="checkbox" id="notifyInApp" checked style="width: 20px; height: 20px; cursor: pointer;">
+                        <span style="flex: 1;">
+                            <i class="fas fa-desktop" style="color: var(--primary-color); margin-left: 0.5rem;"></i>
+                            إشعارات داخل التطبيق
+                        </span>
                     </label>
                 </div>
-                <div class="form-group">
-                    <label class="checkbox-label">
-                        <input type="checkbox" id="notifySound" checked>
-                        <span>صوت عند الإشعار</span>
+                <div class="form-group" style="margin-bottom: 1.5rem;">
+                    <label class="checkbox-label" style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer; padding: 0.75rem; border-radius: 8px; transition: background 0.2s;">
+                        <input type="checkbox" id="notifySound" checked style="width: 20px; height: 20px; cursor: pointer;">
+                        <span style="flex: 1;">
+                            <i class="fas fa-volume-up" style="color: var(--primary-color); margin-left: 0.5rem;"></i>
+                            صوت عند الإشعار
+                        </span>
                     </label>
                 </div>
-                <button class="btn btn-success" onclick="saveNotificationSettings()">
-                    <i class="fas fa-save"></i> حفظ الإعدادات
+                <button class="btn btn-success" onclick="saveNotificationSettings()" style="width: 100%;">
+                    <i class="fas fa-save"></i> حفظ جميع الإعدادات
                 </button>
             </div>
         </div>
     `;
     
+    // إضافة أنماط للتحويم
+    const style = document.createElement('style');
+    style.textContent = `
+        .checkbox-label:hover {
+            background: rgba(99, 102, 241, 0.1) !important;
+        }
+    `;
+    if (!document.getElementById('notifications-styles')) {
+        style.id = 'notifications-styles';
+        document.head.appendChild(style);
+    }
+    
     // تحميل الإعدادات المحفوظة
     loadNotificationSettings();
+    
+    console.log('✅ تم تهيئة تبويب الإشعارات بنجاح');
 }
 
 /**

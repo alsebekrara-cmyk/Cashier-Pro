@@ -410,6 +410,9 @@ async function savePurchase() {
         // إضافة إلى المصفوفة المحلية
         purchasesData.push(purchase);
         
+        // ⭐ إضافة المنتجات إلى صفحة المنتجات تلقائياً ⭐
+        await addPurchaseItemsToProducts(items, supplierName, date);
+        
         // إعادة تحميل البيانات
         loadPurchases();
         updateExpensesStats();
@@ -417,11 +420,100 @@ async function savePurchase() {
         // إغلاق النافذة
         closeAddPurchaseModal();
         
-        showNotification('تم إضافة فاتورة المشتريات بنجاح', 'success');
+        showNotification('تم إضافة فاتورة المشتريات بنجاح ✅ وتم إضافة المنتجات إلى المخزون', 'success');
     } catch (error) {
         console.error('خطأ في حفظ فاتورة المشتريات:', error);
         showNotification('حدث خطأ أثناء حفظ الفاتورة', 'error');
     }
+}
+
+/**
+ * إضافة منتجات فاتورة المشتريات إلى صفحة المنتجات
+ */
+async function addPurchaseItemsToProducts(items, supplierName, purchaseDate) {
+    console.log('🛍️ إضافة منتجات إلى المخزون:', items);
+    
+    for (const item of items) {
+        try {
+            // التحقق إذا كان المنتج موجود بالفعل
+            let existingProducts = [];
+            if (window.electronAPI && window.electronAPI.getAllData) {
+                existingProducts = await window.electronAPI.getAllData('products') || [];
+            } else {
+                existingProducts = JSON.parse(localStorage.getItem('products') || '[]');
+            }
+            
+            // البحث عن المنتج بالاسم
+            const existingProduct = existingProducts.find(p => 
+                p.name && p.name.trim().toLowerCase() === item.name.trim().toLowerCase()
+            );
+            
+            if (existingProduct) {
+                // تحديث الكمية والسعر للمنتج الموجود
+                existingProduct.stock = (parseFloat(existingProduct.stock) || 0) + item.quantity;
+                existingProduct.costPrice = item.price;
+                existingProduct.lastPurchaseDate = purchaseDate;
+                existingProduct.lastSupplier = supplierName;
+                existingProduct.updatedAt = new Date().toISOString();
+                
+                // حفظ التحديث
+                if (window.electronAPI && window.electronAPI.updateData) {
+                    await window.electronAPI.updateData('products', existingProduct.id, existingProduct);
+                } else {
+                    const index = existingProducts.findIndex(p => p.id === existingProduct.id);
+                    if (index !== -1) {
+                        existingProducts[index] = existingProduct;
+                        localStorage.setItem('products', JSON.stringify(existingProducts));
+                    }
+                }
+                
+                console.log('✅ تم تحديث المنتج الموجود:', existingProduct.name);
+                
+            } else {
+                // إنشاء منتج جديد
+                const newProduct = {
+                    id: Date.now() + Math.random(),
+                    barcode: `AUTO-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                    name: item.name,
+                    category: 'عام', // تصنيف افتراضي
+                    costPrice: item.price,
+                    salePrice: Math.ceil(item.price * 1.2), // هامش ربح 20%
+                    stock: item.quantity,
+                    minStock: 5,
+                    unit: 'قطعة',
+                    supplier: supplierName,
+                    lastSupplier: supplierName,
+                    lastPurchaseDate: purchaseDate,
+                    description: `تم إضافته تلقائياً من فاتورة المشتريات - ${supplierName}`,
+                    image: null,
+                    status: 'active',
+                    createdAt: new Date().toISOString(),
+                    createdBy: window.currentUser?.username || 'Admin',
+                    autoAdded: true // علامة للإشارة أنه تم إضافته تلقائياً
+                };
+                
+                // حفظ المنتج الجديد
+                if (window.electronAPI && window.electronAPI.insertData) {
+                    await window.electronAPI.insertData('products', newProduct);
+                } else {
+                    existingProducts.push(newProduct);
+                    localStorage.setItem('products', JSON.stringify(existingProducts));
+                }
+                
+                console.log('✅ تم إضافة منتج جديد:', newProduct.name);
+            }
+            
+        } catch (error) {
+            console.error('❌ خطأ في إضافة المنتج:', item.name, error);
+        }
+    }
+    
+    // تحديث صفحة المنتجات إذا كانت مفتوحة
+    if (typeof loadProducts === 'function') {
+        loadProducts();
+    }
+    
+    console.log('🎉 تمت إضافة جميع المنتجات بنجاح');
 }
 
 /**
@@ -1001,21 +1093,26 @@ async function saveManualDebt() {
             amount: monthlyAmount,
             due_date: dueDate.toISOString().split('T')[0],
             status: 'unpaid',
+            paid_amount: 0,
             paid_date: null
         });
     }
     
     // إنشاء كائن الدين
+    const debtId = Date.now();
     const debt = {
-        id: Date.now(),
-        invoice_id: 'MANUAL-' + Date.now(),
+        id: debtId,
+        __backendId: debtId,
+        invoice_id: 'MANUAL-' + debtId,
         customer_name: customerName,
         customer_phone: customerPhone,
         customer_address: customerAddress,
         date: date,
+        due_date: installments[0].due_date,
         total_amount: finalTotal,
         down_payment: downPayment,
         remaining_amount: remainingAmount,
+        paid_amount: downPayment,
         monthly_amount: monthlyAmount,
         installment_months: months,
         additional_amount: additionalAmount,
@@ -1023,49 +1120,62 @@ async function saveManualDebt() {
         installments: installments,
         items: [],  // فارغ لأنه دين يدوي
         status: 'active',
+        type: 'debt',
         created_at: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
         created_by: window.currentUser?.username || 'Admin',
+        createdBy: window.currentUser?.username || 'Admin',
         is_manual: true  // علامة للتمييز عن ديون البيع
     };
+    
+    console.log('💳 حفظ دين يدوي:', debt);
     
     try {
         // حفظ في قاعدة البيانات
         if (window.electronAPI && window.electronAPI.insertData) {
             await window.electronAPI.insertData('debts', debt);
+            console.log('✅ تم الحفظ في قاعدة البيانات');
         } else {
             // استخدام localStorage كبديل
             const debts = JSON.parse(localStorage.getItem('debts') || '[]');
             debts.push(debt);
             localStorage.setItem('debts', JSON.stringify(debts));
+            console.log('✅ تم الحفظ في localStorage');
         }
         
-        // إضافة الدين إلى مصفوفة debtsData في الذاكرة
+        // إضافة إلى مصفوفة debtsData في الذاكرة إذا كانت موجودة
         if (typeof debtsData !== 'undefined' && Array.isArray(debtsData)) {
             debtsData.push(debt);
+            console.log('✅ تم الإضافة إلى debtsData في الذاكرة');
         }
         
         // تحديث جدول الديون فوراً
         if (typeof renderDebtsTable === 'function') {
             renderDebtsTable();
+            console.log('✅ تم تحديث جدول الديون');
         }
         
         // تحديث الإحصائيات
         if (typeof updateDebtsStats === 'function') {
             updateDebtsStats();
+            console.log('✅ تم تحديث الإحصائيات');
         }
         
-        // إعادة تحميل البيانات من قاعدة البيانات
+        // إعادة تحميل البيانات من قاعدة البيانات للتأكد
         if (window.electronAPI && window.electronAPI.getAllData) {
             try {
                 const allDebts = await window.electronAPI.getAllData('debts');
-                if (allDebts) {
-                    debtsData = allDebts;
+                if (allDebts && Array.isArray(allDebts)) {
+                    if (typeof debtsData !== 'undefined') {
+                        debtsData = allDebts;
+                    }
                     if (typeof renderDebtsTable === 'function') {
                         renderDebtsTable();
                     }
+                    console.log('✅ تم إعادة تحميل جميع الديون من قاعدة البيانات');
                 }
             } catch (e) {
-                console.log('تم تحديث الجدول من الذاكرة');
+                console.log('ℹ️ تم تحديث الجدول من الذاكرة');
             }
         }
         
@@ -1073,16 +1183,19 @@ async function saveManualDebt() {
         closeAddManualDebtModal();
         
         if (typeof showNotification === 'function') {
-            showNotification('تم إضافة الدين بنجاح', 'success');
+            showNotification('تم إضافة الدين بنجاح ✅', 'success');
         } else {
-            alert('تم إضافة الدين بنجاح');
+            alert('تم إضافة الدين بنجاح ✅');
         }
+        
+        console.log('🎉 تمت عملية الحفظ بنجاح');
+        
     } catch (error) {
-        console.error('خطأ في حفظ الدين:', error);
+        console.error('❌ خطأ في حفظ الدين:', error);
         if (typeof showNotification === 'function') {
-            showNotification('حدث خطأ أثناء حفظ الدين', 'error');
+            showNotification('حدث خطأ أثناء حفظ الدين: ' + error.message, 'error');
         } else {
-            alert('حدث خطأ أثناء حفظ الدين');
+            alert('حدث خطأ أثناء حفظ الدين: ' + error.message);
         }
     }
 }

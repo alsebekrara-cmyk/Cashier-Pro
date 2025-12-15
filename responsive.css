@@ -1,0 +1,640 @@
+/* ================================================
+   تصميم متجاوب للهواتف - Responsive Design
+   شركة الإبداع الرقمي - كرار الشعبري
+================================================ */
+
+/* ==================== متغيرات للأجهزة ==================== */
+:root {
+    --mobile-header-height: 60px;
+    --mobile-nav-height: 60px;
+    --mobile-padding: 1rem;
+    --tablet-padding: 1.5rem;
+}
+
+/* ==================== أجهزة الجوال - Mobile (0-768px) ==================== */
+@media screen and (max-width: 768px) {
+    /* الهيدر والشريط الجانبي */
+    .header {
+        height: var(--mobile-header-height);
+        padding: 0 1rem;
+        flex-wrap: wrap;
+    }
+    
+    .header-title {
+        font-size: 1rem;
+        flex: 1;
+    }
+    
+    .header-title i {
+        font-size: 1.2rem;
+    }
+    
+    .header-actions {
+        gap: 0.5rem;
+    }
+    
+    .header-actions .btn {
+        padding: 0.5rem;
+        font-size: 0.9rem;
+    }
+    
+    .sidebar {
+        position: fixed;
+        left: -280px;
+        width: 280px;
+        height: 100vh;
+        top: 0;
+        z-index: 1000;
+        transition: left 0.3s ease;
+        box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+    }
+    
+    .sidebar.active {
+        left: 0;
+    }
+    
+    .sidebar-toggle {
+        display: block !important;
+        position: fixed;
+        top: 10px;
+        left: 10px;
+        z-index: 1001;
+        background: var(--primary-color);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 0.75rem;
+        font-size: 1.2rem;
+        cursor: pointer;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+    
+    .sidebar-toggle i {
+        transition: transform 0.3s ease;
+    }
+    
+    .sidebar.active ~ .sidebar-toggle i {
+        transform: rotate(180deg);
+    }
+    
+    /* Overlay للشريط الجانبي */
+    .sidebar-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 999;
+    }
+    
+    .sidebar.active ~ .sidebar-overlay,
+    .sidebar-overlay.active {
+        display: block;
+    }
+    
+    /* المحتوى الرئيسي */
+    .main-content {
+        margin-right: 0;
+        padding: var(--mobile-padding);
+        margin-top: var(--mobile-header-height);
+    }
+    
+    /* الصفحات */
+    .page {
+        padding: 1rem;
+    }
+    
+    /* عناوين الأقسام */
+    .section-header {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: stretch !important;
+    }
+    
+    .section-title {
+        font-size: 1.25rem;
+        text-align: center;
+    }
+    
+    /* أزرار التصدير */
+    .export-import-buttons {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .export-btn,
+    .import-btn {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    /* صندوق البحث */
+    .pos-search-box {
+        width: 100%;
+    }
+    
+    /* شبكة الإحصائيات */
+    .stats-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .stat-card {
+        padding: 1rem;
+    }
+    
+    .stat-value {
+        font-size: 1.5rem;
+    }
+    
+    /* الجداول */
+    .table-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .table {
+        min-width: 800px;
+        font-size: 0.85rem;
+    }
+    
+    .table th,
+    .table td {
+        padding: 0.75rem 0.5rem;
+        white-space: nowrap;
+    }
+    
+    /* أزرار الإجراءات */
+    .action-btn {
+        padding: 0.4rem 0.6rem;
+        font-size: 0.85rem;
+        margin: 0.1rem;
+    }
+    
+    /* نظام POS */
+    .pos-container {
+        flex-direction: column;
+    }
+    
+    .pos-products,
+    .pos-cart {
+        width: 100%;
+        height: auto;
+        min-height: 300px;
+    }
+    
+    .pos-products {
+        max-height: 400px;
+    }
+    
+    .pos-cart {
+        position: sticky;
+        bottom: 0;
+        background: var(--theme-bg-primary);
+        z-index: 100;
+        box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
+    }
+    
+    .products-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+    }
+    
+    .product-card {
+        padding: 0.75rem;
+    }
+    
+    .product-card img {
+        height: 80px;
+    }
+    
+    .product-name {
+        font-size: 0.85rem;
+    }
+    
+    .product-price {
+        font-size: 1rem;
+    }
+    
+    /* سلة التسوق */
+    .cart-items {
+        max-height: 200px;
+    }
+    
+    .cart-item {
+        padding: 0.75rem;
+    }
+    
+    .cart-summary {
+        padding: 1rem;
+    }
+    
+    /* النوافذ المنبثقة */
+    .modal-content {
+        width: 95%;
+        max-width: 95%;
+        margin: 1rem;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+    
+    .modal-body {
+        padding: 1rem;
+    }
+    
+    .modal-footer {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .modal-footer .btn {
+        width: 100%;
+    }
+    
+    /* النماذج */
+    .form-row {
+        grid-template-columns: 1fr !important;
+    }
+    
+    .form-group {
+        margin-bottom: 1rem;
+    }
+    
+    .form-control,
+    .form-select {
+        font-size: 16px; /* منع التكبير التلقائي في iOS */
+    }
+    
+    /* الأزرار */
+    .btn {
+        padding: 0.75rem 1rem;
+        font-size: 0.95rem;
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .btn-group {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .btn-group .btn {
+        width: 100%;
+    }
+    
+    /* الفلاتر */
+    .filters-section {
+        padding: 1rem;
+    }
+    
+    .filters-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    /* التبويبات */
+    .expense-tabs {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .expense-tab-btn {
+        padding: 0.75rem 1rem;
+        font-size: 0.9rem;
+        white-space: nowrap;
+    }
+    
+    /* بطاقات الديون */
+    .debt-card {
+        padding: 1rem;
+    }
+    
+    /* شبكة المنتجات */
+    .purchase-items-container {
+        gap: 0.75rem;
+    }
+    
+    .purchase-item {
+        padding: 0.75rem;
+    }
+    
+    /* التقارير */
+    .reports-filters {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .filter-group {
+        width: 100%;
+    }
+    
+    /* الإعدادات */
+    .settings-tabs {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .settings-tab {
+        padding: 0.75rem 1rem;
+        font-size: 0.9rem;
+    }
+    
+    /* لوحة التحكم */
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    /* الرسوم البيانية */
+    .chart-container {
+        height: 250px;
+    }
+    
+    /* قائمة المنتجات */
+    .category-filter {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .category-btn {
+        white-space: nowrap;
+    }
+}
+
+/* ==================== الأجهزة اللوحية - Tablet (769px-1024px) ==================== */
+@media screen and (min-width: 769px) and (max-width: 1024px) {
+    .sidebar {
+        width: 200px;
+    }
+    
+    .main-content {
+        margin-right: 200px;
+        padding: var(--tablet-padding);
+    }
+    
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .products-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    
+    .dashboard-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .pos-container {
+        flex-direction: row;
+    }
+    
+    .pos-products {
+        width: 60%;
+    }
+    
+    .pos-cart {
+        width: 40%;
+    }
+}
+
+/* ==================== شاشات كبيرة - Large Screens (1025px+) ==================== */
+@media screen and (min-width: 1025px) {
+    .stats-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+    
+    .products-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+    
+    .dashboard-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+/* ==================== تحسينات خاصة بـ iPhone ==================== */
+@supports (-webkit-touch-callout: none) {
+    /* Safari on iOS */
+    .main-content {
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .table-container {
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .modal-body {
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    /* إصلاح مشكلة 100vh في Safari */
+    .sidebar {
+        height: -webkit-fill-available;
+    }
+}
+
+/* ==================== وضع الطباعة - Print ==================== */
+@media print {
+    .sidebar,
+    .header,
+    .action-btn,
+    .export-import-buttons,
+    .pos-search-box,
+    .filters-section {
+        display: none !important;
+    }
+    
+    .main-content {
+        margin-right: 0;
+        padding: 0;
+    }
+    
+    .table {
+        font-size: 10pt;
+    }
+    
+    .page-break {
+        page-break-after: always;
+    }
+}
+
+/* ==================== تحسينات إضافية ==================== */
+
+/* تحسين أداء السكرول */
+* {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+}
+
+/* تحسين الأزرار للمس */
+button, .btn, .action-btn {
+    touch-action: manipulation;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+/* تحسين النصوص للقراءة على الشاشات الصغيرة */
+@media screen and (max-width: 768px) {
+    body {
+        font-size: 14px;
+        line-height: 1.6;
+    }
+    
+    h1 { font-size: 1.75rem; }
+    h2 { font-size: 1.5rem; }
+    h3 { font-size: 1.25rem; }
+    h4 { font-size: 1.1rem; }
+    h5 { font-size: 1rem; }
+    h6 { font-size: 0.95rem; }
+}
+
+/* تحسين الصور */
+img {
+    max-width: 100%;
+    height: auto;
+}
+
+/* تحسين الفيديو */
+video {
+    max-width: 100%;
+    height: auto;
+}
+
+/* إخفاء عناصر غير ضرورية على الجوال */
+@media screen and (max-width: 768px) {
+    .hide-on-mobile {
+        display: none !important;
+    }
+    
+    .show-on-mobile {
+        display: block !important;
+    }
+}
+
+/* إظهار عناصر فقط على الجوال */
+@media screen and (min-width: 769px) {
+    .show-on-mobile {
+        display: none !important;
+    }
+}
+
+/* ==================== تحسينات الأداء ==================== */
+
+/* تفعيل تسريع الأجهزة */
+.sidebar,
+.modal,
+.dropdown-menu {
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+    will-change: transform;
+}
+
+/* تحسين الانتقالات */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* ==================== حالات خاصة ==================== */
+
+/* iPhone X والأحدث (مع النوتش) */
+@supports (padding: max(0px)) {
+    .header,
+    .sidebar,
+    .main-content {
+        padding-top: max(var(--mobile-padding), env(safe-area-inset-top));
+        padding-bottom: max(var(--mobile-padding), env(safe-area-inset-bottom));
+        padding-left: max(var(--mobile-padding), env(safe-area-inset-left));
+        padding-right: max(var(--mobile-padding), env(safe-area-inset-right));
+    }
+}
+
+/* وضع الشاشة الأفقية على الجوال */
+@media screen and (max-width: 768px) and (orientation: landscape) {
+    .modal-content {
+        max-height: 80vh;
+    }
+    
+    .pos-products {
+        max-height: 300px;
+    }
+    
+    .sidebar {
+        width: 200px;
+    }
+}
+
+/* ==================== إضافات للشريط الجانبي على الجوال ==================== */
+@media screen and (max-width: 768px) {
+    .nav-item {
+        padding: 0.75rem 1rem;
+    }
+    
+    .nav-item i {
+        margin-left: 0.75rem;
+    }
+    
+    .nav-dropdown {
+        padding-right: 1.5rem;
+    }
+    
+    .nav-dropdown-item {
+        padding: 0.5rem 1rem 0.5rem 2.5rem;
+    }
+}
+
+/* ==================== تحسينات خاصة بـ Android ==================== */
+@media screen and (max-width: 768px) {
+    /* تحسين الأداء على Android */
+    * {
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+    
+    /* إصلاح مشكلة الكيبورد */
+    .modal.active {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        overflow-y: auto;
+    }
+}
+
+/* ==================== حالات التحميل والإشعارات ==================== */
+@media screen and (max-width: 768px) {
+    .notification {
+        left: 50%;
+        transform: translateX(-50%);
+        width: 90%;
+        max-width: 400px;
+        bottom: 70px; /* فوق شريط التنقل إن وجد */
+    }
+    
+    .loading-overlay {
+        z-index: 9999;
+    }
+}
+
+/* ==================== تحسينات الوصول - Accessibility ==================== */
+@media screen and (max-width: 768px) {
+    /* زيادة حجم الأزرار للضغط السهل */
+    button,
+    .btn,
+    .action-btn,
+    .nav-item {
+        min-height: 44px; /* معيار Apple للمس */
+        min-width: 44px;
+    }
+    
+    /* تحسين التباين */
+    :focus {
+        outline: 2px solid var(--primary-color);
+        outline-offset: 2px;
+    }
+}
+
+/* ==================== نهاية الملف ==================== */

@@ -227,6 +227,12 @@ async function loadExpenses() {
                 <td>${expense.description || '-'}</td>
                 <td>${expense.createdBy || '-'}</td>
                 <td>
+                    <button class="action-btn view-btn" onclick="viewExpenseDetails(${expense.id})" title="عرض التفاصيل">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button class="action-btn edit-btn" onclick="editExpense(${expense.id})" title="تعديل">
+                        <i class="fas fa-edit"></i>
+                    </button>
                     <button class="action-btn delete-btn" onclick="deleteExpense(${expense.id})" title="حذف">
                         <i class="fas fa-trash"></i>
                     </button>
@@ -1033,12 +1039,34 @@ async function saveManualDebt() {
             localStorage.setItem('debts', JSON.stringify(debts));
         }
         
-        // إعادة تحميل البيانات
-        if (typeof loadDebts === 'function') {
-            loadDebts();
+        // إضافة الدين إلى مصفوفة debtsData في الذاكرة
+        if (typeof debtsData !== 'undefined' && Array.isArray(debtsData)) {
+            debtsData.push(debt);
         }
+        
+        // تحديث جدول الديون فوراً
+        if (typeof renderDebtsTable === 'function') {
+            renderDebtsTable();
+        }
+        
+        // تحديث الإحصائيات
         if (typeof updateDebtsStats === 'function') {
             updateDebtsStats();
+        }
+        
+        // إعادة تحميل البيانات من قاعدة البيانات
+        if (window.electronAPI && window.electronAPI.getAllData) {
+            try {
+                const allDebts = await window.electronAPI.getAllData('debts');
+                if (allDebts) {
+                    debtsData = allDebts;
+                    if (typeof renderDebtsTable === 'function') {
+                        renderDebtsTable();
+                    }
+                }
+            } catch (e) {
+                console.log('تم تحديث الجدول من الذاكرة');
+            }
         }
         
         // إغلاق النافذة
@@ -1057,6 +1085,235 @@ async function saveManualDebt() {
             alert('حدث خطأ أثناء حفظ الدين');
         }
     }
+}
+
+// ==================== دوال عرض وتعديل المصاريف ====================
+
+/**
+ * عرض تفاصيل مصروف
+ */
+function viewExpenseDetails(expenseId) {
+    const expense = expensesData.find(e => e.id === expenseId);
+    if (!expense) {
+        showNotification('لم يتم العثور على المصروف', 'error');
+        return;
+    }
+    
+    // إنشاء محتوى التفاصيل
+    const details = `
+        <div style="padding: 1rem;">
+            <div style="display: grid; gap: 1rem;">
+                <div style="border-bottom: 2px solid var(--border-color); padding-bottom: 1rem;">
+                    <h4 style="color: var(--primary-color); margin-bottom: 0.5rem;">
+                        <i class="fas fa-info-circle"></i> معلومات المصروف
+                    </h4>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
+                    <div>
+                        <div style="color: var(--theme-text-tertiary); font-size: 0.9rem;">نوع المصروف</div>
+                        <div style="margin-top: 0.5rem;">
+                            <span class="expense-type-badge expense-type-${expense.type}">
+                                ${getExpenseTypeLabel(expense.type)}
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <div style="color: var(--theme-text-tertiary); font-size: 0.9rem;">المبلغ</div>
+                        <div style="margin-top: 0.5rem; font-size: 1.5rem; font-weight: bold; color: var(--danger-color);">
+                            ${expense.amount.toLocaleString()} دينار
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <div style="color: var(--theme-text-tertiary); font-size: 0.9rem;">التاريخ</div>
+                        <div style="margin-top: 0.5rem; font-weight: 500;">
+                            ${new Date(expense.date).toLocaleDateString('ar-IQ', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <div style="color: var(--theme-text-tertiary); font-size: 0.9rem;">المستخدم</div>
+                        <div style="margin-top: 0.5rem; font-weight: 500;">
+                            <i class="fas fa-user"></i> ${expense.createdBy || 'غير محدد'}
+                        </div>
+                    </div>
+                </div>
+                
+                ${expense.description ? `
+                <div style="margin-top: 1rem; padding: 1rem; background: var(--theme-bg-secondary); border-radius: 8px;">
+                    <div style="color: var(--theme-text-tertiary); font-size: 0.9rem; margin-bottom: 0.5rem;">الوصف</div>
+                    <div style="white-space: pre-wrap;">${expense.description}</div>
+                </div>
+                ` : ''}
+                
+                <div style="margin-top: 1rem; padding: 0.5rem; background: rgba(99, 102, 241, 0.1); border-radius: 8px; font-size: 0.85rem; color: var(--theme-text-tertiary);">
+                    <i class="fas fa-clock"></i> تم الإنشاء: ${new Date(expense.createdAt).toLocaleString('ar-IQ')}
+                </div>
+            </div>
+            
+            <div style="margin-top: 1.5rem; display: flex; gap: 1rem; justify-content: flex-end;">
+                <button class="btn btn-secondary" onclick="closeExpenseDetailsModal()">إغلاق</button>
+                <button class="btn btn-primary" onclick="closeExpenseDetailsModal(); editExpense(${expense.id});">
+                    <i class="fas fa-edit"></i> تعديل
+                </button>
+            </div>
+        </div>
+    `;
+    
+    // إنشاء نافذة منبثقة أو استخدام موجودة
+    let modal = document.getElementById('viewExpenseDetailsModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'viewExpenseDetailsModal';
+        modal.className = 'modal';
+        modal.innerHTML = `
+            <div class="modal-content" style="max-width: 600px;">
+                <div class="modal-header">
+                    <h3 class="modal-title"><i class="fas fa-receipt"></i> تفاصيل المصروف</h3>
+                    <button class="close-btn" onclick="closeExpenseDetailsModal()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body" id="expenseDetailsContent"></div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    }
+    
+    document.getElementById('expenseDetailsContent').innerHTML = details;
+    modal.style.display = 'flex';
+}
+
+/**
+ * إغلاق نافذة تفاصيل المصروف
+ */
+function closeExpenseDetailsModal() {
+    const modal = document.getElementById('viewExpenseDetailsModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+/**
+ * تعديل مصروف
+ */
+function editExpense(expenseId) {
+    const expense = expensesData.find(e => e.id === expenseId);
+    if (!expense) {
+        showNotification('لم يتم العثور على المصروف', 'error');
+        return;
+    }
+    
+    // ملء النموذج بالبيانات الحالية
+    document.getElementById('expenseType').value = expense.type;
+    document.getElementById('expenseAmount').value = expense.amount;
+    document.getElementById('expenseDescription').value = expense.description || '';
+    document.getElementById('expenseDate').value = expense.date;
+    
+    // تغيير زر الحفظ إلى تحديث
+    const modal = document.getElementById('addExpenseModal');
+    const modalTitle = modal.querySelector('.modal-title');
+    const saveBtn = modal.querySelector('.btn-primary');
+    
+    modalTitle.innerHTML = '<i class="fas fa-edit"></i> تعديل مصروف';
+    saveBtn.innerHTML = '<i class="fas fa-save"></i> تحديث المصروف';
+    saveBtn.onclick = function() { updateExpense(expenseId); };
+    
+    // فتح النافذة
+    modal.style.display = 'flex';
+}
+
+/**
+ * تحديث مصروف
+ */
+async function updateExpense(expenseId) {
+    const type = document.getElementById('expenseType').value;
+    const amount = parseFloat(document.getElementById('expenseAmount').value);
+    const description = document.getElementById('expenseDescription').value;
+    const date = document.getElementById('expenseDate').value;
+    
+    // التحقق من البيانات
+    if (!type || !amount || !date) {
+        showNotification('يرجى ملء جميع الحقول المطلوبة', 'error');
+        return;
+    }
+    
+    if (amount <= 0) {
+        showNotification('المبلغ يجب أن يكون أكبر من صفر', 'error');
+        return;
+    }
+    
+    // العثور على المصروف
+    const expenseIndex = expensesData.findIndex(e => e.id === expenseId);
+    if (expenseIndex === -1) {
+        showNotification('لم يتم العثور على المصروف', 'error');
+        return;
+    }
+    
+    // تحديث البيانات
+    const updatedExpense = {
+        ...expensesData[expenseIndex],
+        type: type,
+        amount: amount,
+        description: description,
+        date: date,
+        updatedAt: new Date().toISOString(),
+        updatedBy: window.currentUser?.username || 'Admin'
+    };
+    
+    try {
+        // تحديث في قاعدة البيانات
+        if (window.electronAPI && window.electronAPI.updateData) {
+            await window.electronAPI.updateData('expenses', expenseId, updatedExpense);
+        } else {
+            // استخدام localStorage كبديل
+            const expenses = JSON.parse(localStorage.getItem('expenses') || '[]');
+            const index = expenses.findIndex(e => e.id === expenseId);
+            if (index !== -1) {
+                expenses[index] = updatedExpense;
+                localStorage.setItem('expenses', JSON.stringify(expenses));
+            }
+        }
+        
+        // تحديث في المصفوفة المحلية
+        expensesData[expenseIndex] = updatedExpense;
+        
+        // إعادة تحميل البيانات
+        loadExpenses();
+        updateExpensesStats();
+        
+        // إعادة تعيين النموذج
+        resetExpenseForm();
+        
+        // إغلاق النافذة
+        closeAddExpenseModal();
+        
+        showNotification('تم تحديث المصروف بنجاح', 'success');
+    } catch (error) {
+        console.error('خطأ في تحديث المصروف:', error);
+        showNotification('حدث خطأ أثناء تحديث المصروف', 'error');
+    }
+}
+
+/**
+ * إعادة تعيين نموذج المصروف
+ */
+function resetExpenseForm() {
+    const modal = document.getElementById('addExpenseModal');
+    const modalTitle = modal.querySelector('.modal-title');
+    const saveBtn = modal.querySelector('.btn-primary');
+    
+    modalTitle.innerHTML = '<i class="fas fa-plus"></i> إضافة مصروف جديد';
+    saveBtn.innerHTML = '<i class="fas fa-save"></i> حفظ المصروف';
+    saveBtn.onclick = saveExpense;
+    
+    // تفريغ الحقول
+    document.getElementById('expenseType').value = '';
+    document.getElementById('expenseAmount').value = '';
+    document.getElementById('expenseDescription').value = '';
+    document.getElementById('expenseDate').valueAsDate = new Date();
 }
 
 console.log('💰 تم تحميل نظام إدارة المصاريف - شركة الإبداع الرقمي');

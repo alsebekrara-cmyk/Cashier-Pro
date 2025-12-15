@@ -1,0 +1,391 @@
+/**
+ * ===============================================
+ * التصميم المتجاوب - نظام نقطة البيع
+ * شركة الإبداع الرقمي - كرار الشعبري
+ * ===============================================
+ */
+
+/* ==========================================
+   إعدادات عامة للجوال
+   ========================================== */
+
+/* تثبيت ارتفاع الشاشة على iOS */
+:root {
+    --vh: 1vh;
+}
+
+html {
+    -webkit-text-size-adjust: 100%;
+    -webkit-font-smoothing: antialiased;
+}
+
+body {
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    position: relative;
+    width: 100%;
+    min-height: 100vh;
+}
+
+/* منع التمرير عند فتح الشريط الجانبي */
+body.sidebar-open {
+    overflow: hidden !important;
+    position: fixed !important;
+    width: 100% !important;
+    height: 100vh !important;
+}
+
+.main-content {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    min-height: calc(100vh - 60px);
+}
+
+/* ==========================================
+   الشريط الجانبي - إعدادات افتراضية
+   ========================================== */
+
+#sidebar {
+    position: fixed;
+    top: 0;
+    right: -100%; /* مخفي خارج الشاشة */
+    width: 280px;
+    height: 100vh;
+    background: linear-gradient(180deg, #1a1f35 0%, #2d3748 100%);
+    box-shadow: -4px 0 15px rgba(0, 0, 0, 0.3);
+    z-index: 9999;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    will-change: transform;
+}
+
+/* الشريط الجانبي عند الفتح */
+#sidebar.active {
+    right: 0 !important;
+}
+
+/* Overlay للشريط الجانبي */
+.sidebar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 9998;
+    display: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.sidebar-overlay.active {
+    display: block;
+    opacity: 1;
+}
+
+/* ==========================================
+   زر فتح القائمة
+   ========================================== */
+
+.sidebar-toggle-btn {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    z-index: 10000;
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    display: none; /* مخفي على الديسكتوب */
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.sidebar-toggle-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+}
+
+.sidebar-toggle-btn:active {
+    transform: scale(0.95);
+}
+
+/* ==========================================
+   التصميم المتجاوب للجوال
+   ========================================== */
+
+@media (max-width: 768px) {
+    /* إظهار زر القائمة */
+    .sidebar-toggle-btn {
+        display: flex !important;
+    }
+    
+    /* الشريط الجانبي على الجوال */
+    #sidebar {
+        width: 80%;
+        max-width: 320px;
+        right: -100%; /* مخفي بشكل افتراضي */
+    }
+    
+    #sidebar.active {
+        right: 0 !important;
+    }
+    
+    /* المحتوى الرئيسي */
+    .main-content {
+        width: 100%;
+        margin-right: 0;
+        padding: 60px 15px 20px;
+    }
+    
+    /* تحسين التمرير */
+    .main-content,
+    .page-content,
+    .content-wrapper {
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        height: auto !important;
+        min-height: calc(100vh - 60px) !important;
+    }
+    
+    /* صفحة البيع */
+    #salePage,
+    .sale-page {
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+    
+    .sale-products-list,
+    #saleProducts,
+    .products-grid {
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        max-height: calc(100vh - 200px) !important;
+        padding: 10px;
+    }
+    
+    /* البطاقات */
+    .card,
+    .stats-card,
+    .product-card {
+        margin-bottom: 15px;
+    }
+    
+    /* الجداول */
+    .table-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    table {
+        font-size: 13px;
+    }
+    
+    /* الأزرار */
+    .btn {
+        padding: 10px 15px;
+        font-size: 14px;
+    }
+    
+    /* النماذج */
+    .form-control {
+        font-size: 16px; /* منع التكبير في iOS */
+    }
+    
+    /* الرأس */
+    .page-header h2 {
+        font-size: 20px;
+    }
+}
+
+/* ==========================================
+   تحسينات إضافية للجوال الصغير
+   ========================================== */
+
+@media (max-width: 480px) {
+    #sidebar {
+        width: 85%;
+    }
+    
+    .sidebar-toggle-btn {
+        width: 40px;
+        height: 40px;
+        font-size: 18px;
+    }
+    
+    .main-content {
+        padding: 55px 10px 15px;
+    }
+    
+    h2 {
+        font-size: 18px;
+    }
+    
+    .btn {
+        padding: 8px 12px;
+        font-size: 13px;
+    }
+}
+
+/* ==========================================
+   تحسينات للأجهزة اللوحية
+   ========================================== */
+
+@media (min-width: 769px) and (max-width: 1024px) {
+    #sidebar {
+        width: 250px;
+        right: 0; /* ظاهر على التابلت */
+    }
+    
+    .main-content {
+        margin-right: 250px;
+    }
+    
+    .sidebar-toggle-btn {
+        display: none !important;
+    }
+    
+    .sidebar-overlay {
+        display: none !important;
+    }
+}
+
+/* ==========================================
+   الديسكتوب
+   ========================================== */
+
+@media (min-width: 1025px) {
+    #sidebar {
+        right: 0 !important; /* ظاهر دائماً */
+        width: 280px;
+    }
+    
+    .main-content {
+        margin-right: 280px;
+    }
+    
+    .sidebar-toggle-btn {
+        display: none !important;
+    }
+    
+    .sidebar-overlay {
+        display: none !important;
+    }
+    
+    body.sidebar-open {
+        overflow: auto !important;
+        position: relative !important;
+    }
+}
+
+/* ==========================================
+   إصلاحات خاصة بـ iOS
+   ========================================== */
+
+@supports (-webkit-touch-callout: none) {
+    /* Safari على iOS */
+    body {
+        height: 100vh;
+        height: calc(var(--vh, 1vh) * 100);
+    }
+    
+    .main-content {
+        min-height: calc(var(--vh, 1vh) * 100 - 60px);
+    }
+    
+    input,
+    textarea,
+    select {
+        font-size: 16px !important; /* منع التكبير التلقائي */
+    }
+}
+
+/* ==========================================
+   تحسينات الأداء
+   ========================================== */
+
+#sidebar,
+.sidebar-overlay {
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+}
+
+/* ==========================================
+   الأنيميشن السلس
+   ========================================== */
+
+@keyframes slideInFromRight {
+    from {
+        right: -100%;
+        opacity: 0;
+    }
+    to {
+        right: 0;
+        opacity: 1;
+    }
+}
+
+@keyframes slideOutToRight {
+    from {
+        right: 0;
+        opacity: 1;
+    }
+    to {
+        right: -100%;
+        opacity: 0;
+    }
+}
+
+#sidebar.active {
+    animation: slideInFromRight 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ==========================================
+   إصلاحات النماذج المنبثقة
+   ========================================== */
+
+.modal {
+    z-index: 10001 !important;
+}
+
+.modal-content {
+    max-height: 90vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 768px) {
+    .modal-content {
+        width: 95%;
+        margin: 5% auto;
+    }
+}
+
+/* ==========================================
+   تحسينات للطباعة
+   ========================================== */
+
+@media print {
+    #sidebar,
+    .sidebar-toggle-btn,
+    .sidebar-overlay {
+        display: none !important;
+    }
+    
+    .main-content {
+        margin-right: 0 !important;
+        width: 100% !important;
+    }
+}

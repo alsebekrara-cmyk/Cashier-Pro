@@ -132,7 +132,14 @@ async function saveExpense() {
     
     try {
         // حفظ في قاعدة البيانات
-        await window.electronAPI.insertData('expenses', expense);
+        if (window.electronAPI && window.electronAPI.insertData) {
+            await window.electronAPI.insertData('expenses', expense);
+        } else {
+            // استخدام localStorage كبديل
+            const expenses = JSON.parse(localStorage.getItem('expenses') || '[]');
+            expenses.push(expense);
+            localStorage.setItem('expenses', JSON.stringify(expenses));
+        }
         
         // إضافة إلى المصفوفة المحلية
         expensesData.push(expense);
@@ -160,7 +167,15 @@ async function deleteExpense(expenseId) {
     }
     
     try {
-        await window.electronAPI.deleteData('expenses', expenseId);
+        if (window.electronAPI && window.electronAPI.deleteData) {
+            await window.electronAPI.deleteData('expenses', expenseId);
+        } else {
+            // استخدام localStorage كبديل
+            const expenses = JSON.parse(localStorage.getItem('expenses') || '[]');
+            const filtered = expenses.filter(e => e.id !== expenseId);
+            localStorage.setItem('expenses', JSON.stringify(filtered));
+        }
+        
         expensesData = expensesData.filter(e => e.id !== expenseId);
         loadExpenses();
         updateExpensesStats();
@@ -176,10 +191,18 @@ async function deleteExpense(expenseId) {
  */
 async function loadExpenses() {
     try {
-        const expenses = await window.electronAPI.getAllData('expenses');
+        let expenses = [];
+        if (window.electronAPI && window.electronAPI.getAllData) {
+            expenses = await window.electronAPI.getAllData('expenses');
+        } else {
+            // استخدام localStorage كبديل
+            expenses = JSON.parse(localStorage.getItem('expenses') || '[]');
+        }
         expensesData = expenses || [];
         
         const tbody = document.getElementById('generalExpensesTableBody');
+        if (!tbody) return;
+        
         tbody.innerHTML = '';
         
         if (expensesData.length === 0) {
@@ -369,7 +392,14 @@ async function savePurchase() {
     
     try {
         // حفظ في قاعدة البيانات
-        await window.electronAPI.insertData('purchases', purchase);
+        if (window.electronAPI && window.electronAPI.insertData) {
+            await window.electronAPI.insertData('purchases', purchase);
+        } else {
+            // استخدام localStorage كبديل
+            const purchases = JSON.parse(localStorage.getItem('purchases') || '[]');
+            purchases.push(purchase);
+            localStorage.setItem('purchases', JSON.stringify(purchases));
+        }
         
         // إضافة إلى المصفوفة المحلية
         purchasesData.push(purchase);
@@ -397,7 +427,15 @@ async function deletePurchase(purchaseId) {
     }
     
     try {
-        await window.electronAPI.deleteData('purchases', purchaseId);
+        if (window.electronAPI && window.electronAPI.deleteData) {
+            await window.electronAPI.deleteData('purchases', purchaseId);
+        } else {
+            // استخدام localStorage كبديل
+            const purchases = JSON.parse(localStorage.getItem('purchases') || '[]');
+            const filtered = purchases.filter(p => p.id !== purchaseId);
+            localStorage.setItem('purchases', JSON.stringify(filtered));
+        }
+        
         purchasesData = purchasesData.filter(p => p.id !== purchaseId);
         loadPurchases();
         updateExpensesStats();
@@ -485,10 +523,18 @@ function viewPurchaseDetails(purchaseId) {
  */
 async function loadPurchases() {
     try {
-        const purchases = await window.electronAPI.getAllData('purchases');
+        let purchases = [];
+        if (window.electronAPI && window.electronAPI.getAllData) {
+            purchases = await window.electronAPI.getAllData('purchases');
+        } else {
+            // استخدام localStorage كبديل
+            purchases = JSON.parse(localStorage.getItem('purchases') || '[]');
+        }
         purchasesData = purchases || [];
         
         const tbody = document.getElementById('purchasesTableBody');
+        if (!tbody) return;
+        
         tbody.innerHTML = '';
         
         if (purchasesData.length === 0) {
@@ -533,8 +579,17 @@ async function loadPurchases() {
 async function updateExpensesStats() {
     try {
         // جلب البيانات
-        const expenses = await window.electronAPI.getAllData('expenses') || [];
-        const purchases = await window.electronAPI.getAllData('purchases') || [];
+        let expenses = [];
+        let purchases = [];
+        
+        if (window.electronAPI && window.electronAPI.getAllData) {
+            expenses = await window.electronAPI.getAllData('expenses') || [];
+            purchases = await window.electronAPI.getAllData('purchases') || [];
+        } else {
+            // استخدام localStorage كبديل
+            expenses = JSON.parse(localStorage.getItem('expenses') || '[]');
+            purchases = JSON.parse(localStorage.getItem('purchases') || '[]');
+        }
         
         // حساب المجاميع
         const totalExpenses = expenses.reduce((sum, exp) => sum + exp.amount, 0);
@@ -551,10 +606,15 @@ async function updateExpensesStats() {
             .reduce((sum, exp) => sum + exp.amount, 0);
         
         // تحديث العناصر
-        document.getElementById('totalExpensesAmount').textContent = totalExpenses.toLocaleString() + ' دينار';
-        document.getElementById('totalPurchasesAmount').textContent = totalPurchases.toLocaleString() + ' دينار';
-        document.getElementById('monthlyExpensesAmount').textContent = monthlyExpenses.toLocaleString() + ' دينار';
-        document.getElementById('totalExpensesCount').textContent = (expenses.length + purchases.length).toLocaleString();
+        const totalExpensesEl = document.getElementById('totalExpensesAmount');
+        const totalPurchasesEl = document.getElementById('totalPurchasesAmount');
+        const monthlyExpensesEl = document.getElementById('monthlyExpensesAmount');
+        const totalCountEl = document.getElementById('totalExpensesCount');
+        
+        if (totalExpensesEl) totalExpensesEl.textContent = totalExpenses.toLocaleString() + ' دينار';
+        if (totalPurchasesEl) totalPurchasesEl.textContent = totalPurchases.toLocaleString() + ' دينار';
+        if (monthlyExpensesEl) monthlyExpensesEl.textContent = monthlyExpenses.toLocaleString() + ' دينار';
+        if (totalCountEl) totalCountEl.textContent = (expenses.length + purchases.length).toLocaleString();
     } catch (error) {
         console.error('خطأ في تحديث إحصائيات المصاريف:', error);
     }
@@ -597,13 +657,24 @@ async function updateExpensesReports() {
     }
     
     // عرض/إخفاء حقول التاريخ المخصص
-    document.getElementById('customDateRangeGroup').style.display = 
-        period === 'custom' ? 'flex' : 'none';
+    const customDateRangeEl = document.getElementById('customDateRangeGroup');
+    if (customDateRangeEl) {
+        customDateRangeEl.style.display = period === 'custom' ? 'flex' : 'none';
+    }
     
     try {
         // جلب البيانات المفلترة
-        const expenses = await window.electronAPI.getAllData('expenses') || [];
-        const purchases = await window.electronAPI.getAllData('purchases') || [];
+        let expenses = [];
+        let purchases = [];
+        
+        if (window.electronAPI && window.electronAPI.getAllData) {
+            expenses = await window.electronAPI.getAllData('expenses') || [];
+            purchases = await window.electronAPI.getAllData('purchases') || [];
+        } else {
+            // استخدام localStorage كبديل
+            expenses = JSON.parse(localStorage.getItem('expenses') || '[]');
+            purchases = JSON.parse(localStorage.getItem('purchases') || '[]');
+        }
         
         const filteredExpenses = expenses.filter(exp => {
             const expDate = new Date(exp.date);
@@ -629,10 +700,15 @@ async function updateExpensesReports() {
             .reduce((sum, exp) => sum + exp.amount, 0);
         
         // تحديث الإحصائيات
-        document.getElementById('reportTotalExpenses').textContent = totalExpenses.toLocaleString() + ' دينار';
-        document.getElementById('reportTotalPurchases').textContent = totalPurchases.toLocaleString() + ' دينار';
-        document.getElementById('reportRentExpenses').textContent = rentExpenses.toLocaleString() + ' دينار';
-        document.getElementById('reportUtilitiesExpenses').textContent = utilitiesExpenses.toLocaleString() + ' دينار';
+        const reportTotalExpensesEl = document.getElementById('reportTotalExpenses');
+        const reportTotalPurchasesEl = document.getElementById('reportTotalPurchases');
+        const reportRentExpensesEl = document.getElementById('reportRentExpenses');
+        const reportUtilitiesExpensesEl = document.getElementById('reportUtilitiesExpenses');
+        
+        if (reportTotalExpensesEl) reportTotalExpensesEl.textContent = totalExpenses.toLocaleString() + ' دينار';
+        if (reportTotalPurchasesEl) reportTotalPurchasesEl.textContent = totalPurchases.toLocaleString() + ' دينار';
+        if (reportRentExpensesEl) reportRentExpensesEl.textContent = rentExpenses.toLocaleString() + ' دينار';
+        if (reportUtilitiesExpensesEl) reportUtilitiesExpensesEl.textContent = utilitiesExpenses.toLocaleString() + ' دينار';
         
         // تحديث جدول المصاريف حسب النوع
         updateExpensesByTypeTable(filteredExpenses);
@@ -790,6 +866,197 @@ if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initExpensesPage);
 } else {
     initExpensesPage();
+}
+
+// ==================== دوال إدارة الدين اليدوي ====================
+
+/**
+ * فتح نافذة إضافة دين يدوياً
+ */
+function showAddManualDebtModal() {
+    const modal = document.getElementById('addManualDebtModal');
+    if (!modal) {
+        console.error('نافذة إضافة الدين غير موجودة');
+        return;
+    }
+    modal.style.display = 'flex';
+    
+    // تعيين التاريخ الحالي
+    document.getElementById('manualDebtDate').valueAsDate = new Date();
+    
+    // تفريغ الحقول
+    document.getElementById('manualDebtCustomerName').value = '';
+    document.getElementById('manualDebtCustomerPhone').value = '';
+    document.getElementById('manualDebtCustomerAddress').value = '';
+    document.getElementById('manualDebtTotalAmount').value = '';
+    document.getElementById('manualDebtDownPayment').value = '0';
+    document.getElementById('manualDebtMonths').value = '';
+    document.getElementById('manualDebtAdditionalAmount').value = '0';
+    document.getElementById('manualDebtNotes').value = '';
+    
+    // إعادة تعيين الملخص
+    document.getElementById('manualDebtRemainingAmount').textContent = '0 دينار';
+    document.getElementById('manualDebtMonthlyAmount').textContent = '0 دينار';
+    document.getElementById('manualDebtFinalTotal').textContent = '0 دينار';
+}
+
+/**
+ * إغلاق نافذة إضافة دين يدوياً
+ */
+function closeAddManualDebtModal() {
+    const modal = document.getElementById('addManualDebtModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+/**
+ * حساب الأقساط للدين اليدوي
+ */
+function calculateManualDebtInstallments() {
+    const totalAmount = parseFloat(document.getElementById('manualDebtTotalAmount').value) || 0;
+    const downPayment = parseFloat(document.getElementById('manualDebtDownPayment').value) || 0;
+    const months = parseInt(document.getElementById('manualDebtMonths').value) || 0;
+    const additionalAmount = parseFloat(document.getElementById('manualDebtAdditionalAmount').value) || 0;
+    
+    // حساب المبلغ المتبقي
+    const remainingAmount = totalAmount - downPayment + additionalAmount;
+    
+    // حساب القسط الشهري
+    const monthlyAmount = months > 0 ? Math.ceil(remainingAmount / months) : 0;
+    
+    // حساب المجموع النهائي
+    const finalTotal = totalAmount + additionalAmount;
+    
+    // تحديث العرض
+    document.getElementById('manualDebtRemainingAmount').textContent = remainingAmount.toLocaleString() + ' دينار';
+    document.getElementById('manualDebtMonthlyAmount').textContent = monthlyAmount.toLocaleString() + ' دينار';
+    document.getElementById('manualDebtFinalTotal').textContent = finalTotal.toLocaleString() + ' دينار';
+}
+
+/**
+ * حفظ دين يدوياً
+ */
+async function saveManualDebt() {
+    // جمع البيانات من النموذج
+    const customerName = document.getElementById('manualDebtCustomerName').value;
+    const customerPhone = document.getElementById('manualDebtCustomerPhone').value;
+    const customerAddress = document.getElementById('manualDebtCustomerAddress').value;
+    const date = document.getElementById('manualDebtDate').value;
+    const totalAmount = parseFloat(document.getElementById('manualDebtTotalAmount').value);
+    const downPayment = parseFloat(document.getElementById('manualDebtDownPayment').value) || 0;
+    const months = parseInt(document.getElementById('manualDebtMonths').value);
+    const additionalAmount = parseFloat(document.getElementById('manualDebtAdditionalAmount').value) || 0;
+    const notes = document.getElementById('manualDebtNotes').value;
+    
+    // التحقق من البيانات
+    if (!customerName || !customerPhone || !date || !totalAmount || !months) {
+        if (typeof showNotification === 'function') {
+            showNotification('يرجى ملء جميع الحقول المطلوبة', 'error');
+        } else {
+            alert('يرجى ملء جميع الحقول المطلوبة');
+        }
+        return;
+    }
+    
+    if (totalAmount <= 0 || months <= 0) {
+        if (typeof showNotification === 'function') {
+            showNotification('المبلغ وعدد الأشهر يجب أن يكون أكبر من صفر', 'error');
+        } else {
+            alert('المبلغ وعدد الأشهر يجب أن يكون أكبر من صفر');
+        }
+        return;
+    }
+    
+    if (downPayment >= totalAmount) {
+        if (typeof showNotification === 'function') {
+            showNotification('الدفعة المقدمة لا يمكن أن تكون أكبر من أو تساوي المبلغ الإجمالي', 'error');
+        } else {
+            alert('الدفعة المقدمة لا يمكن أن تكون أكبر من أو تساوي المبلغ الإجمالي');
+        }
+        return;
+    }
+    
+    // حساب القيم
+    const remainingAmount = totalAmount - downPayment + additionalAmount;
+    const monthlyAmount = Math.ceil(remainingAmount / months);
+    const finalTotal = totalAmount + additionalAmount;
+    
+    // إنشاء جدول الأقساط
+    const installments = [];
+    const startDate = new Date(date);
+    
+    for (let i = 1; i <= months; i++) {
+        const dueDate = new Date(startDate);
+        dueDate.setMonth(dueDate.getMonth() + i);
+        
+        installments.push({
+            month: i,
+            amount: monthlyAmount,
+            due_date: dueDate.toISOString().split('T')[0],
+            status: 'unpaid',
+            paid_date: null
+        });
+    }
+    
+    // إنشاء كائن الدين
+    const debt = {
+        id: Date.now(),
+        invoice_id: 'MANUAL-' + Date.now(),
+        customer_name: customerName,
+        customer_phone: customerPhone,
+        customer_address: customerAddress,
+        date: date,
+        total_amount: finalTotal,
+        down_payment: downPayment,
+        remaining_amount: remainingAmount,
+        monthly_amount: monthlyAmount,
+        installment_months: months,
+        additional_amount: additionalAmount,
+        notes: notes,
+        installments: installments,
+        items: [],  // فارغ لأنه دين يدوي
+        status: 'active',
+        created_at: new Date().toISOString(),
+        created_by: window.currentUser?.username || 'Admin',
+        is_manual: true  // علامة للتمييز عن ديون البيع
+    };
+    
+    try {
+        // حفظ في قاعدة البيانات
+        if (window.electronAPI && window.electronAPI.insertData) {
+            await window.electronAPI.insertData('debts', debt);
+        } else {
+            // استخدام localStorage كبديل
+            const debts = JSON.parse(localStorage.getItem('debts') || '[]');
+            debts.push(debt);
+            localStorage.setItem('debts', JSON.stringify(debts));
+        }
+        
+        // إعادة تحميل البيانات
+        if (typeof loadDebts === 'function') {
+            loadDebts();
+        }
+        if (typeof updateDebtsStats === 'function') {
+            updateDebtsStats();
+        }
+        
+        // إغلاق النافذة
+        closeAddManualDebtModal();
+        
+        if (typeof showNotification === 'function') {
+            showNotification('تم إضافة الدين بنجاح', 'success');
+        } else {
+            alert('تم إضافة الدين بنجاح');
+        }
+    } catch (error) {
+        console.error('خطأ في حفظ الدين:', error);
+        if (typeof showNotification === 'function') {
+            showNotification('حدث خطأ أثناء حفظ الدين', 'error');
+        } else {
+            alert('حدث خطأ أثناء حفظ الدين');
+        }
+    }
 }
 
 console.log('💰 تم تحميل نظام إدارة المصاريف - شركة الإبداع الرقمي');

@@ -6806,6 +6806,7 @@ console.log(`
            <input type="file" id="importDebtsFile" accept=".json,.xlsx,.csv" style="display: none;" onchange="importData('debts')"> 
            <button class="import-btn" onclick="document.getElementById('importDebtsFile').click()" data-permission="settings_restore" style="display: none;"> <i class="fas fa-upload"></i> استيراد </button>
        </div>
+       <button class="btn btn-primary" onclick="showAddManualDebtModal()" style="margin-right: 1rem;"> <i class="fas fa-plus"></i> إضافة دين جديد </button>
       </div>
       
       <div class="stats-grid" style="margin-bottom: 1.5rem;">
@@ -9771,6 +9772,91 @@ console.log(`
     </div>
     <div class="modal-body" id="purchaseDetailsContent">
      <!-- التفاصيل ستظهر هنا -->
+    </div>
+   </div>
+  </div>
+
+  <!-- 💳 نافذة منبثقة لإضافة دين يدوياً -->
+  <div id="addManualDebtModal" class="modal">
+   <div class="modal-content" style="max-width: 900px;">
+    <div class="modal-header">
+     <h3 class="modal-title"><i class="fas fa-user-plus"></i> إضافة دين جديد</h3>
+     <button class="close-btn" onclick="closeAddManualDebtModal()"> <i class="fas fa-times"></i> </button>
+    </div>
+    <div class="modal-body">
+     <!-- معلومات العميل -->
+     <div style="background: var(--theme-bg-secondary); padding: 1.5rem; border-radius: var(--border-radius); margin-bottom: 1.5rem;">
+      <h4 style="margin-bottom: 1rem; color: var(--primary-color);"><i class="fas fa-user"></i> معلومات العميل</h4>
+      <div class="form-row" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
+       <div class="form-group">
+        <label><i class="fas fa-user"></i> اسم العميل</label>
+        <input type="text" id="manualDebtCustomerName" class="form-control" placeholder="أدخل اسم العميل" required>
+       </div>
+       <div class="form-group">
+        <label><i class="fas fa-phone"></i> رقم الهاتف</label>
+        <input type="tel" id="manualDebtCustomerPhone" class="form-control" placeholder="07XX XXX XXXX" required>
+       </div>
+       <div class="form-group">
+        <label><i class="fas fa-map-marker-alt"></i> العنوان</label>
+        <input type="text" id="manualDebtCustomerAddress" class="form-control" placeholder="عنوان العميل">
+       </div>
+       <div class="form-group">
+        <label><i class="fas fa-calendar"></i> تاريخ الدين</label>
+        <input type="date" id="manualDebtDate" class="form-control" required>
+       </div>
+      </div>
+     </div>
+
+     <!-- تفاصيل الدين -->
+     <div style="background: var(--theme-bg-secondary); padding: 1.5rem; border-radius: var(--border-radius); margin-bottom: 1.5rem;">
+      <h4 style="margin-bottom: 1rem; color: var(--primary-color);"><i class="fas fa-money-bill-wave"></i> تفاصيل الدين</h4>
+      <div class="form-row" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
+       <div class="form-group">
+        <label><i class="fas fa-money-bill"></i> المبلغ الإجمالي (دينار)</label>
+        <input type="number" id="manualDebtTotalAmount" class="form-control" placeholder="المبلغ الإجمالي" min="0" onchange="calculateManualDebtInstallments()" required>
+       </div>
+       <div class="form-group">
+        <label><i class="fas fa-hand-holding-usd"></i> الدفعة المقدمة (دينار)</label>
+        <input type="number" id="manualDebtDownPayment" class="form-control" placeholder="0" min="0" value="0" onchange="calculateManualDebtInstallments()">
+       </div>
+       <div class="form-group">
+        <label><i class="fas fa-calendar-alt"></i> عدد الأشهر</label>
+        <input type="number" id="manualDebtMonths" class="form-control" placeholder="عدد الأشهر" min="1" max="60" onchange="calculateManualDebtInstallments()" required>
+       </div>
+       <div class="form-group">
+        <label><i class="fas fa-plus-circle"></i> مبلغ إضافي (اختياري)</label>
+        <input type="number" id="manualDebtAdditionalAmount" class="form-control" placeholder="0" min="0" value="0" onchange="calculateManualDebtInstallments()">
+       </div>
+      </div>
+      <div class="form-group">
+       <label><i class="fas fa-sticky-note"></i> ملاحظات (اختياري)</label>
+       <textarea id="manualDebtNotes" class="form-control" rows="2" placeholder="أي ملاحظات إضافية عن الدين"></textarea>
+      </div>
+     </div>
+
+     <!-- ملخص الحسابات -->
+     <div style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1)); padding: 1.5rem; border-radius: var(--border-radius); border: 2px solid rgba(99, 102, 241, 0.3);">
+      <h4 style="margin-bottom: 1rem; color: var(--primary-color);"><i class="fas fa-calculator"></i> ملخص الحسابات</h4>
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem;">
+       <div style="text-align: center;">
+        <div style="font-size: 0.9rem; color: var(--theme-text-tertiary); margin-bottom: 0.5rem;">المبلغ المتبقي</div>
+        <div id="manualDebtRemainingAmount" style="font-size: 1.5rem; font-weight: bold; color: var(--danger-color);">0 دينار</div>
+       </div>
+       <div style="text-align: center;">
+        <div style="font-size: 0.9rem; color: var(--theme-text-tertiary); margin-bottom: 0.5rem;">القسط الشهري</div>
+        <div id="manualDebtMonthlyAmount" style="font-size: 1.5rem; font-weight: bold; color: var(--primary-color);">0 دينار</div>
+       </div>
+       <div style="text-align: center;">
+        <div style="font-size: 0.9rem; color: var(--theme-text-tertiary); margin-bottom: 0.5rem;">المجموع النهائي</div>
+        <div id="manualDebtFinalTotal" style="font-size: 1.5rem; font-weight: bold; color: var(--success-color);">0 دينار</div>
+       </div>
+      </div>
+     </div>
+
+     <div class="modal-footer" style="margin-top: 1.5rem;">
+      <button class="btn btn-secondary" onclick="closeAddManualDebtModal()">إلغاء</button>
+      <button class="btn btn-primary" onclick="saveManualDebt()"><i class="fas fa-save"></i> حفظ الدين</button>
+     </div>
     </div>
    </div>
   </div>

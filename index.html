@@ -9395,6 +9395,16 @@ console.log(`
                 </div>
             </div>
             
+            <!-- تاريخ بداية الأقساط -->
+            <div class="form-group">
+                <label class="form-label">
+                    <i class="fas fa-calendar-alt"></i>
+                    تاريخ بداية الأقساط
+                </label>
+                <input type="date" class="form-input" id="installmentStartDate">
+                <small class="form-hint">حدد تاريخ بداية استحقاق الأقساط (اختياري)</small>
+            </div>
+            
             <!-- حقول التعديل المتقدم (مخفية افتراضياً) -->
             <div id="advancedEditFields" style="display: none; margin-top: 1rem;">
                 <div style="background: rgba(255, 193, 7, 0.1); padding: 1rem; border-radius: 8px; margin-bottom: 1rem; border-right: 4px solid var(--warning-color);">
@@ -10011,6 +10021,59 @@ console.log(`
       </div>
      </div>
 
+     <!-- قسم المنتجات -->
+     <div style="background: var(--theme-bg-secondary); padding: 1.5rem; border-radius: var(--border-radius); margin-bottom: 1.5rem;">
+      <h4 style="margin-bottom: 1rem; color: var(--primary-color);"><i class="fas fa-shopping-cart"></i> المنتجات</h4>
+      
+      <!-- البحث عن المنتجات -->
+      <div class="form-group">
+       <label><i class="fas fa-search"></i> البحث عن منتج</label>
+       <div style="position: relative;">
+        <input type="text" id="manualDebtProductSearch" class="form-control" placeholder="ابحث عن منتج..." oninput="searchProductsForDebt(this.value)">
+        <div id="manualDebtProductSearchResults" style="position: absolute; top: 100%; left: 0; right: 0; background: var(--theme-bg-primary); border: 1px solid var(--theme-border-color); border-radius: var(--border-radius); max-height: 200px; overflow-y: auto; z-index: 1000; display: none; margin-top: 5px;"></div>
+       </div>
+      </div>
+      
+      <!-- إضافة منتج يدوياً -->
+      <div class="form-row" style="display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 1rem; align-items: end; margin-bottom: 1rem;">
+       <div class="form-group" style="margin: 0;">
+        <label><i class="fas fa-box"></i> اسم المنتج</label>
+        <input type="text" id="manualDebtProductName" class="form-control" placeholder="اسم المنتج">
+       </div>
+       <div class="form-group" style="margin: 0;">
+        <label><i class="fas fa-tag"></i> السعر</label>
+        <input type="number" id="manualDebtProductPrice" class="form-control" placeholder="السعر" min="0">
+       </div>
+       <div class="form-group" style="margin: 0;">
+        <label><i class="fas fa-sort-numeric-up"></i> الكمية</label>
+        <input type="number" id="manualDebtProductQty" class="form-control" placeholder="الكمية" min="1" value="1">
+       </div>
+       <button type="button" class="btn btn-success" onclick="addManualDebtProduct()" style="padding: 0.75rem 1.5rem;">
+        <i class="fas fa-plus"></i>
+       </button>
+      </div>
+      
+      <!-- جدول المنتجات المضافة -->
+      <div id="manualDebtProductsContainer" style="display: none; margin-top: 1rem;">
+       <h5 style="margin-bottom: 0.75rem; color: var(--theme-text-secondary);"><i class="fas fa-list"></i> المنتجات المضافة</h5>
+       <div class="table-container" style="max-height: 300px; overflow-y: auto;">
+        <table class="table">
+         <thead>
+          <tr>
+           <th>المنتج</th>
+           <th>السعر</th>
+           <th>الكمية</th>
+           <th>الإجمالي</th>
+           <th>إجراءات</th>
+          </tr>
+         </thead>
+         <tbody id="manualDebtProductsTable">
+         </tbody>
+        </table>
+       </div>
+      </div>
+     </div>
+
      <!-- تفاصيل الدين -->
      <div style="background: var(--theme-bg-secondary); padding: 1.5rem; border-radius: var(--border-radius); margin-bottom: 1.5rem;">
       <h4 style="margin-bottom: 1rem; color: var(--primary-color);"><i class="fas fa-money-bill-wave"></i> تفاصيل الدين</h4>
@@ -10030,6 +10093,10 @@ console.log(`
        <div class="form-group">
         <label><i class="fas fa-plus-circle"></i> مبلغ إضافي (اختياري)</label>
         <input type="number" id="manualDebtAdditionalAmount" class="form-control" placeholder="0" min="0" value="0" onchange="calculateManualDebtInstallments()">
+       </div>
+       <div class="form-group">
+        <label><i class="fas fa-calendar"></i> تاريخ بداية الأقساط</label>
+        <input type="date" id="manualDebtStartDate" class="form-control">
        </div>
       </div>
       <div class="form-group">
@@ -10065,6 +10132,148 @@ console.log(`
    </div>
   </div>
 
+  <!-- نافذة تعديل دين موجود -->
+  <div id="editDebtModal" class="modal">
+   <div class="modal-content" style="max-width: 900px;">
+    <div class="modal-header">
+     <h3 class="modal-title"><i class="fas fa-edit"></i> تعديل دين العميل</h3>
+     <button class="close-btn" onclick="closeEditDebtModal()"> <i class="fas fa-times"></i> </button>
+    </div>
+    <div class="modal-body">
+     <!-- معلومات العميل -->
+     <div style="background: var(--theme-bg-secondary); padding: 1.5rem; border-radius: var(--border-radius); margin-bottom: 1.5rem;">
+      <h4 style="margin-bottom: 1rem; color: var(--primary-color);"><i class="fas fa-user"></i> معلومات العميل</h4>
+      <div class="form-row" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
+       <div class="form-group">
+        <label><i class="fas fa-user"></i> اسم العميل</label>
+        <input type="text" id="editDebtCustomerName" class="form-control" placeholder="أدخل اسم العميل" required>
+       </div>
+       <div class="form-group">
+        <label><i class="fas fa-phone"></i> رقم الهاتف</label>
+        <input type="tel" id="editDebtCustomerPhone" class="form-control" placeholder="07XX XXX XXXX" required>
+       </div>
+       <div class="form-group">
+        <label><i class="fas fa-map-marker-alt"></i> العنوان</label>
+        <input type="text" id="editDebtCustomerAddress" class="form-control" placeholder="عنوان العميل">
+       </div>
+       <div class="form-group">
+        <label><i class="fas fa-calendar"></i> تاريخ الدين</label>
+        <input type="date" id="editDebtDate" class="form-control" required>
+       </div>
+      </div>
+     </div>
+
+     <!-- قسم المنتجات -->
+     <div style="background: var(--theme-bg-secondary); padding: 1.5rem; border-radius: var(--border-radius); margin-bottom: 1.5rem;">
+      <h4 style="margin-bottom: 1rem; color: var(--primary-color);"><i class="fas fa-shopping-cart"></i> المنتجات</h4>
+      
+      <!-- البحث عن المنتجات -->
+      <div class="form-group">
+       <label><i class="fas fa-search"></i> البحث عن منتج</label>
+       <div style="position: relative;">
+        <input type="text" id="editDebtProductSearch" class="form-control" placeholder="ابحث عن منتج..." oninput="searchProductsForEditDebt(this.value)">
+        <div id="editDebtProductSearchResults" style="position: absolute; top: 100%; left: 0; right: 0; background: var(--theme-bg-primary); border: 1px solid var(--theme-border-color); border-radius: var(--border-radius); max-height: 200px; overflow-y: auto; z-index: 1000; display: none; margin-top: 5px;"></div>
+       </div>
+      </div>
+      
+      <!-- إضافة منتج يدوياً -->
+      <div class="form-row" style="display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 1rem; align-items: end; margin-bottom: 1rem;">
+       <div class="form-group" style="margin: 0;">
+        <label><i class="fas fa-box"></i> اسم المنتج</label>
+        <input type="text" id="editDebtProductName" class="form-control" placeholder="اسم المنتج">
+       </div>
+       <div class="form-group" style="margin: 0;">
+        <label><i class="fas fa-tag"></i> السعر</label>
+        <input type="number" id="editDebtProductPrice" class="form-control" placeholder="السعر" min="0">
+       </div>
+       <div class="form-group" style="margin: 0;">
+        <label><i class="fas fa-sort-numeric-up"></i> الكمية</label>
+        <input type="number" id="editDebtProductQty" class="form-control" placeholder="الكمية" min="1" value="1">
+       </div>
+       <button type="button" class="btn btn-success" onclick="addEditDebtProduct()" style="padding: 0.75rem 1.5rem;">
+        <i class="fas fa-plus"></i>
+       </button>
+      </div>
+      
+      <!-- جدول المنتجات المضافة -->
+      <div id="editDebtProductsContainer" style="display: none; margin-top: 1rem;">
+       <h5 style="margin-bottom: 0.75rem; color: var(--theme-text-secondary);"><i class="fas fa-list"></i> المنتجات المضافة</h5>
+       <div class="table-container" style="max-height: 300px; overflow-y: auto;">
+        <table class="table">
+         <thead>
+          <tr>
+           <th>المنتج</th>
+           <th>السعر</th>
+           <th>الكمية</th>
+           <th>الإجمالي</th>
+           <th>إجراءات</th>
+          </tr>
+         </thead>
+         <tbody id="editDebtProductsTable">
+         </tbody>
+        </table>
+       </div>
+      </div>
+     </div>
+
+     <!-- تفاصيل الدين -->
+     <div style="background: var(--theme-bg-secondary); padding: 1.5rem; border-radius: var(--border-radius); margin-bottom: 1.5rem;">
+      <h4 style="margin-bottom: 1rem; color: var(--primary-color);"><i class="fas fa-money-bill-wave"></i> تفاصيل الدين</h4>
+      <div class="form-row" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
+       <div class="form-group">
+        <label><i class="fas fa-money-bill"></i> المبلغ الإجمالي (دينار)</label>
+        <input type="number" id="editDebtTotalAmount" class="form-control" placeholder="المبلغ الإجمالي" min="0" onchange="calculateEditDebtInstallments()" required>
+       </div>
+       <div class="form-group">
+        <label><i class="fas fa-hand-holding-usd"></i> الدفعة المقدمة (دينار)</label>
+        <input type="number" id="editDebtDownPayment" class="form-control" placeholder="0" min="0" value="0" onchange="calculateEditDebtInstallments()">
+       </div>
+       <div class="form-group">
+        <label><i class="fas fa-calendar-alt"></i> عدد الأشهر</label>
+        <input type="number" id="editDebtMonths" class="form-control" placeholder="عدد الأشهر" min="1" max="60" onchange="calculateEditDebtInstallments()" required>
+       </div>
+       <div class="form-group">
+        <label><i class="fas fa-plus-circle"></i> مبلغ إضافي (اختياري)</label>
+        <input type="number" id="editDebtAdditionalAmount" class="form-control" placeholder="0" min="0" value="0" onchange="calculateEditDebtInstallments()">
+       </div>
+       <div class="form-group">
+        <label><i class="fas fa-calendar"></i> تاريخ بداية الأقساط</label>
+        <input type="date" id="editDebtStartDate" class="form-control">
+       </div>
+      </div>
+      <div class="form-group">
+       <label><i class="fas fa-sticky-note"></i> ملاحظات (اختياري)</label>
+       <textarea id="editDebtNotes" class="form-control" rows="2" placeholder="أي ملاحظات إضافية عن الدين"></textarea>
+      </div>
+     </div>
+
+     <!-- ملخص الحسابات -->
+     <div style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1)); padding: 1.5rem; border-radius: var(--border-radius); border: 2px solid rgba(99, 102, 241, 0.3);">
+      <h4 style="margin-bottom: 1rem; color: var(--primary-color);"><i class="fas fa-calculator"></i> ملخص الحسابات</h4>
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem;">
+       <div style="text-align: center;">
+        <div style="font-size: 0.9rem; color: var(--theme-text-tertiary); margin-bottom: 0.5rem;">المبلغ المتبقي</div>
+        <div id="editDebtRemainingAmount" style="font-size: 1.5rem; font-weight: bold; color: var(--danger-color);">0 دينار</div>
+       </div>
+       <div style="text-align: center;">
+        <div style="font-size: 0.9rem; color: var(--theme-text-tertiary); margin-bottom: 0.5rem;">القسط الشهري</div>
+        <div id="editDebtMonthlyAmount" style="font-size: 1.5rem; font-weight: bold; color: var(--primary-color);">0 دينار</div>
+       </div>
+       <div style="text-align: center;">
+        <div style="font-size: 0.9rem; color: var(--theme-text-tertiary); margin-bottom: 0.5rem;">المجموع النهائي</div>
+        <div id="editDebtFinalTotal" style="font-size: 1.5rem; font-weight: bold; color: var(--success-color);">0 دينار</div>
+       </div>
+      </div>
+     </div>
+
+     <div class="modal-footer" style="margin-top: 1.5rem;">
+      <button class="btn btn-secondary" onclick="closeEditDebtModal()">إلغاء</button>
+      <button class="btn btn-primary" onclick="updateDebt()"><i class="fas fa-save"></i> حفظ التعديلات</button>
+     </div>
+    </div>
+   </div>
+  </div>
+
   <script>
         // متغيرات التطبيق
         let cart = [];
@@ -10091,6 +10300,11 @@ console.log(`
         
         // متغير حذف الدين
         let debtToDelete = null;
+        
+        // متغيرات المنتجات في نافذة الدين
+        let manualDebtProducts = [];
+        let editDebtProducts = [];
+        let currentEditDebtId = null;
 
         // إعدادات افتراضية
         const defaultConfig = {
@@ -14286,6 +14500,11 @@ console.log(`
                             ${window.securityManager && window.securityManager.hasPermission('debts_view_details') ? `
                             <button class="action-btn view-btn" onclick="if(window.securityManager.checkPermission('debts_view_details')) showDebtDetails('${debt.id || debt.__backendId || debt.debt_id}')" title="عرض التفاصيل" data-permission="debts_view_details">
                                 <i class="fas fa-eye"></i>
+                            </button>
+                            ` : ''}
+                            ${!isPaid && window.securityManager && window.securityManager.hasPermission('debts_edit') ? `
+                            <button class="action-btn edit-btn" onclick="if(window.securityManager.checkPermission('debts_edit')) showEditDebtModal('${debt.id || debt.__backendId || debt.debt_id}')" title="تعديل الدين" data-permission="debts_edit">
+                                <i class="fas fa-edit"></i>
                             </button>
                             ` : ''}
                             ${!isPaid && window.securityManager && window.securityManager.hasPermission('debts_payment') ? `
@@ -22421,21 +22640,29 @@ console.log(`
     let debtProductsArray = [];
     
     function showAddManualDebtModal() {
-        debtProductsArray = [];
-        document.getElementById('debtProductsTable').innerHTML = '';
-        document.getElementById('addManualDebtForm').reset();
+        manualDebtProducts = [];
+        document.getElementById('manualDebtProductsTable').innerHTML = '';
+        document.getElementById('manualDebtProductsContainer').style.display = 'none';
         
-        // تعيين تاريخ أول قسط إلى الشهر القادم
-        const nextMonth = new Date();
-        nextMonth.setMonth(nextMonth.getMonth() + 1);
-        document.getElementById('manualDebtFirstDate').valueAsDate = nextMonth;
+        // مسح الحقول
+        document.getElementById('manualDebtCustomerName').value = '';
+        document.getElementById('manualDebtCustomerPhone').value = '';
+        document.getElementById('manualDebtCustomerAddress').value = '';
+        document.getElementById('manualDebtDate').valueAsDate = new Date();
+        document.getElementById('manualDebtTotalAmount').value = 0;
+        document.getElementById('manualDebtDownPayment').value = 0;
+        document.getElementById('manualDebtMonths').value = 12;
+        document.getElementById('manualDebtAdditionalAmount').value = 0;
+        document.getElementById('manualDebtStartDate').valueAsDate = new Date();
+        document.getElementById('manualDebtNotes').value = '';
         
+        calculateManualDebtInstallments();
         showModal('addManualDebtModal');
     }
     
     function closeAddManualDebtModal() {
         hideModal('addManualDebtModal');
-        debtProductsArray = [];
+        manualDebtProducts = [];
     }
     
     // إضافة صف منتج جديد
@@ -22520,48 +22747,41 @@ console.log(`
     }
     
     // حفظ الدين الجديد
-    async function saveManualDebt(event) {
-        event.preventDefault();
+    async function saveManualDebt() {
+        const customerName = document.getElementById('manualDebtCustomerName').value.trim();
+        const customerPhone = document.getElementById('manualDebtCustomerPhone').value.trim();
+        const customerAddress = document.getElementById('manualDebtCustomerAddress').value.trim();
+        const date = document.getElementById('manualDebtDate').value;
+        const totalAmount = parseFloat(document.getElementById('manualDebtTotalAmount').value) || 0;
+        const downPayment = parseFloat(document.getElementById('manualDebtDownPayment').value) || 0;
+        const months = parseInt(document.getElementById('manualDebtMonths').value) || 1;
+        const additionalAmount = parseFloat(document.getElementById('manualDebtAdditionalAmount').value) || 0;
+        const startDate = document.getElementById('manualDebtStartDate').value;
+        const notes = document.getElementById('manualDebtNotes').value.trim();
         
-        // جمع بيانات المنتجات
-        const products = [];
-        document.querySelectorAll('#debtProductsTable tr').forEach(row => {
-            const name = row.querySelector('.debt-product-name').value;
-            const price = parseFloat(row.querySelector('.debt-product-price').value) || 0;
-            const quantity = parseFloat(row.querySelector('.debt-product-quantity').value) || 0;
-            const total = parseFloat(row.querySelector('.debt-product-total').value) || 0;
-            
-            if (name && quantity > 0) {
-                products.push({ name, price, quantity, total });
-            }
-        });
-        
-        if (products.length === 0) {
-            showToast('يرجى إضافة منتج واحد على الأقل!', 'warning');
+        if (!customerName || !customerPhone) {
+            showToast('يرجى إدخال اسم العميل ورقم الهاتف', 'warning');
             return;
         }
         
-        const customerName = document.getElementById('manualDebtCustomerName').value;
-        const customerPhone = document.getElementById('manualDebtPhone').value;
-        const customerAddress = document.getElementById('manualDebtAddress').value;
-        const totalAmount = parseFloat(document.getElementById('manualDebtTotalAmount').value) || 0;
-        const paidAmount = parseFloat(document.getElementById('manualDebtPaidAmount').value) || 0;
-        const remainingAmount = parseFloat(document.getElementById('manualDebtRemainingAmount').value) || 0;
-        const installmentMonths = parseInt(document.getElementById('manualDebtInstallmentMonths').value) || 1;
-        const monthlyAmount = parseFloat(document.getElementById('manualDebtMonthlyAmount').value) || 0;
-        const firstDate = document.getElementById('manualDebtFirstDate').value;
-        const notes = document.getElementById('manualDebtNotes').value;
+        if (totalAmount <= 0) {
+            showToast('يرجى إدخال المبلغ الإجمالي', 'warning');
+            return;
+        }
         
-        // إنشاء جدول الأقساط
+        // حساب الأقساط
+        const remaining = totalAmount - downPayment + additionalAmount;
+        const monthly = remaining / months;
         const installments = [];
-        const firstDateObj = new Date(firstDate);
-        for (let i = 0; i < installmentMonths; i++) {
-            const dueDate = new Date(firstDateObj);
+        const startDateObj = startDate ? new Date(startDate) : new Date();
+        
+        for (let i = 0; i < months; i++) {
+            const dueDate = new Date(startDateObj);
             dueDate.setMonth(dueDate.getMonth() + i);
             
             installments.push({
                 month: i + 1,
-                amount: monthlyAmount,
+                amount: monthly,
                 due_date: dueDate.toISOString(),
                 status: 'pending',
                 paid_date: null,
@@ -22569,31 +22789,507 @@ console.log(`
             });
         }
         
-        // إنشاء الدين
+        // إنشاء الدين الجديد
         const newDebt = {
             id: 'debt_' + Date.now(),
             customer_name: customerName,
             customer_phone: customerPhone,
             customer_address: customerAddress,
+            date: date,
             total_amount: totalAmount,
-            paid_amount: paidAmount,
-            remaining_amount: remainingAmount,
-            installment_months: installmentMonths,
-            monthly_installment: monthlyAmount,
-            installments: installments,
-            products: products,
+            down_payment: downPayment,
+            additional_amount: additionalAmount,
+            remaining_amount: remaining,
+            installment_months: months,
+            monthly_amount: monthly,
+            start_date: startDate,
             notes: notes,
+            products: manualDebtProducts,
+            installments: installments,
             status: 'active',
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
         };
         
         debtsData.push(newDebt);
-        await saveToLocalStorage('debtsData', debtsData);
         
-        closeAddManualDebtModal();
-        updateDebtsView();
-        showToast('✅ تم إضافة الدين بنجاح!', 'success');
+        try {
+            if (window.database) {
+                await window.database.ref('debts/' + newDebt.id).set(newDebt);
+            }
+            
+            await saveToLocalStorage('debtsData', debtsData);
+            
+            closeAddManualDebtModal();
+            updateDebtsView();
+            showToast('✅ تم إضافة الدين بنجاح!', 'success');
+        } catch (error) {
+            console.error('خطأ في حفظ الدين:', error);
+            showToast('حدث خطأ في حفظ الدين', 'error');
+        }
+    }
+    
+    // ============================================
+    // دوال إدارة المنتجات في نافذة الدين
+    // ============================================
+    
+    // دالة البحث عن المنتجات لنافذة إضافة دين
+    function searchProductsForDebt(searchTerm) {
+        const resultsContainer = document.getElementById('manualDebtProductSearchResults');
+        
+        if (!searchTerm || searchTerm.trim() === '') {
+            resultsContainer.style.display = 'none';
+            return;
+        }
+        
+        const filtered = products.filter(p => 
+            p.name && p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            p.barcode && p.barcode.includes(searchTerm)
+        );
+        
+        if (filtered.length === 0) {
+            resultsContainer.innerHTML = '<div style="padding: 1rem; text-align: center; color: var(--theme-text-secondary);">لا توجد نتائج</div>';
+            resultsContainer.style.display = 'block';
+            return;
+        }
+        
+        resultsContainer.innerHTML = filtered.map(p => `
+            <div onclick="selectProductForDebt('${p.id}')" style="padding: 0.75rem; cursor: pointer; border-bottom: 1px solid var(--theme-border-color); transition: all 0.2s;"
+                 onmouseover="this.style.background='var(--theme-bg-secondary)'" 
+                 onmouseout="this.style.background='transparent'">
+                <div style="font-weight: 500; color: var(--theme-text-primary);">${p.name}</div>
+                <div style="font-size: 0.85rem; color: var(--theme-text-secondary);">
+                    ${p.product_cost_retail ? p.product_cost_retail.toLocaleString() : '0'} دينار
+                </div>
+            </div>
+        `).join('');
+        
+        resultsContainer.style.display = 'block';
+    }
+    
+    // دالة اختيار منتج من نتائج البحث
+    function selectProductForDebt(productId) {
+        const product = products.find(p => p.id === productId);
+        if (!product) return;
+        
+        document.getElementById('manualDebtProductName').value = product.name;
+        document.getElementById('manualDebtProductPrice').value = product.product_cost_retail || 0;
+        document.getElementById('manualDebtProductQty').value = 1;
+        document.getElementById('manualDebtProductSearchResults').style.display = 'none';
+        document.getElementById('manualDebtProductSearch').value = '';
+    }
+    
+    // دالة إضافة منتج في نافذة الدين
+    function addManualDebtProduct() {
+        const name = document.getElementById('manualDebtProductName').value.trim();
+        const price = parseFloat(document.getElementById('manualDebtProductPrice').value) || 0;
+        const qty = parseInt(document.getElementById('manualDebtProductQty').value) || 1;
+        
+        if (!name || price <= 0 || qty <= 0) {
+            showToast('يرجى إدخال بيانات المنتج بشكل صحيح', 'warning');
+            return;
+        }
+        
+        const total = price * qty;
+        manualDebtProducts.push({ name, price, qty, total });
+        
+        renderManualDebtProducts();
+        updateManualDebtTotal();
+        
+        // مسح الحقول
+        document.getElementById('manualDebtProductName').value = '';
+        document.getElementById('manualDebtProductPrice').value = '';
+        document.getElementById('manualDebtProductQty').value = 1;
+    }
+    
+    // دالة عرض المنتجات في الجدول
+    function renderManualDebtProducts() {
+        const container = document.getElementById('manualDebtProductsContainer');
+        const tbody = document.getElementById('manualDebtProductsTable');
+        
+        if (manualDebtProducts.length === 0) {
+            container.style.display = 'none';
+            return;
+        }
+        
+        container.style.display = 'block';
+        tbody.innerHTML = manualDebtProducts.map((p, index) => `
+            <tr>
+                <td>${p.name}</td>
+                <td>${p.price.toLocaleString()} دينار</td>
+                <td>${p.qty}</td>
+                <td>${p.total.toLocaleString()} دينار</td>
+                <td>
+                    <button class="action-btn delete-btn" onclick="removeManualDebtProduct(${index})" title="حذف">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+    }
+    
+    // دالة حذف منتج
+    function removeManualDebtProduct(index) {
+        manualDebtProducts.splice(index, 1);
+        renderManualDebtProducts();
+        updateManualDebtTotal();
+    }
+    
+    // دالة تحديث المبلغ الإجمالي
+    function updateManualDebtTotal() {
+        const total = manualDebtProducts.reduce((sum, p) => sum + p.total, 0);
+        document.getElementById('manualDebtTotalAmount').value = total;
+        calculateManualDebtInstallments();
+    }
+    
+    // دالة حساب الأقساط
+    function calculateManualDebtInstallments() {
+        const totalAmount = parseFloat(document.getElementById('manualDebtTotalAmount').value) || 0;
+        const downPayment = parseFloat(document.getElementById('manualDebtDownPayment').value) || 0;
+        const months = parseInt(document.getElementById('manualDebtMonths').value) || 1;
+        const additionalAmount = parseFloat(document.getElementById('manualDebtAdditionalAmount').value) || 0;
+        
+        const remaining = totalAmount - downPayment + additionalAmount;
+        const monthly = remaining / months;
+        const finalTotal = totalAmount + additionalAmount;
+        
+        document.getElementById('manualDebtRemainingAmount').textContent = remaining.toLocaleString() + ' دينار';
+        document.getElementById('manualDebtMonthlyAmount').textContent = monthly.toLocaleString() + ' دينار';
+        document.getElementById('manualDebtFinalTotal').textContent = finalTotal.toLocaleString() + ' دينار';
+    }
+    
+    // دوال مماثلة لنافذة التعديل
+    function searchProductsForEditDebt(searchTerm) {
+        const resultsContainer = document.getElementById('editDebtProductSearchResults');
+        
+        if (!searchTerm || searchTerm.trim() === '') {
+            resultsContainer.style.display = 'none';
+            return;
+        }
+        
+        const filtered = products.filter(p => 
+            p.name && p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            p.barcode && p.barcode.includes(searchTerm)
+        );
+        
+        if (filtered.length === 0) {
+            resultsContainer.innerHTML = '<div style="padding: 1rem; text-align: center; color: var(--theme-text-secondary);">لا توجد نتائج</div>';
+            resultsContainer.style.display = 'block';
+            return;
+        }
+        
+        resultsContainer.innerHTML = filtered.map(p => `
+            <div onclick="selectProductForEditDebt('${p.id}')" style="padding: 0.75rem; cursor: pointer; border-bottom: 1px solid var(--theme-border-color); transition: all 0.2s;"
+                 onmouseover="this.style.background='var(--theme-bg-secondary)'" 
+                 onmouseout="this.style.background='transparent'">
+                <div style="font-weight: 500; color: var(--theme-text-primary);">${p.name}</div>
+                <div style="font-size: 0.85rem; color: var(--theme-text-secondary);">
+                    ${p.product_cost_retail ? p.product_cost_retail.toLocaleString() : '0'} دينار
+                </div>
+            </div>
+        `).join('');
+        
+        resultsContainer.style.display = 'block';
+    }
+    
+    function selectProductForEditDebt(productId) {
+        const product = products.find(p => p.id === productId);
+        if (!product) return;
+        
+        document.getElementById('editDebtProductName').value = product.name;
+        document.getElementById('editDebtProductPrice').value = product.product_cost_retail || 0;
+        document.getElementById('editDebtProductQty').value = 1;
+        document.getElementById('editDebtProductSearchResults').style.display = 'none';
+        document.getElementById('editDebtProductSearch').value = '';
+    }
+    
+    function addEditDebtProduct() {
+        const name = document.getElementById('editDebtProductName').value.trim();
+        const price = parseFloat(document.getElementById('editDebtProductPrice').value) || 0;
+        const qty = parseInt(document.getElementById('editDebtProductQty').value) || 1;
+        
+        if (!name || price <= 0 || qty <= 0) {
+            showToast('يرجى إدخال بيانات المنتج بشكل صحيح', 'warning');
+            return;
+        }
+        
+        const total = price * qty;
+        editDebtProducts.push({ name, price, qty, total });
+        
+        renderEditDebtProducts();
+        updateEditDebtTotal();
+        
+        document.getElementById('editDebtProductName').value = '';
+        document.getElementById('editDebtProductPrice').value = '';
+        document.getElementById('editDebtProductQty').value = 1;
+    }
+    
+    function renderEditDebtProducts() {
+        const container = document.getElementById('editDebtProductsContainer');
+        const tbody = document.getElementById('editDebtProductsTable');
+        
+        if (editDebtProducts.length === 0) {
+            container.style.display = 'none';
+            return;
+        }
+        
+        container.style.display = 'block';
+        tbody.innerHTML = editDebtProducts.map((p, index) => `
+            <tr>
+                <td>${p.name}</td>
+                <td>${p.price.toLocaleString()} دينار</td>
+                <td>${p.qty}</td>
+                <td>${p.total.toLocaleString()} دينار</td>
+                <td>
+                    <button class="action-btn delete-btn" onclick="removeEditDebtProduct(${index})" title="حذف">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+    }
+    
+    function removeEditDebtProduct(index) {
+        editDebtProducts.splice(index, 1);
+        renderEditDebtProducts();
+        updateEditDebtTotal();
+    }
+    
+    function updateEditDebtTotal() {
+        const total = editDebtProducts.reduce((sum, p) => sum + p.total, 0);
+        document.getElementById('editDebtTotalAmount').value = total;
+        calculateEditDebtInstallments();
+    }
+    
+    function calculateEditDebtInstallments() {
+        const totalAmount = parseFloat(document.getElementById('editDebtTotalAmount').value) || 0;
+        const downPayment = parseFloat(document.getElementById('editDebtDownPayment').value) || 0;
+        const months = parseInt(document.getElementById('editDebtMonths').value) || 1;
+        const additionalAmount = parseFloat(document.getElementById('editDebtAdditionalAmount').value) || 0;
+        
+        const remaining = totalAmount - downPayment + additionalAmount;
+        const monthly = remaining / months;
+        const finalTotal = totalAmount + additionalAmount;
+        
+        document.getElementById('editDebtRemainingAmount').textContent = remaining.toLocaleString() + ' دينار';
+        document.getElementById('editDebtMonthlyAmount').textContent = monthly.toLocaleString() + ' دينار';
+        document.getElementById('editDebtFinalTotal').textContent = finalTotal.toLocaleString() + ' دينار';
+    }
+    
+    // دالة فتح نافذة التعديل
+    async function showEditDebtModal(debtId) {
+        currentEditDebtId = debtId;
+        const debt = debtsData.find(d => (d.id || d.__backendId || d.debt_id) === debtId);
+        
+        if (!debt) {
+            showToast('لم يتم العثور على الدين!', 'error');
+            return;
+        }
+        
+        // تعبئة البيانات
+        document.getElementById('editDebtCustomerName').value = debt.customer_name || '';
+        document.getElementById('editDebtCustomerPhone').value = debt.customer_phone || '';
+        document.getElementById('editDebtCustomerAddress').value = debt.customer_address || '';
+        document.getElementById('editDebtDate').value = debt.date || new Date().toISOString().split('T')[0];
+        document.getElementById('editDebtTotalAmount').value = debt.total_amount || 0;
+        document.getElementById('editDebtDownPayment').value = debt.down_payment || 0;
+        document.getElementById('editDebtMonths').value = debt.installment_months || 1;
+        document.getElementById('editDebtAdditionalAmount').value = debt.additional_amount || 0;
+        document.getElementById('editDebtStartDate').value = debt.start_date || '';
+        document.getElementById('editDebtNotes').value = debt.notes || '';
+        
+        // تحميل المنتجات إذا كانت موجودة
+        editDebtProducts = debt.products ? [...debt.products] : [];
+        renderEditDebtProducts();
+        calculateEditDebtInstallments();
+        
+        showModal('editDebtModal');
+    }
+    
+    function closeEditDebtModal() {
+        hideModal('editDebtModal');
+        currentEditDebtId = null;
+        editDebtProducts = [];
+    }
+    
+    // دالة حفظ التعديلات
+    async function updateDebt() {
+        if (!currentEditDebtId) {
+            showToast('خطأ: لم يتم تحديد الدين!', 'error');
+            return;
+        }
+        
+        const debtIndex = debtsData.findIndex(d => (d.id || d.__backendId || d.debt_id) === currentEditDebtId);
+        
+        if (debtIndex === -1) {
+            showToast('لم يتم العثور على الدين!', 'error');
+            return;
+        }
+        
+        const customerName = document.getElementById('editDebtCustomerName').value.trim();
+        const customerPhone = document.getElementById('editDebtCustomerPhone').value.trim();
+        
+        if (!customerName || !customerPhone) {
+            showToast('يرجى إدخال اسم العميل ورقم الهاتف', 'warning');
+            return;
+        }
+        
+        const totalAmount = parseFloat(document.getElementById('editDebtTotalAmount').value) || 0;
+        const downPayment = parseFloat(document.getElementById('editDebtDownPayment').value) || 0;
+        const months = parseInt(document.getElementById('editDebtMonths').value) || 1;
+        const additionalAmount = parseFloat(document.getElementById('editDebtAdditionalAmount').value) || 0;
+        const startDate = document.getElementById('editDebtStartDate').value;
+        
+        // حساب الأقساط الجديدة
+        const remaining = totalAmount - downPayment + additionalAmount;
+        const monthly = remaining / months;
+        const installments = [];
+        const startDateObj = startDate ? new Date(startDate) : new Date();
+        
+        // إنشاء جدول الأقساط
+        for (let i = 0; i < months; i++) {
+            const dueDate = new Date(startDateObj);
+            dueDate.setMonth(dueDate.getMonth() + i);
+            
+            // الحفاظ على الأقساط المدفوعة إذا كانت موجودة
+            const existingInstallment = debtsData[debtIndex].installments?.[i];
+            
+            installments.push({
+                month: i + 1,
+                amount: monthly,
+                due_date: dueDate.toISOString(),
+                status: existingInstallment?.status || 'pending',
+                paid_date: existingInstallment?.paid_date || null,
+                paid_amount: existingInstallment?.paid_amount || 0
+            });
+        }
+        
+        // تحديث الدين
+        debtsData[debtIndex] = {
+            ...debtsData[debtIndex],
+            customer_name: customerName,
+            customer_phone: customerPhone,
+            customer_address: document.getElementById('editDebtCustomerAddress').value.trim(),
+            date: document.getElementById('editDebtDate').value,
+            total_amount: totalAmount,
+            down_payment: downPayment,
+            additional_amount: additionalAmount,
+            remaining_amount: remaining,
+            installment_months: months,
+            monthly_amount: monthly,
+            start_date: startDate,
+            notes: document.getElementById('editDebtNotes').value.trim(),
+            products: editDebtProducts,
+            installments: installments,
+            updated_at: new Date().toISOString()
+        };
+        
+        // حفظ التحديثات
+        try {
+            if (window.database) {
+                const debtRef = window.database.ref('debts/' + currentEditDebtId);
+                await debtRef.update(debtsData[debtIndex]);
+            }
+            
+            await saveToLocalStorage('debtsData', debtsData);
+            
+            closeEditDebtModal();
+            updateDebtsView();
+            showToast('✅ تم تحديث الدين بنجاح!', 'success');
+        } catch (error) {
+            console.error('خطأ في حفظ التعديلات:', error);
+            showToast('حدث خطأ في حفظ التعديلات', 'error');
+        }
+    }
+    
+    // تحديث دالة processInstallmentPayment لتضمين التاريخ
+    async function processInstallmentPaymentUpdated() {
+        const customerName = document.getElementById('customerName').value.trim();
+        const customerPhone = document.getElementById('customerPhone').value.trim();
+        const customerAddress = document.getElementById('customerAddress').value.trim();
+        const months = parseInt(document.getElementById('installmentMonths').value) || 12;
+        const additionalAmount = parseFloat(document.getElementById('additionalAmount').value) || 0;
+        const downPayment = parseFloat(document.getElementById('downPayment').value) || 0;
+        const startDate = document.getElementById('installmentStartDate').value;
+        
+        if (!customerName || !customerPhone) {
+            showToast('يرجى إدخال اسم العميل ورقم الهاتف', 'warning');
+            return;
+        }
+        
+        if (cart.length === 0) {
+            showToast('السلة فارغة! يرجى إضافة منتجات أولاً', 'warning');
+            return;
+        }
+        
+        const cartTotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        const totalWithAddition = cartTotal + additionalAmount;
+        const remainingAmount = totalWithAddition - downPayment;
+        const monthlyPayment = remainingAmount / months;
+        
+        // إنشاء جدول الأقساط مع التواريخ
+        const installments = [];
+        const startDateObj = startDate ? new Date(startDate) : new Date();
+        
+        for (let i = 0; i < months; i++) {
+            const dueDate = new Date(startDateObj);
+            dueDate.setMonth(dueDate.getMonth() + i);
+            
+            installments.push({
+                month: i + 1,
+                amount: monthlyPayment,
+                due_date: dueDate.toISOString(),
+                status: 'pending',
+                paid_date: null,
+                paid_amount: 0
+            });
+        }
+        
+        // إنشاء سجل الدين
+        const debt = {
+            id: 'debt_' + Date.now(),
+            customer_name: customerName,
+            customer_phone: customerPhone,
+            customer_address: customerAddress,
+            total_amount: totalWithAddition,
+            down_payment: downPayment,
+            remaining_amount: remainingAmount,
+            installment_months: months,
+            monthly_amount: monthlyPayment,
+            additional_amount: additionalAmount,
+            start_date: startDate,
+            installments: installments,
+            products: cart.map(item => ({
+                name: item.name,
+                price: item.price,
+                qty: item.quantity,
+                total: item.price * item.quantity
+            })),
+            date: new Date().toISOString(),
+            status: 'active',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+        };
+        
+        debtsData.push(debt);
+        
+        // حفظ وإتمام العملية
+        try {
+            if (window.database) {
+                await window.database.ref('debts/' + debt.id).set(debt);
+            }
+            
+            await saveToLocalStorage('debtsData', debtsData);
+            
+            cart = [];
+            updateCartDisplay();
+            closeModal('paymentModal');
+            showToast('✅ تمت عملية البيع بالأقساط بنجاح!', 'success');
+            updateDebtsView();
+        } catch (error) {
+            console.error('خطأ في حفظ الدين:', error);
+            showToast('حدث خطأ في حفظ الدين', 'error');
+        }
     }
     
     // ============================================

@@ -8,68 +8,139 @@ function toEnglishDigits(str) {
 function generateInstallmentPaymentReceipt({debt, paidInstallment, storeSettings}) {
     // إعداد البيانات
     const customerName = debt.customer_name || '';
-    const storeName = storeSettings?.storeName || storeSettings?.store_name || 'اسم المتجر';
+    const customerPhone = debt.customer_phone || '';
+    const storeName = storeSettings?.storeName || storeSettings?.store_name || 'يعقوب للأجهزة الكهربائية';
+    const storePhone = storeSettings?.storePhone || storeSettings?.store_phone || '07901234567';
     const paidMonth = paidInstallment.month;
     const paidAmount = paidInstallment.amount;
     const paidDate = paidInstallment.paid_date ? new Date(paidInstallment.paid_date) : new Date();
-    const dateStr = toEnglishDigits(paidDate.toLocaleDateString('ar-IQ'));
-    const timeStr = toEnglishDigits(paidDate.toLocaleTimeString('ar-IQ'));
-    const remainingInstallments = (debt.installments || []).filter(inst => inst.status !== 'paid');
+    const dateStr = toEnglishDigits(paidDate.toLocaleDateString('ar-IQ', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        weekday: 'long'
+    }));
+    const timeStr = toEnglishDigits(paidDate.toLocaleTimeString('ar-IQ', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+    }));
+    
+    // حساب الأقساط
+    const allInstallments = debt.installments || [];
+    const remainingInstallments = allInstallments.filter(inst => inst.status !== 'paid');
+    const paidInstallments = allInstallments.filter(inst => inst.status === 'paid');
     const remainingMonths = remainingInstallments.length;
     const remainingAmount = remainingInstallments.reduce((sum, inst) => sum + (inst.amount || 0), 0);
+    const totalPaidAmount = debt.paid_amount || 0;
+    const totalAmount = debt.total_amount || debt.final_total || 0;
+    const monthlyAmount = debt.monthly_amount || 0;
+    const totalMonths = debt.installment_months || allInstallments.length;
 
-    let html = `<div style="width:380px;max-width:100vw;margin:0 auto;padding:18px 10px 10px 10px;font-family:'Cairo',sans-serif;background:#fff;color:#222;border:1px solid #e5e7eb;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,0.08);line-height:1.7;font-size:16px;box-sizing:border-box;">
-        <div style="text-align:center;margin-bottom:8px;">
-            <h2 style="margin:0 0 2px 0;font-size:1.3rem;font-weight:bold;color:#2d3748;letter-spacing:1px;">إيصال تسديد قسط</h2>
-            <div style="font-size:1.1rem;color:#374151;">${storeName}</div>
+    let html = `<div style="width:380px;max-width:100vw;margin:0 auto;padding:18px 10px 10px 10px;font-family:'Cairo',sans-serif;background:#fff;color:#222;border:1px solid #e5e7eb;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,0.08);line-height:1.6;font-size:14px;box-sizing:border-box;">
+        <!-- رأس الإيصال -->
+        <div style="text-align:center;margin-bottom:10px;padding-bottom:8px;border-bottom:2px solid #6366f1;">
+            <h2 style="margin:0 0 2px 0;font-size:1.3rem;font-weight:bold;color:#2d3748;">📝 إيصال تسديد قسط</h2>
+            <div style="font-size:1rem;font-weight:600;color:#6366f1;">${storeName}</div>
+            <div style="font-size:0.9rem;color:#6b7280;">📞 ${storePhone}</div>
         </div>
-        <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
-            <div style="font-size:1rem;color:#1976d2;">${dateStr}</div>
-            <div style="font-size:1rem;color:#6a1b9a;">${timeStr}</div>
+        
+        <!-- التاريخ والوقت -->
+        <div style="display:flex;justify-content:space-between;margin-bottom:10px;padding:6px;background:#f0f9ff;border-radius:6px;">
+            <div style="font-size:0.95rem;color:#1976d2;">📅 ${dateStr}</div>
+            <div style="font-size:0.95rem;color:#7c3aed;">🕐 ${timeStr}</div>
         </div>
-        <div style="border-top:2px solid #6366f1;margin:8px 0 8px 0;"></div>
-        <div style="margin-bottom:8px;">
-            <span style="font-weight:bold;color:#009688;">اسم العميل:</span>
-            <span>${customerName}</span>
+        
+        <!-- معلومات العميل -->
+        <div style="background:#f9fafb;padding:8px;border-radius:6px;margin-bottom:10px;">
+            <div style="font-weight:bold;color:#009688;margin-bottom:4px;">👤 معلومات العميل</div>
+            <div style="font-size:0.95rem;">
+                <span style="font-weight:600;">الاسم:</span> ${customerName}
+                ${customerPhone ? `<span style="margin-right:10px;">📱</span> ${customerPhone}` : ''}
+            </div>
         </div>
-        <div style="margin-bottom:8px;">
-            <span style="font-weight:bold;color:#388e3c;">الشهر المسدد:</span>
-            <span>${toEnglishDigits(paidMonth)}</span>
-            <span style="font-weight:bold;color:#1976d2;margin-right:10px;">المبلغ:</span>
-            <span>${toEnglishDigits(paidAmount.toLocaleString('en'))} دينار</span>
+        
+        <!-- تفاصيل القسط المسدد -->
+        <div style="background:linear-gradient(135deg,#10b981,#059669);padding:10px;border-radius:8px;margin-bottom:10px;color:#fff;">
+            <div style="font-weight:bold;margin-bottom:6px;font-size:1.05rem;">💵 القسط المسدد</div>
+            <div style="display:flex;justify-content:space-between;font-size:0.95rem;">
+                <div><span style="opacity:0.9;">الشهر:</span> <strong>${toEnglishDigits(paidMonth)}</strong></div>
+                <div><span style="opacity:0.9;">المبلغ:</span> <strong>${toEnglishDigits(paidAmount.toLocaleString('en'))} د</strong></div>
+            </div>
         </div>
-        <div style="margin-bottom:8px;">
-            <span style="font-weight:bold;color:#fbc02d;">عدد الأشهر المتبقية:</span>
-            <span>${toEnglishDigits(remainingMonths)}</span>
-            <span style="font-weight:bold;color:#c62828;margin-right:10px;">إجمالي المتبقي:</span>
-            <span>${toEnglishDigits(remainingAmount.toLocaleString('en'))} دينار</span>
-        </div>
-        <div style="margin-bottom:8px;">
-            <span style="font-weight:bold;color:#6366f1;">تفاصيل الأقساط المتبقية:</span>
-        </div>
-        <table style="width:100%;border-collapse:collapse;font-size:0.98rem;background:#f9fafb;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.03);margin-bottom:8px;">
-            <thead>
-                <tr style="background:#6366f1;color:#fff;">
-                    <th style="padding:4px 0;">#</th>
-                    <th style="padding:4px 0;">الشهر</th>
-                    <th style="padding:4px 0;">المبلغ</th>
-                    <th style="padding:4px 0;">تاريخ الاستحقاق</th>
+        
+        <!-- ملخص الأقساط -->
+        <div style="background:#fffbeb;padding:8px;border-radius:6px;margin-bottom:10px;border:1px solid #fbbf24;">
+            <div style="font-weight:bold;color:#d97706;margin-bottom:6px;">📊 ملخص الأقساط</div>
+            <table style="width:100%;font-size:0.9rem;">
+                <tr>
+                    <td style="padding:2px 0;color:#6b7280;">إجمالي المبلغ:</td>
+                    <td style="text-align:left;font-weight:600;">${toEnglishDigits(totalAmount.toLocaleString('en'))} د</td>
                 </tr>
-            </thead>
-            <tbody>`;
-    remainingInstallments.forEach((inst, idx) => {
-        html += `<tr style="background:${idx%2===0?'#fff':'#f3f4f6'};text-align:center;">
-            <td style="padding:4px 0;">${toEnglishDigits(idx+1)}</td>
-            <td style="padding:4px 0;">${toEnglishDigits(inst.month)}</td>
-            <td style="padding:4px 0;">${toEnglishDigits(inst.amount.toLocaleString('en'))} دينار</td>
-            <td style="padding:4px 0;">${inst.due_date ? toEnglishDigits(new Date(inst.due_date).toLocaleDateString('ar-IQ')) : '-'}</td>
-        </tr>`;
-    });
-    html += `</tbody></table>`;
-    html += `<div style="text-align:center;margin-top:18px;font-size:1.05rem;color:#666;">
-        <p style="margin:4px 0;">شكرًا لتسديدكم. يرجى الاحتفاظ بالإيصال.</p>
-        <p style="margin-top:10px;color:#6366f1;font-size:1.1rem;">━━━━━━━━━━━━━━━━━━━━━━</p>
-    </div></div>`;
+                <tr>
+                    <td style="padding:2px 0;color:#6b7280;">القسط الشهري:</td>
+                    <td style="text-align:left;font-weight:600;">${toEnglishDigits(monthlyAmount.toLocaleString('en'))} د</td>
+                </tr>
+                <tr>
+                    <td style="padding:2px 0;color:#6b7280;">عدد الأشهر:</td>
+                    <td style="text-align:left;font-weight:600;">${toEnglishDigits(totalMonths)} شهر</td>
+                </tr>
+                <tr style="border-top:1px solid #fde68a;">
+                    <td style="padding:4px 0 2px 0;color:#10b981;font-weight:600;">المدفوع:</td>
+                    <td style="text-align:left;color:#10b981;font-weight:bold;">${toEnglishDigits(totalPaidAmount.toLocaleString('en'))} د</td>
+                </tr>
+                <tr style="border-top:1px solid #fde68a;">
+                    <td style="padding:2px 0;color:#ef4444;font-weight:600;">المتبقي:</td>
+                    <td style="text-align:left;color:#ef4444;font-weight:bold;">${toEnglishDigits(remainingAmount.toLocaleString('en'))} د</td>
+                </tr>
+                <tr>
+                    <td style="padding:2px 0;color:#6b7280;">الأقساط المتبقية:</td>
+                    <td style="text-align:left;font-weight:600;">${toEnglishDigits(remainingMonths)} شهر</td>
+                </tr>
+            </table>
+        </div>
+        
+        <!-- جدول الأقساط المتبقية -->
+        ${remainingMonths > 0 ? `
+        <div style="margin-bottom:10px;">
+            <div style="font-weight:bold;color:#6366f1;margin-bottom:6px;font-size:0.95rem;">📋 الأقساط المتبقية:</div>
+            <table style="width:100%;border-collapse:collapse;font-size:0.85rem;background:#f9fafb;border-radius:6px;overflow:hidden;">
+                <thead>
+                    <tr style="background:#6366f1;color:#fff;">
+                        <th style="padding:4px 2px;text-align:center;">الشهر</th>
+                        <th style="padding:4px 2px;text-align:center;">المبلغ</th>
+                        <th style="padding:4px 2px;text-align:center;">الاستحقاق</th>
+                    </tr>
+                </thead>
+                <tbody>
+                ${remainingInstallments.slice(0, 5).map((inst, idx) => `
+                    <tr style="background:${idx%2===0?'#fff':'#f3f4f6'};text-align:center;">
+                        <td style="padding:3px 2px;">${toEnglishDigits(inst.month)}</td>
+                        <td style="padding:3px 2px;font-weight:600;">${toEnglishDigits(inst.amount.toLocaleString('en'))}</td>
+                        <td style="padding:3px 2px;font-size:0.8rem;">${inst.due_date ? toEnglishDigits(new Date(inst.due_date).toLocaleDateString('ar-IQ',{day:'numeric',month:'short'})) : '-'}</td>
+                    </tr>
+                `).join('')}
+                ${remainingMonths > 5 ? `
+                    <tr style="background:#e5e7eb;text-align:center;">
+                        <td colspan="3" style="padding:3px 2px;font-size:0.8rem;color:#6b7280;">و ${toEnglishDigits(remainingMonths - 5)} شهر إضافي...</td>
+                    </tr>
+                ` : ''}
+                </tbody>
+            </table>
+        </div>
+        ` : `
+        <div style="background:#d1fae5;padding:8px;border-radius:6px;text-align:center;color:#047857;font-weight:bold;margin-bottom:10px;">
+            🎉 تم سداد جميع الأقساط بنجاح!
+        </div>
+        `}
+        
+        <!-- ملاحظة نهائية -->
+        <div style="text-align:center;margin-top:12px;padding-top:10px;border-top:2px dashed #e5e7eb;">
+            <p style="margin:2px 0;font-size:0.95rem;color:#6b7280;">شكراً لتسديدكم</p>
+            <p style="margin:2px 0;font-size:0.85rem;color:#9ca3af;">يرجى الاحتفاظ بهذا الإيصال</p>
+            <p style="margin:6px 0;color:#6366f1;font-size:0.9rem;">━━━━━━━━━━━━━━━━</p>
+        </div>
+    </div>`;
     return html;
 }
 </script>
@@ -5314,26 +5385,39 @@ console.log(`
         [data-theme="light"] .form-input,
         [data-theme="light"] .form-select {
             background: #ffffff;
-            border: 2px solid #e2e8f0;
+            border: 2px solid #cbd5e0;
             color: #000000;
             font-weight: 600;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
         
         [data-theme="light"] .form-input:focus,
         [data-theme="light"] .form-select:focus {
             border-color: var(--primary-color);
             background: #ffffff;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15), 0 1px 3px rgba(0, 0, 0, 0.1);
         }
         
         [data-theme="light"] .form-input::placeholder {
-            color: #666666;
+            color: #718096;
             font-weight: 500;
         }
         
         [data-theme="light"] .form-label {
-            color: #000000;
+            color: #1a202c;
             font-weight: 700;
+            text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+        }
+        
+        [data-theme="light"] textarea.form-input {
+            border: 2px solid #cbd5e0;
+            background: #ffffff;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        [data-theme="light"] textarea.form-input:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15), 0 1px 3px rgba(0, 0, 0, 0.1);
         }
         
         [data-theme="light"] .stat-card {
@@ -14958,18 +15042,33 @@ console.log(`
             
             console.log('🔄 إعادة حساب من القسط الشهري:', customMonthly);
             
-            const months = parseInt(document.getElementById('installmentMonths')?.value) || 12;
             const downPayment = parseFloat(document.getElementById('downPayment')?.value) || 0;
             const additionalAmount = parseFloat(document.getElementById('additionalAmount')?.value) || 0;
             
-            // حساب المبلغ المتبقي (عكسي)
-            const remainingAmount = customMonthly * months;
+            // حساب المبلغ الأصلي من السلة
+            const cartTotal = cart.reduce((sum, item) => sum + (item.product_price * item.quantity), 0);
+            const originalAmount = cartTotal;
             
             // حساب المبلغ الإجمالي
-            const totalAmount = remainingAmount + downPayment;
+            const totalAmount = originalAmount + additionalAmount;
             
-            // حساب المبلغ الأصلي (عكسي)
-            const originalAmount = totalAmount - additionalAmount;
+            // حساب المبلغ المتبقي بعد الدفعة المقدمة
+            const remainingAmount = totalAmount - downPayment;
+            
+            // حساب عدد الأشهر المطلوبة بناءً على القسط الشهري
+            const calculatedMonths = Math.ceil(remainingAmount / customMonthly);
+            
+            console.log('📊 الحسابات:');
+            console.log('  المبلغ الأصلي:', originalAmount);
+            console.log('  المبلغ الإضافي:', additionalAmount);
+            console.log('  الإجمالي:', totalAmount);
+            console.log('  الدفعة المقدمة:', downPayment);
+            console.log('  المتبقي:', remainingAmount);
+            console.log('  القسط الشهري:', customMonthly);
+            console.log('  عدد الأشهر المحسوب:', calculatedMonths);
+            
+            // تحديث حقل عدد الأشهر
+            document.getElementById('installmentMonths').value = calculatedMonths;
             
             // تحديث العرض
             updateElement('originalAmount', formatCurrency(originalAmount));
@@ -14997,8 +15096,12 @@ console.log(`
                 originalAmount,
                 totalAmount,
                 monthlyAmount: customMonthly,
-                remainingAmount
+                remainingAmount,
+                installmentMonths: calculatedMonths
             };
+            
+            // إظهار رسالة توضيحية
+            showToast(`تم تعديل عدد الأشهر إلى ${calculatedMonths} شهر بناءً على القسط الشهري المحدد`, 'info');
         }
         
         // دالة مساعدة لتنسيق الأرقام بدون عملة
@@ -15172,9 +15275,10 @@ console.log(`
             }
             
             const customerAddress = document.getElementById('customerAddress')?.value.trim() || '';
-            const newInstallmentMonths = parseInt(document.getElementById('installmentMonths')?.value) || 12;
+            let newInstallmentMonths = parseInt(document.getElementById('installmentMonths')?.value) || 12;
             const additionalAmount = parseFloat(document.getElementById('additionalAmount')?.value) || 0;
             const downPayment = parseFloat(document.getElementById('downPayment')?.value) || 0;
+            const installmentStartDate = document.getElementById('installmentStartDate')?.value || null;
             
             // التحقق من وجود قيم مخصصة من وضع التحكم المتقدم
             let newTotalAmount, newRemainingAmount, newMonthlyAmount, finalTotal;
@@ -15189,6 +15293,12 @@ console.log(`
                 newTotalAmount = window.customInstallmentValues.totalAmount;
                 newRemainingAmount = window.customInstallmentValues.remainingAmount;
                 newMonthlyAmount = window.customInstallmentValues.monthlyAmount;
+                
+                // استخدام عدد الأشهر المحسوب من القيم المخصصة إذا كان موجوداً
+                if (window.customInstallmentValues.installmentMonths) {
+                    newInstallmentMonths = window.customInstallmentValues.installmentMonths;
+                    console.log('📅 استخدام عدد الأشهر المحسوب:', newInstallmentMonths);
+                }
                 
                 // مسح القيم المخصصة بعد الاستخدام
                 window.customInstallmentValues = null;
@@ -15269,7 +15379,8 @@ console.log(`
                         downPayment,
                         customerAddress,
                         cart: [...cart],
-                        finalTotal
+                        finalTotal,
+                        start_date: installmentStartDate
                     }
                 );
                 // ملاحظة: window.lastSaleInvoiceId تم تعيينه داخل mergeDebtToExisting بالفاتورة الجديدة
@@ -15309,7 +15420,10 @@ console.log(`
                     down_payment: downPayment,
                     monthly_amount: newMonthlyAmount,
                     total_amount: newTotalAmount,
-                    remaining_amount: newRemainingAmount
+                    remaining_amount: newRemainingAmount,
+                    start_date: installmentStartDate,
+                    advanced_control_used: window.customInstallmentValues ? true : false,
+                    debt_date: new Date().toISOString()
                 });
                 // تحديث معرف الفاتورة الأخيرة بعد كل عملية بيع أقساط
                 if (Array.isArray(salesData) && salesData.length > 0) {
@@ -15422,125 +15536,211 @@ console.log(`
         }
         // توليد محتوى فاتورة التقسيط
         function generateInstallmentInvoiceReceipt(sale, settings) {
-            let html = `<div style="width:210mm;min-height:297mm;margin:0 auto;padding:12px 8px 8px 8px;font-family:'Cairo',sans-serif;background:#fff;color:#222;border:1px solid #e5e7eb;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,0.08);line-height:1.4;font-size:13px;box-sizing:border-box;">
-            <div style="margin-bottom:10px;">
-                <h1 style="margin:0 0 2px 0;font-size:1.3rem;font-weight:bold;color:#2d3748;letter-spacing:1px;text-align:center;width:100%">${settings?.store_name || 'يعقوب للاجهزه الكهربائيه'}</h1>
-                <div style="font-size:0.95rem;color:#374151;text-align:center;width:100%">${settings?.store_address || 'باب الهاشميه قرب مدرسه الكرار'}</div>
-                <div style="font-size:0.9rem;color:#6366f1;text-align:center;width:100%">📞 ${settings?.store_phone || '07901234567'}</div>
-                <div style="width:100%;text-align:center;margin:6px 0 0 0;">
-                <img src="yaqoub_logo.png" alt="Logo" style="max-width:70px;max-height:70px;display:inline-block;vertical-align:middle;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,0.08);margin-bottom:4px;" />
+            // استخراج التاريخ والساعة
+            const saleDate = new Date(sale.timestamp || sale.created_at || Date.now());
+            const dateStr = saleDate.toLocaleDateString('ar-IQ', { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric',
+                weekday: 'long'
+            });
+            const timeStr = saleDate.toLocaleTimeString('ar-IQ', { 
+                hour: '2-digit', 
+                minute: '2-digit',
+                hour12: true
+            });
+            
+            // استخراج تفاصيل الأقساط من installment_details أو من مستوى الفاتورة
+            const installmentDetails = sale.installment_details || {};
+            const originalSubtotal = installmentDetails.original_subtotal || sale.subtotal || 0;
+            const additionalAmount = installmentDetails.additional_amount || sale.additional_amount || 0;
+            const downPayment = installmentDetails.down_payment || sale.down_payment || 0;
+            const totalBeforeDiscount = originalSubtotal + additionalAmount;
+            
+            // حساب المبلغ الإجمالي النهائي
+            let finalTotal = originalSubtotal; // البداية من المبلغ الأصلي
+            if (additionalAmount > 0) finalTotal += additionalAmount; // إضافة المبلغ الإضافي
+            if (downPayment > 0) finalTotal -= downPayment; // خصم الدفعة المقدمة
+            
+            const remainingAmount = installmentDetails.remaining_amount || sale.remaining_amount || (totalBeforeDiscount - downPayment);
+            const monthlyAmount = installmentDetails.monthly_amount || sale.monthly_amount || 0;
+            const installmentMonths = installmentDetails.installment_months || sale.installment_months || 0;
+            const startDate = installmentDetails.start_date || sale.start_date || null;
+            const advancedControlUsed = installmentDetails.advanced_control_used || installmentDetails.custom_values_used || false;
+            
+            let html = `<div style="width:210mm;min-height:297mm;margin:0 auto;padding:12mm 10mm;font-family:'Cairo',sans-serif;background:#fff;color:#222;line-height:1.4;font-size:11px;box-sizing:border-box;">
+            
+            <!-- الهيدر المحسّن -->
+            <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:8px;padding-bottom:6px;border-bottom:2px solid #6366f1;">
+                <!-- اليسار: اسم المحل -->
+                <div style="flex:0 0 35%;">
+                    <h1 style="margin:0;font-size:1.3rem;font-weight:bold;color:#2d3748;">${settings?.store_name || 'يعقوب للاجهزه الكهربائيه'}</h1>
+                </div>
+                <!-- اليمين: العنوان والهاتف -->
+                <div style="flex:0 0 60%;text-align:left;">
+                    <div style="font-size:0.95rem;color:#374151;font-weight:600;margin-bottom:2px;">${settings?.store_address || 'باب الهاشميه قرب مدرسه الكرار'}</div>
+                    <div style="font-size:0.9rem;color:#6366f1;font-weight:600;">📞 ${settings?.store_phone || '07901234567'}</div>
                 </div>
             </div>
-            <div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px;">
-                <div style="flex:1;min-width:120px;background:#e0f7fa;border-radius:6px;padding:6px 8px;display:flex;align-items:center;gap:4px;overflow:hidden;">
-                <span style="font-weight:bold;color:#009688;">اسم العميل:</span>
-                <span style="word-break:break-all;overflow:hidden;text-overflow:ellipsis;max-width:80px;">${sale.customer_name || ''}</span>
-                </div>
-                <div style="flex:1;min-width:120px;background:#f3e5f5;border-radius:6px;padding:6px 8px;display:flex;align-items:center;gap:4px;overflow:hidden;">
-                <span style="font-weight:bold;color:#6a1b9a;">رقم الهاتف:</span>
-                <span style="word-break:break-all;overflow:hidden;text-overflow:ellipsis;max-width:80px;">${sale.customer_phone || ''}</span>
-                </div>
-                <div style="flex:1;min-width:120px;background:#fffde7;border-radius:6px;padding:6px 8px;display:flex;align-items:center;gap:4px;overflow:hidden;">
-                <span style="font-weight:bold;color:#fbc02d;">العنوان:</span>
-                <span style="word-break:break-all;overflow:hidden;text-overflow:ellipsis;max-width:80px;">${sale.customer_address || ''}</span>
-                </div>
-            </div>
-            <div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px;">
-                <div style="flex:1;min-width:90px;background:#c8e6c9;border-radius:6px;padding:6px 8px;display:flex;align-items:center;gap:4px;overflow:hidden;">
-                <span style="font-weight:bold;color:#388e3c;">عدد الأشهر:</span>
-                <span style="word-break:break-all;overflow:hidden;text-overflow:ellipsis;max-width:60px;">${sale.installment_months || ''}</span>
-                </div>
-                <div style="flex:1;min-width:90px;background:#ffe0b2;border-radius:6px;padding:6px 8px;display:flex;align-items:center;gap:4px;overflow:hidden;">
-                <span style="font-weight:bold;color:#f57c00;">المبلغ الشهري:</span>
-                <span style="word-break:break-all;overflow:hidden;text-overflow:ellipsis;max-width:60px;font-size:12px;">${sale.monthly_amount ? sale.monthly_amount.toLocaleString() : ''} دينار</span>
-                </div>
-                <div style="flex:1;min-width:90px;background:#bbdefb;border-radius:6px;padding:6px 8px;display:flex;align-items:center;gap:4px;overflow:hidden;">
-                <span style="font-weight:bold;color:#1976d2;">الدفعة المقدمة:</span>
-                <span style="word-break:break-all;overflow:hidden;text-overflow:ellipsis;max-width:60px;">${sale.down_payment ? sale.down_payment.toLocaleString() : '0'} دينار</span>
-                </div>
-                <div style="flex:1;min-width:90px;background:#e1bee7;border-radius:6px;padding:6px 8px;display:flex;align-items:center;gap:4px;overflow:hidden;">
-                <span style="font-weight:bold;color:#8e24aa;">المبلغ الإضافي:</span>
-                <span style="word-break:break-all;overflow:hidden;text-overflow:ellipsis;max-width:60px;">${sale.additional_amount ? sale.additional_amount.toLocaleString() : '0'} دينار</span>
-                </div>
-                <div style="flex:1;min-width:90px;background:#ffcdd2;border-radius:6px;padding:6px 8px;display:flex;align-items:center;gap:4px;overflow:hidden;">
-                <span style="font-weight:bold;color:#c62828;">المبلغ المتبقي:</span>
-                <span style="word-break:break-all;overflow:hidden;text-overflow:ellipsis;max-width:60px;">${sale.remaining_amount ? sale.remaining_amount.toLocaleString() : ''} دينار</span>
+            
+            <!-- عنوان الفاتورة ومعلوماتها -->
+            <div style="background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);border-radius:6px;padding:6px 10px;margin-bottom:8px;color:#fff;">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <div>
+                        <div style="font-size:1.05rem;font-weight:bold;">📋 فاتورة تقسيط</div>
+                        <div style="font-size:0.85rem;opacity:0.95;">رقم: ${sale.invoice_id || ''}</div>
+                    </div>
+                    <div style="text-align:left;font-size:0.85rem;">
+                        <div>📅 ${dateStr}</div>
+                        <div>🕐 ${timeStr}</div>
+                    </div>
                 </div>
             </div>
-            <div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px;">
-                <div style="flex:1;min-width:120px;background:#e3f2fd;border-radius:6px;padding:6px 8px;display:flex;align-items:center;gap:4px;">
-                <span style="font-weight:bold;color:#1976d2;">المجموع الجزئي:</span>
-                <span>${(sale.subtotal || sale.total_amount || 0).toLocaleString()} دينار</span>
-                </div>
-                <div style="flex:1;min-width:120px;background:#c8e6c9;border-radius:6px;padding:6px 8px;display:flex;align-items:center;gap:4px;">
-                <span style="font-weight:bold;color:#388e3c;">الخصم:</span>
-                <span style="color:#10b981;">${sale.discount ? '- ' + sale.discount.toLocaleString() : '0'} دينار</span>
-                </div>
-                <div style="flex:1;min-width:120px;background:linear-gradient(90deg,#8e24aa,#1976d2);color:#fff;border-radius:6px;padding:6px 8px;display:flex;align-items:center;gap:4px;">
-                <span style="font-weight:bold;">الإجمالي النهائي:</span>
-                <span style="font-size:1rem;">${(sale.final_total || sale.total_amount || 0).toLocaleString()} دينار</span>
+            
+            <!-- معلومات العميل - صف واحد -->
+            <div style="background:#f8fafc;border-radius:6px;padding:6px 8px;margin-bottom:8px;border:1px solid #e2e8f0;">
+                <div style="font-weight:bold;color:#1e293b;margin-bottom:4px;font-size:0.95rem;">👤 معلومات العميل</div>
+                <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;font-size:0.9rem;">
+                    <div><strong>الاسم:</strong> ${sale.customer_name || ''}</div>
+                    <div><strong>الهاتف:</strong> ${sale.customer_phone || ''}</div>
+                    <div><strong>العنوان:</strong> ${sale.customer_address || ''}</div>
                 </div>
             </div>
-            <div style="margin-top:12px;">
-                <table style="width:100%;border-collapse:collapse;font-size:0.95rem;background:#f9fafb;border-radius:6px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.03); page-break-inside:auto;">
+            
+            <!-- تفاصيل الأقساط - مضغوط -->
+            <div style="background:#f0f9ff;border-radius:6px;padding:6px 8px;margin-bottom:8px;border:1px solid #bae6fd;">
+                <div style="font-weight:bold;color:#0c4a6e;margin-bottom:4px;font-size:0.95rem;">💳 تفاصيل الأقساط</div>
+                <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;font-size:0.85rem;">
+                    <div style="background:#dbeafe;padding:4px;border-radius:4px;text-align:center;">
+                        <div style="font-weight:600;color:#1e40af;font-size:0.8rem;">المبلغ الأصلي</div>
+                        <div style="font-weight:bold;color:#1e3a8a;">${originalSubtotal.toLocaleString()}</div>
+                    </div>
+                    ${additionalAmount > 0 ? `<div style="background:#fce7f3;padding:4px;border-radius:4px;text-align:center;">
+                        <div style="font-weight:600;color:#9f1239;font-size:0.8rem;">مبلغ إضافي</div>
+                        <div style="font-weight:bold;color:#be123c;">${additionalAmount.toLocaleString()}</div>
+                    </div>` : ''}
+                    ${downPayment > 0 ? `<div style="background:#d1fae5;padding:4px;border-radius:4px;text-align:center;">
+                        <div style="font-weight:600;color:#065f46;font-size:0.8rem;">دفعة مقدمة</div>
+                        <div style="font-weight:bold;color:#047857;">${downPayment.toLocaleString()}</div>
+                    </div>` : ''}
+                    <div style="background:#fee2e2;padding:4px;border-radius:4px;text-align:center;">
+                        <div style="font-weight:600;color:#7f1d1d;font-size:0.8rem;">المتبقي</div>
+                        <div style="font-weight:bold;color:#991b1b;">${remainingAmount.toLocaleString()}</div>
+                    </div>
+                    <div style="background:#fef3c7;padding:4px;border-radius:4px;text-align:center;">
+                        <div style="font-weight:600;color:#78350f;font-size:0.8rem;">عدد الأشهر</div>
+                        <div style="font-weight:bold;color:#92400e;">${installmentMonths}</div>
+                    </div>
+                    <div style="background:#ffedd5;padding:4px;border-radius:4px;text-align:center;">
+                        <div style="font-weight:600;color:#7c2d12;font-size:0.8rem;">القسط الشهري</div>
+                        <div style="font-weight:bold;color:#9a3412;">${monthlyAmount.toLocaleString()}</div>
+                    </div>
+                    ${startDate ? `<div style="background:#e0e7ff;padding:4px;border-radius:4px;text-align:center;">
+                        <div style="font-weight:600;color:#3730a3;font-size:0.8rem;">تاريخ البداية</div>
+                        <div style="font-weight:bold;color:#4338ca;font-size:0.8rem;">${new Date(startDate).toLocaleDateString('ar-IQ')}</div>
+                    </div>` : ''}
+                    ${advancedControlUsed ? `<div style="background:#ede9fe;padding:4px;border-radius:4px;text-align:center;grid-column:1/-1;">
+                        <div style="font-weight:600;color:#5b21b6;font-size:0.8rem;">⚙️ تحكم متقدم</div>
+                    </div>` : ''}
+                </div>
+            </div>
+            
+            <!-- جدول المنتجات - مضغوط -->
+            <div style="margin-bottom:8px;">
+                <table style="width:100%;border-collapse:collapse;font-size:0.9rem;border:1px solid #e5e7eb;">
                 <thead>
                     <tr style="background:#6366f1;color:#fff;">
-                    <th style="padding:4px 0;">#</th>
-                    <th style="padding:4px 0;">اسم المنتج</th>
-                    <th style="padding:4px 0;">الكمية</th>
-                    <th style="padding:4px 0;">سعر الوحدة</th>
-                    <th style="padding:4px 0;">الإجمالي</th>
+                        <th style="padding:4px 6px;width:6%;text-align:center;border:1px solid rgba(255,255,255,0.2);">#</th>
+                        <th style="padding:4px 6px;width:44%;text-align:right;border:1px solid rgba(255,255,255,0.2);">المنتج</th>
+                        <th style="padding:4px 6px;width:12%;text-align:center;border:1px solid rgba(255,255,255,0.2);">الكمية</th>
+                        <th style="padding:4px 6px;width:18%;text-align:center;border:1px solid rgba(255,255,255,0.2);">السعر</th>
+                        <th style="padding:4px 6px;width:20%;text-align:center;border:1px solid rgba(255,255,255,0.2);">الإجمالي</th>
                     </tr>
                 </thead>
-                <tbody style="page-break-inside:auto;">`;
+                <tbody>`;
+            
             let items = sale.items;
             if (typeof items === 'string') {
                 try { items = JSON.parse(items); } catch { items = []; }
             }
-            // تحديد إذا كان عدد المنتجات قليل (<=10) أم كثير
-            const isSinglePage = items.length <= 10;
+            
             items.forEach((item, index) => {
                 const name = item.product_name || item.name || '—';
                 const price = item.product_price || item.price || 0;
-                html += `<tr style="background:${index%2===0?'#fff':'#f3f4f6'};text-align:center;page-break-inside:avoid;">
-                    <td style="padding:5px 0;">${index+1}</td>
-                    <td style="padding:5px 0;text-align:right;">${name}</td>
-                    <td style="padding:5px 0;">${item.quantity}</td>
-                    <td style="padding:5px 0;">${price.toLocaleString()}</td>
-                    <td style="padding:5px 0;font-weight:bold;color:#10b981;">${(price*item.quantity).toLocaleString()}</td>
+                const qty = item.quantity || 1;
+                const total = price * qty;
+                html += `<tr style="background:${index%2===0?'#fff':'#f9fafb'};">
+                    <td style="padding:4px 6px;text-align:center;border:1px solid #e5e7eb;font-weight:600;">${index+1}</td>
+                    <td style="padding:4px 6px;text-align:right;border:1px solid #e5e7eb;">${name}</td>
+                    <td style="padding:4px 6px;text-align:center;border:1px solid #e5e7eb;font-weight:600;">${qty}</td>
+                    <td style="padding:4px 6px;text-align:center;border:1px solid #e5e7eb;font-weight:600;">${price.toLocaleString()}</td>
+                    <td style="padding:4px 6px;text-align:center;border:1px solid #e5e7eb;font-weight:bold;color:#10b981;">${total.toLocaleString()}</td>
                 </tr>`;
             });
-            html += `</tbody></table></div>`;
-
-            // --- ملاحظات وتواقيع في آخر الصفحة فقط ---
-            // إذا كانت المنتجات قليلة، لا تضف page-break، إذا كثيرة أضف page-break قبل الملاحظات
-            html += `
-            <div style="${isSinglePage ? '' : 'page-break-before: always;'} margin-top:18px;padding:10px 8px;background:#fffbe7;border-radius:8px;border:1px solid #ffe082;">
-                <div style="font-size:0.95rem;font-weight:bold;color:#c62828;margin-bottom:4px;">ملاحظات هامة:</div>
-                <ol style="font-size:0.93rem;padding-right:18px;margin:0;">
-                    <li>المبلغ الموجود في الإجمالي النهائي هو وصل أمانة عليكم.</li>
-                    <li>السعر محمي لمدة 24 ساعة من وقت الشراء.</li>
-                    <li>المباع لا يرجع ولا يبدل.</li>
-                    <li>الخطأ والسهو مرجوع للطرفين.</li>
-                    <li>الشركة المصنعة هي المسؤولة عن الضمان وليس شركتنا.</li>
-                    <li>كسر الشاشة أو كسر المنتج غير داخل بالضمان.</li>
-                    <li>مسؤول صيانة وتنصيب السبالت: حمزه أبو حوراء - هاتف: +964 785 570 6118</li>
+            
+            html += `</tbody></table></div>
+            
+            <!-- ملخص المبالغ - مضغوط -->
+            <div style="background:#fef3c7;border-radius:6px;padding:6px 8px;margin-bottom:8px;border:1px solid #fde68a;">
+                <div style="font-weight:bold;color:#78350f;margin-bottom:4px;font-size:0.95rem;">💰 ملخص المبالغ</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:0.9rem;">
+                    <div style="display:flex;justify-content:space-between;padding:3px 6px;background:#e0f2fe;border-radius:4px;">
+                        <span>المجموع الجزئي:</span>
+                        <strong>${originalSubtotal.toLocaleString()}</strong>
+                    </div>
+                    ${additionalAmount > 0 ? `<div style="display:flex;justify-content:space-between;padding:3px 6px;background:#fce7f3;border-radius:4px;">
+                        <span>مبلغ إضافي:</span>
+                        <strong style="color:#be123c;">+${additionalAmount.toLocaleString()}</strong>
+                    </div>` : ''}
+                    ${downPayment > 0 ? `<div style="display:flex;justify-content:space-between;padding:3px 6px;background:#d1fae5;border-radius:4px;">
+                        <span>دفعة مقدمة:</span>
+                        <strong style="color:#047857;">-${downPayment.toLocaleString()}</strong>
+                    </div>` : ''}
+                    <div style="grid-column:1/-1;display:flex;justify-content:space-between;padding:6px;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);border-radius:4px;color:#fff;">
+                        <span style="font-size:1rem;font-weight:bold;">💵 الإجمالي النهائي:</span>
+                        <strong style="font-size:1.1rem;">${finalTotal.toLocaleString()} دينار</strong>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- ملاحظات مضغوطة -->
+            <div style="background:#fffbeb;border-radius:6px;padding:6px 8px;margin-bottom:8px;border:1px solid #fbbf24;">
+                <div style="font-weight:bold;color:#b91c1c;margin-bottom:4px;font-size:0.9rem;">⚠️ ملاحظات هامة</div>
+                <ol style="font-size:0.8rem;padding-right:18px;margin:0;line-height:1.5;">
+                    <li>المبلغ الموجود هو وصل أمانة</li>
+                    <li>السعر محمي 24 ساعة</li>
+                    <li>المباع لا يرجع ولا يبدل</li>
+                    <li>الخطأ والسهو مرجوع للطرفين</li>
+                    <li>الشركة المصنعة مسؤولة عن الضمان</li>
+                    <li>كسر الشاشة غير داخل بالضمان</li>
+                    <li style="margin-top:4px;">
+                        <div style="background:#e0f2fe;padding:4px 6px;border-radius:4px;border:1px solid #bae6fd;">
+                            <strong style="color:#0c4a6e;">👨‍🔧 الصيانة:</strong> حمزه ابو حوراء - صيانة السبالت
+                            <div style="direction:ltr;text-align:left;font-weight:bold;color:#0c4a6e;margin-top:2px;">
+                                📱 <span style="letter-spacing:1px;">+964 785 570 6118</span>
+                            </div>
+                        </div>
+                    </li>
                 </ol>
             </div>
-            <div style="page-break-inside:avoid; margin-top:28px;display:flex;justify-content:space-between;align-items:center;gap:40px;">
+            
+            <!-- التوقيعات -->
+            <div style="display:flex;justify-content:space-between;gap:30px;margin-top:10px;">
                 <div style="flex:1;text-align:center;">
-                    <div style="font-size:0.95rem;font-weight:bold;margin-bottom:18px;">توقيع البائع</div>
-                    <div style="height:32px;border-bottom:1px dashed #bbb;width:80%;margin:0 auto;"></div>
+                    <div style="font-size:0.9rem;font-weight:bold;margin-bottom:15px;">✍️ توقيع البائع</div>
+                    <div style="border-bottom:1px dashed #9ca3af;"></div>
                 </div>
                 <div style="flex:1;text-align:center;">
-                    <div style="font-size:0.95rem;font-weight:bold;margin-bottom:18px;">توقيع العميل</div>
-                    <div style="height:32px;border-bottom:1px dashed #bbb;width:80%;margin:0 auto;"></div>
+                    <div style="font-size:0.9rem;font-weight:bold;margin-bottom:15px;">✍️ توقيع العميل</div>
+                    <div style="border-bottom:1px dashed #9ca3af;"></div>
                 </div>
             </div>
-            <div style="text-align:center;margin-top:24px;font-size:1rem;color:#666;">
-                <p style="margin:4px 0;">شكراً لتعاملكم مع متجر ${settings?.store_name || 'يعقوب للأجهزة الكهربائية'}</p>
-                <p style="margin:4px 0;">نتطلع لخدمتكم مرة أخرى</p>
-                <p style="margin-top:10px;color:#6366f1;font-size:1.1rem;">━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</p>
+            
+            <!-- الختام -->
+            <div style="text-align:center;margin-top:10px;padding-top:6px;border-top:2px solid #e5e7eb;">
+                <p style="margin:2px 0;font-size:0.95rem;font-weight:bold;color:#6366f1;">🌟 شكراً لتعاملكم معنا 🌟</p>
+                <p style="margin:2px 0;font-size:0.85rem;color:#6b7280;">نتطلع لخدمتكم مرة أخرى</p>
+            </div>
             </div>`;
             return html;
         }
@@ -15876,16 +16076,38 @@ console.log(`
                 const taxRate = parseFloat(getCurrentTaxRate()) / 100;
                 const taxAmount = afterDiscount * taxRate;
                 let finalTotal = afterDiscount + taxAmount;
+                let additionalDiscount = 0;
                 
                 // استخدام المبلغ المخصص إذا كان موجوداً (للبيع النقدي فقط)
                 if (window.customCashAmount && window.customCashAmount > 0 && paymentType === 'نقدي') {
                     console.log('💰 استخدام مبلغ مخصص للبيع النقدي:', window.customCashAmount);
+                    const originalTotal = finalTotal;
                     finalTotal = window.customCashAmount;
+                    // حساب الخصم الإضافي
+                    additionalDiscount = originalTotal - finalTotal;
+                    console.log('💸 الخصم الإضافي:', additionalDiscount);
+                }
+                
+                // 🔥 حساب المبلغ النهائي الصحيح للأقساط (بعد الإضافة والدفعة المقدمة)
+                if (paymentType === 'أقساط') {
+                    const additionalAmount = parseFloat(extraData.additional_amount) || 0;
+                    const downPayment = parseFloat(extraData.down_payment) || 0;
+                    
+                    console.log('💳 حساب المبلغ النهائي للأقساط:');
+                    console.log('  المبلغ الأصلي:', finalTotal);
+                    console.log('  المبلغ الإضافي:', additionalAmount);
+                    console.log('  الدفعة المقدمة:', downPayment);
+                    
+                    // المبلغ النهائي = الأصلي + الإضافي - الدفعة المقدمة
+                    finalTotal = finalTotal + additionalAmount - downPayment;
+                    
+                    console.log('  ✅ المبلغ النهائي النهائي:', finalTotal);
                 }
 
                 console.log('📊 الحسابات:');
                 console.log('  المجموع الفرعي:', subtotal);
                 console.log('  الخصم:', discountAmount);
+                console.log('  الخصم الإضافي:', additionalDiscount);
                 console.log('  الضريبة:', taxAmount);
                 console.log('  المجموع النهائي:', finalTotal);
 
@@ -15896,7 +16118,8 @@ console.log(`
                     subtotal: subtotal,
                     tax: taxAmount,
                     discount: discountAmount,
-                    final_total: finalTotal,
+                    additional_discount: additionalDiscount,
+                    final_total: finalTotal, // 🔥 هذا الآن يحتوي على المبلغ الصحيح بعد الإضافة والدفعة المقدمة
                     payment_method: paymentMethod,
                     payment_type: paymentType,
                     timestamp: new Date().toISOString(),
@@ -15905,6 +16128,45 @@ console.log(`
                     created_by_name: window.securityManager ? window.securityManager.getCurrentUserFullName() : 'غير معروف',
                     created_by_role: window.securityManager && window.securityManager.currentUser ? window.securityManager.currentUser.role : 'unknown',
                     created_at: new Date().toISOString(),
+                    // حفظ تفاصيل البيع بالأقساط الكاملة - محدث
+                    installment_details: paymentType === 'أقساط' ? {
+                        // المبالغ الأساسية
+                        original_subtotal: subtotal,
+                        original_total: subtotal + taxAmount - discountAmount, // المبلغ قبل الإضافة والدفعة
+                        total_amount: extraData.total_amount || (subtotal + taxAmount - discountAmount + (extraData.additional_amount || 0)),
+                        additional_amount: extraData.additional_amount || 0,
+                        down_payment: extraData.down_payment || 0,
+                        remaining_amount: extraData.remaining_amount || 0,
+                        
+                        // معلومات الأقساط
+                        installment_months: extraData.installment_months || 0,
+                        monthly_amount: extraData.monthly_amount || 0,
+                        start_date: extraData.start_date || null,
+                        debt_date: extraData.debt_date || null,
+                        
+                        // معلومات التحكم المتقدم
+                        advanced_control_used: extraData.advanced_control_used || false,
+                        custom_values_used: window.customInstallmentValues ? true : false,
+                        
+                        // معلومات العميل
+                        customer_name: extraData.customer_name || '',
+                        customer_phone: extraData.customer_phone || '',
+                        customer_address: extraData.customer_address || '',
+                        
+                        // الطابع الزمني
+                        created_at: new Date().toISOString(),
+                        updated_at: new Date().toISOString()
+                    } : null,
+                    // معلومات العميل على مستوى الفاتورة (للبيع بالأقساط)
+                    customer_name: paymentType === 'أقساط' ? extraData.customer_name : undefined,
+                    customer_phone: paymentType === 'أقساط' ? extraData.customer_phone : undefined,
+                    customer_address: paymentType === 'أقساط' ? extraData.customer_address : undefined,
+                    installment_months: paymentType === 'أقساط' ? extraData.installment_months : undefined,
+                    monthly_amount: paymentType === 'أقساط' ? extraData.monthly_amount : undefined,
+                    additional_amount: paymentType === 'أقساط' ? extraData.additional_amount : undefined,
+                    down_payment: paymentType === 'أقساط' ? extraData.down_payment : undefined,
+                    remaining_amount: paymentType === 'أقساط' ? extraData.remaining_amount : undefined,
+                    start_date: paymentType === 'أقساط' ? extraData.start_date : undefined,
                     ...extraData
                 };
 
@@ -15964,8 +16226,12 @@ console.log(`
 
                             // إنشاء جدول الأقساط
                             const installments = [];
+                            // استخدام تاريخ بداية الأقساط إذا كان موجوداً، وإلا استخدم التاريخ الحالي
+                            const startDate = extraData.start_date ? new Date(extraData.start_date) : new Date();
+                            
                             for (let i = 1; i <= installmentMonths; i++) {
-                                const dueDate = new Date(Date.now() + (i * 30 * 24 * 60 * 60 * 1000));
+                                const dueDate = new Date(startDate);
+                                dueDate.setMonth(dueDate.getMonth() + (i - 1));
                                 installments.push({
                                     month: i,
                                     amount: monthlyAmount,
@@ -15983,7 +16249,7 @@ console.log(`
                                 customer_phone: extraData.customer_phone || '',
                                 customer_address: extraData.customer_address || '',
                                 total_amount: totalAmount,
-                                final_total: totalAmount,
+                                final_total: finalTotal, // 🔥 استخدام المبلغ النهائي الصحيح
                                 remaining_amount: remainingAmount,
                                 paid_amount: downPayment,
                                 monthly_amount: monthlyAmount,
@@ -15991,9 +16257,11 @@ console.log(`
                                 additional_amount: additionalAmount,
                                 down_payment: downPayment,
                                 installments: installments,
-                                due_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+                                start_date: extraData.start_date || null,
+                                due_date: installments[0].due_date,
                                 status: 'نشط',
-                                timestamp: new Date().toISOString()
+                                timestamp: extraData.debt_date ? new Date(extraData.debt_date).toISOString() : new Date().toISOString(),
+                                created_at: extraData.debt_date ? new Date(extraData.debt_date).toISOString() : new Date().toISOString()
                             };
 
                             console.log('✅ Final debt data to be saved:', debtData);
@@ -17005,6 +17273,17 @@ console.log(`
                 `;
             }).join('') : '<tr><td colspan="4" style="text-align: center; padding: 20px; color: var(--theme-text-secondary);">لا توجد منتجات</td></tr>';
             
+            // استخراج تفاصيل الأقساط
+            const installmentDetails = sale.installment_details || {};
+            const originalSubtotal = installmentDetails.original_subtotal || sale.subtotal || 0;
+            const additionalAmount = installmentDetails.additional_amount || sale.additional_amount || 0;
+            const downPayment = installmentDetails.down_payment || sale.down_payment || 0;
+            const remainingAmount = installmentDetails.remaining_amount || sale.remaining_amount || 0;
+            const monthlyAmount = installmentDetails.monthly_amount || sale.monthly_amount || 0;
+            const installmentMonths = installmentDetails.installment_months || sale.installment_months || 0;
+            const startDate = installmentDetails.start_date || sale.start_date || null;
+            const advancedControlUsed = installmentDetails.advanced_control_used || installmentDetails.custom_values_used || false;
+            
             content.innerHTML = `
                 <div style="padding: 20px;">
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
@@ -17036,22 +17315,58 @@ console.log(`
                     </div>
                     ` : ''}
                     
+                    ${sale.customer_address ? `
+                    <div style="background: var(--theme-bg-secondary); padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                        <div style="color: var(--theme-text-secondary); font-size: 14px; margin-bottom: 5px;">العنوان</div>
+                        <div style="font-size: 16px; font-weight: 500;">${sale.customer_address}</div>
+                    </div>
+                    ` : ''}
+                    
                     ${sale.payment_type === 'أقساط' ? `
-                    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-                        <h4 style="margin: 0 0 10px 0;"><i class="fas fa-calendar-alt"></i> معلومات الأقساط</h4>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
-                            <div>
-                                <div style="font-size: 12px; opacity: 0.9;">عدد الأشهر</div>
-                                <div style="font-size: 18px; font-weight: bold;">${sale.installment_months || 0}</div>
+                    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 12px; margin-bottom: 20px;">
+                        <h4 style="margin: 0 0 15px 0; display: flex; align-items: center; gap: 8px;">
+                            <i class="fas fa-calendar-alt"></i> تفاصيل الأقساط الكاملة
+                        </h4>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px;">
+                            <div style="background: rgba(255,255,255,0.2); padding: 12px; border-radius: 8px;">
+                                <div style="font-size: 12px; opacity: 0.9; margin-bottom: 4px;">💵 المبلغ الأصلي</div>
+                                <div style="font-size: 18px; font-weight: bold;">${formatCurrency(originalSubtotal)}</div>
                             </div>
-                            <div>
-                                <div style="font-size: 12px; opacity: 0.9;">المبلغ الإضافي</div>
-                                <div style="font-size: 18px; font-weight: bold;">${formatCurrency(sale.additional_amount || 0)}</div>
+                            ${additionalAmount > 0 ? `
+                            <div style="background: rgba(255,255,255,0.2); padding: 12px; border-radius: 8px;">
+                                <div style="font-size: 12px; opacity: 0.9; margin-bottom: 4px;">➕ مبلغ إضافي</div>
+                                <div style="font-size: 18px; font-weight: bold;">${formatCurrency(additionalAmount)}</div>
                             </div>
-                            <div>
-                                <div style="font-size: 12px; opacity: 0.9;">القسط الشهري</div>
-                                <div style="font-size: 18px; font-weight: bold;">${formatCurrency(sale.monthly_amount || 0)}</div>
+                            ` : ''}
+                            ${downPayment > 0 ? `
+                            <div style="background: rgba(255,255,255,0.2); padding: 12px; border-radius: 8px;">
+                                <div style="font-size: 12px; opacity: 0.9; margin-bottom: 4px;">💵 دفعة مقدمة</div>
+                                <div style="font-size: 18px; font-weight: bold;">${formatCurrency(downPayment)}</div>
                             </div>
+                            ` : ''}
+                            <div style="background: rgba(255,255,255,0.2); padding: 12px; border-radius: 8px;">
+                                <div style="font-size: 12px; opacity: 0.9; margin-bottom: 4px;">💳 المبلغ المتبقي</div>
+                                <div style="font-size: 18px; font-weight: bold;">${formatCurrency(remainingAmount)}</div>
+                            </div>
+                            <div style="background: rgba(255,255,255,0.2); padding: 12px; border-radius: 8px;">
+                                <div style="font-size: 12px; opacity: 0.9; margin-bottom: 4px;">📅 عدد الأشهر</div>
+                                <div style="font-size: 18px; font-weight: bold;">${installmentMonths} شهر</div>
+                            </div>
+                            <div style="background: rgba(255,255,255,0.2); padding: 12px; border-radius: 8px;">
+                                <div style="font-size: 12px; opacity: 0.9; margin-bottom: 4px;">📊 القسط الشهري</div>
+                                <div style="font-size: 18px; font-weight: bold;">${formatCurrency(monthlyAmount)}</div>
+                            </div>
+                            ${startDate ? `
+                            <div style="background: rgba(255,255,255,0.2); padding: 12px; border-radius: 8px;">
+                                <div style="font-size: 12px; opacity: 0.9; margin-bottom: 4px;">📆 تاريخ البداية</div>
+                                <div style="font-size: 16px; font-weight: bold;">${new Date(startDate).toLocaleDateString('ar-IQ')}</div>
+                            </div>
+                            ` : ''}
+                            ${advancedControlUsed ? `
+                            <div style="background: rgba(139, 92, 246, 0.3); padding: 12px; border-radius: 8px; grid-column: 1/-1; text-align: center;">
+                                <div style="font-size: 14px; font-weight: bold;"><i class="fas fa-cog"></i> تم استخدام التحكم المتقدم</div>
+                            </div>
+                            ` : ''}
                         </div>
                     </div>
                     ` : ''}
@@ -17078,6 +17393,18 @@ console.log(`
                             <span>المجموع الفرعي:</span>
                             <span style="font-weight: bold;">${formatCurrency(sale.subtotal || 0)}</span>
                         </div>
+                        ${additionalAmount > 0 && sale.payment_type === 'أقساط' ? `
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px; color: #be123c;">
+                            <span>مبلغ إضافي:</span>
+                            <span style="font-weight: bold;">+${formatCurrency(additionalAmount)}</span>
+                        </div>
+                        ` : ''}
+                        ${downPayment > 0 && sale.payment_type === 'أقساط' ? `
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px; color: var(--success-color);">
+                            <span>دفعة مقدمة:</span>
+                            <span style="font-weight: bold;">-${formatCurrency(downPayment)}</span>
+                        </div>
+                        ` : ''}
                         ${(sale.discount_amount || sale.discount) ? `
                         <div style="display: flex; justify-content: space-between; margin-bottom: 10px; color: var(--success-color);">
                             <span>الخصم:</span>
@@ -17095,7 +17422,7 @@ console.log(`
                     </div>
                     
                     <div style="margin-top: 20px; text-align: center;">
-                        <button class="btn btn-primary" onclick="printInvoice('${sale.invoice_id}')">
+                        <button class="btn btn-primary" onclick="printInvoiceFromDetails('${sale.invoice_id}', ${sale.payment_type === 'أقساط' ? 'true' : 'false'})">
                             <i class="fas fa-print"></i> طباعة الفاتورة
                         </button>
                         <button class="btn btn-secondary" onclick="closeModal('invoiceDetailsModal')" style="margin-right: 10px;">
@@ -17106,6 +17433,40 @@ console.log(`
             `;
             
             showModal('invoiceDetailsModal');
+        }
+        
+        // دالة طباعة الفاتورة من صفحة التفاصيل
+        function printInvoiceFromDetails(invoiceId, isInstallment) {
+            console.log('🖨️ محاولة الطباعة من التفاصيل:', invoiceId, 'أقساط:', isInstallment);
+            
+            if (isInstallment) {
+                const sale = salesData.find(s => s.invoice_id === invoiceId);
+                if (!sale) {
+                    console.error('❌ لم يتم العثور على الفاتورة:', invoiceId);
+                    showToast('لم يتم العثور على الفاتورة', 'error');
+                    return;
+                }
+                
+                console.log('✅ تم العثور على فاتورة الأقساط:', sale);
+                
+                // استخدام بيانات من installment_details إذا كانت موجودة
+                const installmentDetails = sale.installment_details || {};
+                
+                printInstallmentInvoice(invoiceId, false, {
+                    customer_name: sale.customer_name || installmentDetails.customer_name,
+                    customer_phone: sale.customer_phone || installmentDetails.customer_phone,
+                    customer_address: sale.customer_address || installmentDetails.customer_address,
+                    installment_months: sale.installment_months || installmentDetails.installment_months,
+                    monthly_amount: sale.monthly_amount || installmentDetails.monthly_amount,
+                    down_payment: sale.down_payment || installmentDetails.down_payment,
+                    additional_amount: sale.additional_amount || installmentDetails.additional_amount,
+                    remaining_amount: sale.remaining_amount || installmentDetails.remaining_amount,
+                    start_date: sale.start_date || installmentDetails.start_date
+                });
+            } else {
+                console.log('✅ طباعة فاتورة نقدية:', invoiceId);
+                printInvoice(invoiceId, false);
+            }
         }
 
         // ========================================
@@ -17658,13 +18019,20 @@ console.log(`
 
             html += `<div style="border-top: 2px solid #6366f1; margin: 24px 0 16px 0;"></div>`;
 
-            // الإجمالي بالعربية
+            // الإجمالي بالعربية مع الخصم الإضافي
+            const additionalDiscount = sale.additional_discount || 0;
+            const totalDiscount = (sale.discount || 0) + additionalDiscount;
+            
             html += `
             <div style="font-size: 1.3rem; font-weight: bold; margin: 32px 0 12px 0; text-align: right; direction: rtl;">
                 <div style="display: flex; justify-content: flex-start; gap: 48px; margin-bottom: 10px;">
                 <div><span style="color:#374151;">المجموع الجزئي:</span> <span>${toEnglishDigits((sale.total_amount || 0).toLocaleString('en'))}</span></div>
-                <div><span style="color:#374151;">الخصم:</span> <span style="color: #10b981;">${sale.discount ? '- ' + toEnglishDigits(sale.discount.toLocaleString('en')) : '0'}</span></div>
+                ${sale.discount ? `<div><span style="color:#374151;">الخصم:</span> <span style="color: #10b981;">- ${toEnglishDigits(sale.discount.toLocaleString('en'))}</span></div>` : ''}
+                ${additionalDiscount > 0 ? `<div><span style="color:#374151;">خصم إضافي:</span> <span style="color: #10b981;">- ${toEnglishDigits(additionalDiscount.toLocaleString('en'))}</span></div>` : ''}
                 </div>
+                ${totalDiscount > 0 ? `<div style="display: flex; justify-content: flex-start; gap: 48px; margin-bottom: 10px; padding: 8px; background: #f0fdf4; border-radius: 6px;">
+                    <div><span style="color:#15803d;">إجمالي الخصم:</span> <span style="color: #15803d; font-weight: bold;">- ${toEnglishDigits(totalDiscount.toLocaleString('en'))}</span></div>
+                </div>` : ''}
                 <div style="display: flex; justify-content: flex-start; gap: 48px; border-top: 2px solid #6366f1; padding-top: 12px; margin-top: 8px;">
                 <div><span style="color:#2d3748;">الإجمالي النهائي:</span> <span style="color:#e11d48; font-size:1.5rem;">${toEnglishDigits((sale.final_total || sale.total_amount || 0).toLocaleString('en'))}</span></div>
                 </div>
@@ -19001,6 +19369,36 @@ console.log(`
                         <div style="display: flex; justify-content: space-between; margin-bottom: 8px; color: var(--warning-color);">
                             <span>المبلغ الإضافي:</span>
                             <span style="font-weight: 600;">+${formatCurrency(sale.additional_amount)}</span>
+                        </div>
+                        ` : ''}
+                        ${sale.down_payment ? `
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px; color: var(--success-color);">
+                            <span>الدفعة المقدمة:</span>
+                            <span style="font-weight: 600;">${formatCurrency(sale.down_payment)}</span>
+                        </div>
+                        ` : ''}
+                        ${sale.installment_months ? `
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                            <span style="color: var(--theme-text-secondary);">عدد الأقساط:</span>
+                            <span style="font-weight: 600;">${sale.installment_months} شهر</span>
+                        </div>
+                        ` : ''}
+                        ${sale.monthly_amount ? `
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                            <span style="color: var(--theme-text-secondary);">القسط الشهري:</span>
+                            <span style="font-weight: 600;">${formatCurrency(sale.monthly_amount)}</span>
+                        </div>
+                        ` : ''}
+                        ${sale.start_date ? `
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                            <span style="color: var(--theme-text-secondary);">تاريخ بداية الأقساط:</span>
+                            <span style="font-weight: 600;">${new Date(sale.start_date).toLocaleDateString('ar-IQ')}</span>
+                        </div>
+                        ` : ''}
+                        ${sale.installment_details?.advanced_control_used || sale.installment_details?.custom_values_used ? `
+                        <div style="display: flex; align-items: center; gap: 8px; margin-top: 12px; padding: 10px; background: rgba(139, 92, 246, 0.1); border-radius: 6px; border: 1px solid rgba(139, 92, 246, 0.3);">
+                            <i class="fas fa-cog" style="color: #8b5cf6;"></i>
+                            <span style="color: #8b5cf6; font-weight: 600; font-size: 0.9rem;">تم استخدام التحكم المتقدم في الأقساط</span>
                         </div>
                         ` : ''}
                         <div style="display: flex; justify-content: space-between; padding-top: 10px; border-top: 2px solid ${badgeColor}; font-size: var(--font-size-lg); font-weight: bold; color: ${badgeColor};">
@@ -22431,6 +22829,20 @@ console.log(`
                         <textarea id="manualDebtNotes" class="form-input" rows="3" placeholder="أي ملاحظات إضافية..."></textarea>
                     </div>
                     
+                    <!-- رقم الفاتورة -->
+                    <div class="form-group">
+                        <label class="form-label">رقم الفاتورة</label>
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <input type="text" id="manualDebtInvoiceId" class="form-input" placeholder="أدخل رقم الفاتورة أو اترك فارغاً للتوليد التلقائي" style="flex: 1;">
+                            <button type="button" class="btn btn-secondary" onclick="generateInvoiceNumber()" style="white-space: nowrap;">
+                                <i class="fas fa-sync-alt"></i> توليد رقم
+                            </button>
+                        </div>
+                        <small style="color: var(--text-secondary); display: block; margin-top: 5px;">
+                            <i class="fas fa-info-circle"></i> إذا تركت الحقل فارغاً، سيتم توليد رقم تلقائياً
+                        </small>
+                    </div>
+                    
                     <div class="form-actions">
                         <button type="button" class="btn btn-secondary" onclick="closeAddManualDebtModal()">
                             <i class="fas fa-times"></i> إلغاء
@@ -22588,8 +23000,9 @@ console.log(`
     }
     
     // إغلاق نافذة تعديل الدين
-    function closeEditDebtModal() {
-        hideModal('editDebtModal');
+    function closeEditDebtModal_OLD() {
+        // نسخة قديمة - غير مستخدمة
+        closeModal('editDebtModal');
         document.getElementById('editDebtForm').reset();
     }
     
@@ -22661,8 +23074,24 @@ console.log(`
     }
     
     function closeAddManualDebtModal() {
-        hideModal('addManualDebtModal');
+        closeModal('addManualDebtModal');
         manualDebtProducts = [];
+        
+        // مسح النموذج
+        document.getElementById('manualDebtCustomerName').value = '';
+        document.getElementById('manualDebtPhone').value = '';
+        document.getElementById('manualDebtAddress').value = '';
+        document.getElementById('manualDebtTotalAmount').value = '';
+        document.getElementById('manualDebtPaidAmount').value = '0';
+        document.getElementById('manualDebtRemainingAmount').value = '';
+        document.getElementById('manualDebtInstallmentMonths').value = '3';
+        document.getElementById('manualDebtMonthlyAmount').value = '';
+        document.getElementById('manualDebtFirstDate').value = '';
+        document.getElementById('manualDebtNotes').value = '';
+        document.getElementById('manualDebtInvoiceId').value = '';
+        
+        // مسح جدول المنتجات
+        document.getElementById('debtProductsTable').innerHTML = '';
     }
     
     // إضافة صف منتج جديد
@@ -22747,17 +23176,62 @@ console.log(`
     }
     
     // حفظ الدين الجديد
+    // توليد رقم فاتورة تلقائي
+    function generateInvoiceNumber() {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+        
+        const invoiceNumber = `INV-${year}${month}${day}-${random}`;
+        document.getElementById('manualDebtInvoiceId').value = invoiceNumber;
+        
+        showToast('تم توليد رقم الفاتورة', 'success');
+    }
+    
+    // حفظ الدين الجديد
     async function saveManualDebt() {
         const customerName = document.getElementById('manualDebtCustomerName').value.trim();
-        const customerPhone = document.getElementById('manualDebtCustomerPhone').value.trim();
-        const customerAddress = document.getElementById('manualDebtCustomerAddress').value.trim();
-        const date = document.getElementById('manualDebtDate').value;
+        const customerPhone = document.getElementById('manualDebtPhone').value.trim();
+        const customerAddress = document.getElementById('manualDebtAddress').value.trim();
         const totalAmount = parseFloat(document.getElementById('manualDebtTotalAmount').value) || 0;
-        const downPayment = parseFloat(document.getElementById('manualDebtDownPayment').value) || 0;
-        const months = parseInt(document.getElementById('manualDebtMonths').value) || 1;
-        const additionalAmount = parseFloat(document.getElementById('manualDebtAdditionalAmount').value) || 0;
-        const startDate = document.getElementById('manualDebtStartDate').value;
+        const paidAmount = parseFloat(document.getElementById('manualDebtPaidAmount').value) || 0;
+        const months = parseInt(document.getElementById('manualDebtInstallmentMonths').value) || 1;
+        const firstDate = document.getElementById('manualDebtFirstDate').value;
         const notes = document.getElementById('manualDebtNotes').value.trim();
+        
+        // جمع المنتجات من الجدول
+        const productRows = document.querySelectorAll('#debtProductsTable tr');
+        manualDebtProducts = [];
+        productRows.forEach((row, index) => {
+            const name = row.querySelector('.debt-product-name').value.trim();
+            const price = parseFloat(row.querySelector('.debt-product-price').value) || 0;
+            const qty = parseFloat(row.querySelector('.debt-product-quantity').value) || 0;
+            const total = parseFloat(row.querySelector('.debt-product-total').value) || 0;
+            
+            if (name && price > 0 && qty > 0) {
+                manualDebtProducts.push({
+                    id: index + 1,
+                    name: name,
+                    price: price,
+                    qty: qty,
+                    total: total
+                });
+            }
+        });
+        
+        // الحصول على رقم الفاتورة أو توليده تلقائياً
+        let invoiceId = document.getElementById('manualDebtInvoiceId').value.trim();
+        if (!invoiceId) {
+            // توليد رقم فاتورة تلقائي
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+            invoiceId = `INV-${year}${month}${day}-${random}`;
+        }
         
         if (!customerName || !customerPhone) {
             showToast('يرجى إدخال اسم العميل ورقم الهاتف', 'warning');
@@ -22769,11 +23243,16 @@ console.log(`
             return;
         }
         
+        if (!manualDebtProducts || manualDebtProducts.length === 0) {
+            showToast('يرجى إضافة منتج واحد على الأقل', 'warning');
+            return;
+        }
+        
         // حساب الأقساط
-        const remaining = totalAmount - downPayment + additionalAmount;
+        const remaining = totalAmount - paidAmount;
         const monthly = remaining / months;
         const installments = [];
-        const startDateObj = startDate ? new Date(startDate) : new Date();
+        const startDateObj = firstDate ? new Date(firstDate) : new Date();
         
         for (let i = 0; i < months; i++) {
             const dueDate = new Date(startDateObj);
@@ -22789,40 +23268,94 @@ console.log(`
             });
         }
         
+        const currentDate = new Date().toISOString();
+        
         // إنشاء الدين الجديد
         const newDebt = {
+            type: 'debt',
             id: 'debt_' + Date.now(),
+            invoice_id: invoiceId,
             customer_name: customerName,
             customer_phone: customerPhone,
             customer_address: customerAddress,
-            date: date,
+            date: new Date().toISOString().split('T')[0],
             total_amount: totalAmount,
-            down_payment: downPayment,
-            additional_amount: additionalAmount,
+            down_payment: paidAmount,
+            additional_amount: 0,
             remaining_amount: remaining,
+            paid_amount: paidAmount,
             installment_months: months,
             monthly_amount: monthly,
-            start_date: startDate,
+            start_date: firstDate || new Date().toISOString().split('T')[0],
             notes: notes,
-            products: manualDebtProducts,
+            products: manualDebtProducts || [],
             installments: installments,
-            status: 'active',
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
+            status: 'نشط',
+            created_at: currentDate,
+            updated_at: currentDate,
+            timestamp: currentDate
         };
         
-        debtsData.push(newDebt);
-        
         try {
-            if (window.database) {
-                await window.database.ref('debts/' + newDebt.id).set(newDebt);
+            if (window.dataSdk) {
+                console.log('💾 حفظ الدين في قاعدة البيانات...');
+                const result = await window.dataSdk.create(newDebt);
+                
+                if (result.isOk) {
+                    console.log('✅ تم حفظ الدين بنجاح');
+                    newDebt.id = result.id || newDebt.id;
+                    debtsData.push(newDebt);
+                    
+                    // إنشاء فاتورة مرتبطة بالدين إذا كانت هناك منتجات
+                    if (manualDebtProducts && manualDebtProducts.length > 0) {
+                        const invoiceData = {
+                            type: 'sale',
+                            invoice_id: invoiceId,
+                            items: JSON.stringify(manualDebtProducts.map(p => ({
+                                product_name: p.name,
+                                product_price: p.price,
+                                quantity: p.qty,
+                                product_id: p.id || null
+                            }))),
+                            subtotal: manualDebtProducts.reduce((sum, p) => sum + p.total, 0),
+                            tax: 0,
+                            discount: 0,
+                            additional_discount: 0,
+                            final_total: totalAmount,
+                            payment_method: 'أقساط',
+                            payment_type: 'أقساط',
+                            customer_name: customerName,
+                            customer_phone: customerPhone,
+                            customer_address: customerAddress,
+                            debt_id: newDebt.id,
+                            timestamp: currentDate,
+                            created_by: window.securityManager ? window.securityManager.getCurrentUsername() : 'unknown',
+                            created_by_name: window.securityManager ? window.securityManager.getCurrentUserFullName() : 'غير معروف',
+                            created_at: currentDate
+                        };
+                        
+                        const invoiceResult = await window.dataSdk.create(invoiceData);
+                        if (invoiceResult.isOk) {
+                            console.log('✅ تم إنشاء فاتورة مرتبطة بالدين');
+                        }
+                    }
+                    
+                    // مزامنة مع Firebase
+                    if (window.database) {
+                        await window.database.ref('debts/' + newDebt.id).set(newDebt);
+                    }
+                    
+                    await saveToLocalStorage('debtsData', debtsData);
+                    
+                    closeAddManualDebtModal();
+                    renderDebtsTable();
+                    showToast('✅ تم إضافة الدين بنجاح!', 'success');
+                } else {
+                    throw new Error('فشل حفظ الدين');
+                }
+            } else {
+                throw new Error('dataSdk غير متوفر');
             }
-            
-            await saveToLocalStorage('debtsData', debtsData);
-            
-            closeAddManualDebtModal();
-            updateDebtsView();
-            showToast('✅ تم إضافة الدين بنجاح!', 'success');
         } catch (error) {
             console.error('خطأ في حفظ الدين:', error);
             showToast('حدث خطأ في حفظ الدين', 'error');
@@ -23078,13 +23611,64 @@ console.log(`
     
     // دالة فتح نافذة التعديل
     async function showEditDebtModal(debtId) {
+        console.log('🔍 فتح نافذة تعديل الدين:', debtId, 'نوع:', typeof debtId);
         currentEditDebtId = debtId;
-        const debt = debtsData.find(d => (d.id || d.__backendId || d.debt_id) === debtId);
+        
+        // دالة مساعدة للمقارنة تدعم كل أنواع المعرفات
+        const compareIds = (id1, id2) => {
+            if (id1 == id2) return true; // مقارنة عادية (== بدلاً من ===)
+            if (String(id1) === String(id2)) return true; // مقارنة كنصوص
+            if (Number(id1) === Number(id2)) return true; // مقارنة كأرقام
+            return false;
+        };
+        
+        // البحث في debtsData أولاً
+        let debt = debtsData.find(d => {
+            const id = d.id || d.__backendId || d.debt_id;
+            return compareIds(id, debtId);
+        });
+        
+        console.log('📊 نتيجة البحث في debtsData:', debt ? 'تم العثور عليه' : 'لم يتم العثور');
+        console.log('📋 عدد الديون في debtsData:', debtsData.length);
+        
+        // إذا لم يتم العثور عليه، جرب البحث في dataSdk
+        if (!debt && window.dataSdk) {
+            console.log('🔍 البحث في dataSdk...');
+            const allData = window.dataSdk.getAll();
+            console.log('📊 إجمالي السجلات في dataSdk:', allData.length);
+            
+            const allDebts = allData.filter(item => item.type === 'debt');
+            console.log('📊 عدد الديون في dataSdk:', allDebts.length);
+            console.log('📋 معرفات الديون:', allDebts.map(d => ({
+                id: d.id,
+                __backendId: d.__backendId,
+                debt_id: d.debt_id,
+                customer: d.customer_name
+            })));
+            
+            debt = allDebts.find(d => {
+                const id = d.id || d.__backendId || d.debt_id;
+                return compareIds(id, debtId);
+            });
+            
+            if (debt) {
+                console.log('✅ تم العثور على الدين في dataSdk');
+                // إضافة الدين إلى debtsData للمرة القادمة
+                if (!debtsData.find(d => compareIds(d.id || d.__backendId || d.debt_id, debtId))) {
+                    debtsData.push(debt);
+                    console.log('✅ تم إضافة الدين إلى debtsData');
+                }
+            }
+        }
         
         if (!debt) {
+            console.error('❌ لم يتم العثور على الدين:', debtId);
+            console.error('📋 المعرفات المتاحة في debtsData:', debtsData.map(d => d.id || d.__backendId || d.debt_id));
             showToast('لم يتم العثور على الدين!', 'error');
             return;
         }
+        
+        console.log('✅ بيانات الدين:', debt);
         
         // تعبئة البيانات
         document.getElementById('editDebtCustomerName').value = debt.customer_name || '';
@@ -23092,7 +23676,7 @@ console.log(`
         document.getElementById('editDebtCustomerAddress').value = debt.customer_address || '';
         document.getElementById('editDebtDate').value = debt.date || new Date().toISOString().split('T')[0];
         document.getElementById('editDebtTotalAmount').value = debt.total_amount || 0;
-        document.getElementById('editDebtDownPayment').value = debt.down_payment || 0;
+        document.getElementById('editDebtDownPayment').value = debt.down_payment || debt.paid_amount || 0;
         document.getElementById('editDebtMonths').value = debt.installment_months || 1;
         document.getElementById('editDebtAdditionalAmount').value = debt.additional_amount || 0;
         document.getElementById('editDebtStartDate').value = debt.start_date || '';
@@ -23107,7 +23691,7 @@ console.log(`
     }
     
     function closeEditDebtModal() {
-        hideModal('editDebtModal');
+        closeModal('editDebtModal');
         currentEditDebtId = null;
         editDebtProducts = [];
     }
@@ -23119,9 +23703,21 @@ console.log(`
             return;
         }
         
-        const debtIndex = debtsData.findIndex(d => (d.id || d.__backendId || d.debt_id) === currentEditDebtId);
+        // دالة مساعدة للمقارنة تدعم كل أنواع المعرفات
+        const compareIds = (id1, id2) => {
+            if (id1 == id2) return true;
+            if (String(id1) === String(id2)) return true;
+            if (Number(id1) === Number(id2)) return true;
+            return false;
+        };
+        
+        const debtIndex = debtsData.findIndex(d => {
+            const id = d.id || d.__backendId || d.debt_id;
+            return compareIds(id, currentEditDebtId);
+        });
         
         if (debtIndex === -1) {
+            console.error('❌ لم يتم العثور على الدين في debtsData:', currentEditDebtId);
             showToast('لم يتم العثور على الدين!', 'error');
             return;
         }
@@ -23165,36 +23761,57 @@ console.log(`
         }
         
         // تحديث الدين
-        debtsData[debtIndex] = {
+        const updatedDebt = {
             ...debtsData[debtIndex],
+            type: 'debt',
             customer_name: customerName,
             customer_phone: customerPhone,
-            customer_address: document.getElementById('editDebtCustomerAddress').value.trim(),
-            date: document.getElementById('editDebtDate').value,
+            customer_address: document.getElementById('editDebtCustomerAddress').value.trim() || '',
+            date: document.getElementById('editDebtDate').value || new Date().toISOString().split('T')[0],
             total_amount: totalAmount,
             down_payment: downPayment,
             additional_amount: additionalAmount,
             remaining_amount: remaining,
+            paid_amount: downPayment,
             installment_months: months,
             monthly_amount: monthly,
-            start_date: startDate,
-            notes: document.getElementById('editDebtNotes').value.trim(),
-            products: editDebtProducts,
+            start_date: startDate || new Date().toISOString().split('T')[0],
+            notes: document.getElementById('editDebtNotes').value.trim() || '',
+            products: editDebtProducts || [],
             installments: installments,
-            updated_at: new Date().toISOString()
+            status: debtsData[debtIndex].status || 'نشط',
+            updated_at: new Date().toISOString(),
+            timestamp: debtsData[debtIndex].timestamp || new Date().toISOString()
         };
+        
+        // إزالة أي حقول undefined
+        Object.keys(updatedDebt).forEach(key => {
+            if (updatedDebt[key] === undefined) {
+                delete updatedDebt[key];
+            }
+        });
+        
+        debtsData[debtIndex] = updatedDebt;
         
         // حفظ التحديثات
         try {
+            // استخدام dataSdk إذا كان متاحاً
+            if (window.dataSdk && debtsData[debtIndex].id) {
+                const result = await window.dataSdk.update(debtsData[debtIndex].id, updatedDebt);
+                if (!result.isOk) {
+                    console.warn('فشل تحديث dataSdk، محاولة Firebase...');
+                }
+            }
+            
             if (window.database) {
                 const debtRef = window.database.ref('debts/' + currentEditDebtId);
-                await debtRef.update(debtsData[debtIndex]);
+                await debtRef.set(updatedDebt);
             }
             
             await saveToLocalStorage('debtsData', debtsData);
             
             closeEditDebtModal();
-            updateDebtsView();
+            renderDebtsTable();
             showToast('✅ تم تحديث الدين بنجاح!', 'success');
         } catch (error) {
             console.error('خطأ في حفظ التعديلات:', error);

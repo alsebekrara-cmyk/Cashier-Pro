@@ -7180,7 +7180,7 @@ console.log(`
       </div>
       
       <div class="stats-grid" style="margin-bottom: 1.5rem;">
-       <div class="stat-card" onclick="filterDebtsByStatus('all')" style="cursor: pointer;" title="عرض جميع الديون">
+       <div class="stat-card" onclick="filterDebtsByStatus('all', this)" style="cursor: pointer;" title="عرض جميع الديون">
         <div class="stat-icon"><i class="fas fa-money-bill-wave"></i>
         </div>
         <div class="stat-value" id="totalDebts">
@@ -7190,7 +7190,7 @@ console.log(`
          إجمالي الديون
         </div>
        </div>
-       <div class="stat-card" onclick="filterDebtsByStatus('active')" style="cursor: pointer;" title="عرض الديون النشطة">
+       <div class="stat-card" onclick="filterDebtsByStatus('active', this)" style="cursor: pointer;" title="عرض الديون النشطة">
         <div class="stat-icon"><i class="fas fa-users"></i>
         </div>
         <div class="stat-value" id="debtCustomers">
@@ -7200,7 +7200,7 @@ console.log(`
          عدد العملاء
         </div>
        </div>
-       <div class="stat-card" onclick="filterDebtsByStatus('overdue')" style="cursor: pointer;" title="عرض الديون المتأخرة">
+       <div class="stat-card" onclick="filterDebtsByStatus('overdue', this)" style="cursor: pointer;" title="عرض الديون المتأخرة">
         <div class="stat-icon"><i class="fas fa-calendar-check"></i>
         </div>
         <div class="stat-value" id="overdueDebts">
@@ -7210,7 +7210,7 @@ console.log(`
          ديون متأخرة
         </div>
        </div>
-       <div class="stat-card" onclick="filterDebtsByStatus('paid')" style="cursor: pointer;" title="عرض الديون المسددة">
+       <div class="stat-card" onclick="filterDebtsByStatus('paid', this)" style="cursor: pointer;" title="عرض الديون المسددة">
         <div class="stat-icon"><i class="fas fa-check-circle"></i>
         </div>
         <div class="stat-value" id="paidDebts">
@@ -7336,25 +7336,25 @@ console.log(`
       
       <!-- إحصائيات التسديدات -->
       <div class="stats-grid" style="margin-bottom: 1.5rem;">
-       <div class="stat-card" onclick="filterPaymentsByStatus('all')" style="cursor: pointer; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;" title="عرض جميع التسديدات">
+       <div class="stat-card" onclick="filterPaymentsByStatus('all', this)" style="cursor: pointer; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;" title="عرض جميع التسديدات">
         <div class="stat-icon"><i class="fas fa-money-bill-wave"></i></div>
         <div class="stat-value" id="totalPaymentsAmount">0</div>
         <div class="stat-label">إجمالي التسديدات</div>
        </div>
        
-       <div class="stat-card" onclick="filterPaymentsByStatus('on_time')" style="cursor: pointer; background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); color: white;" title="التسديدات في الموعد">
+       <div class="stat-card" onclick="filterPaymentsByStatus('on_time', this)" style="cursor: pointer; background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); color: white;" title="التسديدات في الموعد">
         <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
         <div class="stat-value" id="onTimePayments">0</div>
         <div class="stat-label">تسديدات في الموعد</div>
        </div>
        
-       <div class="stat-card" onclick="filterPaymentsByStatus('late')" style="cursor: pointer; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white;" title="التسديدات المتأخرة">
+       <div class="stat-card" onclick="filterPaymentsByStatus('late', this)" style="cursor: pointer; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white;" title="التسديدات المتأخرة">
         <div class="stat-icon"><i class="fas fa-exclamation-triangle"></i></div>
         <div class="stat-value" id="latePayments">0</div>
         <div class="stat-label">تسديدات متأخرة</div>
        </div>
        
-       <div class="stat-card" onclick="filterPaymentsByStatus('today')" style="cursor: pointer; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white;" title="تسديدات اليوم">
+       <div class="stat-card" onclick="filterPaymentsByStatus('today', this)" style="cursor: pointer; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white;" title="تسديدات اليوم">
         <div class="stat-icon"><i class="fas fa-calendar-day"></i></div>
         <div class="stat-value" id="todayPayments">0</div>
         <div class="stat-label">تسديدات اليوم</div>
@@ -14987,7 +14987,7 @@ console.log(`
         }
         
         // 🔥 دالة جديدة للفلترة حسب الحالة
-        function filterDebtsByStatus(status) {
+        function filterDebtsByStatus(status, clickedElement) {
             console.log('🔍 تطبيق فلتر:', status);
             currentDebtFilter = status;
             
@@ -14998,10 +14998,9 @@ console.log(`
             });
             
             // إبراز البطاقة المختارة
-            const activeCard = event?.currentTarget;
-            if (activeCard) {
-                activeCard.style.transform = 'scale(1.05)';
-                activeCard.style.boxShadow = '0 8px 24px rgba(0,0,0,0.15)';
+            if (clickedElement) {
+                clickedElement.style.transform = 'scale(1.05)';
+                clickedElement.style.boxShadow = '0 8px 24px rgba(0,0,0,0.15)';
             }
             
             renderDebtsTable();
@@ -20425,6 +20424,12 @@ console.log(`
             console.log('🔄 تحميل بيانات التسديدات...');
             paymentsData = [];
             
+            // التحقق من وجود debtsData
+            if (!debtsData || !Array.isArray(debtsData)) {
+                console.warn('⚠️ لا توجد بيانات ديون');
+                return paymentsData;
+            }
+            
             // جمع جميع التسديدات من جميع الديون
             debtsData.forEach(debt => {
                 if (debt.installments && Array.isArray(debt.installments)) {
@@ -20433,8 +20438,8 @@ console.log(`
                             paymentsData.push({
                                 id: `${debt.id || debt.__backendId}_${index}`,
                                 debt_id: debt.id || debt.__backendId,
-                                customer_name: debt.customer_name,
-                                customer_phone: debt.customer_phone,
+                                customer_name: debt.customer_name || 'غير معروف',
+                                customer_phone: debt.customer_phone || '',
                                 amount: parseFloat(inst.paid_amount || inst.amount || 0),
                                 paid_date: inst.paid_date,
                                 due_date: inst.due_date,
@@ -20483,26 +20488,31 @@ console.log(`
         function renderPaymentsPage() {
             console.log('📊 عرض صفحة التسديدات');
             
-            // تحميل البيانات
-            loadPaymentsData();
-            
-            // تحديث الإحصائيات
-            updatePaymentsStatistics();
-            
-            // ملء قائمة العملاء
-            populateCustomersFilter();
-            
-            // عرض الجدول
-            renderPaymentsTable();
-            
-            // رسم الرسوم البيانية
-            renderPaymentsCharts();
-            
-            // عرض أفضل العملاء
-            renderTopPayingCustomers();
-            
-            // عرض التسديدات القادمة
-            renderUpcomingPayments();
+            try {
+                // تحميل البيانات
+                loadPaymentsData();
+                
+                // تحديث الإحصائيات
+                updatePaymentsStatistics();
+                
+                // ملء قائمة العملاء
+                populateCustomersFilter();
+                
+                // عرض الجدول
+                renderPaymentsTable();
+                
+                // رسم الرسوم البيانية
+                renderPaymentsCharts();
+                
+                // عرض أفضل العملاء
+                renderTopPayingCustomers();
+                
+                // عرض التسديدات القادمة
+                renderUpcomingPayments();
+            } catch (error) {
+                console.error('❌ خطأ في عرض صفحة التسديدات:', error);
+                showToast('حدث خطأ في تحميل صفحة التسديدات', 'error');
+            }
         }
         
         // تحديث إحصائيات التسديدات
@@ -20789,7 +20799,7 @@ console.log(`
         }
         
         // فلترة حسب الحالة (من البطاقات)
-        function filterPaymentsByStatus(status) {
+        function filterPaymentsByStatus(status, clickedElement) {
             console.log('🔍 تطبيق فلتر التسديدات:', status);
             currentPaymentFilter = status;
             
@@ -20800,10 +20810,9 @@ console.log(`
             });
             
             // إبراز البطاقة المختارة
-            const activeCard = event?.currentTarget;
-            if (activeCard) {
-                activeCard.style.transform = 'scale(1.05)';
-                activeCard.style.boxShadow = '0 8px 24px rgba(0,0,0,0.15)';
+            if (clickedElement) {
+                clickedElement.style.transform = 'scale(1.05)';
+                clickedElement.style.boxShadow = '0 8px 24px rgba(0,0,0,0.15)';
             }
             
             renderPaymentsTable();

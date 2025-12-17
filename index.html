@@ -15379,7 +15379,8 @@ console.log(`
                         downPayment,
                         customerAddress,
                         cart: [...cart],
-                        finalTotal,
+                        finalTotal: newTotalAmount - downPayment, // 🔥 المبلغ النهائي الصحيح (بعد الإضافة والخصم)
+                        originalSubtotal: finalTotal, // المبلغ الأصلي للمنتجات
                         start_date: installmentStartDate
                     }
                 );
@@ -15400,7 +15401,7 @@ console.log(`
                             // إضافة المنتجات الجديدة والمبالغ الجديدة
                             new_items: [...cart],
                             new_subtotal: cart.reduce((sum, item) => sum + (item.product_price * item.quantity), 0),
-                            new_final_total: finalTotal
+                            new_final_total: newTotalAmount - downPayment // 🔥 المبلغ النهائي الصحيح (بعد الإضافة والخصم)
                         });
                     }
                     closeModal('paymentModal');
@@ -15763,6 +15764,11 @@ console.log(`
                 
                 // Always use a deep copy of the latest cart for the new sale
                 const latestCart = Array.isArray(newDebtData.cart) ? JSON.parse(JSON.stringify(newDebtData.cart)) : (Array.isArray(cart) ? JSON.parse(JSON.stringify(cart)) : []);
+                
+                // 🔥 حساب المبلغ النهائي الصحيح للفاتورة
+                // يجب أن يكون = المبلغ الأصلي + الإضافي - المقدمة
+                const correctFinalTotal = newDebtData.finalTotal || (newDebtData.newTotalAmount - newDebtData.downPayment);
+                
                 const saleData = {
                     type: 'sale',
                     invoice_id: 'INV-' + Date.now(),
@@ -15770,13 +15776,21 @@ console.log(`
                     subtotal: subtotal,
                     tax: taxAmount,
                     discount: discountAmount,
-                    final_total: newDebtData.finalTotal,
+                    final_total: correctFinalTotal, // 🔥 المبلغ النهائي الصحيح
                     payment_method: 'أقساط',
                     payment_type: 'أقساط',
                     timestamp: new Date().toISOString(),
                     customer_name: existingDebt.customer_name,
                     customer_phone: existingDebt.customer_phone,
+                    customer_address: newDebtData.customerAddress || existingDebt.customer_address,
                     linked_debt_id: existingDebt.id || existingDebt.invoice_id,
+                    // 🔥 حفظ تفاصيل الأقساط الكاملة
+                    installment_months: newDebtData.newInstallmentMonths,
+                    monthly_amount: newDebtData.newMonthlyAmount,
+                    additional_amount: newDebtData.additionalAmount || 0,
+                    down_payment: newDebtData.downPayment || 0,
+                    remaining_amount: newDebtData.newRemainingAmount,
+                    start_date: newDebtData.start_date,
                     // معلومات المستخدم الذي أنشأ الفاتورة
                     created_by: window.securityManager ? window.securityManager.getCurrentUsername() : 'unknown',
                     created_by_name: window.securityManager ? window.securityManager.getCurrentUserFullName() : 'غير معروف',

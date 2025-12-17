@@ -14436,11 +14436,13 @@ console.log(`
                 const createdByRole = sale.created_by_role || (sale.created_by === 'admin' ? 'مدير' : 'مستخدم');
                 
                 // إنشاء أزرار الإجراءات
+                const isInstallmentInvoice = sale.payment_type === 'أقساط';
+                
                 let actionButtons = `
                     <button class="action-btn view-btn" onclick="showInvoiceDetails('${sale.invoice_id}')" title="عرض التفاصيل">
                         <i class="fas fa-eye"></i>
                     </button>
-                    <button class="action-btn view-btn" onclick="printInvoice('${sale.invoice_id}')" title="طباعة">
+                    <button class="action-btn view-btn" onclick="${isInstallmentInvoice ? `printInvoiceFromDetails('${sale.invoice_id}', true)` : `printInvoice('${sale.invoice_id}')`}" title="طباعة">
                         <i class="fas fa-print"></i>
                     </button>
                 `;
@@ -19106,39 +19108,44 @@ console.log(`
             console.log('Debt.installments:', debt.installments);
             console.log('Debt.invoice_id:', debt.invoice_id);
             
-            // محاولة الحصول على المبلغ الإجمالي من عدة مصادر
+            // 🔥 إصلاح: الحصول على المبلغ الإجمالي الصحيح من الفاتورة المرتبطة
             let totalAmount = 0;
             
-            // المحاولة 1: من حقل total_amount
-            if (debt.total_amount !== undefined && debt.total_amount !== null) {
-                totalAmount = parseFloat(debt.total_amount);
-                console.log('✓ Got total from debt.total_amount:', totalAmount);
+            // المحاولة 1: من الفاتورة المرتبطة (الأولوية الأولى)
+            if (debt.invoice_id) {
+                const relatedSale = salesData.find(s => s.invoice_id === debt.invoice_id);
+                if (relatedSale && relatedSale.final_total) {
+                    totalAmount = parseFloat(relatedSale.final_total);
+                    console.log('✓ Got total from related sale.final_total:', totalAmount);
+                }
             }
-            // المحاولة 2: من حقل final_total
-            else if (debt.final_total !== undefined && debt.final_total !== null) {
+            
+            // المحاولة 2: من حقل final_total في الدين
+            if (!totalAmount && debt.final_total !== undefined && debt.final_total !== null) {
                 totalAmount = parseFloat(debt.final_total);
                 console.log('✓ Got total from debt.final_total:', totalAmount);
             }
-            // المحاولة 3: من حقل remaining_amount (إذا لم يكن مدفوع شيء)
-            else if (debt.remaining_amount !== undefined && debt.remaining_amount !== null) {
+            
+            // المحاولة 3: من حقل total_amount في الدين
+            if (!totalAmount && debt.total_amount !== undefined && debt.total_amount !== null) {
+                totalAmount = parseFloat(debt.total_amount);
+                console.log('✓ Got total from debt.total_amount:', totalAmount);
+            }
+            
+            // المحاولة 4: من حقل remaining_amount (إذا لم يكن مدفوع شيء)
+            if (!totalAmount && debt.remaining_amount !== undefined && debt.remaining_amount !== null) {
                 totalAmount = parseFloat(debt.remaining_amount);
                 console.log('✓ Got total from debt.remaining_amount:', totalAmount);
             }
-            // المحاولة 4: من الفاتورة المرتبطة
-            else if (debt.invoice_id) {
-                const relatedSale = salesData.find(s => s.invoice_id === debt.invoice_id);
-                if (relatedSale) {
-                    totalAmount = parseFloat(relatedSale.final_total || relatedSale.total_amount || 0);
-                    console.log('✓ Got total from related sale:', totalAmount);
-                }
-            }
+            
             // المحاولة 5: حساب من الأقساط
-            else if (debt.installments && Array.isArray(debt.installments) && debt.installments.length > 0) {
+            if (!totalAmount && debt.installments && Array.isArray(debt.installments) && debt.installments.length > 0) {
                 totalAmount = debt.installments.reduce((sum, inst) => sum + parseFloat(inst.amount || 0), 0);
                 console.log('✓ Calculated total from installments:', totalAmount);
             }
+            
             // المحاولة 6: من القسط الشهري × عدد الأشهر
-            else if (debt.monthly_amount && debt.installment_months) {
+            if (!totalAmount && debt.monthly_amount && debt.installment_months) {
                 totalAmount = parseFloat(debt.monthly_amount) * parseInt(debt.installment_months);
                 console.log('✓ Calculated total from monthly × months:', totalAmount);
             }

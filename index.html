@@ -7373,15 +7373,65 @@ console.log(`
        </div>
       </div>
       
+      <!-- إحصائيات إضافية متقدمة -->
+      <div class="card" style="margin-bottom: 1.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+       <h3 style="margin: 0 0 1rem 0; display: flex; align-items: center; gap: 0.5rem; color: white;">
+        <i class="fas fa-chart-line"></i> إحصائيات متقدمة
+       </h3>
+       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+        <div style="background: rgba(255,255,255,0.1); padding: 1rem; border-radius: 8px; text-align: center;">
+         <div style="font-size: 0.9rem; opacity: 0.9; margin-bottom: 0.5rem;">📊 معدل التسديد الشهري</div>
+         <div style="font-size: 1.5rem; font-weight: bold;" id="avgMonthlyPayments">0</div>
+        </div>
+        <div style="background: rgba(255,255,255,0.1); padding: 1rem; border-radius: 8px; text-align: center;">
+         <div style="font-size: 0.9rem; opacity: 0.9; margin-bottom: 0.5rem;">⚡ أسرع تسديد</div>
+         <div style="font-size: 1.5rem; font-weight: bold;" id="fastestPayment">-</div>
+        </div>
+        <div style="background: rgba(255,255,255,0.1); padding: 1rem; border-radius: 8px; text-align: center;">
+         <div style="font-size: 0.9rem; opacity: 0.9; margin-bottom: 0.5rem;">🐌 أبطأ تسديد</div>
+         <div style="font-size: 1.5rem; font-weight: bold;" id="slowestPayment">-</div>
+        </div>
+        <div style="background: rgba(255,255,255,0.1); padding: 1rem; border-radius: 8px; text-align: center;">
+         <div style="font-size: 0.9rem; opacity: 0.9; margin-bottom: 0.5rem;">💰 أكبر تسديد</div>
+         <div style="font-size: 1.5rem; font-weight: bold;" id="largestPayment">0</div>
+        </div>
+        <div style="background: rgba(255,255,255,0.1); padding: 1rem; border-radius: 8px; text-align: center;">
+         <div style="font-size: 0.9rem; opacity: 0.9; margin-bottom: 0.5rem;">📈 نسبة الالتزام</div>
+         <div style="font-size: 1.5rem; font-weight: bold;" id="commitmentRate">0%</div>
+        </div>
+        <div style="background: rgba(255,255,255,0.1); padding: 1rem; border-radius: 8px; text-align: center;">
+         <div style="font-size: 0.9rem; opacity: 0.9; margin-bottom: 0.5rem;">🏆 أفضل عميل</div>
+         <div style="font-size: 1.1rem; font-weight: bold;" id="topPayingCustomer">-</div>
+        </div>
+       </div>
+      </div>
+      
       <!-- فلاتر متقدمة -->
       <div class="card" style="margin-bottom: 1.5rem;">
-       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
         <h3 style="margin: 0; display: flex; align-items: center; gap: 0.5rem;">
          <i class="fas fa-filter"></i> فلاتر متقدمة
         </h3>
-        <button class="btn btn-secondary" onclick="resetPaymentsFilters()" style="padding: 0.5rem 1rem;">
-         <i class="fas fa-redo"></i> إعادة تعيين
-        </button>
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+         <button class="btn btn-sm btn-secondary" onclick="applyQuickFilter('today')" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">
+          <i class="fas fa-calendar-day"></i> اليوم
+         </button>
+         <button class="btn btn-sm btn-secondary" onclick="applyQuickFilter('this_week')" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">
+          <i class="fas fa-calendar-week"></i> هذا الأسبوع
+         </button>
+         <button class="btn btn-sm btn-secondary" onclick="applyQuickFilter('this_month')" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">
+          <i class="fas fa-calendar-alt"></i> هذا الشهر
+         </button>
+         <button class="btn btn-sm btn-secondary" onclick="applyQuickFilter('last_month')" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">
+          <i class="fas fa-calendar-minus"></i> الشهر الماضي
+         </button>
+         <button class="btn btn-sm btn-secondary" onclick="applyQuickFilter('this_year')" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">
+          <i class="fas fa-calendar"></i> هذا العام
+         </button>
+         <button class="btn btn-secondary" onclick="resetPaymentsFilters()" style="padding: 0.4rem 0.8rem;">
+          <i class="fas fa-redo"></i> إعادة تعيين
+         </button>
+        </div>
        </div>
        
        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
@@ -20502,6 +20552,74 @@ console.log(`
             
             const avgDays = latePaymentsCount > 0 ? Math.round(totalDaysLate / latePaymentsCount) : 0;
             updateElement('avgPaymentDays', avgDays + ' يوم');
+            
+            // ✨ إحصائيات متقدمة جديدة
+            
+            // معدل التسديد الشهري
+            const monthsWithPayments = [...new Set(paymentsData.map(p => {
+                const date = new Date(p.paid_date);
+                return `${date.getFullYear()}-${date.getMonth() + 1}`;
+            }))].length;
+            const avgMonthly = monthsWithPayments > 0 ? Math.round(paymentsData.length / monthsWithPayments) : 0;
+            updateElement('avgMonthlyPayments', avgMonthly + ' تسديد');
+            
+            // أسرع تسديد (أقل أيام تأخير)
+            let fastest = null;
+            let fastestDays = Infinity;
+            paymentsData.forEach(p => {
+                const days = calculateDaysLate(p.paid_date, p.due_date);
+                if (days >= 0 && days < fastestDays) {
+                    fastestDays = days;
+                    fastest = p;
+                }
+            });
+            updateElement('fastestPayment', fastest ? `${fastestDays} يوم` : '-');
+            
+            // أبطأ تسديد (أكثر أيام تأخير)
+            let slowest = null;
+            let slowestDays = -1;
+            paymentsData.forEach(p => {
+                const days = calculateDaysLate(p.paid_date, p.due_date);
+                if (days > slowestDays) {
+                    slowestDays = days;
+                    slowest = p;
+                }
+            });
+            updateElement('slowestPayment', slowest && slowestDays > 0 ? `${slowestDays} يوم` : '-');
+            
+            // أكبر تسديد
+            const largest = paymentsData.reduce((max, p) => p.amount > max ? p.amount : max, 0);
+            updateElement('largestPayment', formatCurrency(largest));
+            
+            // نسبة الالتزام (نسبة التسديدات في الموعد)
+            const commitmentRate = paymentsData.length > 0 
+                ? Math.round((onTime / paymentsData.length) * 100) 
+                : 0;
+            updateElement('commitmentRate', commitmentRate + '%');
+            
+            // أفضل عميل (أكثر عميل تسديداً)
+            const customerPayments = {};
+            paymentsData.forEach(p => {
+                if (!customerPayments[p.customer_phone]) {
+                    customerPayments[p.customer_phone] = {
+                        name: p.customer_name,
+                        count: 0,
+                        amount: 0
+                    };
+                }
+                customerPayments[p.customer_phone].count++;
+                customerPayments[p.customer_phone].amount += p.amount;
+            });
+            
+            let topCustomer = null;
+            let topCount = 0;
+            Object.entries(customerPayments).forEach(([phone, data]) => {
+                if (data.count > topCount) {
+                    topCount = data.count;
+                    topCustomer = data.name;
+                }
+            });
+            updateElement('topPayingCustomer', topCustomer || '-');
         }
         
         // ملء قائمة العملاء في الفلتر
@@ -20720,6 +20838,65 @@ console.log(`
             
             renderPaymentsTable();
             showToast('تم إعادة تعيين الفلاتر', 'success');
+        }
+        
+        // ✨ دالة الفلاتر السريعة الجديدة
+        function applyQuickFilter(period) {
+            console.log('⚡ تطبيق فلتر سريع:', period);
+            
+            const today = new Date();
+            let fromDate, toDate;
+            
+            switch(period) {
+                case 'today':
+                    fromDate = new Date(today);
+                    toDate = new Date(today);
+                    break;
+                    
+                case 'this_week':
+                    // بداية الأسبوع (السبت في العراق)
+                    const dayOfWeek = today.getDay();
+                    const diff = dayOfWeek === 6 ? 0 : (dayOfWeek + 1); // السبت = 6
+                    fromDate = new Date(today);
+                    fromDate.setDate(today.getDate() - diff);
+                    toDate = new Date(today);
+                    break;
+                    
+                case 'this_month':
+                    fromDate = new Date(today.getFullYear(), today.getMonth(), 1);
+                    toDate = new Date(today);
+                    break;
+                    
+                case 'last_month':
+                    fromDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+                    toDate = new Date(today.getFullYear(), today.getMonth(), 0);
+                    break;
+                    
+                case 'this_year':
+                    fromDate = new Date(today.getFullYear(), 0, 1);
+                    toDate = new Date(today);
+                    break;
+                    
+                default:
+                    return;
+            }
+            
+            // تطبيق التواريخ
+            document.getElementById('paymentsFromDate').value = fromDate.toISOString().split('T')[0];
+            document.getElementById('paymentsToDate').value = toDate.toISOString().split('T')[0];
+            
+            // تطبيق الفلتر
+            applyPaymentsFilters();
+            
+            const periodNames = {
+                'today': 'اليوم',
+                'this_week': 'هذا الأسبوع',
+                'this_month': 'هذا الشهر',
+                'last_month': 'الشهر الماضي',
+                'this_year': 'هذا العام'
+            };
+            
+            showToast(`تم تطبيق فلتر: ${periodNames[period]}`, 'success');
         }
         
         // البحث في التسديدات

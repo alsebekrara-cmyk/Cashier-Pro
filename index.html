@@ -7180,7 +7180,7 @@ console.log(`
       </div>
       
       <div class="stats-grid" style="margin-bottom: 1.5rem;">
-       <div class="stat-card" onclick="filterDebtsByStatus('all', this)" style="cursor: pointer;" title="عرض جميع الديون">
+       <div class="stat-card" onclick="filterDebtsByStatus('all')" style="cursor: pointer;" title="عرض جميع الديون">
         <div class="stat-icon"><i class="fas fa-money-bill-wave"></i>
         </div>
         <div class="stat-value" id="totalDebts">
@@ -7190,7 +7190,7 @@ console.log(`
          إجمالي الديون
         </div>
        </div>
-       <div class="stat-card" onclick="filterDebtsByStatus('active', this)" style="cursor: pointer;" title="عرض الديون النشطة">
+       <div class="stat-card" onclick="filterDebtsByStatus('active')" style="cursor: pointer;" title="عرض الديون النشطة">
         <div class="stat-icon"><i class="fas fa-users"></i>
         </div>
         <div class="stat-value" id="debtCustomers">
@@ -7200,7 +7200,7 @@ console.log(`
          عدد العملاء
         </div>
        </div>
-       <div class="stat-card" onclick="filterDebtsByStatus('overdue', this)" style="cursor: pointer;" title="عرض الديون المتأخرة">
+       <div class="stat-card" onclick="filterDebtsByStatus('overdue')" style="cursor: pointer;" title="عرض الديون المتأخرة">
         <div class="stat-icon"><i class="fas fa-calendar-check"></i>
         </div>
         <div class="stat-value" id="overdueDebts">
@@ -7210,7 +7210,7 @@ console.log(`
          ديون متأخرة
         </div>
        </div>
-       <div class="stat-card" onclick="filterDebtsByStatus('paid', this)" style="cursor: pointer;" title="عرض الديون المسددة">
+       <div class="stat-card" onclick="filterDebtsByStatus('paid')" style="cursor: pointer;" title="عرض الديون المسددة">
         <div class="stat-icon"><i class="fas fa-check-circle"></i>
         </div>
         <div class="stat-value" id="paidDebts">
@@ -7334,99 +7334,44 @@ console.log(`
        </div>
       </div>
       
-      <!-- إحصائيات التسديدات المحسّنة -->
-      <div class="stats-grid" style="margin-bottom: 1.5rem; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));">
-       <div class="stat-card" onclick="filterPaymentsByStatus('all', this)" style="cursor: pointer; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; transition: all 0.3s;" title="عرض جميع التسديدات">
+      <!-- إحصائيات التسديدات -->
+      <div class="stats-grid" style="margin-bottom: 1.5rem;">
+       <div class="stat-card" onclick="filterPaymentsByStatus('all')" style="cursor: pointer; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;" title="عرض جميع التسديدات">
         <div class="stat-icon"><i class="fas fa-money-bill-wave"></i></div>
         <div class="stat-value" id="totalPaymentsAmount">0</div>
         <div class="stat-label">إجمالي التسديدات</div>
-        <div style="font-size: 0.75rem; opacity: 0.9; margin-top: 4px;" id="totalPaymentsCount">0 تسديد</div>
        </div>
        
-       <div class="stat-card" onclick="filterPaymentsByStatus('on_time', this)" style="cursor: pointer; background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); color: white; transition: all 0.3s;" title="التسديدات في الموعد">
+       <div class="stat-card" onclick="filterPaymentsByStatus('on_time')" style="cursor: pointer; background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); color: white;" title="التسديدات في الموعد">
         <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
         <div class="stat-value" id="onTimePayments">0</div>
         <div class="stat-label">تسديدات في الموعد</div>
-        <div style="font-size: 0.75rem; opacity: 0.9; margin-top: 4px;" id="onTimePercentage">0%</div>
        </div>
        
-       <div class="stat-card" onclick="filterPaymentsByStatus('late', this)" style="cursor: pointer; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; transition: all 0.3s;" title="التسديدات المتأخرة">
+       <div class="stat-card" onclick="filterPaymentsByStatus('late')" style="cursor: pointer; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white;" title="التسديدات المتأخرة">
         <div class="stat-icon"><i class="fas fa-exclamation-triangle"></i></div>
         <div class="stat-value" id="latePayments">0</div>
         <div class="stat-label">تسديدات متأخرة</div>
-        <div style="font-size: 0.75rem; opacity: 0.9; margin-top: 4px;" id="latePercentage">0%</div>
        </div>
        
-       <div class="stat-card" onclick="filterPaymentsByStatus('today', this)" style="cursor: pointer; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; transition: all 0.3s;" title="تسديدات اليوم">
+       <div class="stat-card" onclick="filterPaymentsByStatus('today')" style="cursor: pointer; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white;" title="تسديدات اليوم">
         <div class="stat-icon"><i class="fas fa-calendar-day"></i></div>
         <div class="stat-value" id="todayPayments">0</div>
         <div class="stat-label">تسديدات اليوم</div>
-        <div style="font-size: 0.75rem; opacity: 0.9; margin-top: 4px;" id="todayPaymentsAmount">0 د</div>
        </div>
        
-       <div class="stat-card" onclick="filterPaymentsByStatus('this_week', this)" style="cursor: pointer; background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); color: white; transition: all 0.3s;" title="تسديدات هذا الأسبوع">
-        <div class="stat-icon"><i class="fas fa-calendar-week"></i></div>
-        <div class="stat-value" id="weekPayments">0</div>
-        <div class="stat-label">تسديدات الأسبوع</div>
-        <div style="font-size: 0.75rem; opacity: 0.9; margin-top: 4px;" id="weekPaymentsAmount">0 د</div>
-       </div>
-       
-       <div class="stat-card" onclick="filterPaymentsByStatus('this_month', this)" style="cursor: pointer; background: linear-gradient(135deg, #30cfd0 0%, #330867 100%); color: white; transition: all 0.3s;" title="تسديدات هذا الشهر">
-        <div class="stat-icon"><i class="fas fa-calendar-alt"></i></div>
-        <div class="stat-value" id="monthPayments">0</div>
-        <div class="stat-label">تسديدات الشهر</div>
-        <div style="font-size: 0.75rem; opacity: 0.9; margin-top: 4px;" id="monthPaymentsAmount">0 د</div>
-       </div>
-       
-       <div class="stat-card" style="background: linear-gradient(135deg, #f77062 0%, #fe5196 100%); color: white;">
+       <div class="stat-card" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); color: white;">
         <div class="stat-icon"><i class="fas fa-users"></i></div>
         <div class="stat-value" id="totalPayingCustomers">0</div>
-        <div class="stat-label">العملاء المسددون</div>
-        <div style="font-size: 0.75rem; opacity: 0.9; margin-top: 4px;" id="activeDebtorsCount">0 نشط</div>
+        <div class="stat-label">عدد العملاء المسددين</div>
        </div>
        
-       <div class="stat-card" style="background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); color: #333;">
-        <div class="stat-icon"><i class="fas fa-clock"></i></div>
+       <div class="stat-card" style="background: linear-gradient(135deg, #30cfd0 0%, #330867 100%); color: white;">
+        <div class="stat-icon"><i class="fas fa-calendar-alt"></i></div>
         <div class="stat-value" id="avgPaymentDays">0</div>
         <div class="stat-label">متوسط أيام التأخير</div>
-        <div style="font-size: 0.75rem; opacity: 0.8; margin-top: 4px;" id="maxDelayDays">أقصى: 0 يوم</div>
-       </div>
-       
-       <div class="stat-card" style="background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%); color: #333;">
-        <div class="stat-icon"><i class="fas fa-chart-line"></i></div>
-        <div class="stat-value" id="avgPaymentAmount">0</div>
-        <div class="stat-label">متوسط قيمة التسديد</div>
-        <div style="font-size: 0.75rem; opacity: 0.8; margin-top: 4px;" id="totalDebtRemaining">متبقي: 0 د</div>
-       </div>
-       
-       <div class="stat-card" style="background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%); color: #333;">
-        <div class="stat-icon"><i class="fas fa-percentage"></i></div>
-        <div class="stat-value" id="collectionRate">0%</div>
-        <div class="stat-label">معدل التحصيل</div>
-        <div style="font-size: 0.75rem; opacity: 0.8; margin-top: 4px;" id="collectionTarget">الهدف: 90%</div>
-       </div>
-       
-       <div class="stat-card" style="background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%); color: #333;">
-        <div class="stat-icon"><i class="fas fa-calendar-check"></i></div>
-        <div class="stat-value" id="upcomingPaymentsCount">0</div>
-        <div class="stat-label">تسديدات قادمة</div>
-        <div style="font-size: 0.75rem; opacity: 0.8; margin-top: 4px;" id="upcomingPaymentsAmount">0 د</div>
-       </div>
-       
-       <div class="stat-card" style="background: linear-gradient(135deg, #ffdde1 0%, #ee9ca7 100%); color: #333;">
-        <div class="stat-icon"><i class="fas fa-exclamation-circle"></i></div>
-        <div class="stat-value" id="overduePaymentsCount">0</div>
-        <div class="stat-label">أقساط متأخرة</div>
-        <div style="font-size: 0.75rem; opacity: 0.8; margin-top: 4px;" id="overduePaymentsAmount">0 د</div>
        </div>
       </div>
-      
-      <style>
-        .stat-card:hover {
-          transform: translateY(-5px);
-          box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-        }
-      </style>
       
       <!-- إحصائيات إضافية متقدمة -->
       <div class="card" style="margin-bottom: 1.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
@@ -7486,13 +7431,10 @@ console.log(`
          <button class="btn btn-secondary" onclick="resetPaymentsFilters()" style="padding: 0.4rem 0.8rem;">
           <i class="fas fa-redo"></i> إعادة تعيين
          </button>
-         <button class="btn btn-primary" onclick="showAdvancedFiltersModal()" style="padding: 0.4rem 0.8rem;">
-          <i class="fas fa-sliders-h"></i> فلاتر متقدمة
-         </button>
         </div>
        </div>
        
-       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
         <div>
          <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">
           <i class="fas fa-calendar"></i> من تاريخ
@@ -7541,102 +7483,22 @@ console.log(`
          </label>
          <input type="number" id="paymentsMaxAmount" class="form-control" placeholder="∞" onchange="applyPaymentsFilters()">
         </div>
-        
-        <div>
-         <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">
-          <i class="fas fa-sort"></i> ترتيب حسب
-         </label>
-         <select id="paymentsSortBy" class="form-control" onchange="applyPaymentsFilters()">
-          <option value="date_desc">التاريخ (الأحدث أولاً)</option>
-          <option value="date_asc">التاريخ (الأقدم أولاً)</option>
-          <option value="amount_desc">المبلغ (الأعلى أولاً)</option>
-          <option value="amount_asc">المبلغ (الأقل أولاً)</option>
-          <option value="delay_desc">التأخير (الأكثر أولاً)</option>
-          <option value="delay_asc">التأخير (الأقل أولاً)</option>
-          <option value="customer_asc">اسم العميل (أ-ي)</option>
-         </select>
-        </div>
-        
-        <div>
-         <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">
-          <i class="fas fa-hashtag"></i> عدد النتائج
-         </label>
-         <select id="paymentsLimitResults" class="form-control" onchange="applyPaymentsFilters()">
-          <option value="50">50 نتيجة</option>
-          <option value="100" selected>100 نتيجة</option>
-          <option value="250">250 نتيجة</option>
-          <option value="500">500 نتيجة</option>
-          <option value="all">جميع النتائج</option>
-         </select>
-        </div>
-       </div>
-       
-       <!-- معلومات الفلترة النشطة -->
-       <div id="activeFiltersInfo" style="margin-top: 1rem; padding: 0.75rem; background: #f0f9ff; border-radius: 8px; display: none;">
-        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem;">
-         <div style="display: flex; align-items: center; gap: 0.5rem;">
-          <i class="fas fa-info-circle" style="color: #0284c7;"></i>
-          <span style="font-weight: 500; color: #0c4a6e;">الفلاتر النشطة:</span>
-          <span id="activeFiltersText" style="color: #0369a1;"></span>
-         </div>
-         <button class="btn btn-sm" onclick="resetPaymentsFilters()" style="padding: 0.25rem 0.75rem; background: #e0f2fe; color: #075985; border: none;">
-          <i class="fas fa-times"></i> إزالة الكل
-         </button>
-        </div>
        </div>
       </div>
       
-      <!-- جدول التسديدات المحسّن -->
+      <!-- جدول التسديدات -->
       <div class="table-container">
-       <div style="margin-bottom: 1rem; padding: 0.75rem; background: var(--theme-bg-secondary); border-radius: 8px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
-        <div style="display: flex; align-items: center; gap: 1rem;">
-         <span style="font-weight: 500;">
-          <i class="fas fa-list"></i> عرض <span id="displayedPaymentsCount">0</span> من <span id="totalPaymentsCountDisplay">0</span> تسديد
-         </span>
-         <span style="color: var(--theme-text-secondary); font-size: 0.9rem;">
-          <i class="fas fa-dollar-sign"></i> المجموع: <strong id="displayedPaymentsTotal">0 د</strong>
-         </span>
-        </div>
-        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-         <button class="btn btn-sm btn-secondary" onclick="selectAllPayments()" style="padding: 0.4rem 0.75rem;">
-          <i class="fas fa-check-square"></i> تحديد الكل
-         </button>
-         <button class="btn btn-sm btn-secondary" onclick="exportSelectedPayments()" style="padding: 0.4rem 0.75rem;">
-          <i class="fas fa-download"></i> تصدير المحدد
-         </button>
-         <button class="btn btn-sm btn-primary" onclick="printSelectedPayments()" style="padding: 0.4rem 0.75rem;">
-          <i class="fas fa-print"></i> طباعة المحدد
-         </button>
-        </div>
-       </div>
-       
        <table class="table">
         <thead>
          <tr>
-          <th style="width: 40px;"><input type="checkbox" id="selectAllPaymentsCheckbox" onchange="toggleAllPayments(this)"></th>
           <th><i class="fas fa-hashtag"></i> #</th>
-          <th style="cursor: pointer;" onclick="sortPaymentsBy('date')">
-           <i class="fas fa-calendar"></i> تاريخ التسديد
-           <i class="fas fa-sort" id="sortIconDate"></i>
-          </th>
-          <th style="cursor: pointer;" onclick="sortPaymentsBy('customer')">
-           <i class="fas fa-user"></i> اسم العميل
-           <i class="fas fa-sort" id="sortIconCustomer"></i>
-          </th>
+          <th><i class="fas fa-calendar"></i> تاريخ التسديد</th>
+          <th><i class="fas fa-user"></i> اسم العميل</th>
           <th><i class="fas fa-phone"></i> رقم الهاتف</th>
-          <th style="cursor: pointer;" onclick="sortPaymentsBy('amount')">
-           <i class="fas fa-money-bill-wave"></i> المبلغ المدفوع
-           <i class="fas fa-sort" id="sortIconAmount"></i>
-          </th>
-          <th><i class="fas fa-receipt"></i> رقم الفاتورة</th>
+          <th><i class="fas fa-money-bill-wave"></i> المبلغ المدفوع</th>
           <th><i class="fas fa-calendar-alt"></i> القسط المستحق</th>
           <th><i class="fas fa-calendar-check"></i> تاريخ الاستحقاق</th>
-          <th style="cursor: pointer;" onclick="sortPaymentsBy('delay')">
-           <i class="fas fa-clock"></i> التأخير
-           <i class="fas fa-sort" id="sortIconDelay"></i>
-          </th>
-          <th><i class="fas fa-wallet"></i> المتبقي</th>
-          <th><i class="fas fa-percentage"></i> نسبة السداد</th>
+          <th><i class="fas fa-clock"></i> أيام التأخير</th>
           <th><i class="fas fa-info-circle"></i> الحالة</th>
           <th><i class="fas fa-cogs"></i> الإجراءات</th>
          </tr>
@@ -7645,24 +7507,7 @@ console.log(`
          <!-- التسديدات ستظهر هنا -->
         </tbody>
        </table>
-       
-       <!-- Pagination للجدول -->
-       <div id="paymentsPagination" style="display: flex; justify-content: center; align-items: center; gap: 0.5rem; margin-top: 1rem; flex-wrap: wrap;">
-        <!-- سيتم ملؤها ديناميكياً -->
-       </div>
       </div>
-      
-      <style>
-        .table th[onclick] {
-          user-select: none;
-        }
-        .table th[onclick]:hover {
-          background: rgba(99, 102, 241, 0.1);
-        }
-        .payment-row-selected {
-          background: rgba(99, 102, 241, 0.1) !important;
-        }
-      </style>
       
       <!-- رسوم بيانية وتقارير -->
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 1.5rem; margin-top: 2rem;">
@@ -15142,7 +14987,7 @@ console.log(`
         }
         
         // 🔥 دالة جديدة للفلترة حسب الحالة
-        function filterDebtsByStatus(status, clickedElement) {
+        function filterDebtsByStatus(status) {
             console.log('🔍 تطبيق فلتر:', status);
             currentDebtFilter = status;
             
@@ -15153,9 +14998,10 @@ console.log(`
             });
             
             // إبراز البطاقة المختارة
-            if (clickedElement) {
-                clickedElement.style.transform = 'scale(1.05)';
-                clickedElement.style.boxShadow = '0 8px 24px rgba(0,0,0,0.15)';
+            const activeCard = event?.currentTarget;
+            if (activeCard) {
+                activeCard.style.transform = 'scale(1.05)';
+                activeCard.style.boxShadow = '0 8px 24px rgba(0,0,0,0.15)';
             }
             
             renderDebtsTable();
@@ -20579,12 +20425,6 @@ console.log(`
             console.log('🔄 تحميل بيانات التسديدات...');
             paymentsData = [];
             
-            // التحقق من وجود debtsData
-            if (!debtsData || !Array.isArray(debtsData)) {
-                console.warn('⚠️ لا توجد بيانات ديون');
-                return paymentsData;
-            }
-            
             // جمع جميع التسديدات من جميع الديون
             debtsData.forEach(debt => {
                 if (debt.installments && Array.isArray(debt.installments)) {
@@ -20593,8 +20433,8 @@ console.log(`
                             paymentsData.push({
                                 id: `${debt.id || debt.__backendId}_${index}`,
                                 debt_id: debt.id || debt.__backendId,
-                                customer_name: debt.customer_name || 'غير معروف',
-                                customer_phone: debt.customer_phone || '',
+                                customer_name: debt.customer_name,
+                                customer_phone: debt.customer_phone,
                                 amount: parseFloat(inst.paid_amount || inst.amount || 0),
                                 paid_date: inst.paid_date,
                                 due_date: inst.due_date,
@@ -20643,49 +20483,35 @@ console.log(`
         function renderPaymentsPage() {
             console.log('📊 عرض صفحة التسديدات');
             
-            try {
-                // تحميل البيانات
-                loadPaymentsData();
-                
-                // تحديث الإحصائيات
-                updatePaymentsStatistics();
-                
-                // ملء قائمة العملاء
-                populateCustomersFilter();
-                
-                // عرض الجدول
-                renderPaymentsTable();
-                
-                // رسم الرسوم البيانية
-                renderPaymentsCharts();
-                
-                // عرض أفضل العملاء
-                renderTopPayingCustomers();
-                
-                // عرض التسديدات القادمة
-                renderUpcomingPayments();
-            } catch (error) {
-                console.error('❌ خطأ في عرض صفحة التسديدات:', error);
-                showToast('حدث خطأ في تحميل صفحة التسديدات', 'error');
-            }
+            // تحميل البيانات
+            loadPaymentsData();
+            
+            // تحديث الإحصائيات
+            updatePaymentsStatistics();
+            
+            // ملء قائمة العملاء
+            populateCustomersFilter();
+            
+            // عرض الجدول
+            renderPaymentsTable();
+            
+            // رسم الرسوم البيانية
+            renderPaymentsCharts();
+            
+            // عرض أفضل العملاء
+            renderTopPayingCustomers();
+            
+            // عرض التسديدات القادمة
+            renderUpcomingPayments();
         }
         
         // تحديث إحصائيات التسديدات
         function updatePaymentsStatistics() {
             console.log('📈 تحديث إحصائيات التسديدات');
             
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            
-            const weekStart = new Date(today);
-            weekStart.setDate(today.getDate() - today.getDay());
-            
-            const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
-            
-            // إجمالي المبلغ والعدد
+            // إجمالي المبلغ
             const totalAmount = paymentsData.reduce((sum, p) => sum + p.amount, 0);
             updateElement('totalPaymentsAmount', formatCurrency(totalAmount));
-            updateElement('totalPaymentsCount', paymentsData.length + ' تسديد');
             
             // التسديدات في الموعد
             const onTime = paymentsData.filter(p => {
@@ -20693,10 +20519,6 @@ console.log(`
                 return status.status === 'on_time' || status.status === 'early';
             }).length;
             updateElement('onTimePayments', onTime);
-            const onTimePercentage = paymentsData.length > 0 
-                ? Math.round((onTime / paymentsData.length) * 100) 
-                : 0;
-            updateElement('onTimePercentage', onTimePercentage + '%');
             
             // التسديدات المتأخرة
             const late = paymentsData.filter(p => {
@@ -20704,146 +20526,32 @@ console.log(`
                 return status.status === 'late' || status.status === 'very_late';
             }).length;
             updateElement('latePayments', late);
-            const latePercentage = paymentsData.length > 0 
-                ? Math.round((late / paymentsData.length) * 100) 
-                : 0;
-            updateElement('latePercentage', latePercentage + '%');
             
             // تسديدات اليوم
-            const todayPayments = paymentsData.filter(p => {
-                const pDate = new Date(p.paid_date);
-                pDate.setHours(0, 0, 0, 0);
-                return pDate.getTime() === today.getTime();
-            });
-            updateElement('todayPayments', todayPayments.length);
-            const todayAmount = todayPayments.reduce((sum, p) => sum + p.amount, 0);
-            updateElement('todayPaymentsAmount', formatCurrency(todayAmount));
-            
-            // تسديدات هذا الأسبوع
-            const weekPayments = paymentsData.filter(p => {
-                const pDate = new Date(p.paid_date);
-                return pDate >= weekStart && pDate <= today;
-            });
-            updateElement('weekPayments', weekPayments.length);
-            const weekAmount = weekPayments.reduce((sum, p) => sum + p.amount, 0);
-            updateElement('weekPaymentsAmount', formatCurrency(weekAmount));
-            
-            // تسديدات هذا الشهر
-            const monthPayments = paymentsData.filter(p => {
-                const pDate = new Date(p.paid_date);
-                return pDate >= monthStart && pDate <= today;
-            });
-            updateElement('monthPayments', monthPayments.length);
-            const monthAmount = monthPayments.reduce((sum, p) => sum + p.amount, 0);
-            updateElement('monthPaymentsAmount', formatCurrency(monthAmount));
+            const today = new Date().toDateString();
+            const todayPayments = paymentsData.filter(p => 
+                new Date(p.paid_date).toDateString() === today
+            ).length;
+            updateElement('todayPayments', todayPayments);
             
             // عدد العملاء المسددين
             const uniqueCustomers = [...new Set(paymentsData.map(p => p.customer_phone))].length;
             updateElement('totalPayingCustomers', uniqueCustomers);
             
-            // حساب عدد العملاء النشطين (لديهم ديون غير مسددة بالكامل)
-            const activeDebtors = debtsData ? debtsData.filter(d => {
-                const paidInstallments = (d.installments || []).filter(i => i.status === 'paid').length;
-                const totalInstallments = (d.installments || []).length;
-                return paidInstallments < totalInstallments;
-            }).length : 0;
-            updateElement('activeDebtorsCount', activeDebtors + ' نشط');
-            
-            // متوسط أيام التأخير وأقصى تأخير
+            // متوسط أيام التأخير
             let totalDaysLate = 0;
             let latePaymentsCount = 0;
-            let maxDelay = 0;
             
             paymentsData.forEach(p => {
                 const days = calculateDaysLate(p.paid_date, p.due_date);
                 if (days > 0) {
                     totalDaysLate += days;
                     latePaymentsCount++;
-                    maxDelay = Math.max(maxDelay, days);
                 }
             });
             
             const avgDays = latePaymentsCount > 0 ? Math.round(totalDaysLate / latePaymentsCount) : 0;
             updateElement('avgPaymentDays', avgDays + ' يوم');
-            updateElement('maxDelayDays', 'أقصى: ' + maxDelay + ' يوم');
-            
-            // متوسط قيمة التسديد
-            const avgAmount = paymentsData.length > 0 
-                ? totalAmount / paymentsData.length 
-                : 0;
-            updateElement('avgPaymentAmount', formatCurrency(avgAmount));
-            
-            // حساب إجمالي المتبقي من جميع الديون
-            let totalRemaining = 0;
-            if (debtsData && Array.isArray(debtsData)) {
-                debtsData.forEach(debt => {
-                    const remaining = (debt.installments || [])
-                        .filter(i => i.status !== 'paid')
-                        .reduce((sum, i) => sum + (i.amount || 0), 0);
-                    totalRemaining += remaining;
-                });
-            }
-            updateElement('totalDebtRemaining', 'متبقي: ' + formatCurrency(totalRemaining));
-            
-            // معدل التحصيل (نسبة المدفوع إلى الإجمالي)
-            let totalDebts = 0;
-            let totalPaid = 0;
-            if (debtsData && Array.isArray(debtsData)) {
-                debtsData.forEach(debt => {
-                    const total = (debt.installments || []).reduce((sum, i) => sum + (i.amount || 0), 0);
-                    const paid = (debt.installments || [])
-                        .filter(i => i.status === 'paid')
-                        .reduce((sum, i) => sum + (i.amount || 0), 0);
-                    totalDebts += total;
-                    totalPaid += paid;
-                });
-            }
-            const collectionRate = totalDebts > 0 
-                ? Math.round((totalPaid / totalDebts) * 100) 
-                : 0;
-            updateElement('collectionRate', collectionRate + '%');
-            
-            // التسديدات القادمة (الأقساط المستحقة في الأيام الـ 7 القادمة)
-            let upcomingCount = 0;
-            let upcomingAmount = 0;
-            const in7Days = new Date(today);
-            in7Days.setDate(today.getDate() + 7);
-            
-            if (debtsData && Array.isArray(debtsData)) {
-                debtsData.forEach(debt => {
-                    (debt.installments || []).forEach(inst => {
-                        if (inst.status !== 'paid' && inst.due_date) {
-                            const dueDate = new Date(inst.due_date);
-                            if (dueDate >= today && dueDate <= in7Days) {
-                                upcomingCount++;
-                                upcomingAmount += inst.amount || 0;
-                            }
-                        }
-                    });
-                });
-            }
-            updateElement('upcomingPaymentsCount', upcomingCount);
-            updateElement('upcomingPaymentsAmount', formatCurrency(upcomingAmount));
-            
-            // الأقساط المتأخرة (لم يتم دفعها وتاريخ استحقاقها قد مر)
-            let overdueCount = 0;
-            let overdueAmount = 0;
-            
-            if (debtsData && Array.isArray(debtsData)) {
-                debtsData.forEach(debt => {
-                    (debt.installments || []).forEach(inst => {
-                        if (inst.status !== 'paid' && inst.due_date) {
-                            const dueDate = new Date(inst.due_date);
-                            if (dueDate < today) {
-                                overdueCount++;
-                                overdueAmount += inst.amount || 0;
-                            }
-                        }
-                    });
-                });
-            }
-            updateElement('overduePaymentsCount', overdueCount);
-            updateElement('overduePaymentsAmount', formatCurrency(overdueAmount));
             
             // ✨ إحصائيات متقدمة جديدة
             
@@ -20947,53 +20655,10 @@ console.log(`
             // تطبيق الفلاتر
             let filteredPayments = applyPaymentsFilters();
             
-            // تطبيق الترتيب
-            if (currentSortColumn) {
-                filteredPayments.sort((a, b) => {
-                    let valA, valB;
-                    
-                    switch (currentSortColumn) {
-                        case 'date':
-                            valA = new Date(a.paid_date);
-                            valB = new Date(b.paid_date);
-                            break;
-                        case 'customer':
-                            valA = a.customer_name.toLowerCase();
-                            valB = b.customer_name.toLowerCase();
-                            break;
-                        case 'amount':
-                            valA = a.amount;
-                            valB = b.amount;
-                            break;
-                        case 'delay':
-                            valA = calculateDaysLate(a.paid_date, a.due_date);
-                            valB = calculateDaysLate(b.paid_date, b.due_date);
-                            break;
-                        default:
-                            return 0;
-                    }
-                    
-                    if (currentSortDirection === 'desc') {
-                        return valB > valA ? 1 : valB < valA ? -1 : 0;
-                    } else {
-                        return valA > valB ? 1 : valA < valB ? -1 : 0;
-                    }
-                });
-            } else {
-                // ترتيب افتراضي حسب التاريخ (الأحدث أولاً)
-                filteredPayments.sort((a, b) => new Date(b.paid_date) - new Date(a.paid_date));
-            }
-            
-            // تحديث العداد
-            updateElement('displayedPaymentsCount', filteredPayments.length);
-            updateElement('totalPaymentsCountDisplay', paymentsData.length);
-            const displayedTotal = filteredPayments.reduce((sum, p) => sum + p.amount, 0);
-            updateElement('displayedPaymentsTotal', formatCurrency(displayedTotal));
-            
             if (filteredPayments.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="14" style="text-align: center; padding: 2rem; color: #999;">
+                        <td colspan="10" style="text-align: center; padding: 2rem; color: #999;">
                             <i class="fas fa-inbox" style="font-size: 3rem; margin-bottom: 1rem; display: block;"></i>
                             <p>لا توجد تسديدات مطابقة للفلتر</p>
                         </td>
@@ -21002,33 +20667,15 @@ console.log(`
                 return;
             }
             
+            // ترتيب حسب التاريخ (الأحدث أولاً)
+            filteredPayments.sort((a, b) => new Date(b.paid_date) - new Date(a.paid_date));
+            
             tbody.innerHTML = filteredPayments.map((payment, index) => {
                 const daysLate = calculateDaysLate(payment.paid_date, payment.due_date);
                 const status = getPaymentStatus(payment.paid_date, payment.due_date);
                 
-                // حساب المبلغ المتبقي من الدين
-                const debt = payment.debt;
-                const remainingInstallments = debt ? (debt.installments || []).filter(i => i.status !== 'paid') : [];
-                const remainingAmount = remainingInstallments.reduce((sum, i) => sum + (i.amount || 0), 0);
-                
-                // حساب نسبة السداد
-                const totalInstallments = debt ? (debt.installments || []).length : 0;
-                const paidInstallments = debt ? (debt.installments || []).filter(i => i.status === 'paid').length : 0;
-                const paymentPercentage = totalInstallments > 0 ? Math.round((paidInstallments / totalInstallments) * 100) : 0;
-                
-                // الحصول على رقم الفاتورة
-                const invoiceId = debt ? (debt.invoice_id || debt.linked_invoices?.[0] || '-') : '-';
-                
-                const isSelected = selectedPayments.has(payment.id);
-                
                 return `
-                    <tr class="${isSelected ? 'payment-row-selected' : ''}">
-                        <td>
-                            <input type="checkbox" 
-                                   data-payment-id="${payment.id}" 
-                                   ${isSelected ? 'checked' : ''}
-                                   onchange="togglePaymentSelection(this, '${payment.id}')">
-                        </td>
+                    <tr>
                         <td>${index + 1}</td>
                         <td>
                             <i class="fas fa-calendar"></i>
@@ -21045,61 +20692,26 @@ console.log(`
                                 ${formatCurrency(payment.amount)}
                             </strong>
                         </td>
-                        <td>
-                            <span style="background: #f0f9ff; color: #0284c7; padding: 4px 8px; border-radius: 4px; font-size: 0.85rem;">
-                                ${invoiceId}
-                            </span>
-                        </td>
                         <td>القسط ${payment.month_number}</td>
                         <td>
                             ${payment.due_date ? new Date(payment.due_date).toLocaleDateString('ar-IQ') : '-'}
                         </td>
                         <td>
                             ${daysLate > 0 
-                                ? `<span style="color: #ef4444; font-weight: 600;">
-                                    <i class="fas fa-clock"></i> ${daysLate} يوم
-                                   </span>` 
-                                : daysLate === 0 && payment.due_date
-                                ? `<span style="color: #10b981; font-weight: 600;">
-                                    <i class="fas fa-check"></i> في الموعد
-                                   </span>`
-                                : `<span style="color: #3b82f6; font-weight: 600;">
-                                    <i class="fas fa-bolt"></i> مبكر ${Math.abs(daysLate)} يوم
-                                   </span>`
+                                ? `<span style="color: #ef4444; font-weight: 600;">${daysLate} يوم</span>` 
+                                : `<span style="color: #10b981;"><i class="fas fa-check"></i> في الموعد</span>`
                             }
                         </td>
                         <td>
-                            <strong style="color: ${remainingAmount > 0 ? '#ef4444' : '#10b981'}; font-size: 0.95rem;">
-                                ${formatCurrency(remainingAmount)}
-                            </strong>
+                            <span class="${status.class}">${status.label}</span>
                         </td>
                         <td>
-                            <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                <div style="flex: 1; background: #e5e7eb; height: 8px; border-radius: 4px; overflow: hidden;">
-                                    <div style="width: ${paymentPercentage}%; height: 100%; background: linear-gradient(90deg, #10b981, #059669); transition: width 0.3s;"></div>
-                                </div>
-                                <span style="font-size: 0.85rem; font-weight: 600; color: ${paymentPercentage === 100 ? '#10b981' : '#6b7280'};">
-                                    ${paymentPercentage}%
-                                </span>
-                            </div>
-                        </td>
-                        <td>
-                            <span class="${status.class}" style="padding: 4px 12px; border-radius: 12px; font-size: 0.85rem; white-space: nowrap;">
-                                ${status.label}
-                            </span>
-                        </td>
-                        <td>
-                            <div style="display: flex; gap: 0.25rem; justify-content: center;">
-                                <button class="action-btn view-btn" onclick="showPaymentDetails('${payment.id}')" title="عرض التفاصيل">
-                                    <i class="fas fa-eye"></i>
-                                </button>
-                                <button class="action-btn view-btn" onclick="printPaymentReceipt('${payment.debt_id}')" title="طباعة إيصال">
-                                    <i class="fas fa-print"></i>
-                                </button>
-                                <button class="action-btn edit-btn" onclick="viewDebtDetails('${payment.debt_id}')" title="عرض الدين">
-                                    <i class="fas fa-file-invoice-dollar"></i>
-                                </button>
-                            </div>
+                            <button class="action-btn view-btn" onclick="showPaymentDetails('${payment.id}')" title="عرض التفاصيل">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="action-btn view-btn" onclick="printPaymentReceipt('${payment.id}')" title="طباعة إيصال">
+                                <i class="fas fa-print"></i>
+                            </button>
                         </td>
                     </tr>
                 `;
@@ -21157,24 +20769,10 @@ console.log(`
             // فلتر حسب الحالة العامة (من البطاقات)
             if (currentPaymentFilter !== 'all') {
                 filtered = filtered.filter(p => {
-                    const today = new Date();
-                    today.setHours(0, 0, 0, 0);
-                    const paidDate = new Date(p.paid_date);
-                    paidDate.setHours(0, 0, 0, 0);
+                    const today = new Date().toDateString();
                     
                     if (currentPaymentFilter === 'today') {
-                        return paidDate.getTime() === today.getTime();
-                    } else if (currentPaymentFilter === 'this_week') {
-                        const weekStart = new Date(today);
-                        const dayOfWeek = today.getDay();
-                        const diff = dayOfWeek === 6 ? 0 : (dayOfWeek + 1); // السبت = 6
-                        weekStart.setDate(today.getDate() - diff);
-                        weekStart.setHours(0, 0, 0, 0);
-                        return paidDate >= weekStart && paidDate <= today;
-                    } else if (currentPaymentFilter === 'this_month') {
-                        const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
-                        monthStart.setHours(0, 0, 0, 0);
-                        return paidDate >= monthStart && paidDate <= today;
+                        return new Date(p.paid_date).toDateString() === today;
                     } else if (currentPaymentFilter === 'on_time') {
                         const status = getPaymentStatus(p.paid_date, p.due_date);
                         return status.status === 'on_time' || status.status === 'early';
@@ -21191,7 +20789,7 @@ console.log(`
         }
         
         // فلترة حسب الحالة (من البطاقات)
-        function filterPaymentsByStatus(status, clickedElement) {
+        function filterPaymentsByStatus(status) {
             console.log('🔍 تطبيق فلتر التسديدات:', status);
             currentPaymentFilter = status;
             
@@ -21202,9 +20800,10 @@ console.log(`
             });
             
             // إبراز البطاقة المختارة
-            if (clickedElement) {
-                clickedElement.style.transform = 'scale(1.05)';
-                clickedElement.style.boxShadow = '0 8px 24px rgba(0,0,0,0.15)';
+            const activeCard = event?.currentTarget;
+            if (activeCard) {
+                activeCard.style.transform = 'scale(1.05)';
+                activeCard.style.boxShadow = '0 8px 24px rgba(0,0,0,0.15)';
             }
             
             renderPaymentsTable();
@@ -21213,9 +20812,7 @@ console.log(`
                 'all': 'عرض جميع التسديدات',
                 'on_time': 'عرض التسديدات في الموعد فقط',
                 'late': 'عرض التسديدات المتأخرة فقط',
-                'today': 'عرض تسديدات اليوم فقط',
-                'this_week': 'عرض تسديدات هذا الأسبوع',
-                'this_month': 'عرض تسديدات هذا الشهر'
+                'today': 'عرض تسديدات اليوم فقط'
             };
             
             showToast(messages[status] || 'تطبيق الفلتر', 'info');
@@ -21304,322 +20901,6 @@ console.log(`
         
         // البحث في التسديدات
         function filterPayments() {
-            renderPaymentsTable();
-        }
-        
-        // متغير لتخزين التسديدات المحددة
-        let selectedPayments = new Set();
-        
-        // تحديد/إلغاء تحديد جميع التسديدات
-        function toggleAllPayments(checkbox) {
-            const rows = document.querySelectorAll('#paymentsTableBody tr');
-            const isChecked = checkbox.checked;
-            
-            selectedPayments.clear();
-            
-            rows.forEach(row => {
-                const paymentCheckbox = row.querySelector('input[type="checkbox"]');
-                if (paymentCheckbox) {
-                    paymentCheckbox.checked = isChecked;
-                    if (isChecked) {
-                        const paymentId = paymentCheckbox.getAttribute('data-payment-id');
-                        if (paymentId) selectedPayments.add(paymentId);
-                    }
-                    row.classList.toggle('payment-row-selected', isChecked);
-                }
-            });
-            
-            updateSelectedCount();
-            console.log('✅ تحديد الكل:', selectedPayments.size, 'تسديد');
-        }
-        
-        // تحديد/إلغاء تحديد تسديد واحد
-        function togglePaymentSelection(checkbox, paymentId) {
-            const row = checkbox.closest('tr');
-            
-            if (checkbox.checked) {
-                selectedPayments.add(paymentId);
-                row.classList.add('payment-row-selected');
-            } else {
-                selectedPayments.delete(paymentId);
-                row.classList.remove('payment-row-selected');
-            }
-            
-            // تحديث حالة checkbox "تحديد الكل"
-            const allCheckboxes = document.querySelectorAll('#paymentsTableBody input[type="checkbox"]');
-            const checkedCount = document.querySelectorAll('#paymentsTableBody input[type="checkbox"]:checked').length;
-            const selectAllCheckbox = document.getElementById('selectAllPaymentsCheckbox');
-            
-            if (selectAllCheckbox) {
-                selectAllCheckbox.checked = checkedCount === allCheckboxes.length && allCheckboxes.length > 0;
-                selectAllCheckbox.indeterminate = checkedCount > 0 && checkedCount < allCheckboxes.length;
-            }
-            
-            updateSelectedCount();
-        }
-        
-        // تحديث عدد التسديدات المحددة
-        function updateSelectedCount() {
-            const count = selectedPayments.size;
-            if (count > 0) {
-                const selectedData = paymentsData.filter(p => selectedPayments.has(p.id));
-                const total = selectedData.reduce((sum, p) => sum + p.amount, 0);
-                console.log('📊 محدد:', count, 'تسديد بقيمة', formatCurrency(total));
-            }
-        }
-        
-        // تحديد جميع التسديدات المعروضة
-        function selectAllPayments() {
-            const checkbox = document.getElementById('selectAllPaymentsCheckbox');
-            if (checkbox) {
-                checkbox.checked = true;
-                toggleAllPayments(checkbox);
-            }
-            showToast('تم تحديد جميع التسديدات المعروضة', 'success');
-        }
-        
-        // تصدير التسديدات المحددة
-        function exportSelectedPayments() {
-            if (selectedPayments.size === 0) {
-                showToast('يرجى تحديد التسديدات المراد تصديرها', 'warning');
-                return;
-            }
-            
-            const selectedData = paymentsData.filter(p => selectedPayments.has(p.id));
-            
-            // عرض خيارات التصدير
-            const format = prompt('اختر صيغة التصدير:\n1 - Excel\n2 - PDF\n3 - JSON', '1');
-            
-            if (format === '1') {
-                exportPaymentsToExcel(selectedData);
-            } else if (format === '2') {
-                exportPaymentsToPDF(selectedData);
-            } else if (format === '3') {
-                const dataStr = JSON.stringify(selectedData, null, 2);
-                const dataBlob = new Blob([dataStr], { type: 'application/json' });
-                const url = URL.createObjectURL(dataBlob);
-                const link = document.createElement('a');
-                link.href = url;
-                link.download = `selected-payments-${new Date().getTime()}.json`;
-                link.click();
-                showToast('تم تصدير التسديدات بصيغة JSON', 'success');
-            }
-        }
-        
-        // طباعة التسديدات المحددة
-        function printSelectedPayments() {
-            if (selectedPayments.size === 0) {
-                showToast('يرجى تحديد التسديدات المراد طباعتها', 'warning');
-                return;
-            }
-            
-            const selectedData = paymentsData.filter(p => selectedPayments.has(p.id));
-            generatePaymentsReport(selectedData);
-        }
-        
-        // توليد تقرير التسديدات المحددة
-        function generatePaymentsReport(payments) {
-            const total = payments.reduce((sum, p) => sum + p.amount, 0);
-            const onTime = payments.filter(p => {
-                const status = getPaymentStatus(p.paid_date, p.due_date);
-                return status.status === 'on_time' || status.status === 'early';
-            }).length;
-            
-            const reportHTML = `
-                <!DOCTYPE html>
-                <html dir="rtl">
-                <head>
-                    <meta charset="UTF-8">
-                    <title>تقرير التسديدات</title>
-                    <style>
-                        body {
-                            font-family: 'Cairo', Arial, sans-serif;
-                            direction: rtl;
-                            padding: 20px;
-                            background: white;
-                        }
-                        .header {
-                            text-align: center;
-                            margin-bottom: 30px;
-                            border-bottom: 3px solid #6366f1;
-                            padding-bottom: 15px;
-                        }
-                        .header h1 {
-                            color: #6366f1;
-                            margin: 0;
-                        }
-                        .date {
-                            color: #666;
-                            margin-top: 10px;
-                        }
-                        .summary {
-                            background: #f0f9ff;
-                            padding: 15px;
-                            border-radius: 8px;
-                            margin-bottom: 20px;
-                            display: grid;
-                            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-                            gap: 15px;
-                        }
-                        .summary-item {
-                            text-align: center;
-                        }
-                        .summary-item .label {
-                            color: #666;
-                            font-size: 0.9rem;
-                        }
-                        .summary-item .value {
-                            color: #0284c7;
-                            font-size: 1.5rem;
-                            font-weight: bold;
-                            margin-top: 5px;
-                        }
-                        table {
-                            width: 100%;
-                            border-collapse: collapse;
-                            margin-top: 20px;
-                        }
-                        th, td {
-                            border: 1px solid #ddd;
-                            padding: 12px;
-                            text-align: center;
-                        }
-                        th {
-                            background: #6366f1;
-                            color: white;
-                            font-weight: 600;
-                        }
-                        tr:nth-child(even) {
-                            background: #f9fafb;
-                        }
-                        .status-on-time {
-                            color: #10b981;
-                            font-weight: 600;
-                        }
-                        .status-late {
-                            color: #ef4444;
-                            font-weight: 600;
-                        }
-                        @media print {
-                            body {
-                                padding: 0;
-                            }
-                            .no-print {
-                                display: none !important;
-                            }
-                        }
-                    </style>
-                </head>
-                <body>
-                    <div class="header">
-                        <h1>📄 تقرير التسديدات</h1>
-                        <p class="date">التاريخ: ${new Date().toLocaleDateString('ar-IQ', { 
-                            year: 'numeric', 
-                            month: 'long', 
-                            day: 'numeric' 
-                        })}</p>
-                    </div>
-                    
-                    <div class="summary">
-                        <div class="summary-item">
-                            <div class="label">عدد التسديدات</div>
-                            <div class="value">${payments.length}</div>
-                        </div>
-                        <div class="summary-item">
-                            <div class="label">إجمالي المبلغ</div>
-                            <div class="value">${formatCurrency(total)}</div>
-                        </div>
-                        <div class="summary-item">
-                            <div class="label">في الموعد</div>
-                            <div class="value">${onTime}</div>
-                        </div>
-                        <div class="summary-item">
-                            <div class="label">المتأخر</div>
-                            <div class="value">${payments.length - onTime}</div>
-                        </div>
-                    </div>
-                    
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>التاريخ</th>
-                                <th>العميل</th>
-                                <th>الهاتف</th>
-                                <th>المبلغ</th>
-                                <th>القسط</th>
-                                <th>الاستحقاق</th>
-                                <th>التأخير</th>
-                                <th>الحالة</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${payments.map((p, index) => {
-                                const daysLate = calculateDaysLate(p.paid_date, p.due_date);
-                                const status = getPaymentStatus(p.paid_date, p.due_date);
-                                return `
-                                    <tr>
-                                        <td>${index + 1}</td>
-                                        <td>${new Date(p.paid_date).toLocaleDateString('ar-IQ')}</td>
-                                        <td>${p.customer_name}</td>
-                                        <td>${p.customer_phone}</td>
-                                        <td>${formatCurrency(p.amount)}</td>
-                                        <td>${p.month_number}</td>
-                                        <td>${p.due_date ? new Date(p.due_date).toLocaleDateString('ar-IQ') : '-'}</td>
-                                        <td>${daysLate} يوم</td>
-                                        <td class="${status.class}">${status.label}</td>
-                                    </tr>
-                                `;
-                            }).join('')}
-                        </tbody>
-                    </table>
-                    
-                    <div style="margin-top: 30px; text-align: center; color: #666; font-size: 0.9rem;">
-                        <p>تم إنشاء هذا التقرير بواسطة نظام إدارة نقاط البيع - شركة الإبداع الرقمي</p>
-                    </div>
-                    
-                    <script>
-                        window.onload = function() {
-                            window.print();
-                        }
-                    </script>
-                </body>
-                </html>
-            `;
-            
-            const printWindow = window.open('', '_blank');
-            printWindow.document.write(reportHTML);
-            printWindow.document.close();
-        }
-        
-        // عرض نافذة الفلاتر المتقدمة
-        function showAdvancedFiltersModal() {
-            showToast('جاري تطوير الفلاتر المتقدمة...', 'info');
-            // يمكن إضافة نافذة منبثقة للفلاتر المتقدمة هنا
-        }
-        
-        // ترتيب التسديدات حسب العمود
-        let currentSortColumn = null;
-        let currentSortDirection = 'desc';
-        
-        function sortPaymentsBy(column) {
-            if (currentSortColumn === column) {
-                currentSortDirection = currentSortDirection === 'desc' ? 'asc' : 'desc';
-            } else {
-                currentSortColumn = column;
-                currentSortDirection = 'desc';
-            }
-            
-            // تحديث أيقونات الترتيب
-            document.querySelectorAll('.table th i.fa-sort, .table th i.fa-sort-up, .table th i.fa-sort-down').forEach(icon => {
-                icon.className = 'fas fa-sort';
-            });
-            
-            const sortIcon = document.getElementById('sortIcon' + column.charAt(0).toUpperCase() + column.slice(1));
-            if (sortIcon) {
-                sortIcon.className = currentSortDirection === 'desc' ? 'fas fa-sort-down' : 'fas fa-sort-up';
-            }
-            
             renderPaymentsTable();
         }
         

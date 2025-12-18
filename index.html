@@ -7094,7 +7094,7 @@ console.log(`
       </div>
       
       <div class="stats-grid" style="margin-bottom: 1.5rem;">
-       <div class="stat-card">
+       <div class="stat-card" onclick="filterDebtsByStatus('all')" style="cursor: pointer;" title="عرض جميع الديون">
         <div class="stat-icon"><i class="fas fa-money-bill-wave"></i>
         </div>
         <div class="stat-value" id="totalDebts">
@@ -7104,7 +7104,7 @@ console.log(`
          إجمالي الديون
         </div>
        </div>
-       <div class="stat-card">
+       <div class="stat-card" onclick="filterDebtsByStatus('active')" style="cursor: pointer;" title="عرض الديون النشطة">
         <div class="stat-icon"><i class="fas fa-users"></i>
         </div>
         <div class="stat-value" id="debtCustomers">
@@ -7114,7 +7114,7 @@ console.log(`
          عدد العملاء
         </div>
        </div>
-       <div class="stat-card">
+       <div class="stat-card" onclick="filterDebtsByStatus('overdue')" style="cursor: pointer;" title="عرض الديون المتأخرة">
         <div class="stat-icon"><i class="fas fa-calendar-check"></i>
         </div>
         <div class="stat-value" id="overdueDebts">
@@ -7124,7 +7124,7 @@ console.log(`
          ديون متأخرة
         </div>
        </div>
-       <div class="stat-card">
+       <div class="stat-card" onclick="filterDebtsByStatus('paid')" style="cursor: pointer;" title="عرض الديون المسددة">
         <div class="stat-icon"><i class="fas fa-check-circle"></i>
         </div>
         <div class="stat-value" id="paidDebts">
@@ -11404,74 +11404,165 @@ console.log(`
                 let totalUpdated = 0;
 
                 // دمج المنتجات
+                let productsCount = 0;
                 if (backupData.data.products) {
+                    console.log(`📦 استرجاع ${backupData.data.products.length} منتج...`);
+                    
                     const localProducts = await dataSDK.queryByField('type', 'product');
                     const result = await mergeDataWithLocal('products', backupData.data.products, localProducts);
                     totalAdded += result.added;
                     totalUpdated += result.updated;
                     
                     // حفظ المنتجات المدموجة
+                    console.log(`💾 حفظ ${localProducts.length} منتج في IndexedDB...`);
                     for (const product of localProducts) {
-                        await dataSDK.save({ ...product, type: 'product' });
+                        await dataSDK.save({ ...product, type: 'product', lastModified: new Date().toISOString() });
+                        productsCount++;
                     }
+                    
+                    // تحديث المتغير العالمي
+                    products = localProducts;
+                    localStorage.setItem('products', JSON.stringify(products));
+                    console.log(`✅ تم حفظ ${productsCount} منتج`);
                 }
 
                 // دمج التصنيفات
+                let categoriesCount = 0;
                 if (backupData.data.categories) {
+                    console.log(`📦 استرجاع ${backupData.data.categories.length} تصنيف...`);
+                    
                     const localCategories = await dataSDK.queryByField('type', 'category');
                     const result = await mergeDataWithLocal('categories', backupData.data.categories, localCategories);
                     totalAdded += result.added;
                     totalUpdated += result.updated;
                     
+                    console.log(`💾 حفظ ${localCategories.length} تصنيف في IndexedDB...`);
                     for (const category of localCategories) {
-                        await dataSDK.save({ ...category, type: 'category' });
+                        await dataSDK.save({ ...category, type: 'category', lastModified: new Date().toISOString() });
+                        categoriesCount++;
                     }
+                    
+                    // تحديث المتغير العالمي
+                    categories = localCategories;
+                    localStorage.setItem('categories', JSON.stringify(categories));
+                    console.log(`✅ تم حفظ ${categoriesCount} تصنيف`);
                 }
 
                 // دمج المبيعات
+                let salesCount = 0;
                 if (backupData.data.sales) {
-                    salesData = salesData || [];
-                    const result = await mergeDataWithLocal('sales', backupData.data.sales, salesData, 'invoice_id');
+                    console.log(`📦 استرجاع ${backupData.data.sales.length} مبيعة...`);
+                    
+                    // جلب المبيعات الحالية من IndexedDB
+                    let localSales = await dataSDK.queryByField('type', 'sale');
+                    console.log(`📊 المبيعات الحالية: ${localSales.length}`);
+                    
+                    // دمج البيانات
+                    const result = await mergeDataWithLocal('sales', backupData.data.sales, localSales, 'invoice_id');
                     totalAdded += result.added;
                     totalUpdated += result.updated;
+                    
+                    // ⭐ الإصلاح الجذري: حفظ كل مبيعة في IndexedDB
+                    console.log(`💾 حفظ ${localSales.length} مبيعة في IndexedDB...`);
+                    for (const sale of localSales) {
+                        await dataSDK.save({ 
+                            ...sale, 
+                            type: 'sale',
+                            lastModified: new Date().toISOString()
+                        });
+                        salesCount++;
+                    }
+                    
+                    // تحديث المتغير العالمي و localStorage
+                    salesData = localSales;
+                    localStorage.setItem('salesData', JSON.stringify(salesData));
+                    console.log(`✅ تم حفظ ${salesCount} مبيعة في IndexedDB و localStorage`);
                 }
 
                 // دمج الديون
+                let debtsCount = 0;
                 if (backupData.data.debts) {
-                    debtsData = debtsData || [];
-                    const result = await mergeDataWithLocal('debts', backupData.data.debts, debtsData);
+                    console.log(`📦 استرجاع ${backupData.data.debts.length} دين...`);
+                    
+                    // جلب الديون الحالية من IndexedDB
+                    let localDebts = await dataSDK.queryByField('type', 'debt');
+                    console.log(`📊 الديون الحالية: ${localDebts.length}`);
+                    
+                    // دمج البيانات
+                    const result = await mergeDataWithLocal('debts', backupData.data.debts, localDebts);
                     totalAdded += result.added;
                     totalUpdated += result.updated;
+                    
+                    // ⭐ الإصلاح الجذري: حفظ كل دين في IndexedDB
+                    console.log(`💾 حفظ ${localDebts.length} دين في IndexedDB...`);
+                    for (const debt of localDebts) {
+                        await dataSDK.save({ 
+                            ...debt, 
+                            type: 'debt',
+                            lastModified: new Date().toISOString()
+                        });
+                        debtsCount++;
+                    }
+                    
+                    // تحديث المتغير العالمي و localStorage
+                    debtsData = localDebts;
+                    localStorage.setItem('debtsData', JSON.stringify(debtsData));
+                    console.log(`✅ تم حفظ ${debtsCount} دين في IndexedDB و localStorage`);
                 }
 
-                // استرجاع الإعدادات (اختياري - يمكن تخطيه)
-                if (backupData.data.settings && confirm('هل تريد استرجاع الإعدادات أيضاً؟')) {
+                // ⭐ استرجاع وتطبيق الإعدادات تلقائياً
+                let settingsRestored = false;
+                if (backupData.data.settings) {
+                    console.log('⚙️ استرجاع الإعدادات...');
+                    
                     if (backupData.data.settings.store) {
                         localStorage.setItem('storeSettings', JSON.stringify(backupData.data.settings.store));
+                        console.log('✅ تم استرجاع إعدادات المتجر');
                     }
                     if (backupData.data.settings.system) {
                         localStorage.setItem('systemSettings', JSON.stringify(backupData.data.settings.system));
+                        console.log('✅ تم استرجاع إعدادات النظام');
                     }
                     if (backupData.data.settings.printer) {
                         localStorage.setItem('printerSettings', JSON.stringify(backupData.data.settings.printer));
+                        console.log('✅ تم استرجاع إعدادات الطابعة');
                     }
                     if (backupData.data.settings.theme) {
                         localStorage.setItem('currentTheme', backupData.data.settings.theme);
+                        console.log('✅ تم استرجاع الثيم');
                     }
                     if (backupData.data.settings.customColors) {
                         localStorage.setItem('customColors', JSON.stringify(backupData.data.settings.customColors));
+                        console.log('✅ تم استرجاع الألوان المخصصة');
                     }
+                    settingsRestored = true;
                 }
+
+                // إعداد رسالة تفصيلية
+                const successMsg = `✅ تم استرجاع النسخة الاحتياطية بنجاح!\n\n` +
+                    `📊 التفاصيل:\n` +
+                    `• ${productsCount || 0} منتج\n` +
+                    `• ${categoriesCount || 0} تصنيف\n` +
+                    `• ${salesCount} مبيعة\n` +
+                    `• ${debtsCount} دين\n` +
+                    (settingsRestored ? `• تم استرجاع الإعدادات\n` : '') +
+                    `\n📈 الإحصائيات:\n` +
+                    `• ${totalAdded} سجل جديد\n` +
+                    `• ${totalUpdated} سجل محدّث\n\n` +
+                    `⏳ سيتم إعادة تحميل الصفحة خلال 3 ثواني...`;
 
                 console.log('✅ تم استرجاع النسخة الاحتياطية بنجاح');
-                showToast(`✅ تم الاسترجاع بنجاح! (${totalAdded} جديد، ${totalUpdated} محدث)`, 'success');
+                console.log(`📊 إحصائيات: ${salesCount} مبيعة، ${debtsCount} دين، ${totalAdded} جديد، ${totalUpdated} محدّث`);
                 
-                // إعادة تحميل الصفحة لتطبيق التغييرات
-                if (confirm('تم الاسترجاع بنجاح! هل تريد إعادة تحميل الصفحة؟')) {
+                showToast(successMsg, 'success');
+                
+                // ⭐ إعادة تحميل الصفحة تلقائياً بعد 3 ثواني
+                console.log('🔄 إعادة تحميل الصفحة خلال 3 ثواني لتطبيق جميع التغييرات...');
+                setTimeout(() => {
                     location.reload();
-                }
+                }, 3000);
 
-                return { success: true, added: totalAdded, updated: totalUpdated };
+                return { success: true, added: totalAdded, updated: totalUpdated, sales: salesCount, debts: debtsCount };
             } catch (error) {
                 console.error('❌ خطأ في استرجاع النسخة الاحتياطية:', error);
                 showToast('❌ فشل استرجاع النسخة الاحتياطية: ' + error.message, 'error');
@@ -12473,6 +12564,153 @@ console.log(`
         });
 
         // تهيئة التطبيق
+        // تحميل جميع البيانات من IndexedDB
+        async function loadDataFromIndexedDB() {
+            try {
+                console.log('📦 بدء تحميل البيانات من IndexedDB...');
+                
+                // 1. جلب جميع البيانات من IndexedDB
+                const allData = await window.dataSdk.getAll();
+                console.log(`📊 تم جلب ${allData.length} عنصر من IndexedDB`);
+
+                if (!allData || allData.length === 0) {
+                    console.log('⚠️ لا توجد بيانات في IndexedDB');
+                    return {
+                        products: 0,
+                        categories: 0,
+                        suppliers: 0,
+                        sales: 0,
+                        debts: 0
+                    };
+                }
+
+                // 2. تصنيف البيانات حسب النوع
+                const productsList = [];
+                const categoriesList = [];
+                const suppliersList = [];
+                const salesList = [];
+                const debtsList = [];
+
+                for (const item of allData) {
+                    if (!item || !item.type) continue;
+                    
+                    switch (item.type) {
+                        case 'product':
+                            productsList.push(item);
+                            break;
+                        case 'category':
+                            categoriesList.push(item);
+                            break;
+                        case 'supplier':
+                            suppliersList.push(item);
+                            break;
+                        case 'sale':
+                            salesList.push(item);
+                            break;
+                        case 'debt':
+                            debtsList.push(item);
+                            break;
+                    }
+                }
+
+                console.log('📋 تفاصيل البيانات المحملة:');
+                console.log(`  • المنتجات: ${productsList.length}`);
+                console.log(`  • التصنيفات: ${categoriesList.length}`);
+                console.log(`  • الموردين: ${suppliersList.length}`);
+                console.log(`  • المبيعات: ${salesList.length}`);
+                console.log(`  • الديون: ${debtsList.length}`);
+
+                // 3. تحديث المتغيرات العالمية
+                if (productsList.length > 0) {
+                    products = productsList;
+                    localStorage.setItem('products', JSON.stringify(products));
+                    console.log(`✅ تم تحميل ${products.length} منتج`);
+                }
+
+                if (categoriesList.length > 0) {
+                    categories = categoriesList;
+                    localStorage.setItem('categories', JSON.stringify(categories));
+                    console.log(`✅ تم تحميل ${categories.length} تصنيف`);
+                }
+
+                if (suppliersList.length > 0) {
+                    suppliers = suppliersList;
+                    localStorage.setItem('suppliers', JSON.stringify(suppliers));
+                    console.log(`✅ تم تحميل ${suppliers.length} مورد`);
+                }
+
+                // ⭐ الأهم: تحميل المبيعات والديون
+                if (salesList.length > 0) {
+                    salesData = salesList;
+                    localStorage.setItem('salesData', JSON.stringify(salesData));
+                    console.log(`✅ تم تحميل ${salesData.length} مبيعة من IndexedDB`);
+                } else {
+                    // محاولة التحميل من localStorage كنسخة احتياطية
+                    const savedSales = localStorage.getItem('salesData');
+                    if (savedSales) {
+                        try {
+                            salesData = JSON.parse(savedSales);
+                            console.log(`📋 تم تحميل ${salesData.length} مبيعة من localStorage`);
+                        } catch (e) {
+                            console.warn('⚠️ خطأ في قراءة المبيعات من localStorage');
+                        }
+                    }
+                }
+
+                if (debtsList.length > 0) {
+                    debtsData = debtsList;
+                    localStorage.setItem('debtsData', JSON.stringify(debtsData));
+                    console.log(`✅ تم تحميل ${debtsData.length} دين من IndexedDB`);
+                } else {
+                    // محاولة التحميل من localStorage كنسخة احتياطية
+                    const savedDebts = localStorage.getItem('debtsData');
+                    if (savedDebts) {
+                        try {
+                            debtsData = JSON.parse(savedDebts);
+                            console.log(`📋 تم تحميل ${debtsData.length} دين من localStorage`);
+                        } catch (e) {
+                            console.warn('⚠️ خطأ في قراءة الديون من localStorage');
+                        }
+                    }
+                }
+
+                console.log('✅ تم تحميل جميع البيانات من IndexedDB بنجاح');
+                
+                return {
+                    products: productsList.length,
+                    categories: categoriesList.length,
+                    suppliers: suppliersList.length,
+                    sales: salesList.length,
+                    debts: debtsList.length
+                };
+            } catch (error) {
+                console.error('❌ خطأ في تحميل البيانات من IndexedDB:', error);
+                
+                // محاولة التحميل من localStorage كنسخة احتياطية
+                try {
+                    const savedProducts = localStorage.getItem('products');
+                    const savedSales = localStorage.getItem('salesData');
+                    const savedDebts = localStorage.getItem('debtsData');
+                    
+                    if (savedProducts) products = JSON.parse(savedProducts);
+                    if (savedSales) salesData = JSON.parse(savedSales);
+                    if (savedDebts) debtsData = JSON.parse(savedDebts);
+                    
+                    console.log('📋 تم التحميل من localStorage كنسخة احتياطية');
+                } catch (e) {
+                    console.error('❌ فشل التحميل من localStorage أيضاً:', e);
+                }
+                
+                return {
+                    products: 0,
+                    categories: 0,
+                    suppliers: 0,
+                    sales: 0,
+                    debts: 0
+                };
+            }
+        }
+
         async function initApp() {
             try {
                 console.log('🚀 بدء تهيئة التطبيق...');
@@ -12517,6 +12755,12 @@ console.log(`
                         return;
                     }
                     console.log('✅ تم تهيئة قاعدة البيانات المحلية');
+                    
+                    // ⭐ تحميل جميع البيانات من IndexedDB (الخطوة الأهم!)
+                    console.log('📦 تحميل البيانات من IndexedDB...');
+                    updateLoaderStatus('تحميل البيانات المحفوظة...');
+                    const loadedData = await loadDataFromIndexedDB();
+                    console.log(`✅ تم تحميل البيانات: ${loadedData.products} منتج، ${loadedData.sales} مبيعة، ${loadedData.debts} دين`);
                 } else {
                     console.error('❌ Data SDK غير موجود!');
                     showToast('خطأ في تحميل النظام', 'error');
@@ -14436,11 +14680,13 @@ console.log(`
                 const createdByRole = sale.created_by_role || (sale.created_by === 'admin' ? 'مدير' : 'مستخدم');
                 
                 // إنشاء أزرار الإجراءات
+                const isInstallmentInvoice = sale.payment_type === 'أقساط';
+                
                 let actionButtons = `
                     <button class="action-btn view-btn" onclick="showInvoiceDetails('${sale.invoice_id}')" title="عرض التفاصيل">
                         <i class="fas fa-eye"></i>
                     </button>
-                    <button class="action-btn view-btn" onclick="printInvoice('${sale.invoice_id}')" title="طباعة">
+                    <button class="action-btn view-btn" onclick="${isInstallmentInvoice ? `printInvoiceFromDetails('${sale.invoice_id}', true)` : `printInvoice('${sale.invoice_id}')`}" title="طباعة">
                         <i class="fas fa-print"></i>
                     </button>
                 `;
@@ -14485,21 +14731,66 @@ console.log(`
         }
 
         // عرض جدول الديون
+        // متغير عام لحفظ حالة الفلتر الحالية
+        let currentDebtFilter = 'all';
+        
         function renderDebtsTable() {
             const tbody = document.getElementById('debtsTableBody');
             if (!tbody) return;
             
             console.log('Rendering debts:', debtsData);
+            console.log('Current filter:', currentDebtFilter);
             
             // البحث في الديون
             const searchTerm = document.getElementById('debtsSearchInput')?.value.toLowerCase() || '';
-            const filteredDebts = searchTerm 
+            let filteredDebts = searchTerm 
                 ? debtsData.filter(debt => 
                     (debt.customer_name && debt.customer_name.toLowerCase().includes(searchTerm)) ||
                     (debt.customer_phone && debt.customer_phone.toLowerCase().includes(searchTerm)) ||
                     (debt.customer_address && debt.customer_address.toLowerCase().includes(searchTerm))
                   )
                 : debtsData;
+            
+            // 🔥 تطبيق فلتر الحالة
+            if (currentDebtFilter !== 'all') {
+                filteredDebts = filteredDebts.filter(debt => {
+                    // حساب حالة الدين
+                    let paidAmount = 0;
+                    let totalMonths = 0;
+                    let paidMonths = 0;
+                    
+                    if (debt.installments && Array.isArray(debt.installments) && debt.installments.length > 0) {
+                        totalMonths = debt.installments.length;
+                        debt.installments.forEach(inst => {
+                            if (inst.status === 'paid') {
+                                paidAmount += parseFloat(inst.paid_amount || inst.amount || 0);
+                                paidMonths++;
+                            }
+                        });
+                    } else if (debt.paid_amount !== undefined && debt.paid_amount !== null) {
+                        paidAmount = parseFloat(debt.paid_amount) || 0;
+                        totalMonths = debt.installment_months || 0;
+                    }
+                    
+                    const totalAmount = debt.total_amount || debt.final_total || 0;
+                    const remainingAmount = totalAmount - paidAmount;
+                    const isPaid = paidMonths === totalMonths && totalMonths > 0;
+                    const isOverdue = new Date(debt.due_date) < new Date() && remainingAmount > 0;
+                    
+                    // تطبيق الفلتر المناسب
+                    if (currentDebtFilter === 'paid') {
+                        return isPaid;
+                    } else if (currentDebtFilter === 'overdue') {
+                        return isOverdue;
+                    } else if (currentDebtFilter === 'active') {
+                        return !isPaid && !isOverdue;
+                    }
+                    
+                    return true;
+                });
+            }
+            
+            console.log('Filtered debts:', filteredDebts.length);
             
             tbody.innerHTML = filteredDebts.map(debt => {
                 console.log('Debt data:', debt);
@@ -14605,6 +14896,37 @@ console.log(`
                     </tr>
                 `;
             }).join('');
+        }
+        
+        // 🔥 دالة جديدة للفلترة حسب الحالة
+        function filterDebtsByStatus(status) {
+            console.log('🔍 تطبيق فلتر:', status);
+            currentDebtFilter = status;
+            
+            // تحديث شكل البطاقات لإظهار البطاقة النشطة
+            document.querySelectorAll('#debts .stat-card').forEach(card => {
+                card.style.transform = 'scale(1)';
+                card.style.boxShadow = '';
+            });
+            
+            // إبراز البطاقة المختارة
+            const activeCard = event?.currentTarget;
+            if (activeCard) {
+                activeCard.style.transform = 'scale(1.05)';
+                activeCard.style.boxShadow = '0 8px 24px rgba(0,0,0,0.15)';
+            }
+            
+            renderDebtsTable();
+            
+            // إظهار رسالة توضيحية
+            const filterMessages = {
+                'all': 'عرض جميع الديون',
+                'paid': 'عرض الديون المسددة فقط',
+                'overdue': 'عرض الديون المتأخرة فقط',
+                'active': 'عرض الديون النشطة فقط'
+            };
+            
+            showToast(filterMessages[status] || 'تطبيق الفلتر', 'info');
         }
 
         // تحديث الإحصائيات
@@ -15379,7 +15701,8 @@ console.log(`
                         downPayment,
                         customerAddress,
                         cart: [...cart],
-                        finalTotal,
+                        finalTotal: newTotalAmount - downPayment, // 🔥 المبلغ النهائي الصحيح (بعد الإضافة والخصم)
+                        originalSubtotal: finalTotal, // المبلغ الأصلي للمنتجات
                         start_date: installmentStartDate
                     }
                 );
@@ -15400,7 +15723,7 @@ console.log(`
                             // إضافة المنتجات الجديدة والمبالغ الجديدة
                             new_items: [...cart],
                             new_subtotal: cart.reduce((sum, item) => sum + (item.product_price * item.quantity), 0),
-                            new_final_total: finalTotal
+                            new_final_total: newTotalAmount - downPayment // 🔥 المبلغ النهائي الصحيح (بعد الإضافة والخصم)
                         });
                     }
                     closeModal('paymentModal');
@@ -15763,6 +16086,11 @@ console.log(`
                 
                 // Always use a deep copy of the latest cart for the new sale
                 const latestCart = Array.isArray(newDebtData.cart) ? JSON.parse(JSON.stringify(newDebtData.cart)) : (Array.isArray(cart) ? JSON.parse(JSON.stringify(cart)) : []);
+                
+                // 🔥 حساب المبلغ النهائي الصحيح للفاتورة
+                // يجب أن يكون = المبلغ الأصلي + الإضافي - المقدمة
+                const correctFinalTotal = newDebtData.finalTotal || (newDebtData.newTotalAmount - newDebtData.downPayment);
+                
                 const saleData = {
                     type: 'sale',
                     invoice_id: 'INV-' + Date.now(),
@@ -15770,13 +16098,21 @@ console.log(`
                     subtotal: subtotal,
                     tax: taxAmount,
                     discount: discountAmount,
-                    final_total: newDebtData.finalTotal,
+                    final_total: correctFinalTotal, // 🔥 المبلغ النهائي الصحيح
                     payment_method: 'أقساط',
                     payment_type: 'أقساط',
                     timestamp: new Date().toISOString(),
                     customer_name: existingDebt.customer_name,
                     customer_phone: existingDebt.customer_phone,
+                    customer_address: newDebtData.customerAddress || existingDebt.customer_address,
                     linked_debt_id: existingDebt.id || existingDebt.invoice_id,
+                    // 🔥 حفظ تفاصيل الأقساط الكاملة
+                    installment_months: newDebtData.newInstallmentMonths,
+                    monthly_amount: newDebtData.newMonthlyAmount,
+                    additional_amount: newDebtData.additionalAmount || 0,
+                    down_payment: newDebtData.downPayment || 0,
+                    remaining_amount: newDebtData.newRemainingAmount,
+                    start_date: newDebtData.start_date,
                     // معلومات المستخدم الذي أنشأ الفاتورة
                     created_by: window.securityManager ? window.securityManager.getCurrentUsername() : 'unknown',
                     created_by_name: window.securityManager ? window.securityManager.getCurrentUserFullName() : 'غير معروف',
@@ -19091,40 +19427,61 @@ console.log(`
             console.log('Debt.paid_amount:', debt.paid_amount, typeof debt.paid_amount);
             console.log('Debt.installments:', debt.installments);
             console.log('Debt.invoice_id:', debt.invoice_id);
+            console.log('Debt.linked_invoices:', debt.linked_invoices);
             
-            // محاولة الحصول على المبلغ الإجمالي من عدة مصادر
+            // 🔥 إصلاح جديد: حساب المبلغ الإجمالي من جميع الفواتير المرتبطة
             let totalAmount = 0;
             
-            // المحاولة 1: من حقل total_amount
-            if (debt.total_amount !== undefined && debt.total_amount !== null) {
-                totalAmount = parseFloat(debt.total_amount);
-                console.log('✓ Got total from debt.total_amount:', totalAmount);
+            // المحاولة 1: من جميع الفواتير المرتبطة (الأولوية الأولى)
+            if (debt.linked_invoices && Array.isArray(debt.linked_invoices) && debt.linked_invoices.length > 0) {
+                console.log('🔍 حساب من الفواتير المرتبطة:', debt.linked_invoices);
+                
+                debt.linked_invoices.forEach(invoiceId => {
+                    const relatedSale = salesData.find(s => s.invoice_id === invoiceId);
+                    if (relatedSale && relatedSale.final_total) {
+                        const invoiceTotal = parseFloat(relatedSale.final_total);
+                        totalAmount += invoiceTotal;
+                        console.log(`  ✓ فاتورة ${invoiceId}: ${invoiceTotal}`);
+                    }
+                });
+                
+                console.log('✓ إجمالي من جميع الفواتير المرتبطة:', totalAmount);
             }
-            // المحاولة 2: من حقل final_total
-            else if (debt.final_total !== undefined && debt.final_total !== null) {
+            // المحاولة 2: من الفاتورة الأساسية فقط
+            else if (debt.invoice_id) {
+                const relatedSale = salesData.find(s => s.invoice_id === debt.invoice_id);
+                if (relatedSale && relatedSale.final_total) {
+                    totalAmount = parseFloat(relatedSale.final_total);
+                    console.log('✓ Got total from main invoice:', totalAmount);
+                }
+            }
+            
+            // المحاولة 3: من حقل final_total في الدين
+            if (!totalAmount && debt.final_total !== undefined && debt.final_total !== null) {
                 totalAmount = parseFloat(debt.final_total);
                 console.log('✓ Got total from debt.final_total:', totalAmount);
             }
-            // المحاولة 3: من حقل remaining_amount (إذا لم يكن مدفوع شيء)
-            else if (debt.remaining_amount !== undefined && debt.remaining_amount !== null) {
+            
+            // المحاولة 4: من حقل total_amount في الدين
+            if (!totalAmount && debt.total_amount !== undefined && debt.total_amount !== null) {
+                totalAmount = parseFloat(debt.total_amount);
+                console.log('✓ Got total from debt.total_amount:', totalAmount);
+            }
+            
+            // المحاولة 5: من حقل remaining_amount (إذا لم يكن مدفوع شيء)
+            if (!totalAmount && debt.remaining_amount !== undefined && debt.remaining_amount !== null) {
                 totalAmount = parseFloat(debt.remaining_amount);
                 console.log('✓ Got total from debt.remaining_amount:', totalAmount);
             }
-            // المحاولة 4: من الفاتورة المرتبطة
-            else if (debt.invoice_id) {
-                const relatedSale = salesData.find(s => s.invoice_id === debt.invoice_id);
-                if (relatedSale) {
-                    totalAmount = parseFloat(relatedSale.final_total || relatedSale.total_amount || 0);
-                    console.log('✓ Got total from related sale:', totalAmount);
-                }
-            }
-            // المحاولة 5: حساب من الأقساط
-            else if (debt.installments && Array.isArray(debt.installments) && debt.installments.length > 0) {
+            
+            // المحاولة 6: حساب من الأقساط
+            if (!totalAmount && debt.installments && Array.isArray(debt.installments) && debt.installments.length > 0) {
                 totalAmount = debt.installments.reduce((sum, inst) => sum + parseFloat(inst.amount || 0), 0);
                 console.log('✓ Calculated total from installments:', totalAmount);
             }
-            // المحاولة 6: من القسط الشهري × عدد الأشهر
-            else if (debt.monthly_amount && debt.installment_months) {
+            
+            // المحاولة 7: من القسط الشهري × عدد الأشهر
+            if (!totalAmount && debt.monthly_amount && debt.installment_months) {
                 totalAmount = parseFloat(debt.monthly_amount) * parseInt(debt.installment_months);
                 console.log('✓ Calculated total from monthly × months:', totalAmount);
             }

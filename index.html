@@ -188,6 +188,183 @@ function showPage(page) {
         }, 100);
     }
 }
+
+// دالة فتح نافذة إدارة النظام
+function openSystemManagement() {
+    console.log('🔧 فتح إدارة النظام...');
+    showModal('systemManagementModal');
+    updateSystemStatus();
+}
+
+// دالة تحديث حالة النظام
+async function updateSystemStatus() {
+    try {
+        const uid = localStorage.getItem('app_uid');
+        const version = localStorage.getItem('app_version') || '1.0.0';
+        
+        document.getElementById('systemStatusUID').textContent = uid || 'غير متوفر';
+        document.getElementById('systemStatusVersion').textContent = version;
+        
+        if (window.authFix) {
+            const accountCheck = await window.authFix.checkCurrentAccount();
+            const statusElem = document.getElementById('systemStatusAccount');
+            if (accountCheck.hasAccount && accountCheck.isValid) {
+                statusElem.textContent = '✅ صالح';
+                statusElem.style.color = '#10b981';
+            } else if (accountCheck.hasAccount && !accountCheck.isValid) {
+                statusElem.textContent = '⚠️ غير صالح';
+                statusElem.style.color = '#f59e0b';
+            } else {
+                statusElem.textContent = 'لا يوجد حساب';
+                statusElem.style.color = '#6b7280';
+            }
+        }
+        
+        const firebaseElem = document.getElementById('systemStatusFirebase');
+        if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
+            firebaseElem.textContent = '✅ متصل';
+            firebaseElem.style.color = '#10b981';
+        } else {
+            firebaseElem.textContent = '⚠️ غير متصل';
+            firebaseElem.style.color = '#ef4444';
+        }
+    } catch (error) {
+        console.error('خطأ في تحديث حالة النظام:', error);
+    }
+}
+
+// دوال إدارة النظام
+async function systemCheckAccount() {
+    const logDiv = document.getElementById('systemConsoleLog');
+    logDiv.innerHTML += '<div style="color:#3b82f6">⏳ جاري فحص الحساب...</div>';
+    
+    try {
+        const result = await window.authFix.checkCurrentAccount();
+        if (result.hasAccount && result.isValid) {
+            logDiv.innerHTML += '<div style="color:#10b981">✅ الحساب صالح ويعمل بشكل صحيح</div>';
+            showToast('الحساب صالح ويعمل بشكل صحيح', 'success');
+        } else if (result.hasAccount && !result.isValid) {
+            logDiv.innerHTML += `<div style="color:#f59e0b">⚠️ الحساب غير صالح: ${result.reason}</div>`;
+            showToast('تم اكتشاف مشكلة في الحساب', 'warning');
+        } else {
+            logDiv.innerHTML += '<div style="color:#6b7280">ℹ️ لا يوجد حساب محفوظ</div>';
+            showToast('لا يوجد حساب محفوظ', 'info');
+        }
+        updateSystemStatus();
+    } catch (error) {
+        logDiv.innerHTML += `<div style="color:#ef4444">❌ خطأ: ${error.message}</div>`;
+        showToast('حدث خطأ في الفحص', 'error');
+    }
+    logDiv.scrollTop = logDiv.scrollHeight;
+}
+
+async function systemFixRegistration() {
+    const logDiv = document.getElementById('systemConsoleLog');
+    logDiv.innerHTML += '<div style="color:#3b82f6">⏳ جاري إصلاح مشكلة التسجيل...</div>';
+    
+    try {
+        const result = await window.authFix.attemptRegistrationFix();
+        if (result.success) {
+            logDiv.innerHTML += `<div style="color:#10b981">✅ ${result.message}</div>`;
+            showToast(result.message, 'success');
+        } else {
+            logDiv.innerHTML += `<div style="color:#ef4444">❌ فشل الإصلاح: ${result.error}</div>`;
+            showToast('فشل الإصلاح', 'error');
+        }
+        updateSystemStatus();
+    } catch (error) {
+        logDiv.innerHTML += `<div style="color:#ef4444">❌ خطأ: ${error.message}</div>`;
+        showToast('حدث خطأ في الإصلاح', 'error');
+    }
+    logDiv.scrollTop = logDiv.scrollHeight;
+}
+
+async function systemSoftReset() {
+    if (!confirm('هل أنت متأكد من إعادة التعيين الخفيفة؟\n\nسيتم مسح بيانات الحساب مع الاحتفاظ بالإعدادات.')) {
+        return;
+    }
+    
+    const logDiv = document.getElementById('systemConsoleLog');
+    logDiv.innerHTML += '<div style="color:#f59e0b">⏳ جاري إعادة التعيين الخفيفة...</div>';
+    
+    try {
+        const result = await window.systemReset.softReset();
+        if (result.success) {
+            logDiv.innerHTML += '<div style="color:#10b981">✅ تمت إعادة التعيين بنجاح</div>';
+            showToast('تمت إعادة التعيين بنجاح', 'success');
+            setTimeout(() => window.location.reload(), 2000);
+        } else {
+            logDiv.innerHTML += `<div style="color:#ef4444">❌ فشلت إعادة التعيين: ${result.error}</div>`;
+            showToast('فشلت العملية', 'error');
+        }
+    } catch (error) {
+        logDiv.innerHTML += `<div style="color:#ef4444">❌ خطأ: ${error.message}</div>`;
+        showToast('حدث خطأ', 'error');
+    }
+    logDiv.scrollTop = logDiv.scrollHeight;
+}
+
+async function systemFullReset() {
+    if (!confirm('⚠️ تحذير: إعادة تعيين كاملة\n\nسيتم مسح جميع البيانات والإعدادات نهائياً!\n\nهل أنت متأكد؟')) {
+        return;
+    }
+    
+    if (!confirm('هل أنت متأكد 100%؟\n\nلا يمكن التراجع عن هذا الإجراء!')) {
+        return;
+    }
+    
+    const logDiv = document.getElementById('systemConsoleLog');
+    logDiv.innerHTML += '<div style="color:#ef4444">⏳ جاري إعادة التعيين الكاملة...</div>';
+    
+    try {
+        const result = await window.systemReset.fullReset(true);
+        if (result.success) {
+            logDiv.innerHTML += '<div style="color:#10b981">✅ تمت إعادة التعيين الكاملة</div>';
+            showToast('جاري إعادة تحميل التطبيق...', 'success');
+        }
+    } catch (error) {
+        logDiv.innerHTML += `<div style="color:#ef4444">❌ خطأ: ${error.message}</div>`;
+        showToast('حدث خطأ', 'error');
+    }
+    logDiv.scrollTop = logDiv.scrollHeight;
+}
+
+async function systemClearInvalidData() {
+    const logDiv = document.getElementById('systemConsoleLog');
+    logDiv.innerHTML += '<div style="color:#3b82f6">⏳ جاري مسح البيانات غير الصالحة...</div>';
+    
+    try {
+        const cleared = await window.authFix.clearInvalidAccount();
+        if (cleared) {
+            logDiv.innerHTML += '<div style="color:#10b981">✅ تم مسح البيانات غير الصالحة</div>';
+            showToast('تم مسح البيانات بنجاح', 'success');
+        } else {
+            logDiv.innerHTML += '<div style="color:#6b7280">ℹ️ لم يتم العثور على بيانات غير صالحة</div>';
+            showToast('لا توجد بيانات غير صالحة', 'info');
+        }
+        updateSystemStatus();
+    } catch (error) {
+        logDiv.innerHTML += `<div style="color:#ef4444">❌ خطأ: ${error.message}</div>`;
+        showToast('حدث خطأ', 'error');
+    }
+    logDiv.scrollTop = logDiv.scrollHeight;
+}
+
+async function systemExportBackup() {
+    const logDiv = document.getElementById('systemConsoleLog');
+    logDiv.innerHTML += '<div style="color:#3b82f6">⏳ جاري تصدير النسخة الاحتياطية...</div>';
+    
+    try {
+        await window.systemReset.exportBackup();
+        logDiv.innerHTML += '<div style="color:#10b981">✅ تم تصدير النسخة الاحتياطية بنجاح</div>';
+        showToast('تم التصدير بنجاح', 'success');
+    } catch (error) {
+        logDiv.innerHTML += `<div style="color:#ef4444">❌ خطأ: ${error.message}</div>`;
+        showToast('حدث خطأ في التصدير', 'error');
+    }
+    logDiv.scrollTop = logDiv.scrollHeight;
+}
+
 (function() {
     console.log('🔧 تطبيق إصلاح الطباعة الصامتة...');
     // حفظ الدالة الأصلية
@@ -445,7 +622,7 @@ window.testSilentPrint = function() {
 console.log(`
 ╔════════════════════════════════════════════╗
 ║   🖨️  نظام الطباعة الصامتة v2.0.1         ║
-║   شركة الإبداع الرقمي - كرار الشعبري      ║
+║   شركة الإبداع الرقمي - كرار السعبري      ║
 ╚════════════════════════════════════════════╝
 
 ✅ التحسينات:
@@ -478,7 +655,445 @@ console.log(`
   <script src="./firebase-config.js"></script>
   
   <script src="./_sdk/data_sdk.js"></script>
-  <script src="./_sdk/element_sdk.js"></script><!-- Font Awesome Icons -->
+  <script src="./_sdk/element_sdk.js"></script>
+  
+  <!-- System Reset SDK - نظام إعادة التعيين الشامل -->
+  <script>
+/**
+ * System Reset SDK - نظام إعادة تعيين التطبيق بالكامل
+ * يحل مشكلة البيانات المحفوظة عند إعادة التثبيت
+ * Digital Creativity Company - المطور: كرار
+ */
+(function() {
+    'use strict';
+    const RESET_KEY = 'app_reset_token';
+    const VERSION_KEY = 'app_version';
+    const CURRENT_VERSION = '1.0.0';
+    class SystemReset {
+        constructor() { this.resetInProgress = false; }
+        async validateStoredData() {
+            try {
+                const uid = localStorage.getItem('app_uid');
+                const secret = localStorage.getItem('app_secret');
+                const version = localStorage.getItem(VERSION_KEY);
+                if (version !== CURRENT_VERSION) {
+                    console.log('⚠️ إصدار التطبيق تغير، يحتاج إعادة تعيين');
+                    return { isValid: false, reason: 'version_mismatch', message: 'تم تحديث التطبيق، يجب إعادة التهيئة' };
+                }
+                if (uid && secret) {
+                    try {
+                        if (typeof database !== 'undefined') {
+                            const snap = await database.ref(`users/${uid}`).once('value');
+                            if (!snap.exists()) {
+                                console.log('⚠️ المستخدم غير موجود في Firebase');
+                                return { isValid: false, reason: 'user_not_found', message: 'الحساب غير موجود في قاعدة البيانات' };
+                            }
+                            const userData = snap.val();
+                            if (userData.profile && userData.profile.secret !== secret) {
+                                console.log('⚠️ Secret Key غير صحيح');
+                                return { isValid: false, reason: 'invalid_secret', message: 'بيانات التحقق غير صحيحة' };
+                            }
+                            console.log('✅ البيانات المحفوظة صالحة');
+                            return { isValid: true };
+                        }
+                    } catch (error) {
+                        console.error('خطأ في التحقق من Firebase:', error);
+                        return { isValid: false, reason: 'firebase_error', message: 'خطأ في الاتصال بقاعدة البيانات' };
+                    }
+                }
+                return { isValid: false, reason: 'no_data', message: 'لا توجد بيانات محفوظة' };
+            } catch (error) {
+                console.error('خطأ في التحقق من البيانات:', error);
+                return { isValid: false, reason: 'validation_error', message: error.message };
+            }
+        }
+        async clearAllLocalData(keepVersion = false) {
+            if (this.resetInProgress) {
+                console.log('⚠️ إعادة التعيين قيد التنفيذ بالفعل');
+                return { success: false, error: 'reset_in_progress' };
+            }
+            this.resetInProgress = true;
+            const cleared = [];
+            try {
+                console.log('🔄 بدء مسح جميع البيانات المحلية...');
+                try {
+                    const keysToKeep = keepVersion ? [VERSION_KEY] : [];
+                    const savedData = {};
+                    keysToKeep.forEach(key => {
+                        const value = localStorage.getItem(key);
+                        if (value) savedData[key] = value;
+                    });
+                    localStorage.clear();
+                    keysToKeep.forEach(key => {
+                        if (savedData[key]) localStorage.setItem(key, savedData[key]);
+                    });
+                    cleared.push('localStorage');
+                    console.log('✅ تم مسح localStorage');
+                } catch (error) { console.error('خطأ في مسح localStorage:', error); }
+                try {
+                    const databases = await indexedDB.databases();
+                    for (const db of databases) {
+                        await new Promise((resolve, reject) => {
+                            const request = indexedDB.deleteDatabase(db.name);
+                            request.onsuccess = () => { console.log(`✅ تم مسح قاعدة البيانات: ${db.name}`); resolve(); };
+                            request.onerror = () => reject(request.error);
+                            request.onblocked = () => { console.warn(`⚠️ مسح ${db.name} محظور`); resolve(); };
+                        });
+                    }
+                    cleared.push('IndexedDB');
+                    console.log('✅ تم مسح IndexedDB');
+                } catch (error) { console.error('خطأ في مسح IndexedDB:', error); }
+                try {
+                    sessionStorage.clear();
+                    cleared.push('sessionStorage');
+                    console.log('✅ تم مسح sessionStorage');
+                } catch (error) { console.error('خطأ في مسح sessionStorage:', error); }
+                try {
+                    if ('caches' in window) {
+                        const cacheNames = await caches.keys();
+                        await Promise.all(cacheNames.map(cacheName => caches.delete(cacheName)));
+                        cleared.push('caches');
+                        console.log('✅ تم مسح Cache Storage');
+                    }
+                } catch (error) { console.error('خطأ في مسح Cache:', error); }
+                try {
+                    if (window.elementSdk && typeof window.elementSdk.clearConfig === 'function') {
+                        await window.elementSdk.clearConfig();
+                        cleared.push('elementSdk');
+                        console.log('✅ تم إعادة تعيين Element SDK');
+                    }
+                    if (window.dataSdk && typeof window.dataSdk.clearAllData === 'function') {
+                        await window.dataSdk.clearAllData();
+                        cleared.push('dataSdk');
+                        console.log('✅ تم إعادة تعيين Data SDK');
+                    }
+                } catch (error) { console.error('خطأ في إعادة تعيين SDKs:', error); }
+                console.log('✅ تم مسح جميع البيانات المحلية بنجاح');
+                console.log('📊 العناصر التي تم مسحها:', cleared);
+                return { success: true, cleared };
+            } catch (error) {
+                console.error('❌ خطأ في مسح البيانات:', error);
+                return { success: false, error: error.message };
+            } finally { this.resetInProgress = false; }
+        }
+        async fullReset(reloadPage = true) {
+            try {
+                console.log('🔄 بدء إعادة التعيين الكاملة...');
+                const result = await this.clearAllLocalData(false);
+                if (!result.success) throw new Error('فشل مسح البيانات');
+                localStorage.setItem(VERSION_KEY, CURRENT_VERSION);
+                console.log('✅ تمت إعادة التعيين الكاملة بنجاح');
+                if (reloadPage) {
+                    console.log('🔄 إعادة تحميل التطبيق...');
+                    setTimeout(() => { window.location.reload(); }, 500);
+                }
+                return { success: true, message: 'تمت إعادة التعيين بنجاح' };
+            } catch (error) {
+                console.error('❌ خطأ في إعادة التعيين الكاملة:', error);
+                return { success: false, error: error.message };
+            }
+        }
+        async softReset() {
+            try {
+                console.log('🔄 بدء إعادة التعيين الخفيفة...');
+                const settingsToKeep = {
+                    theme: localStorage.getItem('currentTheme'),
+                    language: localStorage.getItem('app_language'),
+                    storeSettings: localStorage.getItem('storeSettings'),
+                    systemSettings: localStorage.getItem('systemSettings')
+                };
+                await this.clearAllLocalData(true);
+                Object.keys(settingsToKeep).forEach(key => {
+                    if (settingsToKeep[key]) localStorage.setItem(key, settingsToKeep[key]);
+                });
+                console.log('✅ تمت إعادة التعيين الخفيفة بنجاح');
+                return { success: true, message: 'تمت إعادة التعيين مع الاحتفاظ بالإعدادات' };
+            } catch (error) {
+                console.error('❌ خطأ في إعادة التعيين الخفيفة:', error);
+                return { success: false, error: error.message };
+            }
+        }
+        async autoCheck() {
+            try {
+                console.log('🔍 التحقق التلقائي من صلاحية البيانات...');
+                const savedVersion = localStorage.getItem(VERSION_KEY);
+                if (!savedVersion) {
+                    localStorage.setItem(VERSION_KEY, CURRENT_VERSION);
+                    console.log('✅ أول تشغيل - تم حفظ الإصدار');
+                    return { needsReset: false, reason: 'first_run' };
+                }
+                if (savedVersion !== CURRENT_VERSION) {
+                    console.log('⚠️ تم اكتشاف إصدار مختلف');
+                    return { needsReset: true, reason: 'version_changed' };
+                }
+                const validation = await this.validateStoredData();
+                if (!validation.isValid && validation.reason !== 'no_data') {
+                    console.log('⚠️ البيانات المحفوظة غير صالحة');
+                    return { needsReset: true, reason: validation.reason, validation };
+                }
+                console.log('✅ التحقق التلقائي اكتمل بنجاح');
+                return { needsReset: false, validation };
+            } catch (error) {
+                console.error('❌ خطأ في التحقق التلقائي:', error);
+                return { needsReset: false, error: error.message };
+            }
+        }
+        async exportBackup() {
+            try {
+                const backup = {
+                    timestamp: Date.now(),
+                    date: new Date().toISOString(),
+                    version: CURRENT_VERSION,
+                    localStorage: {}
+                };
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    backup.localStorage[key] = localStorage.getItem(key);
+                }
+                const dataStr = JSON.stringify(backup, null, 2);
+                const dataBlob = new Blob([dataStr], { type: 'application/json' });
+                const url = URL.createObjectURL(dataBlob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `app-backup-${Date.now()}.json`;
+                link.click();
+                URL.revokeObjectURL(url);
+                console.log('✅ تم تصدير النسخة الاحتياطية');
+            } catch (error) {
+                console.error('❌ خطأ في تصدير النسخة الاحتياطية:', error);
+                throw error;
+            }
+        }
+    }
+    window.systemReset = new SystemReset();
+    window.addEventListener('DOMContentLoaded', async () => {
+        try {
+            const checkResult = await window.systemReset.autoCheck();
+            if (checkResult.needsReset) {
+                console.log('⚠️ يحتاج التطبيق إلى إعادة تعيين:', checkResult.reason);
+                const shouldReset = confirm(`تم اكتشاف مشكلة في البيانات المحفوظة.\n\nالسبب: ${checkResult.validation?.message || checkResult.reason}\n\nهل تريد إعادة تعيين التطبيق؟`);
+                if (shouldReset) await window.systemReset.fullReset(true);
+            }
+        } catch (error) { console.error('خطأ في التحقق التلقائي:', error); }
+    });
+    console.log('✅ System Reset SDK تم تحميله بنجاح');
+})();
+  </script>
+  
+  <!-- Authentication Fix SDK - إصلاح نظام المصادقة -->
+  <script>
+/**
+ * Authentication Fix - إصلاح مشكلة إنشاء الحسابات
+ * Digital Creativity Company - المطور: كرار
+ */
+(function() {
+    'use strict';
+    class AuthFix {
+        constructor() { this.registrationAttempts = 0; this.maxAttempts = 3; }
+        async checkCurrentAccount() {
+            try {
+                const uid = localStorage.getItem('app_uid');
+                const secret = localStorage.getItem('app_secret');
+                if (!uid || !secret) {
+                    console.log('ℹ️ لا يوجد حساب محفوظ');
+                    return { hasAccount: false, isValid: false };
+                }
+                if (typeof database !== 'undefined') {
+                    try {
+                        const snap = await database.ref(`users/${uid}`).once('value');
+                        if (!snap.exists()) {
+                            console.log('⚠️ الحساب غير موجود في Firebase');
+                            return { hasAccount: true, isValid: false, uid, reason: 'not_found_in_firebase' };
+                        }
+                        const userData = snap.val();
+                        if (userData.profile && userData.profile.secret !== secret) {
+                            console.log('⚠️ Secret Key غير صحيح');
+                            return { hasAccount: true, isValid: false, uid, reason: 'invalid_secret' };
+                        }
+                        console.log('✅ الحساب صالح');
+                        return { hasAccount: true, isValid: true, uid, userData };
+                    } catch (error) {
+                        console.error('خطأ في التحقق من Firebase:', error);
+                        return { hasAccount: true, isValid: false, uid, reason: 'firebase_error', error: error.message };
+                    }
+                }
+                return { hasAccount: true, isValid: false, uid };
+            } catch (error) {
+                console.error('خطأ في التحقق من الحساب:', error);
+                return { hasAccount: false, isValid: false, error: error.message };
+            }
+        }
+        async clearInvalidAccount() {
+            try {
+                console.log('🔄 مسح بيانات الحساب غير الصالح...');
+                localStorage.removeItem('app_uid');
+                localStorage.removeItem('app_secret');
+                localStorage.removeItem('user_id');
+                if (window.currentUser) window.currentUser = null;
+                console.log('✅ تم مسح بيانات الحساب غير الصالح');
+                return true;
+            } catch (error) {
+                console.error('❌ خطأ في مسح بيانات الحساب:', error);
+                return false;
+            }
+        }
+        async createNewAccount(userData) {
+            try {
+                const { fullName, phone, address, storeName, lat, lng } = userData;
+                if (!fullName || !phone || !address || !storeName) {
+                    return { success: false, error: 'missing_data', message: 'يرجى تعبئة جميع الحقول المطلوبة' };
+                }
+                const accountCheck = await this.checkCurrentAccount();
+                if (accountCheck.hasAccount && accountCheck.isValid) {
+                    return { success: false, error: 'account_exists', message: 'يوجد حساب صالح بالفعل' };
+                }
+                if (accountCheck.hasAccount && !accountCheck.isValid) {
+                    console.log('⚠️ حساب غير صالح موجود، سيتم مسحه');
+                    await this.clearInvalidAccount();
+                }
+                console.log('🔄 إنشاء حساب جديد...');
+                if (typeof database === 'undefined') {
+                    return { success: false, error: 'firebase_not_ready', message: 'قاعدة البيانات غير جاهزة' };
+                }
+                const newUserRef = database.ref('users').push();
+                const uid = newUserRef.key;
+                const secret = this.generateRandomKey(10);
+                const appSettingsSnap = await database.ref('appSettings/trialDays').once('value');
+                const trialDays = appSettingsSnap.exists() ? Number(appSettingsSnap.val()) : 30;
+                const createdAt = Date.now();
+                const trialUntil = createdAt + (trialDays * 24 * 60 * 60 * 1000);
+                const userObj = {
+                    profile: {
+                        uid, secret, fullName, phone, address, storeName,
+                        lat: lat || null, lng: lng || null, createdAt,
+                        deviceInfo: {
+                            platform: navigator.platform || '',
+                            userAgent: navigator.userAgent || '',
+                            appVersion: localStorage.getItem('app_version') || '1.0.0'
+                        }
+                    },
+                    trialUntil, subscription: null, status: 'active', createdBy: 'web_app'
+                };
+                await database.ref(`users/${uid}`).set(userObj);
+                localStorage.setItem('app_uid', uid);
+                localStorage.setItem('app_secret', secret);
+                if (typeof window !== 'undefined') {
+                    window.currentUser = userObj;
+                    window.currentUser.uid = uid;
+                }
+                console.log('✅ تم إنشاء الحساب بنجاح');
+                console.log('📝 UID:', uid);
+                return { success: true, uid, secret, trialDays, userData: userObj, message: 'تم إنشاء الحساب بنجاح' };
+            } catch (error) {
+                console.error('❌ خطأ في إنشاء الحساب:', error);
+                this.registrationAttempts++;
+                return { success: false, error: 'creation_failed', message: error.message, attempts: this.registrationAttempts };
+            }
+        }
+        async attemptRegistrationFix() {
+            try {
+                console.log('🔧 محاولة إصلاح مشكلة التسجيل...');
+                const accountCheck = await this.checkCurrentAccount();
+                console.log('📊 حالة الحساب:', accountCheck);
+                if (accountCheck.hasAccount && !accountCheck.isValid) {
+                    console.log('🔄 مسح الحساب غير الصالح...');
+                    await this.clearInvalidAccount();
+                    return { success: true, action: 'cleared_invalid_account', message: 'تم مسح الحساب غير الصالح، يمكنك الآن إنشاء حساب جديد' };
+                }
+                if (accountCheck.hasAccount && accountCheck.isValid) {
+                    return { success: true, action: 'account_valid', message: 'الحساب الحالي صالح', userData: accountCheck.userData };
+                }
+                return { success: true, action: 'ready_for_registration', message: 'جاهز لإنشاء حساب جديد' };
+            } catch (error) {
+                console.error('❌ خطأ في إصلاح التسجيل:', error);
+                return { success: false, error: error.message };
+            }
+        }
+        generateRandomKey(length = 10) {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+            let result = '';
+            for (let i = 0; i < length; i++) {
+                result += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return result;
+        }
+        async canRegister() {
+            try {
+                const accountCheck = await this.checkCurrentAccount();
+                if (accountCheck.hasAccount && accountCheck.isValid) {
+                    return { canRegister: false, reason: 'valid_account_exists', message: 'يوجد حساب صالح بالفعل' };
+                }
+                if (accountCheck.hasAccount && !accountCheck.isValid) {
+                    await this.clearInvalidAccount();
+                }
+                return { canRegister: true, message: 'يمكنك إنشاء حساب جديد' };
+            } catch (error) {
+                console.error('خطأ في التحقق من إمكانية التسجيل:', error);
+                return { canRegister: false, reason: 'check_failed', message: error.message };
+            }
+        }
+    }
+    window.authFix = new AuthFix();
+    window.createUserAccount_original = window.createUserAccount;
+    window.createUserAccount = async function(formData) {
+        try {
+            console.log('🔐 استدعاء createUserAccount المحسّن...');
+            const canRegisterCheck = await window.authFix.canRegister();
+            if (!canRegisterCheck.canRegister) {
+                if (typeof showToast === 'function') showToast(canRegisterCheck.message, 'warning');
+                return;
+            }
+            const result = await window.authFix.createNewAccount(formData);
+            if (result.success) {
+                if (typeof showToast === 'function') showToast('تم إنشاء الحساب بنجاح', 'success');
+                if (typeof showModal === 'function' && typeof document !== 'undefined') {
+                    const form = document.getElementById('userDetailsForm');
+                    if (form) form.style.display = 'none';
+                    showModal('userInfoModal');
+                    const uidElem = document.getElementById('userUID');
+                    const secretElem = document.getElementById('userSecret');
+                    const trialElem = document.getElementById('trialDaysDisplay');
+                    if (uidElem) uidElem.textContent = result.uid;
+                    if (secretElem) secretElem.textContent = result.secret;
+                    if (trialElem) trialElem.textContent = result.trialDays;
+                }
+                return result;
+            } else {
+                if (typeof showToast === 'function') showToast(result.message || 'حدث خطأ في إنشاء الحساب', 'error');
+                if (result.attempts >= 2) {
+                    console.log('🔧 محاولة إصلاح المشكلة...');
+                    const fixResult = await window.authFix.attemptRegistrationFix();
+                    if (fixResult.success && fixResult.action === 'cleared_invalid_account') {
+                        if (typeof showToast === 'function') showToast('تم إصلاح المشكلة، يرجى المحاولة مرة أخرى', 'info');
+                    }
+                }
+                return result;
+            }
+        } catch (error) {
+            console.error('❌ خطأ في createUserAccount:', error);
+            if (typeof showToast === 'function') showToast('حدث خطأ غير متوقع', 'error');
+            return { success: false, error: error.message };
+        }
+    };
+    window.addEventListener('DOMContentLoaded', async () => {
+        try {
+            console.log('🔍 التحقق من حالة المصادقة...');
+            const accountCheck = await window.authFix.checkCurrentAccount();
+            if (accountCheck.hasAccount && !accountCheck.isValid) {
+                console.log('⚠️ تم اكتشاف حساب غير صالح');
+                const shouldClear = confirm('تم اكتشاف بيانات حساب غير صالحة.\n\nهل تريد مسح هذه البيانات لتتمكن من إنشاء حساب جديد؟');
+                if (shouldClear) {
+                    await window.authFix.clearInvalidAccount();
+                    if (typeof showToast === 'function') showToast('تم مسح البيانات القديمة، يمكنك الآن التسجيل', 'success');
+                }
+            }
+        } catch (error) { console.error('خطأ في التحقق من المصادقة:', error); }
+    });
+    console.log('✅ Authentication Fix تم تحميله بنجاح');
+})();
+  </script>
+  
+  <!-- Font Awesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   
   <!-- تحسينات CSS للنوافذ المنبثقة -->
@@ -6590,6 +7205,7 @@ console.log(`
      <div class="nav-section">
     <div class="nav-section-title">المالية</div>
     <div class="nav-item" id="debtsNavItem"><a class="nav-link" onclick="showPage('debts')"> <i class="fas fa-credit-card nav-icon"></i> <span class="nav-text">إدارة الديون</span> </a></div>
+    <div class="nav-item" id="paymentsNavItem"><a class="nav-link" onclick="showPage('payments')"> <i class="fas fa-hand-holding-usd nav-icon"></i> <span class="nav-text">التسديدات</span> </a></div>
     <div class="nav-item" id="expensesNavItem"><a class="nav-link" onclick="showPage('expenses')"> <i class="fas fa-money-bill-wave nav-icon"></i> <span class="nav-text">إدارة المصاريف</span> </a></div>
      </div>
         <div class="nav-item" id="reportsNavItem"><a class="nav-link" onclick="window.reportsManager && window.reportsManager.openReportsModal ? window.reportsManager.openReportsModal() : alert('تعذر تحميل نظام التقارير')"> <i class="fas fa-chart-bar nav-icon"></i> <span class="nav-text">التقارير</span> </a></div>
@@ -6597,6 +7213,12 @@ console.log(`
     <div class="nav-section-title">النظام</div>
     <div class="nav-item" id="printerNavItem"><a class="nav-link" onclick="showPage('printer')"> <i class="fas fa-print nav-icon"></i> <span class="nav-text">إدارة الطابعة</span> </a></div>
     <div class="nav-item" id="settingsNavItem"><a class="nav-link" onclick="showPage('settings')"> <i class="fas fa-cog nav-icon"></i> <span class="nav-text">الإعدادات العامة</span> </a></div>
+    <div class="nav-item" id="systemManagementNavItem">
+        <a class="nav-link" onclick="openSystemManagement()" style="cursor: pointer;">
+            <i class="fas fa-tools nav-icon" style="color:#f59e0b"></i>
+            <span class="nav-text">إدارة النظام والإصلاح</span>
+        </a>
+    </div>
      </div>
             <div class="nav-item" id="securityNavItem" style="display:none">
                 <a class="nav-link" onclick="window.securityManager && window.securityManager.openSecurityPanel ? window.securityManager.openSecurityPanel() : alert('تعذر تحميل نظام الحماية')">
@@ -6619,6 +7241,8 @@ console.log(`
             {id: 'productsNavItem', perm: 'products_view'},
             {id: 'inventoryNavItem', perm: 'inventory_view'},
             {id: 'debtsNavItem', perm: 'debts_view'},
+            {id: 'paymentsNavItem', perm: 'debts_view'},
+            {id: 'expensesNavItem', perm: 'settings_view'},
             {id: 'reportsNavItem', perm: 'reports_view'},
             {id: 'printerNavItem', perm: 'settings_view'},
             {id: 'settingsNavItem', perm: 'settings_view'}
@@ -6671,6 +7295,8 @@ console.log(`
                     case 'productsNavItem': perm = 'products_view'; break;
                     case 'inventoryNavItem': perm = 'inventory_view'; break;
                     case 'debtsNavItem': perm = 'debts_view'; break;
+                    case 'paymentsNavItem': perm = 'debts_view'; break;
+                    case 'expensesNavItem': perm = 'settings_view'; break;
                     case 'reportsNavItem': perm = 'reports_view'; break;
                     case 'printerNavItem': perm = 'settings_view'; break;
                     case 'settingsNavItem': perm = 'settings_view'; break;
@@ -7222,6 +7848,417 @@ console.log(`
          </tbody>
         </table>
        </div>
+      </div>
+     </div>
+     
+     <!-- 💵 صفحة إدارة التسديدات الشاملة -->
+     <div id="payments" class="page">
+      <div class="section-header" style="margin-bottom: 1.5rem;">
+       <div class="section-title"><i class="fas fa-hand-holding-usd"></i> إدارة التسديدات والأقساط
+       </div>
+       <div class="pos-search-box">
+           <i class="fas fa-search"></i>
+           <input type="text" id="paymentsSearchInput" class="pos-search-input" placeholder="ابحث في التسديدات..." onkeyup="filterPayments()">
+       </div>
+       <div class="export-import-buttons">
+           <button class="export-btn" onclick="if(window.securityManager.checkPermission('debts_export')) exportPaymentsAsJSON()" data-permission="debts_export"> <i class="fas fa-download"></i> JSON </button> 
+           <button class="export-btn" onclick="if(window.securityManager.checkPermission('debts_export')) exportPaymentsAsExcel()" data-permission="debts_export"> <i class="fas fa-file-excel"></i> Excel </button> 
+           <button class="export-btn" onclick="if(window.securityManager.checkPermission('debts_export')) exportPaymentsAsPDF()" data-permission="debts_export"> <i class="fas fa-file-pdf"></i> PDF </button> 
+       </div>
+       <button class="btn btn-primary" onclick="refreshPaymentsPage()" style="margin-right: 1rem;"> <i class="fas fa-sync-alt"></i> تحديث البيانات </button>
+      </div>
+      
+      <!-- الإحصائيات السريعة -->
+      <div class="stats-grid" style="margin-bottom: 1.5rem;">
+       <div class="stat-card" onclick="filterPaymentsByStatus('all')" style="cursor: pointer;" title="عرض جميع التسديدات">
+        <div class="stat-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);"><i class="fas fa-list"></i></div>
+        <div class="stat-value" id="totalPaymentsCount">0</div>
+        <div class="stat-label">إجمالي الأقساط</div>
+       </div>
+       <div class="stat-card" onclick="filterPaymentsByStatus('paid')" style="cursor: pointer;" title="عرض التسديدات المدفوعة">
+        <div class="stat-icon" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);"><i class="fas fa-check-circle"></i></div>
+        <div class="stat-value" id="paidPaymentsCount">0</div>
+        <div class="stat-label">أقساط مسددة</div>
+       </div>
+       <div class="stat-card" onclick="filterPaymentsByStatus('overdue')" style="cursor: pointer;" title="عرض التسديدات المتأخرة">
+        <div class="stat-icon" style="background: linear-gradient(135deg, #ee0979 0%, #ff6a00 100%);"><i class="fas fa-exclamation-triangle"></i></div>
+        <div class="stat-value" id="overduePaymentsCount">0</div>
+        <div class="stat-label">أقساط متأخرة</div>
+       </div>
+       <div class="stat-card" onclick="filterPaymentsByStatus('upcoming')" style="cursor: pointer;" title="عرض التسديدات القادمة">
+        <div class="stat-icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);"><i class="fas fa-clock"></i></div>
+        <div class="stat-value" id="upcomingPaymentsCount">0</div>
+        <div class="stat-label">أقساط قادمة</div>
+       </div>
+       <div class="stat-card">
+        <div class="stat-icon" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);"><i class="fas fa-money-bill-wave"></i></div>
+        <div class="stat-value" id="totalPaidAmount">0 د</div>
+        <div class="stat-label">إجمالي المسدد</div>
+       </div>
+       <div class="stat-card">
+        <div class="stat-icon" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);"><i class="fas fa-hourglass-half"></i></div>
+        <div class="stat-value" id="totalRemainingAmount">0 د</div>
+        <div class="stat-label">إجمالي المتبقي</div>
+       </div>
+      </div>
+      
+      <!-- فلاتر متقدمة -->
+      <div class="filter-section" style="background: var(--theme-bg-secondary); padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem; border: 1px solid var(--theme-border-color);">
+       <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+        <i class="fas fa-filter" style="color: var(--primary-color); font-size: 1.2rem;"></i>
+        <h3 style="margin: 0; color: var(--text-primary); font-size: 1.1rem; font-weight: 600;">الفلاتر والخيارات المتقدمة</h3>
+       </div>
+       
+       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+        <!-- فلتر التاريخ من -->
+        <div class="form-group">
+         <label for="paymentsDateFrom" style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+          <i class="fas fa-calendar-alt" style="color: var(--primary-color);"></i>
+          <span>من تاريخ</span>
+         </label>
+         <input type="date" id="paymentsDateFrom" class="form-control" onchange="applyPaymentsFilters()">
+        </div>
+        
+        <!-- فلتر التاريخ إلى -->
+        <div class="form-group">
+         <label for="paymentsDateTo" style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+          <i class="fas fa-calendar-alt" style="color: var(--primary-color);"></i>
+          <span>إلى تاريخ</span>
+         </label>
+         <input type="date" id="paymentsDateTo" class="form-control" onchange="applyPaymentsFilters()">
+        </div>
+        
+        <!-- فلتر الحالة -->
+        <div class="form-group">
+         <label for="paymentsStatusFilter" style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+          <i class="fas fa-tasks" style="color: var(--primary-color);"></i>
+          <span>حالة التسديد</span>
+         </label>
+         <select id="paymentsStatusFilter" class="form-control" onchange="applyPaymentsFilters()">
+          <option value="all">جميع الحالات</option>
+          <option value="paid">مسدد</option>
+          <option value="overdue">متأخر</option>
+          <option value="upcoming">قادم</option>
+          <option value="pending">معلق</option>
+         </select>
+        </div>
+        
+        <!-- فلتر الترتيب -->
+        <div class="form-group">
+         <label for="paymentsSortFilter" style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+          <i class="fas fa-sort" style="color: var(--primary-color);"></i>
+          <span>ترتيب حسب</span>
+         </label>
+         <select id="paymentsSortFilter" class="form-control" onchange="applyPaymentsFilters()">
+          <option value="date_desc">الأحدث أولاً</option>
+          <option value="date_asc">الأقدم أولاً</option>
+          <option value="amount_desc">المبلغ (الأعلى أولاً)</option>
+          <option value="amount_asc">المبلغ (الأقل أولاً)</option>
+          <option value="customer_asc">اسم العميل (أ-ي)</option>
+          <option value="customer_desc">اسم العميل (ي-أ)</option>
+         </select>
+        </div>
+       </div>
+       
+       <!-- أزرار التحكم -->
+       <div style="display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap;">
+        <!-- أزرار الفلترة -->
+        <button class="btn btn-secondary" onclick="resetPaymentsFilters()">
+         <i class="fas fa-redo"></i> إعادة تعيين الفلاتر
+        </button>
+        
+        <!-- أزرار التصدير -->
+        <button class="btn btn-info" onclick="exportPaymentsReport()">
+         <i class="fas fa-file-excel"></i> تصدير Excel
+        </button>
+        
+        <!-- قائمة منسدلة للطباعة -->
+        <div class="dropdown" style="position: relative; display: inline-block;">
+         <button class="btn btn-primary" onclick="togglePrintMenu()" style="display: flex; align-items: center; gap: 8px;">
+          <i class="fas fa-print"></i> خيارات الطباعة
+          <i class="fas fa-chevron-down" style="font-size: 0.8rem;"></i>
+         </button>
+         <div id="printMenuDropdown" style="display: none; position: absolute; background: var(--theme-bg-primary); border: 1px solid var(--border-color); border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); min-width: 250px; z-index: 1000; margin-top: 5px;">
+          <div style="padding: 8px 0;">
+           <button onclick="printCompletePaymentsReport(); togglePrintMenu();" style="width: 100%; text-align: right; padding: 10px 15px; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 10px; color: var(--text-primary); transition: background 0.2s;" onmouseover="this.style.background='var(--theme-bg-secondary)'" onmouseout="this.style.background='transparent'">
+            <i class="fas fa-file-invoice" style="width: 20px; color: #667eea;"></i>
+            <span>طباعة التقرير الكامل</span>
+           </button>
+           
+           <div style="height: 1px; background: var(--border-color); margin: 5px 0;"></div>
+           
+           <button onclick="printPaymentsStat('total'); togglePrintMenu();" style="width: 100%; text-align: right; padding: 10px 15px; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 10px; color: var(--text-primary); transition: background 0.2s;" onmouseover="this.style.background='var(--theme-bg-secondary)'" onmouseout="this.style.background='transparent'">
+            <i class="fas fa-list-ol" style="width: 20px; color: #667eea;"></i>
+            <span>إجمالي الأقساط</span>
+           </button>
+           
+           <button onclick="printPaymentsStat('paid'); togglePrintMenu();" style="width: 100%; text-align: right; padding: 10px 15px; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 10px; color: var(--text-primary); transition: background 0.2s;" onmouseover="this.style.background='var(--theme-bg-secondary)'" onmouseout="this.style.background='transparent'">
+            <i class="fas fa-check-circle" style="width: 20px; color: #10b981;"></i>
+            <span>الأقساط المسددة</span>
+           </button>
+           
+           <button onclick="printPaymentsStat('overdue'); togglePrintMenu();" style="width: 100%; text-align: right; padding: 10px 15px; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 10px; color: var(--text-primary); transition: background 0.2s;" onmouseover="this.style.background='var(--theme-bg-secondary)'" onmouseout="this.style.background='transparent'">
+            <i class="fas fa-exclamation-triangle" style="width: 20px; color: #ef4444;"></i>
+            <span>الأقساط المتأخرة</span>
+           </button>
+           
+           <button onclick="printPaymentsStat('upcoming'); togglePrintMenu();" style="width: 100%; text-align: right; padding: 10px 15px; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 10px; color: var(--text-primary); transition: background 0.2s;" onmouseover="this.style.background='var(--theme-bg-secondary)'" onmouseout="this.style.background='transparent'">
+            <i class="fas fa-clock" style="width: 20px; color: #f59e0b;"></i>
+            <span>الأقساط القادمة</span>
+           </button>
+           
+           <button onclick="printPaymentsStat('paidAmount'); togglePrintMenu();" style="width: 100%; text-align: right; padding: 10px 15px; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 10px; color: var(--text-primary); transition: background 0.2s;" onmouseover="this.style.background='var(--theme-bg-secondary)'" onmouseout="this.style.background='transparent'">
+            <i class="fas fa-money-bill-wave" style="width: 20px; color: #06b6d4;"></i>
+            <span>إجمالي المبالغ المسددة</span>
+           </button>
+           
+           <button onclick="printPaymentsStat('remainingAmount'); togglePrintMenu();" style="width: 100%; text-align: right; padding: 10px 15px; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 10px; color: var(--text-primary); transition: background 0.2s;" onmouseover="this.style.background='var(--theme-bg-secondary)'" onmouseout="this.style.background='transparent'">
+            <i class="fas fa-coins" style="width: 20px; color: #8b5cf6;"></i>
+            <span>إجمالي المبالغ المتبقية</span>
+           </button>
+          </div>
+         </div>
+        </div>
+        
+        <script>
+         // دالة لإظهار/إخفاء قائمة الطباعة
+         function togglePrintMenu() {
+          const menu = document.getElementById('printMenuDropdown');
+          if (menu) {
+           menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+          }
+         }
+         
+         // إخفاء القائمة عند النقر خارجها
+         document.addEventListener('click', function(event) {
+          const menu = document.getElementById('printMenuDropdown');
+          const printBtn = event.target.closest('.dropdown');
+          if (menu && !printBtn && menu.style.display === 'block') {
+           menu.style.display = 'none';
+          }
+         });
+        </script>
+       </div>
+      </div>
+      
+      <!-- جدول التسديدات -->
+      <div class="table-container">
+       <table class="table">
+        <thead>
+         <tr>
+          <th><i class="fas fa-hashtag"></i> رقم القسط</th>
+          <th><i class="fas fa-user"></i> اسم العميل</th>
+          <th><i class="fas fa-phone"></i> رقم الهاتف</th>
+          <th><i class="fas fa-money-bill-wave"></i> مبلغ القسط</th>
+          <th><i class="fas fa-calendar-alt"></i> تاريخ الاستحقاق</th>
+          <th><i class="fas fa-calendar-check"></i> تاريخ التسديد</th>
+          <th><i class="fas fa-info-circle"></i> الحالة</th>
+          <th><i class="fas fa-cog"></i> الإجراءات</th>
+         </tr>
+        </thead>
+        <tbody id="paymentsTableBody">
+         <!-- سيتم ملء البيانات ديناميكياً -->
+        </tbody>
+       </table>
+       <div id="noPaymentsMessage" style="display: none; text-align: center; padding: 3rem; color: var(--text-secondary);">
+        <i class="fas fa-inbox" style="font-size: 4rem; color: var(--text-secondary); opacity: 0.3; margin-bottom: 1rem;"></i>
+        <p style="font-size: 1.2rem; font-weight: 600;">لا توجد تسديدات</p>
+        <p style="font-size: 0.95rem;">ابدأ بإضافة ديون لعرض الأقساط هنا</p>
+       </div>
+      </div>
+      
+      <!-- معلومات إضافية -->
+      <div style="background: var(--info-bg); color: var(--info-color); padding: 1rem; border-radius: 8px; margin-top: 1.5rem; border: 1px solid var(--info-border);">
+       <div style="display: flex; align-items: center; gap: 0.75rem;">
+        <i class="fas fa-info-circle" style="font-size: 1.5rem;"></i>
+        <div>
+         <strong>معلومة مفيدة:</strong> يمكنك النقر على بطاقات الإحصائيات لفلترة التسديدات حسب الحالة. كما يمكنك طباعة إيصال التسديد لكل قسط مسدد.
+        </div>
+       </div>
+      </div>
+     </div>
+     
+     <!-- 💰 صفحة إدارة التسديدات المتكاملة -->
+     <div id="payments" class="page">
+      <div class="section-header" style="margin-bottom: 1.5rem;">
+       <div class="section-title"><i class="fas fa-hand-holding-usd"></i> إدارة التسديدات والأقساط
+       </div>
+       <div class="pos-search-box">
+           <i class="fas fa-search"></i>
+           <input type="text" id="paymentsSearchInput" class="pos-search-input" placeholder="ابحث عن عميل، رقم هاتف..." onkeyup="filterPayments()">
+       </div>
+       <button class="btn btn-success" onclick="refreshPaymentsPage()" style="margin-right: 1rem;">
+         <i class="fas fa-sync-alt"></i> تحديث
+       </button>
+      </div>
+      
+      <!-- الإحصائيات السريعة -->
+      <div class="stats-grid" style="margin-bottom: 1.5rem;">
+       <div class="stat-card" onclick="filterPaymentsByStatus('all')" style="cursor: pointer;" title="جميع التسديدات">
+        <div class="stat-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);"><i class="fas fa-calendar-alt"></i>
+        </div>
+        <div class="stat-value" id="totalPaymentsCount">
+         0
+        </div>
+        <div class="stat-label">
+         إجمالي الأقساط
+        </div>
+       </div>
+       
+       <div class="stat-card" onclick="filterPaymentsByStatus('paid')" style="cursor: pointer;" title="الأقساط المسددة">
+        <div class="stat-icon" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);"><i class="fas fa-check-circle"></i>
+        </div>
+        <div class="stat-value" id="paidPaymentsCount">
+         0
+        </div>
+        <div class="stat-label">
+         أقساط مسددة
+        </div>
+       </div>
+       
+       <div class="stat-card" onclick="filterPaymentsByStatus('overdue')" style="cursor: pointer;" title="الأقساط المتأخرة">
+        <div class="stat-icon" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);"><i class="fas fa-exclamation-triangle"></i>
+        </div>
+        <div class="stat-value" id="overduePaymentsCount">
+         0
+        </div>
+        <div class="stat-label">
+         أقساط متأخرة
+        </div>
+       </div>
+       
+       <div class="stat-card" onclick="filterPaymentsByStatus('upcoming')" style="cursor: pointer;" title="الأقساط القادمة">
+        <div class="stat-icon" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);"><i class="fas fa-clock"></i>
+        </div>
+        <div class="stat-value" id="upcomingPaymentsCount">
+         0
+        </div>
+        <div class="stat-label">
+         أقساط قادمة
+        </div>
+       </div>
+       
+       <div class="stat-card" style="cursor: default;">
+        <div class="stat-icon" style="background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);"><i class="fas fa-money-bill-wave"></i>
+        </div>
+        <div class="stat-value" id="totalPaidAmount">
+         0 د
+        </div>
+        <div class="stat-label">
+         إجمالي المبالغ المسددة
+        </div>
+       </div>
+       
+       <div class="stat-card" style="cursor: default;">
+        <div class="stat-icon" style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);"><i class="fas fa-coins"></i>
+        </div>
+        <div class="stat-value" id="totalRemainingAmount">
+         0 د
+        </div>
+        <div class="stat-label">
+         إجمالي المبالغ المتبقية
+        </div>
+       </div>
+      </div>
+      
+      <!-- فلاتر متقدمة -->
+      <div class="card" style="margin-bottom: 1.5rem; padding: 20px;">
+       <h3 style="margin-bottom: 15px; color: var(--primary-color); display: flex; align-items: center; gap: 10px;">
+        <i class="fas fa-filter"></i> فلاتر البحث المتقدمة
+       </h3>
+       
+       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px;">
+        <!-- فلتر التاريخ من -->
+        <div class="form-group">
+         <label style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-primary);">
+          <i class="fas fa-calendar-day"></i> من تاريخ:
+         </label>
+         <input type="date" id="paymentsDateFrom" class="form-control" onchange="applyPaymentsFilters()">
+        </div>
+        
+        <!-- فلتر التاريخ إلى -->
+        <div class="form-group">
+         <label style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-primary);">
+          <i class="fas fa-calendar-day"></i> إلى تاريخ:
+         </label>
+         <input type="date" id="paymentsDateTo" class="form-control" onchange="applyPaymentsFilters()">
+        </div>
+        
+        <!-- فلتر الحالة -->
+        <div class="form-group">
+         <label style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-primary);">
+          <i class="fas fa-info-circle"></i> الحالة:
+         </label>
+         <select id="paymentsStatusFilter" class="form-control" onchange="applyPaymentsFilters()">
+          <option value="all">جميع الحالات</option>
+          <option value="paid">مسددة</option>
+          <option value="pending">قيد الانتظار</option>
+          <option value="overdue">متأخرة</option>
+          <option value="upcoming">قادمة</option>
+         </select>
+        </div>
+        
+        <!-- فلتر الترتيب -->
+        <div class="form-group">
+         <label style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-primary);">
+          <i class="fas fa-sort"></i> ترتيب حسب:
+         </label>
+         <select id="paymentsSortFilter" class="form-control" onchange="applyPaymentsFilters()">
+          <option value="date_desc">التاريخ (الأحدث أولاً)</option>
+          <option value="date_asc">التاريخ (الأقدم أولاً)</option>
+          <option value="amount_desc">المبلغ (الأكبر أولاً)</option>
+          <option value="amount_asc">المبلغ (الأصغر أولاً)</option>
+          <option value="customer_asc">اسم العميل (أ-ي)</option>
+          <option value="customer_desc">اسم العميل (ي-أ)</option>
+         </select>
+        </div>
+       </div>
+       
+       <!-- أزرار التحكم -->
+       <div style="display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap;">
+        <button class="btn btn-secondary" onclick="resetPaymentsFilters()">
+         <i class="fas fa-redo"></i> إعادة تعيين الفلاتر
+        </button>
+        <button class="btn btn-info" onclick="exportPaymentsReport()">
+         <i class="fas fa-file-excel"></i> تصدير تقرير Excel
+        </button>
+        <button class="btn btn-primary" onclick="printPaymentsReport()">
+         <i class="fas fa-print"></i> طباعة التقرير
+        </button>
+       </div>
+      </div>
+      
+      <!-- جدول التسديدات -->
+      <div class="table-container">
+       <table class="table">
+        <thead>
+         <tr>
+          <th><i class="fas fa-user"></i> اسم العميل</th>
+          <th><i class="fas fa-phone"></i> رقم الهاتف</th>
+          <th><i class="fas fa-hashtag"></i> رقم القسط</th>
+          <th><i class="fas fa-calendar"></i> تاريخ الاستحقاق</th>
+          <th><i class="fas fa-money-bill"></i> المبلغ المستحق</th>
+          <th><i class="fas fa-calendar-check"></i> تاريخ الدفع</th>
+          <th><i class="fas fa-info-circle"></i> الحالة</th>
+          <th><i class="fas fa-cogs"></i> الإجراءات</th>
+         </tr>
+        </thead>
+        <tbody id="paymentsTableBody">
+         <tr>
+          <td colspan="8" style="text-align: center; padding: 30px;">
+           <i class="fas fa-spinner fa-spin" style="font-size: 24px; color: var(--primary-color);"></i>
+           <p style="margin-top: 10px; color: var(--text-secondary);">جاري تحميل التسديدات...</p>
+          </td>
+         </tr>
+        </tbody>
+       </table>
+      </div>
+      
+      <!-- رسالة عدم وجود بيانات -->
+      <div id="noPaymentsMessage" style="display: none; text-align: center; padding: 50px; background: var(--theme-bg-secondary); border-radius: 12px; margin-top: 20px;">
+       <i class="fas fa-inbox" style="font-size: 48px; color: var(--text-secondary); opacity: 0.5;"></i>
+       <p style="margin-top: 15px; font-size: 18px; color: var(--text-secondary);">لا توجد تسديدات متاحة</p>
+       <p style="color: var(--text-secondary); opacity: 0.7;">قم بإضافة ديون جديدة لعرض التسديدات هنا</p>
       </div>
      </div>
      
@@ -9688,6 +10725,135 @@ console.log(`
    </div>
   </div>
 
+  <!-- نافذة إدارة النظام والإصلاح -->
+  <div id="systemManagementModal" class="modal">
+    <div class="modal-content" style="max-width: 900px;">
+      <div class="modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+        <h3 class="modal-title">
+          <i class="fas fa-tools"></i> إدارة النظام والإصلاح
+        </h3>
+        <button class="close-btn" onclick="closeModal('systemManagementModal')" style="color: white;">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      
+      <div class="modal-body" style="padding: 2rem;">
+        <!-- حالة النظام -->
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem;">
+          <h4 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+            <i class="fas fa-info-circle"></i> حالة النظام
+          </h4>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+            <div style="background: rgba(255, 255, 255, 0.2); padding: 1rem; border-radius: 8px; backdrop-filter: blur(10px);">
+              <div style="font-size: 0.9rem; opacity: 0.9; margin-bottom: 0.25rem;">معرف المستخدم</div>
+              <div id="systemStatusUID" style="font-weight: bold; font-size: 1.1rem;">---</div>
+            </div>
+            <div style="background: rgba(255, 255, 255, 0.2); padding: 1rem; border-radius: 8px; backdrop-filter: blur(10px);">
+              <div style="font-size: 0.9rem; opacity: 0.9; margin-bottom: 0.25rem;">حالة الحساب</div>
+              <div id="systemStatusAccount" style="font-weight: bold; font-size: 1.1rem;">---</div>
+            </div>
+            <div style="background: rgba(255, 255, 255, 0.2); padding: 1rem; border-radius: 8px; backdrop-filter: blur(10px);">
+              <div style="font-size: 0.9rem; opacity: 0.9; margin-bottom: 0.25rem;">إصدار التطبيق</div>
+              <div id="systemStatusVersion" style="font-weight: bold; font-size: 1.1rem;">---</div>
+            </div>
+            <div style="background: rgba(255, 255, 255, 0.2); padding: 1rem; border-radius: 8px; backdrop-filter: blur(10px);">
+              <div style="font-size: 0.9rem; opacity: 0.9; margin-bottom: 0.25rem;">حالة Firebase</div>
+              <div id="systemStatusFirebase" style="font-weight: bold; font-size: 1.1rem;">---</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- أدوات الإصلاح -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+          <!-- فحص الحساب -->
+          <div style="background: var(--theme-bg-secondary); border: 2px solid var(--theme-border); border-radius: 12px; padding: 1.5rem; transition: all 0.3s ease;">
+            <h5 style="color: var(--theme-text-primary); margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;">
+              <i class="fas fa-search" style="color: #3b82f6;"></i> فحص الحساب
+            </h5>
+            <p style="color: var(--theme-text-secondary); font-size: 0.9rem; margin-bottom: 1rem;">التحقق من صلاحية بيانات الحساب المحفوظة</p>
+            <button onclick="systemCheckAccount()" class="btn btn-primary" style="width: 100%; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);">
+              <i class="fas fa-search"></i> فحص الآن
+            </button>
+          </div>
+
+          <!-- إصلاح التسجيل -->
+          <div style="background: var(--theme-bg-secondary); border: 2px solid var(--theme-border); border-radius: 12px; padding: 1.5rem; transition: all 0.3s ease;">
+            <h5 style="color: var(--theme-text-primary); margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;">
+              <i class="fas fa-wrench" style="color: #10b981;"></i> إصلاح التسجيل
+            </h5>
+            <p style="color: var(--theme-text-secondary); font-size: 0.9rem; margin-bottom: 1rem;">حل مشاكل إنشاء الحسابات الجديدة</p>
+            <button onclick="systemFixRegistration()" class="btn btn-success" style="width: 100%; background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+              <i class="fas fa-wrench"></i> إصلاح
+            </button>
+          </div>
+
+          <!-- إعادة تعيين خفيفة -->
+          <div style="background: var(--theme-bg-secondary); border: 2px solid var(--theme-border); border-radius: 12px; padding: 1.5rem; transition: all 0.3s ease;">
+            <h5 style="color: var(--theme-text-primary); margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;">
+              <i class="fas fa-sync" style="color: #6366f1;"></i> إعادة تعيين خفيفة
+            </h5>
+            <p style="color: var(--theme-text-secondary); font-size: 0.9rem; margin-bottom: 1rem;">مسح البيانات مع الاحتفاظ بالإعدادات</p>
+            <button onclick="systemSoftReset()" class="btn" style="width: 100%; background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); color: white;">
+              <i class="fas fa-sync"></i> إعادة تعيين
+            </button>
+          </div>
+
+          <!-- إعادة تعيين كاملة -->
+          <div style="background: var(--theme-bg-secondary); border: 2px solid var(--theme-border); border-radius: 12px; padding: 1.5rem; transition: all 0.3s ease;">
+            <h5 style="color: var(--theme-text-primary); margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;">
+              <i class="fas fa-exclamation-triangle" style="color: #ef4444;"></i> إعادة تعيين كاملة
+            </h5>
+            <p style="color: var(--theme-text-secondary); font-size: 0.9rem; margin-bottom: 1rem;">مسح جميع البيانات والإعدادات</p>
+            <button onclick="systemFullReset()" class="btn btn-danger" style="width: 100%; background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);">
+              <i class="fas fa-exclamation-triangle"></i> إعادة تعيين كاملة
+            </button>
+          </div>
+
+          <!-- مسح البيانات غير الصالحة -->
+          <div style="background: var(--theme-bg-secondary); border: 2px solid var(--theme-border); border-radius: 12px; padding: 1.5rem; transition: all 0.3s ease;">
+            <h5 style="color: var(--theme-text-primary); margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;">
+              <i class="fas fa-trash-alt" style="color: #f59e0b;"></i> مسح البيانات غير الصالحة
+            </h5>
+            <p style="color: var(--theme-text-secondary); font-size: 0.9rem; margin-bottom: 1rem;">إزالة بيانات الحسابات التالفة</p>
+            <button onclick="systemClearInvalidData()" class="btn" style="width: 100%; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white;">
+              <i class="fas fa-trash-alt"></i> مسح
+            </button>
+          </div>
+
+          <!-- تصدير نسخة احتياطية -->
+          <div style="background: var(--theme-bg-secondary); border: 2px solid var(--theme-border); border-radius: 12px; padding: 1.5rem; transition: all 0.3s ease;">
+            <h5 style="color: var(--theme-text-primary); margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;">
+              <i class="fas fa-download" style="color: #8b5cf6;"></i> تصدير نسخة احتياطية
+            </h5>
+            <p style="color: var(--theme-text-secondary); font-size: 0.9rem; margin-bottom: 1rem;">حفظ نسخة من البيانات الحالية</p>
+            <button onclick="systemExportBackup()" class="btn" style="width: 100%; background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white;">
+              <i class="fas fa-download"></i> تصدير
+            </button>
+          </div>
+        </div>
+
+        <!-- سجل العمليات -->
+        <div style="margin-bottom: 1rem;">
+          <h4 style="color: var(--theme-text-primary); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+            <i class="fas fa-list"></i> سجل العمليات
+          </h4>
+          <div id="systemConsoleLog" style="background: #1f2937; color: #e5e7eb; padding: 1.5rem; border-radius: 8px; max-height: 250px; overflow-y: auto; font-family: 'Courier New', monospace; font-size: 0.9rem; line-height: 1.6;">
+            <div style="color: #3b82f6;">ℹ️ في انتظار العمليات...</div>
+          </div>
+        </div>
+
+        <!-- معلومات المطور -->
+        <div style="text-align: center; padding: 1rem; border-top: 2px solid var(--theme-border); color: var(--theme-text-secondary); font-size: 0.9rem;">
+          <p style="margin-bottom: 0.5rem;">
+            <strong style="color: var(--theme-text-primary);">Digital Creativity Company</strong>
+          </p>
+          <p>نظام نقاط البيع المتقدم - كاش برو</p>
+          <p style="margin-top: 0.5rem;">المطور: كرار | 07813798636</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- نافذة الدفع النقدي الحديثة -->
   <div id="cashPaymentModal" class="modal">
    <div class="modal-content" style="max-width: 600px;">
@@ -9937,6 +11103,41 @@ console.log(`
 
         <button onclick="loginWithCredentials()" class="btn btn-primary" style="width: 100%; padding: 1rem; font-size: 1rem;">
          <i class="fas fa-sign-in-alt"></i> تسجيل الدخول
+                </button>
+                <button onclick="createLocalUserIfNeeded()" class="btn btn-success" style="width: 100%; margin-top: 0.5rem; padding: 1rem; font-size: 1rem;">
+                    <i class="fas fa-user-plus"></i> إنشاء حساب جديد
+        </button>
+        <!-- نموذج بيانات المستخدم الجديد -->
+        <div id="userDetailsForm" style="display:block; margin-top:1.5rem; background:rgb(23,25,27); border-radius:10px; padding:1.2rem; border:1px solid rgb(229,231,235);">
+            <h4 style="margin-bottom:1rem; color:var(--primary-gradient); font-weight:700; letter-spacing:1px; text-shadow:0 2px 8px rgba(99,102,241,0.10); font-family:'Cairo',sans-serif;"><i class="fas fa-user"></i> بيانات المستخدم</h4>
+            <div class="form-group" style="margin-bottom:1rem;">
+                <label style="color:var(--theme-text-secondary); font-weight:600; margin-bottom:0.3rem; display:block; font-family:'Cairo',sans-serif; font-size:1.08rem;"><i class="fas fa-user"></i> الاسم الرباعي</label>
+                <input type="text" id="newUserFullName" class="form-input" placeholder="أدخل الاسم الرباعي" required style="background:var(--theme-bg-card); color:var(--theme-text-primary); border:2px solid var(--theme-border,#d8d8d8); border-radius:8px; padding:1.1rem 0.9rem; font-size:1.13rem; font-weight:600; font-family:'Cairo',sans-serif; transition:box-shadow 0.2s;">
+            </div>
+            <div class="form-group" style="margin-bottom:1rem;">
+                <label style="color:var(--theme-text-secondary); font-weight:600; margin-bottom:0.3rem; display:block; font-family:'Cairo',sans-serif; font-size:1.08rem;"><i class="fas fa-phone"></i> رقم الهاتف</label>
+                <input type="tel" id="newUserPhone" class="form-input" placeholder="07XX XXX XXXX" required style="background:var(--theme-bg-card); color:var(--theme-text-primary); border:2px solid var(--theme-border,#d8d8d8); border-radius:8px; padding:1.1rem 0.9rem; font-size:1.13rem; font-weight:600; font-family:'Cairo',sans-serif; transition:box-shadow 0.2s;">
+            </div>
+            <div class="form-group" style="margin-bottom:1rem;">
+                <label style="color:var(--theme-text-secondary); font-weight:600; margin-bottom:0.3rem; display:block; font-family:'Cairo',sans-serif; font-size:1.08rem;"><i class="fas fa-map-marker-alt"></i> العنوان</label>
+                <input type="text" id="newUserAddress" class="form-input" placeholder="العنوان الكامل" required style="background:var(--theme-bg-card); color:var(--theme-text-primary); border:2px solid var(--theme-border,#d8d8d8); border-radius:8px; padding:1.1rem 0.9rem; font-size:1.13rem; font-weight:600; font-family:'Cairo',sans-serif; transition:box-shadow 0.2s;">
+            </div>
+            <div class="form-group" style="margin-bottom:1rem;">
+                <label style="color:var(--theme-text-secondary); font-weight:600; margin-bottom:0.3rem; display:block; font-family:'Cairo',sans-serif; font-size:1.08rem;"><i class="fas fa-store"></i> اسم المتجر</label>
+                <input type="text" id="newUserStoreName" class="form-input" placeholder="اسم المتجر/المؤسسة" required style="background:var(--theme-bg-card); color:var(--theme-text-primary); border:2px solid var(--theme-border,#d8d8d8); border-radius:8px; padding:1.1rem 0.9rem; font-size:1.13rem; font-weight:600; font-family:'Cairo',sans-serif; transition:box-shadow 0.2s;">
+            </div>
+            <div class="form-group" style="margin-bottom:1rem; display:flex; align-items:center; gap:0.7rem;">
+                <label style="color:var(--theme-text-secondary); font-weight:500;"><i class="fas fa-map-marked-alt"></i> الموقع الجغرافي</label>
+                <button type="button" class="btn btn-info" style="background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff;padding:0.5rem 1.2rem;border-radius:7px;font-weight:600;box-shadow:0 2px 8px rgba(59,130,246,0.10);" onclick="getUserLocation()"><i class="fas fa-map-marker-alt"></i> تحديد الموقع</button>
+                <span id="locationStatus" style="font-size:0.95rem; color:#059669; margin-right:8px;"></span>
+            </div>
+            <input type="hidden" id="newUserLat">
+            <input type="hidden" id="newUserLng">
+            <div style="margin-top:1.2rem; display:flex; gap:0.7rem;">
+                <button type="button" class="btn btn-success" style="width: 100%; margin-bottom: 0.5rem; padding: 1rem; font-size: 1rem; border-radius: 8px; background: linear-gradient(135deg,#10b981,#059669); color: #fff; font-weight: 700;" onclick="saveNewUserDetails()"><i class="fas fa-save"></i> حفظ البيانات وإنشاء الحساب</button>
+                <button type="button" class="btn btn-secondary" style="width: 100%; padding: 1rem; font-size: 1rem; border-radius: 8px; background: linear-gradient(135deg,#64748b,#334155); color: #fff; font-weight: 700;" onclick="hideUserDetailsForm()">إلغاء</button>
+            </div>
+        </div>
         </button>
        </div>
       </div>
@@ -10531,40 +11732,75 @@ console.log(`
             return s;
         }
 
-        async function createLocalUserIfNeeded() {
+        // إظهار نموذج بيانات المستخدم
+        window.createLocalUserIfNeeded = function() {
+            document.getElementById('userDetailsForm').style.display = 'block';
+        };
+
+        // إخفاء النموذج
+        window.hideUserDetailsForm = function() {
+            document.getElementById('userDetailsForm').style.display = 'none';
+        };
+
+        // زر تحديد الموقع الجغرافي
+        window.getUserLocation = function() {
+            const status = document.getElementById('locationStatus');
+            status.textContent = 'جاري تحديد الموقع...';
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(pos) {
+                    document.getElementById('newUserLat').value = pos.coords.latitude;
+                    document.getElementById('newUserLng').value = pos.coords.longitude;
+                    status.textContent = 'تم تحديد الموقع بنجاح';
+                }, function(err) {
+                    let msg = 'تعذر تحديد الموقع';
+                    if (window && window.process && window.process.type === 'renderer') {
+                        msg += ' - قد تحتاج لتفعيل صلاحية الموقع من إعدادات النظام أو تشغيل التطبيق كمسؤول.';
+                    } else if (err && err.code === 1) {
+                        msg += ' - تم رفض الإذن. يرجى السماح للتطبيق بالوصول للموقع.';
+                    } else if (err && err.code === 2) {
+                        msg += ' - الموقع غير متوفر. تأكد من اتصال الإنترنت أو GPS.';
+                    } else if (err && err.code === 3) {
+                        msg += ' - انتهت مهلة الطلب. حاول مجددًا.';
+                    }
+                    status.textContent = msg;
+                });
+            } else {
+                status.textContent = 'المتصفح أو التطبيق لا يدعم تحديد الموقع. إذا كنت تستخدم تطبيق سطح مكتب، قد تحتاج لتفعيل صلاحية الموقع من إعدادات النظام.';
+            }
+        };
+
+        // حفظ بيانات المستخدم وإنشاء الحساب
+        window.saveNewUserDetails = async function() {
+            const fullName = document.getElementById('newUserFullName').value.trim();
+            const phone = document.getElementById('newUserPhone').value.trim();
+            const address = document.getElementById('newUserAddress').value.trim();
+            const storeName = document.getElementById('newUserStoreName').value.trim();
+            const lat = document.getElementById('newUserLat').value;
+            const lng = document.getElementById('newUserLng').value;
+
+            if (!fullName || !phone || !address || !storeName) {
+                showToast('يرجى تعبئة جميع الحقول المطلوبة', 'warning');
+                return;
+            }
+
             let uid = localStorage.getItem('app_uid');
             let secret = localStorage.getItem('app_secret');
-
-            // تحقق من وجود المستخدم في DB إن وجدت بيانات محلية
             if (uid && secret) {
-                try {
-                    const snap = await database.ref(`users/${uid}`).once('value');
-                    if (snap.exists()) {
-                        window.currentUser = snap.val();
-                        window.currentUser.uid = uid;
-                        console.log('✅ تم تحميل بيانات المستخدم:', uid);
-                        return;
-                    } else {
-                        // تنظيف محلي
-                        console.log('⚠️ المستخدم غير موجود في DB، إنشاء حساب جديد');
-                        localStorage.removeItem('app_uid');
-                        localStorage.removeItem('app_secret');
-                        uid = secret = null;
-                    }
-                } catch (error) {
-                    console.error('❌ خطأ في تحميل بيانات المستخدم:', error);
+                // تحقق من عدم وجود المستخدم مسبقاً
+                const snap = await database.ref(`users/${uid}`).once('value');
+                if (snap.exists()) {
+                    showToast('الحساب موجود مسبقاً', 'info');
+                    return;
                 }
             }
 
             // إنشاء مستخدم جديد
-            console.log('🔄 إنشاء حساب مستخدم جديد...');
             const newUserRef = database.ref('users').push();
             uid = newUserRef.key;
             secret = generateRandomKey(10);
 
             const appSettingsSnap = await database.ref('appSettings/trialDays').once('value');
             const trialDays = appSettingsSnap.exists() ? Number(appSettingsSnap.val()) : 30;
-
             const createdAt = Date.now();
             const trialUntil = createdAt + (trialDays * 24 * 60 * 60 * 1000);
 
@@ -10572,6 +11808,12 @@ console.log(`
                 profile: {
                     uid,
                     secret,
+                    fullName,
+                    phone,
+                    address,
+                    storeName,
+                    lat: lat || null,
+                    lng: lng || null,
                     createdAt,
                     deviceInfo: {
                         platform: navigator.platform || '',
@@ -10588,9 +11830,8 @@ console.log(`
                 localStorage.setItem('app_secret', secret);
                 window.currentUser = userObj;
                 window.currentUser.uid = uid;
-
-                console.log('✅ تم إنشاء المستخدم بنجاح:', uid);
-
+                showToast('تم إنشاء الحساب بنجاح', 'success');
+                document.getElementById('userDetailsForm').style.display = 'none';
                 // إظهار رسالة للمستخدم بمعلومات الحساب
                 showModal('userInfoModal');
                 document.getElementById('userUID').textContent = uid;
@@ -10600,7 +11841,7 @@ console.log(`
                 console.error('❌ خطأ في إنشاء المستخدم:', error);
                 alert('حدث خطأ في إنشاء الحساب. الرجاء المحاولة مرة أخرى.');
             }
-        }
+        };
 
         async function checkSubscriptionAndGate() {
             const uid = localStorage.getItem('app_uid');
@@ -11404,165 +12645,74 @@ console.log(`
                 let totalUpdated = 0;
 
                 // دمج المنتجات
-                let productsCount = 0;
                 if (backupData.data.products) {
-                    console.log(`📦 استرجاع ${backupData.data.products.length} منتج...`);
-                    
                     const localProducts = await dataSDK.queryByField('type', 'product');
                     const result = await mergeDataWithLocal('products', backupData.data.products, localProducts);
                     totalAdded += result.added;
                     totalUpdated += result.updated;
                     
                     // حفظ المنتجات المدموجة
-                    console.log(`💾 حفظ ${localProducts.length} منتج في IndexedDB...`);
                     for (const product of localProducts) {
-                        await dataSDK.save({ ...product, type: 'product', lastModified: new Date().toISOString() });
-                        productsCount++;
+                        await dataSDK.save({ ...product, type: 'product' });
                     }
-                    
-                    // تحديث المتغير العالمي
-                    products = localProducts;
-                    localStorage.setItem('products', JSON.stringify(products));
-                    console.log(`✅ تم حفظ ${productsCount} منتج`);
                 }
 
                 // دمج التصنيفات
-                let categoriesCount = 0;
                 if (backupData.data.categories) {
-                    console.log(`📦 استرجاع ${backupData.data.categories.length} تصنيف...`);
-                    
                     const localCategories = await dataSDK.queryByField('type', 'category');
                     const result = await mergeDataWithLocal('categories', backupData.data.categories, localCategories);
                     totalAdded += result.added;
                     totalUpdated += result.updated;
                     
-                    console.log(`💾 حفظ ${localCategories.length} تصنيف في IndexedDB...`);
                     for (const category of localCategories) {
-                        await dataSDK.save({ ...category, type: 'category', lastModified: new Date().toISOString() });
-                        categoriesCount++;
+                        await dataSDK.save({ ...category, type: 'category' });
                     }
-                    
-                    // تحديث المتغير العالمي
-                    categories = localCategories;
-                    localStorage.setItem('categories', JSON.stringify(categories));
-                    console.log(`✅ تم حفظ ${categoriesCount} تصنيف`);
                 }
 
                 // دمج المبيعات
-                let salesCount = 0;
                 if (backupData.data.sales) {
-                    console.log(`📦 استرجاع ${backupData.data.sales.length} مبيعة...`);
-                    
-                    // جلب المبيعات الحالية من IndexedDB
-                    let localSales = await dataSDK.queryByField('type', 'sale');
-                    console.log(`📊 المبيعات الحالية: ${localSales.length}`);
-                    
-                    // دمج البيانات
-                    const result = await mergeDataWithLocal('sales', backupData.data.sales, localSales, 'invoice_id');
+                    salesData = salesData || [];
+                    const result = await mergeDataWithLocal('sales', backupData.data.sales, salesData, 'invoice_id');
                     totalAdded += result.added;
                     totalUpdated += result.updated;
-                    
-                    // ⭐ الإصلاح الجذري: حفظ كل مبيعة في IndexedDB
-                    console.log(`💾 حفظ ${localSales.length} مبيعة في IndexedDB...`);
-                    for (const sale of localSales) {
-                        await dataSDK.save({ 
-                            ...sale, 
-                            type: 'sale',
-                            lastModified: new Date().toISOString()
-                        });
-                        salesCount++;
-                    }
-                    
-                    // تحديث المتغير العالمي و localStorage
-                    salesData = localSales;
-                    localStorage.setItem('salesData', JSON.stringify(salesData));
-                    console.log(`✅ تم حفظ ${salesCount} مبيعة في IndexedDB و localStorage`);
                 }
 
                 // دمج الديون
-                let debtsCount = 0;
                 if (backupData.data.debts) {
-                    console.log(`📦 استرجاع ${backupData.data.debts.length} دين...`);
-                    
-                    // جلب الديون الحالية من IndexedDB
-                    let localDebts = await dataSDK.queryByField('type', 'debt');
-                    console.log(`📊 الديون الحالية: ${localDebts.length}`);
-                    
-                    // دمج البيانات
-                    const result = await mergeDataWithLocal('debts', backupData.data.debts, localDebts);
+                    debtsData = debtsData || [];
+                    const result = await mergeDataWithLocal('debts', backupData.data.debts, debtsData);
                     totalAdded += result.added;
                     totalUpdated += result.updated;
-                    
-                    // ⭐ الإصلاح الجذري: حفظ كل دين في IndexedDB
-                    console.log(`💾 حفظ ${localDebts.length} دين في IndexedDB...`);
-                    for (const debt of localDebts) {
-                        await dataSDK.save({ 
-                            ...debt, 
-                            type: 'debt',
-                            lastModified: new Date().toISOString()
-                        });
-                        debtsCount++;
-                    }
-                    
-                    // تحديث المتغير العالمي و localStorage
-                    debtsData = localDebts;
-                    localStorage.setItem('debtsData', JSON.stringify(debtsData));
-                    console.log(`✅ تم حفظ ${debtsCount} دين في IndexedDB و localStorage`);
                 }
 
-                // ⭐ استرجاع وتطبيق الإعدادات تلقائياً
-                let settingsRestored = false;
-                if (backupData.data.settings) {
-                    console.log('⚙️ استرجاع الإعدادات...');
-                    
+                // استرجاع الإعدادات (اختياري - يمكن تخطيه)
+                if (backupData.data.settings && confirm('هل تريد استرجاع الإعدادات أيضاً؟')) {
                     if (backupData.data.settings.store) {
                         localStorage.setItem('storeSettings', JSON.stringify(backupData.data.settings.store));
-                        console.log('✅ تم استرجاع إعدادات المتجر');
                     }
                     if (backupData.data.settings.system) {
                         localStorage.setItem('systemSettings', JSON.stringify(backupData.data.settings.system));
-                        console.log('✅ تم استرجاع إعدادات النظام');
                     }
                     if (backupData.data.settings.printer) {
                         localStorage.setItem('printerSettings', JSON.stringify(backupData.data.settings.printer));
-                        console.log('✅ تم استرجاع إعدادات الطابعة');
                     }
                     if (backupData.data.settings.theme) {
                         localStorage.setItem('currentTheme', backupData.data.settings.theme);
-                        console.log('✅ تم استرجاع الثيم');
                     }
                     if (backupData.data.settings.customColors) {
                         localStorage.setItem('customColors', JSON.stringify(backupData.data.settings.customColors));
-                        console.log('✅ تم استرجاع الألوان المخصصة');
                     }
-                    settingsRestored = true;
                 }
 
-                // إعداد رسالة تفصيلية
-                const successMsg = `✅ تم استرجاع النسخة الاحتياطية بنجاح!\n\n` +
-                    `📊 التفاصيل:\n` +
-                    `• ${productsCount || 0} منتج\n` +
-                    `• ${categoriesCount || 0} تصنيف\n` +
-                    `• ${salesCount} مبيعة\n` +
-                    `• ${debtsCount} دين\n` +
-                    (settingsRestored ? `• تم استرجاع الإعدادات\n` : '') +
-                    `\n📈 الإحصائيات:\n` +
-                    `• ${totalAdded} سجل جديد\n` +
-                    `• ${totalUpdated} سجل محدّث\n\n` +
-                    `⏳ سيتم إعادة تحميل الصفحة خلال 3 ثواني...`;
-
                 console.log('✅ تم استرجاع النسخة الاحتياطية بنجاح');
-                console.log(`📊 إحصائيات: ${salesCount} مبيعة، ${debtsCount} دين، ${totalAdded} جديد، ${totalUpdated} محدّث`);
+                showToast(`✅ تم الاسترجاع بنجاح! (${totalAdded} جديد، ${totalUpdated} محدث)`, 'success');
                 
-                showToast(successMsg, 'success');
-                
-                // ⭐ إعادة تحميل الصفحة تلقائياً بعد 3 ثواني
-                console.log('🔄 إعادة تحميل الصفحة خلال 3 ثواني لتطبيق جميع التغييرات...');
-                setTimeout(() => {
+                // إعادة تحميل الصفحة لتطبيق التغييرات
+                if (confirm('تم الاسترجاع بنجاح! هل تريد إعادة تحميل الصفحة؟')) {
                     location.reload();
-                }, 3000);
+                }
 
-                return { success: true, added: totalAdded, updated: totalUpdated, sales: salesCount, debts: debtsCount };
+                return { success: true, added: totalAdded, updated: totalUpdated };
             } catch (error) {
                 console.error('❌ خطأ في استرجاع النسخة الاحتياطية:', error);
                 showToast('❌ فشل استرجاع النسخة الاحتياطية: ' + error.message, 'error');
@@ -12564,153 +13714,6 @@ console.log(`
         });
 
         // تهيئة التطبيق
-        // تحميل جميع البيانات من IndexedDB
-        async function loadDataFromIndexedDB() {
-            try {
-                console.log('📦 بدء تحميل البيانات من IndexedDB...');
-                
-                // 1. جلب جميع البيانات من IndexedDB
-                const allData = await window.dataSdk.getAll();
-                console.log(`📊 تم جلب ${allData.length} عنصر من IndexedDB`);
-
-                if (!allData || allData.length === 0) {
-                    console.log('⚠️ لا توجد بيانات في IndexedDB');
-                    return {
-                        products: 0,
-                        categories: 0,
-                        suppliers: 0,
-                        sales: 0,
-                        debts: 0
-                    };
-                }
-
-                // 2. تصنيف البيانات حسب النوع
-                const productsList = [];
-                const categoriesList = [];
-                const suppliersList = [];
-                const salesList = [];
-                const debtsList = [];
-
-                for (const item of allData) {
-                    if (!item || !item.type) continue;
-                    
-                    switch (item.type) {
-                        case 'product':
-                            productsList.push(item);
-                            break;
-                        case 'category':
-                            categoriesList.push(item);
-                            break;
-                        case 'supplier':
-                            suppliersList.push(item);
-                            break;
-                        case 'sale':
-                            salesList.push(item);
-                            break;
-                        case 'debt':
-                            debtsList.push(item);
-                            break;
-                    }
-                }
-
-                console.log('📋 تفاصيل البيانات المحملة:');
-                console.log(`  • المنتجات: ${productsList.length}`);
-                console.log(`  • التصنيفات: ${categoriesList.length}`);
-                console.log(`  • الموردين: ${suppliersList.length}`);
-                console.log(`  • المبيعات: ${salesList.length}`);
-                console.log(`  • الديون: ${debtsList.length}`);
-
-                // 3. تحديث المتغيرات العالمية
-                if (productsList.length > 0) {
-                    products = productsList;
-                    localStorage.setItem('products', JSON.stringify(products));
-                    console.log(`✅ تم تحميل ${products.length} منتج`);
-                }
-
-                if (categoriesList.length > 0) {
-                    categories = categoriesList;
-                    localStorage.setItem('categories', JSON.stringify(categories));
-                    console.log(`✅ تم تحميل ${categories.length} تصنيف`);
-                }
-
-                if (suppliersList.length > 0) {
-                    suppliers = suppliersList;
-                    localStorage.setItem('suppliers', JSON.stringify(suppliers));
-                    console.log(`✅ تم تحميل ${suppliers.length} مورد`);
-                }
-
-                // ⭐ الأهم: تحميل المبيعات والديون
-                if (salesList.length > 0) {
-                    salesData = salesList;
-                    localStorage.setItem('salesData', JSON.stringify(salesData));
-                    console.log(`✅ تم تحميل ${salesData.length} مبيعة من IndexedDB`);
-                } else {
-                    // محاولة التحميل من localStorage كنسخة احتياطية
-                    const savedSales = localStorage.getItem('salesData');
-                    if (savedSales) {
-                        try {
-                            salesData = JSON.parse(savedSales);
-                            console.log(`📋 تم تحميل ${salesData.length} مبيعة من localStorage`);
-                        } catch (e) {
-                            console.warn('⚠️ خطأ في قراءة المبيعات من localStorage');
-                        }
-                    }
-                }
-
-                if (debtsList.length > 0) {
-                    debtsData = debtsList;
-                    localStorage.setItem('debtsData', JSON.stringify(debtsData));
-                    console.log(`✅ تم تحميل ${debtsData.length} دين من IndexedDB`);
-                } else {
-                    // محاولة التحميل من localStorage كنسخة احتياطية
-                    const savedDebts = localStorage.getItem('debtsData');
-                    if (savedDebts) {
-                        try {
-                            debtsData = JSON.parse(savedDebts);
-                            console.log(`📋 تم تحميل ${debtsData.length} دين من localStorage`);
-                        } catch (e) {
-                            console.warn('⚠️ خطأ في قراءة الديون من localStorage');
-                        }
-                    }
-                }
-
-                console.log('✅ تم تحميل جميع البيانات من IndexedDB بنجاح');
-                
-                return {
-                    products: productsList.length,
-                    categories: categoriesList.length,
-                    suppliers: suppliersList.length,
-                    sales: salesList.length,
-                    debts: debtsList.length
-                };
-            } catch (error) {
-                console.error('❌ خطأ في تحميل البيانات من IndexedDB:', error);
-                
-                // محاولة التحميل من localStorage كنسخة احتياطية
-                try {
-                    const savedProducts = localStorage.getItem('products');
-                    const savedSales = localStorage.getItem('salesData');
-                    const savedDebts = localStorage.getItem('debtsData');
-                    
-                    if (savedProducts) products = JSON.parse(savedProducts);
-                    if (savedSales) salesData = JSON.parse(savedSales);
-                    if (savedDebts) debtsData = JSON.parse(savedDebts);
-                    
-                    console.log('📋 تم التحميل من localStorage كنسخة احتياطية');
-                } catch (e) {
-                    console.error('❌ فشل التحميل من localStorage أيضاً:', e);
-                }
-                
-                return {
-                    products: 0,
-                    categories: 0,
-                    suppliers: 0,
-                    sales: 0,
-                    debts: 0
-                };
-            }
-        }
-
         async function initApp() {
             try {
                 console.log('🚀 بدء تهيئة التطبيق...');
@@ -12755,12 +13758,6 @@ console.log(`
                         return;
                     }
                     console.log('✅ تم تهيئة قاعدة البيانات المحلية');
-                    
-                    // ⭐ تحميل جميع البيانات من IndexedDB (الخطوة الأهم!)
-                    console.log('📦 تحميل البيانات من IndexedDB...');
-                    updateLoaderStatus('تحميل البيانات المحفوظة...');
-                    const loadedData = await loadDataFromIndexedDB();
-                    console.log(`✅ تم تحميل البيانات: ${loadedData.products} منتج، ${loadedData.sales} مبيعة، ${loadedData.debts} دين`);
                 } else {
                     console.error('❌ Data SDK غير موجود!');
                     showToast('خطأ في تحميل النظام', 'error');
@@ -14169,6 +15166,8 @@ console.log(`
                 'inventory': 'إدارة المخزن',
                 'invoices': 'الفواتير',
                 'debts': 'إدارة الديون',
+                'payments': 'التسديدات والأقساط',
+                'expenses': 'إدارة المصاريف',
                 'printer': 'إدارة الطابعة',
                 'settings': 'الإعدادات العامة'
             };
@@ -24595,7 +25594,7 @@ console.log(`
             
             <div style="margin-top:30px;text-align:center;color:#666;font-size:0.9rem;">
                 <p style="margin:5px 0;">تم إنشاء التقرير بواسطة نظام نقاط البيع المتقدم</p>
-                <p style="margin:5px 0;">شركة الإبداع الرقمي - إدارة كرار الشعبري</p>
+                <p style="margin:5px 0;">شركة الإبداع الرقمي - إدارة كرار السعبري</p>
             </div>
         </div>`;
         
@@ -24701,6 +25700,1427 @@ console.log(`
     
     </script>
     
+    <!-- 💰 نظام إدارة التسديدات المتكامل -->
+    <script>
+    // نظام إدارة التسديدات
+    (function() {
+        'use strict';
+
+        // بيانات التسديدات
+        let allPayments = [];
+        let filteredPayments = [];
+        let currentFilters = {
+            searchText: '',
+            dateFrom: '',
+            dateTo: '',
+            status: 'all',
+            sortBy: 'date_desc'
+        };
+
+        /**
+         * تهيئة صفحة التسديدات
+         */
+        window.initPaymentsPage = async function() {
+            console.log('🔧 تهيئة صفحة التسديدات...');
+            await loadAllPayments();
+            setupPaymentsEventListeners();
+            applyPaymentsFilters();
+            updatePaymentsStats();
+        };
+
+        /**
+         * تحميل جميع التسديدات من الديون
+         */
+        async function loadAllPayments() {
+            try {
+                allPayments = [];
+                
+                // تحميل الديون
+                const debts = window.dataSdk.query({ type: 'debt' });
+                
+                if (!debts || debts.length === 0) {
+                    console.log('⚠️ لا توجد ديون محفوظة');
+                    return;
+                }
+                
+                // استخراج جميع الأقساط من الديون
+                debts.forEach(debt => {
+                    if (debt.installments && Array.isArray(debt.installments)) {
+                        debt.installments.forEach((installment, index) => {
+                            allPayments.push({
+                                id: `${debt.id}_${index}`,
+                                debt_id: debt.id,
+                                customer_name: debt.customer_name,
+                                customer_phone: debt.customer_phone,
+                                month: installment.month,
+                                amount: installment.amount,
+                                due_date: installment.due_date,
+                                paid_date: installment.paid_date,
+                                status: installment.status || 'pending',
+                                notes: installment.notes || '',
+                                total_debt: debt.total_amount || debt.final_total,
+                                monthly_amount: debt.monthly_amount,
+                                installment_months: debt.installment_months,
+                                installments: debt.installments // للاستخدام في التفاصيل
+                            });
+                        });
+                    }
+                });
+
+                console.log(`✅ تم تحميل ${allPayments.length} تسديد`);
+            } catch (error) {
+                console.error('❌ خطأ في تحميل التسديدات:', error);
+                showToast('error', 'فشل تحميل بيانات التسديد');
+            }
+        }
+
+        /**
+         * إعداد مستمعي الأحداث
+         */
+        function setupPaymentsEventListeners() {
+            // البحث
+            const searchInput = document.getElementById('paymentsSearchInput');
+            if (searchInput) {
+                searchInput.addEventListener('input', (e) => {
+                    currentFilters.searchText = e.target.value;
+                    applyPaymentsFilters();
+                });
+            }
+        }
+
+        /**
+         * تطبيق الفلاتر
+         */
+        window.applyPaymentsFilters = function() {
+            // تحديث الفلاتر من الحقول
+            const dateFrom = document.getElementById('paymentsDateFrom')?.value || '';
+            const dateTo = document.getElementById('paymentsDateTo')?.value || '';
+            const status = document.getElementById('paymentsStatusFilter')?.value || 'all';
+            const sortBy = document.getElementById('paymentsSortFilter')?.value || 'date_desc';
+            
+            currentFilters.dateFrom = dateFrom;
+            currentFilters.dateTo = dateTo;
+            currentFilters.status = status;
+            currentFilters.sortBy = sortBy;
+
+            filteredPayments = [...allPayments];
+
+            // فلتر البحث النصي
+            if (currentFilters.searchText) {
+                const searchLower = currentFilters.searchText.toLowerCase();
+                filteredPayments = filteredPayments.filter(payment => 
+                    payment.customer_name.toLowerCase().includes(searchLower) ||
+                    (payment.customer_phone && payment.customer_phone.includes(searchLower))
+                );
+            }
+
+            // فلتر التاريخ من
+            if (currentFilters.dateFrom) {
+                const fromDate = new Date(currentFilters.dateFrom);
+                filteredPayments = filteredPayments.filter(payment => {
+                    const dueDate = new Date(payment.due_date);
+                    return dueDate >= fromDate;
+                });
+            }
+
+            // فلتر التاريخ إلى
+            if (currentFilters.dateTo) {
+                const toDate = new Date(currentFilters.dateTo);
+                filteredPayments = filteredPayments.filter(payment => {
+                    const dueDate = new Date(payment.due_date);
+                    return dueDate <= toDate;
+                });
+            }
+
+            // فلتر الحالة
+            if (currentFilters.status !== 'all') {
+                if (currentFilters.status === 'overdue') {
+                    // الأقساط المتأخرة: غير مسددة وتاريخ الاستحقاق قد مضى
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    filteredPayments = filteredPayments.filter(payment => {
+                        const dueDate = new Date(payment.due_date);
+                        return payment.status !== 'paid' && dueDate < today;
+                    });
+                } else if (currentFilters.status === 'upcoming') {
+                    // الأقساط القادمة: غير مسددة وتاريخ الاستحقاق لم يأتِ بعد
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    filteredPayments = filteredPayments.filter(payment => {
+                        const dueDate = new Date(payment.due_date);
+                        return payment.status !== 'paid' && dueDate >= today;
+                    });
+                } else {
+                    filteredPayments = filteredPayments.filter(payment => 
+                        payment.status === currentFilters.status
+                    );
+                }
+            }
+
+            // الترتيب
+            filteredPayments.sort((a, b) => {
+                switch (currentFilters.sortBy) {
+                    case 'date_desc':
+                        return new Date(b.due_date) - new Date(a.due_date);
+                    case 'date_asc':
+                        return new Date(a.due_date) - new Date(b.due_date);
+                    case 'amount_desc':
+                        return b.amount - a.amount;
+                    case 'amount_asc':
+                        return a.amount - b.amount;
+                    case 'customer_asc':
+                        return a.customer_name.localeCompare(b.customer_name, 'ar');
+                    case 'customer_desc':
+                        return b.customer_name.localeCompare(a.customer_name, 'ar');
+                    default:
+                        return 0;
+                }
+            });
+
+            renderPaymentsTable();
+            updatePaymentsStats();
+        };
+
+        /**
+         * عرض جدول التسديدات
+         */
+        function renderPaymentsTable() {
+            const tbody = document.getElementById('paymentsTableBody');
+            const noDataMessage = document.getElementById('noPaymentsMessage');
+            
+            if (!tbody) return;
+
+            if (filteredPayments.length === 0) {
+                tbody.innerHTML = '';
+                if (noDataMessage) noDataMessage.style.display = 'block';
+                return;
+            }
+
+            if (noDataMessage) noDataMessage.style.display = 'none';
+
+            tbody.innerHTML = filteredPayments.map(payment => {
+                const statusInfo = getPaymentStatus(payment);
+                
+                // تنسيق تاريخ الاستحقاق مع اسم اليوم
+                const dueDate = new Date(payment.due_date);
+                const dueDayName = dueDate.toLocaleDateString('ar-IQ', { weekday: 'long' });
+                const dueDateStr = dueDate.toLocaleDateString('ar-IQ', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+                const dueDateFull = `${dueDayName}<br>${dueDateStr}`;
+                
+                // تنسيق تاريخ التسديد مع اسم اليوم
+                let paidDateFull = '-';
+                if (payment.paid_date) {
+                    const paidDate = new Date(payment.paid_date);
+                    const paidDayName = paidDate.toLocaleDateString('ar-IQ', { weekday: 'long' });
+                    const paidDateStr = paidDate.toLocaleDateString('ar-IQ', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    });
+                    paidDateFull = `${paidDayName}<br>${paidDateStr}`;
+                }
+
+                return `
+                    <tr>
+                        <td><span style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 6px 16px; border-radius: 20px; font-weight: 700; font-size: 1rem;">الشهر ${payment.month}</span></td>
+                        <td><strong style="font-size: 1rem;">${payment.customer_name}</strong></td>
+                        <td style="direction: ltr; text-align: center;">${payment.customer_phone || '-'}</td>
+                        <td><strong style="color: var(--primary-color); font-size: 1.05rem;">${payment.amount.toLocaleString('en')} دينار</strong></td>
+                        <td style="font-size: 0.9rem; line-height: 1.5;">${dueDateFull}</td>
+                        <td style="font-size: 0.9rem; line-height: 1.5;">${paidDateFull}</td>
+                        <td>
+                            <span class="badge ${statusInfo.class}" style="padding: 8px 16px; border-radius: 20px; font-weight: 700; font-size: 0.95rem;">
+                                <i class="${statusInfo.icon}"></i> ${statusInfo.text}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="action-buttons" style="display: flex; gap: 8px; flex-wrap: wrap; justify-content: center;">
+                                ${payment.status !== 'paid' ? `
+                                    <button class="btn-icon btn-success" onclick="payInstallmentFromPaymentsPage('${payment.debt_id}', ${payment.month})" title="تسديد القسط" style="width: 45px; height: 45px; border-radius: 12px; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); transition: all 0.3s;">
+                                        <i class="fas fa-check-circle" style="font-size: 1.3rem;"></i>
+                                    </button>
+                                ` : ''}
+                                <button class="btn-icon btn-info" onclick="viewPaymentDetailsFromPaymentsPage('${payment.debt_id}')" title="عرض التفاصيل" style="width: 45px; height: 45px; border-radius: 12px; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3); transition: all 0.3s;">
+                                    <i class="fas fa-eye" style="font-size: 1.3rem;"></i>
+                                </button>
+                                ${payment.status === 'paid' ? `
+                                    <button class="btn-icon btn-primary" onclick="printPaymentReceiptFromPaymentsPage('${payment.debt_id}', ${payment.month})" title="طباعة الإيصال" style="width: 45px; height: 45px; border-radius: 12px; box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3); transition: all 0.3s;">
+                                        <i class="fas fa-print" style="font-size: 1.3rem;"></i>
+                                    </button>
+                                ` : ''}
+                                ${payment.status === 'paid' ? `
+                                    <button class="btn-icon btn-warning" onclick="cancelInstallmentPaymentFromPaymentsPage('${payment.debt_id}', ${payment.month})" title="إلغاء التسديد" style="width: 45px; height: 45px; border-radius: 12px; box-shadow: 0 4px 12px rgba(251, 191, 36, 0.3); transition: all 0.3s;">
+                                        <i class="fas fa-undo-alt" style="font-size: 1.3rem;"></i>
+                                    </button>
+                                ` : ''}
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        /**
+         * الحصول على حالة القسط
+         */
+        function getPaymentStatus(payment) {
+            if (payment.status === 'paid') {
+                return {
+                    text: 'مسدد',
+                    class: 'badge-success',
+                    icon: 'fas fa-check-circle'
+                };
+            }
+
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const dueDate = new Date(payment.due_date);
+            dueDate.setHours(0, 0, 0, 0);
+
+            if (dueDate < today) {
+                return {
+                    text: 'متأخر',
+                    class: 'badge-danger',
+                    icon: 'fas fa-exclamation-triangle'
+                };
+            } else if (dueDate.getTime() === today.getTime()) {
+                return {
+                    text: 'مستحق اليوم',
+                    class: 'badge-warning',
+                    icon: 'fas fa-calendar-day'
+                };
+            } else {
+                const diffDays = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24));
+                if (diffDays <= 7) {
+                    return {
+                        text: `قادم (${diffDays} أيام)`,
+                        class: 'badge-warning',
+                        icon: 'fas fa-clock'
+                    };
+                } else {
+                    return {
+                        text: 'قادم',
+                        class: 'badge-info',
+                        icon: 'fas fa-clock'
+                    };
+                }
+            }
+        }
+
+        /**
+         * تحديث الإحصائيات
+         */
+        function updatePaymentsStats() {
+            const stats = calculatePaymentsStats();
+
+            // تحديث العدادات
+            document.getElementById('totalPaymentsCount').textContent = stats.total.toLocaleString('en');
+            document.getElementById('paidPaymentsCount').textContent = stats.paid.toLocaleString('en');
+            document.getElementById('overduePaymentsCount').textContent = stats.overdue.toLocaleString('en');
+            document.getElementById('upcomingPaymentsCount').textContent = stats.upcoming.toLocaleString('en');
+            document.getElementById('totalPaidAmount').textContent = stats.paidAmount.toLocaleString('en') + ' د';
+            document.getElementById('totalRemainingAmount').textContent = stats.remainingAmount.toLocaleString('en') + ' د';
+        }
+
+        /**
+         * حساب الإحصائيات
+         */
+        function calculatePaymentsStats() {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            let stats = {
+                total: allPayments.length,
+                paid: 0,
+                pending: 0,
+                overdue: 0,
+                upcoming: 0,
+                paidAmount: 0,
+                remainingAmount: 0
+            };
+
+            allPayments.forEach(payment => {
+                if (payment.status === 'paid') {
+                    stats.paid++;
+                    stats.paidAmount += payment.amount;
+                } else {
+                    stats.remainingAmount += payment.amount;
+                    const dueDate = new Date(payment.due_date);
+                    dueDate.setHours(0, 0, 0, 0);
+
+                    if (dueDate < today) {
+                        stats.overdue++;
+                    } else {
+                        stats.upcoming++;
+                    }
+                }
+            });
+
+            return stats;
+        }
+
+        /**
+         * فلترة حسب الحالة
+         */
+        window.filterPaymentsByStatus = function(status) {
+            const statusFilter = document.getElementById('paymentsStatusFilter');
+            if (statusFilter) {
+                statusFilter.value = status;
+                applyPaymentsFilters();
+            }
+        };
+
+        /**
+         * إعادة تعيين الفلاتر
+         */
+        window.resetPaymentsFilters = function() {
+            document.getElementById('paymentsSearchInput').value = '';
+            document.getElementById('paymentsDateFrom').value = '';
+            document.getElementById('paymentsDateTo').value = '';
+            document.getElementById('paymentsStatusFilter').value = 'all';
+            document.getElementById('paymentsSortFilter').value = 'date_desc';
+            
+            currentFilters = {
+                searchText: '',
+                dateFrom: '',
+                dateTo: '',
+                status: 'all',
+                sortBy: 'date_desc'
+            };
+            
+            applyPaymentsFilters();
+            showToast('success', 'تم إعادة تعيين الفلاتر');
+        };
+
+        /**
+         * فلترة التسديدات (للبحث السريع)
+         */
+        window.filterPayments = function() {
+            applyPaymentsFilters();
+        };
+
+        /**
+         * تحديث صفحة التسديدات
+         */
+        window.refreshPaymentsPage = async function() {
+            showToast('info', 'جاري تحديث البيانات...');
+            await loadAllPayments();
+            applyPaymentsFilters();
+            showToast('success', 'تم تحديث البيانات بنجاح');
+        };
+
+        /**
+         * عرض تفاصيل القسط
+         */
+        window.viewPaymentDetails = function(debtId) {
+            // استخدام نفس دالة عرض تفاصيل الدين
+            if (typeof showDebtDetails === 'function') {
+                showDebtDetails(debtId);
+            } else {
+                showToast('warning', 'وظيفة عرض التفاصيل غير متاحة');
+            }
+        };
+
+        /**
+         * طباعة إيصال التسديد
+         */
+        window.printPaymentReceipt = async function(debtId, month) {
+            try {
+                // الحصول على بيانات الدين
+                const debt = window.dataSdk.getById(parseInt(debtId));
+                if (!debt) {
+                    showToast('error', 'لم يتم العثور على بيانات الدين');
+                    return;
+                }
+
+                // الحصول على القسط المسدد
+                const paidInstallment = debt.installments.find(inst => inst.month === month);
+                if (!paidInstallment) {
+                    showToast('error', 'لم يتم العثور على بيانات القسط');
+                    return;
+                }
+
+                // الحصول على إعدادات المتجر
+                const storeSettings = window.elementSdk.getConfig();
+
+                // توليد محتوى الإيصال
+                const receiptHtml = generateInstallmentPaymentReceipt({
+                    debt,
+                    paidInstallment,
+                    storeSettings
+                });
+
+                // طباعة الإيصال
+                if (window.electronAPI && window.electronAPI.printInvoiceHtml) {
+                    await window.electronAPI.printInvoiceHtml(receiptHtml, {
+                        silent: true,
+                        pageSize: { width: 80000, height: 297000 }
+                    });
+                    showToast('success', 'تم إرسال الإيصال للطباعة');
+                } else {
+                    // طباعة عبر المتصفح
+                    const printWindow = window.open('', '_blank');
+                    printWindow.document.write(receiptHtml);
+                    printWindow.document.close();
+                    printWindow.print();
+                }
+            } catch (error) {
+                console.error('خطأ في طباعة الإيصال:', error);
+                showToast('error', 'فشلت عملية الطباعة');
+            }
+        };
+
+        /**
+         * تصدير تقرير Excel
+         */
+        window.exportPaymentsReport = function() {
+            if (filteredPayments.length === 0) {
+                showToast('warning', 'لا توجد بيانات لتصديرها');
+                return;
+            }
+
+            // تحويل البيانات إلى CSV
+            let csv = 'اسم العميل,رقم الهاتف,رقم القسط,تاريخ الاستحقاق,المبلغ,تاريخ الدفع,الحالة\n';
+            
+            filteredPayments.forEach(payment => {
+                const status = getPaymentStatus(payment).text;
+                const paidDate = payment.paid_date ? 
+                    new Date(payment.paid_date).toLocaleDateString('ar-IQ') : '-';
+                
+                csv += `${payment.customer_name},`;
+                csv += `${payment.customer_phone || '-'},`;
+                csv += `الشهر ${payment.month},`;
+                csv += `${new Date(payment.due_date).toLocaleDateString('ar-IQ')},`;
+                csv += `${payment.amount},`;
+                csv += `${paidDate},`;
+                csv += `${status}\n`;
+            });
+
+            // تنزيل الملف
+            const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', `تقرير_التسديدات_${new Date().toISOString().split('T')[0]}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            showToast('success', 'تم تصدير التقرير بنجاح');
+        };
+
+        /**
+         * طباعة تقرير التسديدات
+         */
+        window.printPaymentsReport = function() {
+            if (filteredPayments.length === 0) {
+                showToast('warning', 'لا توجد بيانات لطباعتها');
+                return;
+            }
+
+            const stats = calculatePaymentsStats();
+            const currentDate = new Date().toLocaleDateString('ar-IQ', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                weekday: 'long'
+            });
+
+            let html = `
+                <!DOCTYPE html>
+                <html dir="rtl" lang="ar">
+                <head>
+                    <meta charset="UTF-8">
+                    <title>تقرير التسديدات</title>
+                    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+                    <style>
+                        * { margin: 0; padding: 0; box-sizing: border-box; }
+                        body { font-family: 'Cairo', sans-serif; padding: 20px; background: white; }
+                        .header { text-align: center; margin-bottom: 30px; border-bottom: 3px solid #667eea; padding-bottom: 20px; }
+                        .header h1 { color: #667eea; font-size: 28px; margin-bottom: 10px; }
+                        .header p { color: #666; font-size: 14px; }
+                        .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 30px; }
+                        .stat-box { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px; border-radius: 10px; text-align: center; }
+                        .stat-box .value { font-size: 24px; font-weight: bold; margin-bottom: 5px; }
+                        .stat-box .label { font-size: 14px; opacity: 0.9; }
+                        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                        th, td { padding: 12px; text-align: right; border: 1px solid #ddd; }
+                        th { background: #667eea; color: white; font-weight: 600; }
+                        tr:nth-child(even) { background: #f9f9f9; }
+                        .badge { padding: 5px 10px; border-radius: 15px; font-size: 12px; font-weight: 600; }
+                        .badge-success { background: #10b981; color: white; }
+                        .badge-danger { background: #ef4444; color: white; }
+                        .badge-warning { background: #f59e0b; color: white; }
+                        .badge-info { background: #06b6d4; color: white; }
+                        @media print {
+                            body { padding: 10px; }
+                            .no-print { display: none; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <h1>📊 تقرير التسديدات والأقساط</h1>
+                        <p>${currentDate}</p>
+                    </div>
+
+                    <div class="stats">
+                        <div class="stat-box">
+                            <div class="value">${stats.total}</div>
+                            <div class="label">إجمالي الأقساط</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="value">${stats.paid}</div>
+                            <div class="label">أقساط مسددة</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="value">${stats.overdue}</div>
+                            <div class="label">أقساط متأخرة</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="value">${stats.paidAmount.toLocaleString('en')} د</div>
+                            <div class="label">المبالغ المسددة</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="value">${stats.remainingAmount.toLocaleString('en')} د</div>
+                            <div class="label">المبالغ المتبقية</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="value">${stats.upcoming}</div>
+                            <div class="label">أقساط قادمة</div>
+                        </div>
+                    </div>
+
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>العميل</th>
+                                <th>الهاتف</th>
+                                <th>القسط</th>
+                                <th>الاستحقاق</th>
+                                <th>المبلغ</th>
+                                <th>تاريخ الدفع</th>
+                                <th>الحالة</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${filteredPayments.map(payment => {
+                                const statusInfo = getPaymentStatus(payment);
+                                const paidDate = payment.paid_date ? 
+                                    new Date(payment.paid_date).toLocaleDateString('ar-IQ', {
+                                        year: 'numeric',
+                                        month: 'short',
+                                        day: 'numeric'
+                                    }) : '-';
+                                
+                                return `
+                                    <tr>
+                                        <td><strong>${payment.customer_name}</strong></td>
+                                        <td>${payment.customer_phone || '-'}</td>
+                                        <td>الشهر ${payment.month}</td>
+                                        <td>${new Date(payment.due_date).toLocaleDateString('ar-IQ', {
+                                            year: 'numeric',
+                                            month: 'short',
+                                            day: 'numeric'
+                                        })}</td>
+                                        <td><strong>${payment.amount.toLocaleString('en')} د</strong></td>
+                                        <td>${paidDate}</td>
+                                        <td><span class="badge ${statusInfo.class}">${statusInfo.text}</span></td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+
+                    <div style="margin-top: 30px; text-align: center; color: #666; font-size: 12px;">
+                        <p>تم إنشاء التقرير بواسطة نظام نقاط البيع - شركة الإبداع الرقمي</p>
+                    </div>
+                </body>
+                </html>
+            `;
+
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(html);
+            printWindow.document.close();
+            printWindow.print();
+        };
+
+        // تحميل البيانات عند عرض الصفحة
+        const originalShowPage = window.showPage;
+        window.showPage = function(page) {
+            if (originalShowPage) {
+                originalShowPage(page);
+            }
+            
+            if (page === 'payments') {
+                setTimeout(() => {
+                    initPaymentsPage();
+                }, 100);
+            }
+        };
+
+        /**
+         * دوال معالجة الأزرار من صفحة التسديدات
+         */
+        
+        // تسديد قسط من صفحة التسديدات
+        window.payInstallmentFromPaymentsPage = function(debtId, month) {
+            if (typeof payInstallment === 'function') {
+                payInstallment(parseInt(debtId), month);
+            } else {
+                showToast('error', 'دالة التسديد غير متوفرة');
+            }
+        };
+
+        // عرض تفاصيل الدين من صفحة التسديدات
+        window.viewPaymentDetailsFromPaymentsPage = function(debtId) {
+            if (typeof showDebtDetails === 'function') {
+                showDebtDetails(parseInt(debtId));
+            } else {
+                showToast('warning', 'دالة عرض التفاصيل غير متوفرة');
+            }
+        };
+
+        // طباعة إيصال التسديد من صفحة التسديدات
+        window.printPaymentReceiptFromPaymentsPage = async function(debtId, month) {
+            try {
+                const debt = window.dataSdk.getById(parseInt(debtId));
+                if (!debt) {
+                    showToast('error', 'لم يتم العثور على بيانات الدين');
+                    return;
+                }
+
+                const paidInstallment = debt.installments.find(inst => inst.month === month);
+                if (!paidInstallment) {
+                    showToast('error', 'لم يتم العثور على بيانات القسط');
+                    return;
+                }
+
+                const storeSettings = window.elementSdk.getConfig();
+                const receiptHtml = generateInstallmentPaymentReceipt({
+                    debt,
+                    paidInstallment,
+                    storeSettings
+                });
+
+                if (window.electronAPI && window.electronAPI.printInvoiceHtml) {
+                    await window.electronAPI.printInvoiceHtml(receiptHtml, {
+                        silent: true,
+                        pageSize: { width: 80000, height: 297000 }
+                    });
+                    showToast('success', 'تم إرسال الإيصال للطباعة');
+                } else {
+                    const printWindow = window.open('', '_blank');
+                    printWindow.document.write(receiptHtml);
+                    printWindow.document.close();
+                    printWindow.print();
+                }
+            } catch (error) {
+                console.error('خطأ في طباعة الإيصال:', error);
+                showToast('error', 'فشلت عملية الطباعة');
+            }
+        };
+
+        // إلغاء تسديد قسط من صفحة التسديدات
+        window.cancelInstallmentPaymentFromPaymentsPage = async function(debtId, month) {
+            if (!confirm('هل أنت متأكد من إلغاء تسديد هذا القسط؟')) {
+                return;
+            }
+
+            try {
+                const debt = window.dataSdk.getById(parseInt(debtId));
+                if (!debt) {
+                    showToast('error', 'لم يتم العثور على بيانات الدين');
+                    return;
+                }
+
+                const installmentIndex = debt.installments.findIndex(inst => inst.month === month);
+                if (installmentIndex === -1) {
+                    showToast('error', 'لم يتم العثور على القسط');
+                    return;
+                }
+
+                const installment = debt.installments[installmentIndex];
+                if (installment.status !== 'paid') {
+                    showToast('warning', 'القسط غير مسدد أصلاً');
+                    return;
+                }
+
+                // إلغاء التسديد
+                installment.status = 'pending';
+                installment.paid_date = null;
+                
+                // تحديث المبلغ المدفوع
+                debt.paid_amount = (debt.paid_amount || 0) - installment.amount;
+                debt.remaining_amount = (debt.remaining_amount || 0) + installment.amount;
+
+                // حفظ التحديثات
+                const result = await window.dataSdk.update(parseInt(debtId), debt);
+                
+                if (result.isOk) {
+                    showToast('success', 'تم إلغاء التسديد بنجاح');
+                    // تحديث الصفحة
+                    await refreshPaymentsPage();
+                } else {
+                    showToast('error', 'فشل إلغاء التسديد: ' + (result.error || ''));
+                }
+            } catch (error) {
+                console.error('خطأ في إلغاء التسديد:', error);
+                showToast('error', 'حدث خطأ أثناء إلغاء التسديد');
+            }
+        };
+
+        /**
+         * دوال الطباعة الشاملة
+         */
+
+        // طباعة إحصائيات معينة مع الجدول
+        window.printSpecificPaymentsReport = function(filterType) {
+            // تطبيق الفلتر المطلوب
+            const statusFilter = document.getElementById('paymentsStatusFilter');
+            if (statusFilter) {
+                statusFilter.value = filterType;
+                applyPaymentsFilters();
+            }
+
+            // الانتظار قليلاً لتطبيق الفلتر ثم الطباعة
+            setTimeout(() => {
+                printPaymentsReport();
+            }, 300);
+        };
+
+        // طباعة قسم إحصائيات محدد فقط
+        window.printPaymentsStat = function(statType) {
+            if (allPayments.length === 0) {
+                showToast('warning', 'لا توجد بيانات للطباعة');
+                return;
+            }
+
+            const stats = calculatePaymentsStats();
+            const currentDate = new Date().toLocaleDateString('ar-IQ', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                weekday: 'long'
+            });
+
+            let statTitle = '';
+            let statValue = '';
+            let statDescription = '';
+
+            switch(statType) {
+                case 'total':
+                    statTitle = 'إجمالي الأقساط';
+                    statValue = stats.total;
+                    statDescription = 'العدد الكلي لجميع الأقساط في النظام';
+                    break;
+                case 'paid':
+                    statTitle = 'الأقساط المسددة';
+                    statValue = stats.paid;
+                    statDescription = 'عدد الأقساط التي تم تسديدها بالكامل';
+                    break;
+                case 'overdue':
+                    statTitle = 'الأقساط المتأخرة';
+                    statValue = stats.overdue;
+                    statDescription = 'عدد الأقساط المتأخرة عن موعد استحقاقها';
+                    break;
+                case 'upcoming':
+                    statTitle = 'الأقساط القادمة';
+                    statValue = stats.upcoming;
+                    statDescription = 'عدد الأقساط القادمة التي لم تستحق بعد';
+                    break;
+                case 'paidAmount':
+                    statTitle = 'إجمالي المبالغ المسددة';
+                    statValue = stats.paidAmount.toLocaleString('en') + ' دينار';
+                    statDescription = 'مجموع المبالغ المالية المسددة';
+                    break;
+                case 'remainingAmount':
+                    statTitle = 'إجمالي المبالغ المتبقية';
+                    statValue = stats.remainingAmount.toLocaleString('en') + ' دينار';
+                    statDescription = 'مجموع المبالغ المالية المتبقية';
+                    break;
+            }
+
+            const html = `
+                <!DOCTYPE html>
+                <html dir="rtl" lang="ar">
+                <head>
+                    <meta charset="UTF-8">
+                    <title>تقرير ${statTitle}</title>
+                    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+                    <style>
+                        * { margin: 0; padding: 0; box-sizing: border-box; }
+                        body { 
+                            font-family: 'Cairo', sans-serif; 
+                            padding: 40px; 
+                            background: white; 
+                            text-align: center;
+                        }
+                        .header { 
+                            border-bottom: 4px solid #667eea; 
+                            padding-bottom: 30px; 
+                            margin-bottom: 50px; 
+                        }
+                        .header h1 { 
+                            color: #667eea; 
+                            font-size: 32px; 
+                            margin-bottom: 15px; 
+                        }
+                        .header p { color: #666; font-size: 16px; }
+                        .stat-container {
+                            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                            color: white;
+                            padding: 60px;
+                            border-radius: 20px;
+                            margin: 30px auto;
+                            max-width: 600px;
+                            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+                        }
+                        .stat-value {
+                            font-size: 72px;
+                            font-weight: bold;
+                            margin: 20px 0;
+                        }
+                        .stat-label {
+                            font-size: 28px;
+                            margin-bottom: 15px;
+                            opacity: 0.95;
+                        }
+                        .stat-desc {
+                            font-size: 18px;
+                            opacity: 0.85;
+                            margin-top: 20px;
+                        }
+                        .footer {
+                            margin-top: 60px;
+                            padding-top: 30px;
+                            border-top: 2px solid #e0e0e0;
+                            color: #666;
+                            font-size: 14px;
+                        }
+                        @media print {
+                            body { padding: 20px; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <h1>📊 تقرير ${statTitle}</h1>
+                        <p>${currentDate}</p>
+                    </div>
+
+                    <div class="stat-container">
+                        <div class="stat-label">${statTitle}</div>
+                        <div class="stat-value">${statValue}</div>
+                        <div class="stat-desc">${statDescription}</div>
+                    </div>
+
+                    <div class="footer">
+                        <p>تم إنشاء التقرير بواسطة نظام نقاط البيع</p>
+                        <p>شركة الإبداع الرقمي © 2025</p>
+                    </div>
+                </body>
+                </html>
+            `;
+
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(html);
+            printWindow.document.close();
+            printWindow.print();
+        };
+
+        // طباعة الصفحة كاملة (جميع الإحصائيات + الجدول)
+        window.printCompletePaymentsReport = function() {
+            if (allPayments.length === 0) {
+                showToast('warning', 'لا توجد بيانات للطباعة');
+                return;
+            }
+
+            const stats = calculatePaymentsStats();
+            const currentDate = new Date().toLocaleDateString('ar-IQ', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                weekday: 'long'
+            });
+
+            const html = `
+                <!DOCTYPE html>
+                <html dir="rtl" lang="ar">
+                <head>
+                    <meta charset="UTF-8">
+                    <title>تقرير التسديدات الشامل</title>
+                    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+                    <style>
+                        * { margin: 0; padding: 0; box-sizing: border-box; }
+                        body { font-family: 'Cairo', sans-serif; padding: 20px; background: white; }
+                        .header { 
+                            text-align: center; 
+                            margin-bottom: 30px; 
+                            border-bottom: 3px solid #667eea; 
+                            padding-bottom: 20px; 
+                        }
+                        .header h1 { color: #667eea; font-size: 32px; margin-bottom: 10px; }
+                        .header p { color: #666; font-size: 16px; }
+                        .stats { 
+                            display: grid; 
+                            grid-template-columns: repeat(3, 1fr); 
+                            gap: 20px; 
+                            margin-bottom: 30px; 
+                        }
+                        .stat-box { 
+                            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                            color: white; 
+                            padding: 25px; 
+                            border-radius: 15px; 
+                            text-align: center; 
+                        }
+                        .stat-box .value { font-size: 36px; font-weight: bold; margin-bottom: 10px; }
+                        .stat-box .label { font-size: 18px; opacity: 0.95; }
+                        table { 
+                            width: 100%; 
+                            border-collapse: collapse; 
+                            margin-top: 30px; 
+                        }
+                        th, td { 
+                            padding: 14px 8px; 
+                            text-align: center; 
+                            border: 1px solid #ddd; 
+                            font-size: 14px;
+                        }
+                        th { 
+                            background: #667eea; 
+                            color: white; 
+                            font-weight: 600; 
+                        }
+                        tr:nth-child(even) { background: #f9f9f9; }
+                        .badge { 
+                            padding: 6px 12px; 
+                            border-radius: 15px; 
+                            font-size: 13px; 
+                            font-weight: 600; 
+                            display: inline-block;
+                        }
+                        .badge-success { background: #10b981; color: white; }
+                        .badge-danger { background: #ef4444; color: white; }
+                        .badge-warning { background: #f59e0b; color: white; }
+                        .badge-info { background: #06b6d4; color: white; }
+                        .footer { 
+                            margin-top: 40px; 
+                            text-align: center; 
+                            color: #666; 
+                            font-size: 13px; 
+                            padding-top: 20px;
+                            border-top: 2px solid #e0e0e0;
+                        }
+                        @media print {
+                            body { padding: 10px; }
+                            .stat-box .value { font-size: 28px; }
+                            .stat-box .label { font-size: 14px; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <h1>📊 تقرير التسديدات والأقساط الشامل</h1>
+                        <p>${currentDate}</p>
+                    </div>
+
+                    <div class="stats">
+                        <div class="stat-box">
+                            <div class="value">${stats.total}</div>
+                            <div class="label">إجمالي الأقساط</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="value">${stats.paid}</div>
+                            <div class="label">أقساط مسددة</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="value">${stats.overdue}</div>
+                            <div class="label">أقساط متأخرة</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="value">${stats.upcoming}</div>
+                            <div class="label">أقساط قادمة</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="value">${stats.paidAmount.toLocaleString('en')} د</div>
+                            <div class="label">المبالغ المسددة</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="value">${stats.remainingAmount.toLocaleString('en')} د</div>
+                            <div class="label">المبالغ المتبقية</div>
+                        </div>
+                    </div>
+
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>العميل</th>
+                                <th>الهاتف</th>
+                                <th>القسط</th>
+                                <th>الاستحقاق</th>
+                                <th>المبلغ</th>
+                                <th>تاريخ التسديد</th>
+                                <th>الحالة</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${filteredPayments.map(payment => {
+                                const statusInfo = getPaymentStatus(payment);
+                                const dueDate = new Date(payment.due_date);
+                                const dueDateStr = dueDate.toLocaleDateString('ar-IQ', {
+                                    year: 'numeric',
+                                    month: 'short',
+                                    day: 'numeric'
+                                });
+                                const paidDate = payment.paid_date ? 
+                                    new Date(payment.paid_date).toLocaleDateString('ar-IQ', {
+                                        year: 'numeric',
+                                        month: 'short',
+                                        day: 'numeric'
+                                    }) : '-';
+                                
+                                return `
+                                    <tr>
+                                        <td><strong>${payment.customer_name}</strong></td>
+                                        <td>${payment.customer_phone || '-'}</td>
+                                        <td>الشهر ${payment.month}</td>
+                                        <td>${dueDateStr}</td>
+                                        <td><strong>${payment.amount.toLocaleString('en')} د</strong></td>
+                                        <td>${paidDate}</td>
+                                        <td><span class="badge ${statusInfo.class}">${statusInfo.text}</span></td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+
+                    <div class="footer">
+                        <p>تم إنشاء التقرير بواسطة نظام نقاط البيع - شركة الإبداع الرقمي</p>
+                        <p>تاريخ الطباعة: ${currentDate}</p>
+                    </div>
+                </body>
+                </html>
+            `;
+
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(html);
+            printWindow.document.close();
+            printWindow.print();
+        };
+
+        /**
+         * دوال التصدير الجديدة
+         */
+
+        // تصدير كـ JSON
+        window.exportPaymentsAsJSON = function() {
+            if (allPayments.length === 0) {
+                showToast('warning', 'لا توجد بيانات للتصدير');
+                return;
+            }
+
+            const dataToExport = allPayments.map(payment => ({
+                'رقم القسط': payment.month,
+                'اسم العميل': payment.customer_name,
+                'رقم الهاتف': payment.customer_phone || '-',
+                'المبلغ': payment.amount,
+                'تاريخ الاستحقاق': payment.due_date,
+                'تاريخ التسديد': payment.paid_date || '-',
+                'الحالة': payment.status,
+                'معرف الدين': payment.debt_id
+            }));
+
+            const dataStr = JSON.stringify(dataToExport, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `تسديدات_${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+            URL.revokeObjectURL(url);
+            
+            showToast('success', 'تم تصدير البيانات بنجاح');
+        };
+
+        // تصدير كـ Excel (CSV)
+        window.exportPaymentsAsExcel = function() {
+            exportPaymentsReport(); // استخدام الدالة الموجودة
+        };
+
+        // تصدير كـ PDF
+        window.exportPaymentsAsPDF = function() {
+            if (allPayments.length === 0) {
+                showToast('warning', 'لا توجد بيانات للتصدير');
+                return;
+            }
+
+            // استخدام دالة الطباعة لإنشاء PDF
+            printCompletePaymentsReport();
+            showToast('info', 'افتح نافذة الطباعة واختر "حفظ كـ PDF"');
+        };
+
+        /**
+         * دوال الطباعة المحسّنة - مع البيانات الكاملة
+         */
+
+        // طباعة إحصائيات معينة مع جدول البيانات المفلترة
+        window.printPaymentsStat = function(statType) {
+            if (allPayments.length === 0) {
+                showToast('warning', 'لا توجد بيانات للطباعة');
+                return;
+            }
+
+            const stats = calculatePaymentsStats();
+            const currentDate = new Date().toLocaleDateString('ar-IQ', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                weekday: 'long'
+            });
+
+            let statTitle = '';
+            let statValue = '';
+            let statDescription = '';
+            let dataToShow = [];
+
+            // تحديد البيانات حسب النوع
+            switch(statType) {
+                case 'total':
+                    statTitle = 'إجمالي الأقساط';
+                    statValue = stats.total;
+                    statDescription = 'جميع الأقساط في النظام';
+                    dataToShow = allPayments;
+                    break;
+                case 'paid':
+                    statTitle = 'الأقساط المسددة';
+                    statValue = stats.paid;
+                    statDescription = 'الأقساط التي تم تسديدها';
+                    dataToShow = allPayments.filter(p => p.status === 'paid');
+                    break;
+                case 'overdue':
+                    statTitle = 'الأقساط المتأخرة';
+                    statValue = stats.overdue;
+                    statDescription = 'الأقساط المتأخرة عن موعدها';
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    dataToShow = allPayments.filter(p => {
+                        const dueDate = new Date(p.due_date);
+                        return p.status !== 'paid' && dueDate < today;
+                    });
+                    break;
+                case 'upcoming':
+                    statTitle = 'الأقساط القادمة';
+                    statValue = stats.upcoming;
+                    statDescription = 'الأقساط القادمة';
+                    const todayUpcoming = new Date();
+                    todayUpcoming.setHours(0, 0, 0, 0);
+                    dataToShow = allPayments.filter(p => {
+                        const dueDate = new Date(p.due_date);
+                        return p.status !== 'paid' && dueDate >= todayUpcoming;
+                    });
+                    break;
+                case 'paidAmount':
+                    statTitle = 'إجمالي المبالغ المسددة';
+                    statValue = stats.paidAmount.toLocaleString('en') + ' دينار';
+                    statDescription = 'مجموع المبالغ المسددة';
+                    dataToShow = allPayments.filter(p => p.status === 'paid');
+                    break;
+                case 'remainingAmount':
+                    statTitle = 'إجمالي المبالغ المتبقية';
+                    statValue = stats.remainingAmount.toLocaleString('en') + ' دينار';
+                    statDescription = 'مجموع المبالغ المتبقية';
+                    dataToShow = allPayments.filter(p => p.status !== 'paid');
+                    break;
+            }
+
+            // إنشاء HTML للطباعة
+            const html = `
+                <!DOCTYPE html>
+                <html dir="rtl" lang="ar">
+                <head>
+                    <meta charset="UTF-8">
+                    <title>تقرير ${statTitle}</title>
+                    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+                    <style>
+                        * { margin: 0; padding: 0; box-sizing: border-box; }
+                        body { 
+                            font-family: 'Cairo', sans-serif; 
+                            padding: 30px; 
+                            background: white; 
+                        }
+                        .header { 
+                            text-align: center;
+                            border-bottom: 4px solid #667eea; 
+                            padding-bottom: 25px; 
+                            margin-bottom: 40px; 
+                        }
+                        .header h1 { 
+                            color: #667eea; 
+                            font-size: 38px; 
+                            margin-bottom: 12px;
+                            font-weight: 900;
+                        }
+                        .header p { color: #666; font-size: 17px; }
+                        .stat-container {
+                            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                            color: white;
+                            padding: 50px;
+                            border-radius: 20px;
+                            margin: 25px auto 40px;
+                            max-width: 700px;
+                            box-shadow: 0 15px 50px rgba(0,0,0,0.25);
+                            text-align: center;
+                        }
+                        .stat-value {
+                            font-size: 80px;
+                            font-weight: 900;
+                            margin: 25px 0;
+                            text-shadow: 0 4px 8px rgba(0,0,0,0.2);
+                        }
+                        .stat-label {
+                            font-size: 32px;
+                            margin-bottom: 18px;
+                            opacity: 0.95;
+                            font-weight: 700;
+                        }
+                        .stat-desc {
+                            font-size: 20px;
+                            opacity: 0.85;
+                            margin-top: 25px;
+                        }
+                        table {
+                            width: 100%;
+                            border-collapse: collapse;
+                            margin-top: 30px;
+                            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+                        }
+                        th, td {
+                            padding: 16px 12px;
+                            text-align: center;
+                            border: 1px solid #e0e0e0;
+                            font-size: 15px;
+                        }
+                        th {
+                            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                            color: white;
+                            font-weight: 700;
+                            font-size: 16px;
+                        }
+                        tr:nth-child(even) { background: #f8f9fa; }
+                        tr:hover { background: #e8f4fd; }
+                        .badge {
+                            padding: 6px 14px;
+                            border-radius: 15px;
+                            font-size: 14px;
+                            font-weight: 700;
+                            display: inline-block;
+                        }
+                        .badge-success { background: #10b981; color: white; }
+                        .badge-danger { background: #ef4444; color: white; }
+                        .badge-warning { background: #f59e0b; color: white; }
+                        .badge-info { background: #06b6d4; color: white; }
+                        .footer { 
+                            margin-top: 50px; 
+                            padding-top: 25px; 
+                            border-top: 2px solid #e0e0e0; 
+                            text-align: center;
+                            color: #666; 
+                            font-size: 15px; 
+                        }
+                        @media print {
+                            body { padding: 15px; }
+                            .stat-value { font-size: 65px; }
+                            .stat-label { font-size: 26px; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <h1>📊 ${statTitle}</h1>
+                        <p>${currentDate}</p>
+                    </div>
+
+                    <div class="stat-container">
+                        <div class="stat-label">${statTitle}</div>
+                        <div class="stat-value">${statValue}</div>
+                        <div class="stat-desc">${statDescription}</div>
+                    </div>
+
+                    ${dataToShow.length > 0 ? `
+                        <h2 style="color: #667eea; margin: 30px 0 20px; font-size: 28px; text-align: center;">تفاصيل ${statTitle}</h2>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>القسط</th>
+                                    <th>العميل</th>
+                                    <th>الهاتف</th>
+                                    <th>المبلغ</th>
+                                    <th>الاستحقاق</th>
+                                    <th>التسديد</th>
+                                    <th>الحالة</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${dataToShow.map(payment => {
+                                    const statusInfo = getPaymentStatus(payment);
+                                    const dueDate = new Date(payment.due_date);
+                                    const dueDateStr = dueDate.toLocaleDateString('ar-IQ', {
+                                        year: 'numeric',
+                                        month: 'short',
+                                        day: 'numeric'
+                                    });
+                                    const paidDate = payment.paid_date ? 
+                                        new Date(payment.paid_date).toLocaleDateString('ar-IQ', {
+                                            year: 'numeric',
+                                            month: 'short',
+                                            day: 'numeric'
+                                        }) : '-';
+                                    
+                                    return `
+                                        <tr>
+                                            <td><strong>الشهر ${payment.month}</strong></td>
+                                            <td><strong>${payment.customer_name}</strong></td>
+                                            <td>${payment.customer_phone || '-'}</td>
+                                            <td><strong>${payment.amount.toLocaleString('en')} د</strong></td>
+                                            <td>${dueDateStr}</td>
+                                            <td>${paidDate}</td>
+                                            <td><span class="badge ${statusInfo.class}">${statusInfo.text}</span></td>
+                                        </tr>
+                                    `;
+                                }).join('')}
+                            </tbody>
+                        </table>
+                    ` : '<p style="text-align: center; color: #999; font-size: 18px; margin-top: 30px;">لا توجد بيانات لعرضها</p>'}
+
+                    <div class="footer">
+                        <p style="font-weight: 700; margin-bottom: 8px;">تم إنشاء التقرير بواسطة نظام نقاط البيع</p>
+                        <p>شركة الإبداع الرقمي © 2025</p>
+                        <p style="margin-top: 8px; font-size: 13px;">تاريخ الطباعة: ${currentDate}</p>
+                    </div>
+                </body>
+                </html>
+            `;
+
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(html);
+            printWindow.document.close();
+            printWindow.print();
+        };
+
+        console.log('✅ تم تحميل نظام إدارة التسديدات');
+    })();
+
+
+
+    
+    </script>
     
 
     <script src="./reports-system.js"></script>

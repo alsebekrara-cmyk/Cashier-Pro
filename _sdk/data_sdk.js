@@ -1,3 +1,9 @@
+// ملاحظة هامة:
+// يجب تضمين هذا الملف (data_sdk.js) في مجلد البناء النهائي (build/output) عند توزيع التطبيق.
+// إذا كنت تستخدم سكريبت بناء (npm run build أو غيره)، تأكد من نسخ ملف _sdk/data_sdk.js إلى مجلد build أو output النهائي.
+// مثال (في package.json):
+//   "build": "... && copy _sdk\\data_sdk.js build\\_sdk\\data_sdk.js && ..."
+
 /**
  * Data SDK - نظام قاعدة البيانات المحلي باستخدام IndexedDB
  * يوفر تخزين دائم لجميع بيانات التطبيق
@@ -11,6 +17,15 @@
     const STORE_NAME = 'app_data';
     
     class DataSDK {
+                /**
+                 * جلب قائمة سجلات بناءً على معايير (متوافقة مع await)
+                 * @param {Object} criteria - معايير البحث {type, ...}
+                 * @returns {Promise<Array>} - السجلات المطابقة
+                 */
+                async list(criteria) {
+                    // دعم الواجهة async/await
+                    return this.query(criteria);
+                }
         constructor() {
             this.db = null;
             this.dataHandler = null;
@@ -142,6 +157,16 @@
                         // تحديث البيانات المحلية
                         await this.loadAllData();
                         
+                        // مزامنة مع Firestore
+                        if (window.syncToFirestore && data.type) {
+                            const dataWithId = { ...data, id };
+                            if (data.type === 'product') {
+                                window.syncProductToFirestore(dataWithId).catch(e => console.warn('⚠️ فشل مزامنة المنتج:', e));
+                            } else if (data.type === 'category') {
+                                window.syncCategoryToFirestore(dataWithId).catch(e => console.warn('⚠️ فشل مزامنة التصنيف:', e));
+                            }
+                        }
+                        
                         resolve({ isOk: true, id: id });
                     };
 
@@ -195,6 +220,15 @@
                             // تحديث البيانات المحلية
                             await this.loadAllData();
                             
+                            // مزامنة مع Firestore
+                            if (window.syncToFirestore && updatedData.type) {
+                                if (updatedData.type === 'product') {
+                                    window.syncProductToFirestore(updatedData).catch(e => console.warn('⚠️ فشل مزامنة المنتج:', e));
+                                } else if (updatedData.type === 'category') {
+                                    window.syncCategoryToFirestore(updatedData).catch(e => console.warn('⚠️ فشل مزامنة التصنيف:', e));
+                                }
+                            }
+                            
                             resolve({ isOk: true });
                         };
 
@@ -228,21 +262,42 @@
 
                 const transaction = this.db.transaction([STORE_NAME], 'readwrite');
                 const objectStore = transaction.objectStore(STORE_NAME);
-                const request = objectStore.delete(id);
+                
+                // الحصول على السجل قبل حذفه لمعرفة النوع
+                const getRequest = objectStore.get(id);
 
                 return new Promise((resolve, reject) => {
-                    request.onsuccess = async () => {
-                        console.log(`✅ تم حذف السجل: ${id}`);
+                    getRequest.onsuccess = async () => {
+                        const record = getRequest.result;
+                        const deleteRequest = objectStore.delete(id);
                         
-                        // تحديث البيانات المحلية
-                        await this.loadAllData();
+                        deleteRequest.onsuccess = async () => {
+                            console.log(`✅ تم حذف السجل: ${id}`);
+                            
+                            // تحديث البيانات المحلية
+                            await this.loadAllData();
+                            
+                            // حذف من Firestore
+                            if (window.deleteFromFirestore && record && record.type) {
+                                if (record.type === 'product') {
+                                    window.deleteFromFirestore('products', id.toString()).catch(e => console.warn('⚠️ فشل حذف المنتج من Firestore:', e));
+                                } else if (record.type === 'category') {
+                                    window.deleteFromFirestore('categories', id.toString()).catch(e => console.warn('⚠️ فشل حذف التصنيف من Firestore:', e));
+                                }
+                            }
+                            
+                            resolve({ isOk: true });
+                        };
                         
-                        resolve({ isOk: true });
+                        deleteRequest.onerror = () => {
+                            console.error('فشل حذف السجل:', deleteRequest.error);
+                            resolve({ isOk: false, error: deleteRequest.error.message });
+                        };
                     };
-
-                    request.onerror = () => {
-                        console.error('فشل حذف السجل:', request.error);
-                        resolve({ isOk: false, error: request.error.message });
+                    
+                    getRequest.onerror = () => {
+                        console.error('فشل الحصول على السجل:', getRequest.error);
+                        resolve({ isOk: false, error: getRequest.error.message });
                     };
                 });
             } catch (error) {

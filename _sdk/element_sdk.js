@@ -1,3 +1,9 @@
+// ملاحظة هامة:
+// يجب تضمين هذا الملف (element_sdk.js) في مجلد البناء النهائي (build/output) عند توزيع التطبيق.
+// إذا كنت تستخدم سكريبت بناء (npm run build أو غيره)، تأكد من نسخ ملف _sdk/element_sdk.js إلى مجلد build أو output النهائي.
+// مثال (في package.json):
+//   "build": "... && copy _sdk\\element_sdk.js build\\_sdk\\element_sdk.js && ..."
+
 /**
  * Element SDK - نظام إدارة إعدادات التطبيق
  * يوفر تخزين دائم للإعدادات باستخدام localStorage

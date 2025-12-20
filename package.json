@@ -1,16 +1,17 @@
 {
   "name": "pos-system-pro",
-  "version": "2.0.0",
+  "version": "2.0.3",
   "description": "نظام نقاط البيع المتقدم المحسن - شركة الإبداع الرقمي",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
     "dev": "cross-env NODE_ENV=development electron .",
     "build": "electron-builder",
-    "build-win": "electron-builder --win",
+    "build-win-portable": "electron-builder --win portable",
     "build-all": "electron-builder -mwl",
     "postinstall": "electron-builder install-app-deps",
-    "rebuild": "electron-rebuild -f -w better-sqlite3"
+    "rebuild": "electron-rebuild -f -w better-sqlite3",
+    "clean": "rimraf dist"
   },
   "keywords": [
     "pos",
@@ -44,7 +45,11 @@
   "build": {
     "appId": "com.digitalcreativity.pos.pro",
     "productName": "نظام نقاط البيع المتقدم",
-    "copyright": "Copyright © 2025 شركة الإبداع الرقمي - إدارة كرار الشعبري",
+    "copyright": "Copyright © 2025 شركة الإبداع الرقمي - إدارة كرار السعبري",
+    "asar": true,
+    "asarUnpack": [
+      "**/*.node"
+    ],
     "directories": {
       "output": "dist",
       "buildResources": "build"
@@ -54,7 +59,10 @@
       "preload.js",
       "splash.html",
       "index.html",
+      "firebase-config.js",
+      "enhanced-modals.css",
       "reports-system.js",
+      "expenses-system.js",
       "installment-invoice-templates.js",
       "_sdk/**/*",
       "database/**/*",
@@ -62,7 +70,8 @@
       "!**/node_modules/*/{CHANGELOG.md,README.md,README,readme.md,readme}",
       "!**/node_modules/.bin",
       "!**/node_modules/*/build",
-      "!**/node_modules/*/test"
+      "!**/node_modules/*/test",
+      "!firebase/**/*"
     ],
     "extraResources": [
       {
@@ -104,6 +113,9 @@
       "warningsAsErrors": false,
       "allowElevation": true,
       "perMachine": true
+    },
+    "portable": {
+      "artifactName": "POS-System-Pro-Portable-${version}.${ext}"
     },
     "linux": {
       "target": [

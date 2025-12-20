@@ -31,6 +31,7 @@ const store = new Store({
         }
     }
 });
+        devMode: false // وضع التطوير
 
 // تهيئة قاعدة البيانات
 function initDatabase() {
@@ -232,6 +233,34 @@ function createTables() {
             ip_address TEXT,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (user_id) REFERENCES users(id)
+        )`,
+        // جدول الموردين
+        `CREATE TABLE IF NOT EXISTS suppliers (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            supplier_name TEXT NOT NULL,
+            company_name TEXT,
+            phone TEXT NOT NULL,
+            address TEXT,
+            notes TEXT,
+            is_active INTEGER DEFAULT 1,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )`,
+        // جدول منتجات الموردين
+        `CREATE TABLE IF NOT EXISTS supplier_products (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            supplier_id INTEGER NOT NULL,
+            product_name TEXT NOT NULL,
+            quantity INTEGER NOT NULL DEFAULT 0,
+            purchase_price_single REAL NOT NULL DEFAULT 0,
+            purchase_price_wholesale REAL NOT NULL DEFAULT 0,
+            selling_price_single REAL NOT NULL DEFAULT 0,
+            selling_price_wholesale REAL NOT NULL DEFAULT 0,
+            currency TEXT DEFAULT 'IQD',
+            purchase_date DATE DEFAULT CURRENT_DATE,
+            notes TEXT,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (supplier_id) REFERENCES suppliers(id) ON DELETE CASCADE
         )`
     ];
 
@@ -320,7 +349,7 @@ function createIndexes() {
 // إنشاء نافذة التطبيق الرئيسية
 function createMainWindow() {
     const { width, height } = screen.getPrimaryDisplay().workAreaSize;
-    
+    const devMode = false; // دائماً وضع الإنتاج
     mainWindow = new BrowserWindow({
         width: Math.floor(width * 0.9),
         height: Math.floor(height * 0.9),
@@ -337,7 +366,7 @@ function createMainWindow() {
             preload: path.join(__dirname, 'preload.js'),
             webSecurity: true,
             allowRunningInsecureContent: false,
-            devTools: process.env.NODE_ENV === 'development'
+            devTools: false
         },
         frame: false,
         titleBarStyle: 'hidden',
@@ -353,12 +382,15 @@ function createMainWindow() {
         if (splashWindow && !splashWindow.isDestroyed()) {
             splashWindow.close();
         }
-        
         mainWindow.show();
         mainWindow.focus();
-        
-        if (process.env.NODE_ENV === 'development') {
-            mainWindow.webContents.openDevTools();
+        // لا تفتح DevTools تلقائياً في الإنتاج
+    });
+
+    // إضافة اختصار Ctrl+Shift+D لفتح DevTools في أي وقت
+    mainWindow.webContents.on('before-input-event', (event, input) => {
+        if (input.type === 'keyDown' && input.control && input.shift && input.key.toLowerCase() === 'd') {
+            mainWindow.webContents.openDevTools({ mode: 'detach' });
         }
     });
 
@@ -418,8 +450,9 @@ function createSplashWindow() {
     
     setTimeout(() => {
         if (splashWindow && !splashWindow.isDestroyed()) {
-            createMainWindow();
+            splashWindow.close();
         }
+        createMainWindow();
     }, 3000);
 }
 

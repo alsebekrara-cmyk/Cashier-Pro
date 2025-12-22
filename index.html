@@ -7346,6 +7346,181 @@ console.log(`
         }
     </style>
   <style>@view-transition { navigation: auto; }</style>
+  <!-- تحسين خطوط الشريط الجانبي والسلة -->
+  <style>
+  /* جعل جميع الخطوط والنصوص متوسطة وواضحة في جميع العناصر والجداول والصفحات */
+  body, html, table, th, td, input, select, button, label, .form-control, .modal, .cart, .product-card, .details-section, .detail-row, .info-row, .product-header, .product-name, .product-category, .product-actions, .empty-state {
+      font-size: 1.08em !important;
+      font-weight: 600 !important;
+      letter-spacing: 0.2px;
+  }
+
+  /* تكبير الأرقام في الجداول والعناصر */
+  .table td, .table th, .product-card .info-value, .cart .item-qty, .cart .item-price, .detail-value, .stock, .price {
+      font-size: 1.18em !important;
+      font-weight: 800 !important;
+  }
+
+  /* تكبير عناوين الجداول والصفحات */
+  h1, h2, h3, h4, h5, h6, .modal-title, .page-title {
+      font-size: 2em !important;
+      font-weight: 900 !important;
+  }
+
+  /* تحسين خطوط الشريط الجانبي */
+  .sidebar, .sidebar-menu, .sidebar .menu-item, .sidebar .menu-link {
+      font-size: 1.22em !important;
+      font-weight: 800 !important;
+      letter-spacing: 0.5px;
+  }
+
+  /* تكبير عناصر الشريط الجانبي مع الحفاظ على التنسيق */
+  .nav-menu {
+      font-size: 1.25rem !important; /* زيادة حجم الخط الأساسي */
+      font-family: 'Tajawal', 'Cairo', 'Segoe UI', Arial, sans-serif !important;
+  }
+  .nav-section-title {
+      font-size: 1.35rem !important;
+      font-weight: bold !important;
+      margin-bottom: 0.5em !important;
+      letter-spacing: 0.5px;
+  }
+  .nav-item {
+      margin-bottom: 0.25em !important;
+  }
+  .nav-link {
+      font-size: 1.18rem !important;
+      font-weight: 500 !important;
+      display: flex;
+      align-items: center;
+      gap: 0.5em;
+      padding: 0.5em 0.75em !important;
+      border-radius: 8px !important;
+      transition: background 0.2s;
+  }
+  .nav-link.active,
+  .nav-link:hover {
+      background: #f3f4f6 !important;
+      color: #0f172a !important;
+  }
+  .nav-icon {
+      font-size: 1.5em !important;
+      min-width: 1.5em;
+      text-align: center;
+  }
+  .nav-text {
+      font-size: 1.15em !important;
+      font-weight: 500 !important;
+  }
+  /* عناصر الحماية وتسجيل الخروج */
+  #securityNavItem .nav-link,
+  #logoutNavItem .nav-link {
+      font-size: 1.18rem !important;
+      font-weight: 600 !important;
+  }
+
+  /* تحسين خطوط السلة */
+  .cart, .cart-list, .cart-item, .cart .item-name, .cart .item-qty, .cart .item-price {
+      font-size: 1.08em !important;
+      font-weight: 600 !important;
+      letter-spacing: 0.2px;
+  }
+  </style>
+  <!-- تكبير عناصر شريط الإحصائيات العلوي (top-bar-stats) -->
+  <style>
+  /* تكبير عناصر شريط الإحصائيات العلوي (top-bar-stats) */
+  .top-bar-stats, .top-bar-stats .quick-stat-card {
+      min-height: 70px;
+  }
+  .top-bar-stats .quick-stat-card {
+      padding: 0.7em 1.2em !important;
+      border-radius: 12px !important;
+      margin: 0 0.3em !important;
+      display: flex;
+      align-items: center;
+      gap: 1em;
+  }
+
+  /* --- تخصيص عرض المنتجات داخل السلة --- */
+.cart-items {
+  display: grid !important;
+  grid-template-columns: repeat(2, 1fr) !important;
+  gap: 0.7em 0.5em !important;
+}
+.cart-item {
+  min-width: 0;
+  max-width: 100%;
+  font-size: 0.97rem !important;
+  padding: 0.45em 0.5em !important;
+  margin-bottom: 0.3em !important;
+}
+.cart-item .item-header h4,
+.cart-item .item-info h4 {
+  font-size: 1em !important;
+}
+.cart-item .item-price,
+.cart-item .item-total {
+  font-size: 0.98em !important;
+}
+.cart-item .quantity-controls {
+  font-size: 0.97em !important;
+}
+/* --- تكبير نصوص المجموع الفرعي والخصم والضريبة والمجموع النهائي والأرقام والدينار --- */
+.cart-summary .summary-row span:first-child {
+  font-size: 1.18em !important;
+  font-weight: 600 !important;
+}
+.cart-summary .summary-value {
+  font-size: 1.25em !important;
+  font-weight: bold !important;
+  color: #0d9488 !important;
+  letter-spacing: 0.5px;
+}
+.cart-summary .total .summary-value {
+  font-size: 1.35em !important;
+  color: #d97706 !important;
+}
+.cart-summary .total span:first-child {
+  font-size: 1.22em !important;
+  color: #d97706 !important;
+}
+.cart-summary .summary-value {
+  direction: ltr;
+  unicode-bidi: embed;
+}
+  .top-bar-stats .quick-stat-icon {
+      font-size: 2.1em !important;
+      width: 2.2em;
+      height: 2.2em;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+  }
+  .top-bar-stats .quick-stat-label {
+      font-size: 1.18em !important;
+      font-weight: 800 !important;
+      letter-spacing: 0.2px;
+  }
+  .top-bar-stats .quick-stat-value {
+      font-size: 1.35em !important;
+      font-weight: 900 !important;
+      margin-top: 0.1em;
+  }
+  /* تكبير الساعة الرقمية */
+  .top-bar-stats .digital-clock-card {
+      min-width: 170px;
+      padding: 0.7em 1.2em !important;
+  }
+  .top-bar-stats .digital-clock .clock-time {
+      font-size: 1.45em !important;
+      font-weight: 900 !important;
+      letter-spacing: 0.2px;
+  }
+  .top-bar-stats .digital-clock .clock-date {
+      font-size: 1.08em !important;
+      font-weight: 700 !important;
+  }
+  </style>
   <script src="https://cdn.tailwindcss.com" type="text/javascript"></script>
  </head>
  <body data-theme="dark">

@@ -10806,6 +10806,219 @@ console.log(`
         let editDebtProducts = [];
         let currentEditDebtId = null;
 
+        // ================================================================================
+        // نظام التخزين الثلاثي المتقدم - Triple Storage System
+        // ================================================================================
+        class TripleStorageManager {
+            constructor() {
+                this.localStorageKey = 'pos_backup_data_v2';
+            }
+
+            async saveProduct(productData) {
+                const results = { indexedDB: false, firebase: false, localStorage: false, errors: [] };
+                
+                try {
+                    if (window.dataSdk) {
+                        const result = await window.dataSdk.create(productData);
+                        if (result.isOk) {
+                            results.indexedDB = true;
+                            productData.id = result.id;
+                            console.log('✅ IndexedDB: المنتج محفوظ - ID:', result.id);
+                        } else {
+                            results.errors.push('IndexedDB: ' + result.error);
+                        }
+                    }
+                } catch (error) {
+                    results.errors.push('IndexedDB: ' + error.message);
+                    console.error('❌ IndexedDB خطأ:', error);
+                }
+                
+                try {
+                    if (window.database && typeof window.saveProductForCurrentUser === 'function') {
+                        await window.saveProductForCurrentUser(productData);
+                        results.firebase = true;
+                        console.log('✅ Firebase: المنتج محفوظ');
+                    }
+                } catch (error) {
+                    results.errors.push('Firebase: ' + error.message);
+                    console.error('❌ Firebase خطأ:', error);
+                }
+                
+                try {
+                    this.saveToLocalStorage(productData, 'product');
+                    results.localStorage = true;
+                    console.log('✅ localStorage: المنتج محفوظ');
+                } catch (error) {
+                    results.errors.push('localStorage: ' + error.message);
+                    console.error('❌ localStorage خطأ:', error);
+                }
+                
+                return results;
+            }
+
+            async updateProduct(productId, updateId, updatedData) {
+                const results = { indexedDB: false, firebase: false, localStorage: false, errors: [] };
+                
+                try {
+                    if (window.dataSdk && updateId) {
+                        const result = await window.dataSdk.update(updateId, updatedData);
+                        if (result.isOk) {
+                            results.indexedDB = true;
+                            console.log('✅ IndexedDB: المنتج محدث');
+                        } else {
+                            results.errors.push('IndexedDB: ' + result.error);
+                        }
+                    }
+                } catch (error) {
+                    results.errors.push('IndexedDB: ' + error.message);
+                    console.error('❌ IndexedDB خطأ:', error);
+                }
+                
+                try {
+                    if (window.database) {
+                        const uid = localStorage.getItem('app_uid');
+                        if (uid && productId) {
+                            const snapshot = await window.database.ref(`users/${uid}/products`).once('value');
+                            const productsObj = snapshot.val() || {};
+                            let firebaseKey = null;
+                            for (const key in productsObj) {
+                                if (productsObj[key].product_id === productId) {
+                                    firebaseKey = key;
+                                    break;
+                                }
+                            }
+                            if (firebaseKey) {
+                                await window.database.ref(`users/${uid}/products/${firebaseKey}`).update(updatedData);
+                                results.firebase = true;
+                                console.log('✅ Firebase: المنتج محدث');
+                            }
+                        }
+                    }
+                } catch (error) {
+                    results.errors.push('Firebase: ' + error.message);
+                    console.error('❌ Firebase خطأ:', error);
+                }
+                
+                try {
+                    this.updateInLocalStorage(productId, updatedData, 'product');
+                    results.localStorage = true;
+                    console.log('✅ localStorage: المنتج محدث');
+                } catch (error) {
+                    results.errors.push('localStorage: ' + error.message);
+                    console.error('❌ localStorage خطأ:', error);
+                }
+                
+                return results;
+            }
+
+            async deleteProduct(productId, deleteId) {
+                const results = { indexedDB: false, firebase: false, localStorage: false, errors: [] };
+                
+                try {
+                    if (window.dataSdk && deleteId) {
+                        const result = await window.dataSdk.delete(deleteId);
+                        if (result.isOk) {
+                            results.indexedDB = true;
+                            console.log('✅ IndexedDB: المنتج محذوف');
+                        } else {
+                            results.errors.push('IndexedDB: ' + result.error);
+                        }
+                    }
+                } catch (error) {
+                    results.errors.push('IndexedDB: ' + error.message);
+                    console.error('❌ IndexedDB خطأ:', error);
+                }
+                
+                try {
+                    if (window.database) {
+                        const uid = localStorage.getItem('app_uid');
+                        if (uid && productId) {
+                            const snapshot = await window.database.ref(`users/${uid}/products`).once('value');
+                            const productsObj = snapshot.val() || {};
+                            let firebaseKey = null;
+                            for (const key in productsObj) {
+                                if (productsObj[key].product_id === productId) {
+                                    firebaseKey = key;
+                                    break;
+                                }
+                            }
+                            if (firebaseKey) {
+                                await window.database.ref(`users/${uid}/products/${firebaseKey}`).remove();
+                                results.firebase = true;
+                                console.log('✅ Firebase: المنتج محذوف');
+                            }
+                        }
+                    }
+                } catch (error) {
+                    results.errors.push('Firebase: ' + error.message);
+                    console.error('❌ Firebase خطأ:', error);
+                }
+                
+                try {
+                    this.deleteFromLocalStorage(productId, 'product');
+                    results.localStorage = true;
+                    console.log('✅ localStorage: المنتج محذوف');
+                } catch (error) {
+                    results.errors.push('localStorage: ' + error.message);
+                    console.error('❌ localStorage خطأ:', error);
+                }
+                
+                return results;
+            }
+
+            saveToLocalStorage(data, type) {
+                try {
+                    let backupData = JSON.parse(localStorage.getItem(this.localStorageKey) || '{}');
+                    if (!backupData[type + 's']) backupData[type + 's'] = [];
+                    const existingIndex = backupData[type + 's'].findIndex(item => item[type + '_id'] === data[type + '_id']);
+                    if (existingIndex >= 0) {
+                        backupData[type + 's'][existingIndex] = data;
+                    } else {
+                        backupData[type + 's'].push(data);
+                    }
+                    localStorage.setItem(this.localStorageKey, JSON.stringify(backupData));
+                    return true;
+                } catch (error) {
+                    console.error('localStorage حفظ خطأ:', error);
+                    return false;
+                }
+            }
+
+            updateInLocalStorage(id, updates, type) {
+                try {
+                    let backupData = JSON.parse(localStorage.getItem(this.localStorageKey) || '{}');
+                    if (backupData[type + 's']) {
+                        const index = backupData[type + 's'].findIndex(item => item[type + '_id'] === id);
+                        if (index >= 0) {
+                            backupData[type + 's'][index] = { ...backupData[type + 's'][index], ...updates };
+                            localStorage.setItem(this.localStorageKey, JSON.stringify(backupData));
+                        }
+                    }
+                    return true;
+                } catch (error) {
+                    console.error('localStorage تحديث خطأ:', error);
+                    return false;
+                }
+            }
+
+            deleteFromLocalStorage(id, type) {
+                try {
+                    let backupData = JSON.parse(localStorage.getItem(this.localStorageKey) || '{}');
+                    if (backupData[type + 's']) {
+                        backupData[type + 's'] = backupData[type + 's'].filter(item => item[type + '_id'] !== id);
+                        localStorage.setItem(this.localStorageKey, JSON.stringify(backupData));
+                    }
+                    return true;
+                } catch (error) {
+                    console.error('localStorage حذف خطأ:', error);
+                    return false;
+                }
+            }
+        }
+
+        window.tripleStorage = new TripleStorageManager();
+        console.log('✅ نظام التخزين الثلاثي جاهز');
+
         // إعدادات افتراضية
         const defaultConfig = {
             store_name: 'متجر التقنية الحديثة',
@@ -14474,7 +14687,6 @@ console.log(`
         async function handleAddProduct(event) {
             event.preventDefault();
             
-            // فحص الصلاحية
             if (!window.securityManager.checkPermission('products_add')) {
                 return;
             }
@@ -14496,41 +14708,41 @@ console.log(`
                 product_category: document.getElementById('productCategory').value,
                 supplier: document.getElementById('productSupplier').value || '',
                 timestamp: new Date().toISOString(),
-                // معلومات المستخدم
                 created_by: window.securityManager.getCurrentUsername(),
                 created_by_name: window.securityManager.getCurrentUserFullName(),
                 created_at: new Date().toISOString()
             };
 
-            console.log('➕ محاولة إضافة منتج جديد:', {
-                product_id: productData.product_id,
-                product_name: productData.product_name,
-                product_barcode: productData.product_barcode
-            });
-
-            if (window.dataSdk) {
-                const result = await window.dataSdk.create(productData);
-                if (result.isOk) {
-                    console.log('✅ تم إضافة المنتج بنجاح - IndexedDB id:', result.id);
-                    
-                    // تسجيل العملية
-                    window.securityManager.logOperation('إضافة منتج', {
-                        productId: productData.product_id,
-                        productName: productData.product_name,
-                        barcode: productData.product_barcode,
-                        dbId: result.id
-                    });
-                    
-                    closeModal('addProductModal');
-                    document.getElementById('addProductForm').reset();
-                    showToast('تم إضافة المنتج بنجاح', 'success');
+            console.log('➕ بدء إضافة منتج جديد:', productData.product_name);
+            
+            // استخدام نظام التخزين الثلاثي
+            const results = await window.tripleStorage.saveProduct(productData);
+            
+            // التحقق من النتائج
+            const successCount = [results.indexedDB, results.firebase, results.localStorage].filter(Boolean).length;
+            
+            if (successCount > 0) {
+                window.securityManager.logOperation('إضافة منتج', {
+                    productId: productData.product_id,
+                    productName: productData.product_name,
+                    barcode: productData.product_barcode,
+                    savedIn: `${successCount}/3 قواعد بيانات`
+                });
+                
+                closeModal('addProductModal');
+                document.getElementById('addProductForm').reset();
+                
+                if (successCount === 3) {
+                    showToast('✅ تم حفظ المنتج في جميع قواعد البيانات', 'success');
                 } else {
-                    showToast('فشل في إضافة المنتج: ' + (result.error || ''), 'error');
-                    console.error('❌ فشل في إضافة المنتج:', result);
+                    showToast(`⚠️ تم حفظ المنتج في ${successCount} من 3 قواعد بيانات`, 'warning');
+                    console.warn('أخطاء الحفظ:', results.errors);
                 }
+                
+                console.log('✅ تم إضافة المنتج بنجاح - النتائج:', results);
             } else {
-                showToast('قاعدة البيانات غير مهيأة', 'error');
-                console.error('❌ dataSdk غير متاح');
+                showToast('❌ فشل حفظ المنتج في جميع قواعد البيانات', 'error');
+                console.error('❌ جميع عمليات الحفظ فشلت:', results.errors);
             }
             
             setLoading(false);
@@ -14541,13 +14753,7 @@ console.log(`
             const product = products.find(p => p.product_id === productId);
             if (!product) {
                 showToast('المنتج غير موجود', 'error');
-                console.error('المنتج غير موجود - product_id:', productId);
-                console.log('المنتجات المتاحة:', products.map(p => ({
-                    product_id: p.product_id,
-                    product_name: p.product_name,
-                    id: p.id,
-                    __backendId: p.__backendId
-                })));
+                console.error('❌ المنتج غير موجود - product_id:', productId);
                 return;
             }
             
@@ -14562,7 +14768,6 @@ console.log(`
             document.getElementById('editProductId').value = productId;
             document.getElementById('editProductName').value = product.product_name;
             document.getElementById('editProductBarcode').value = product.product_barcode || '';
-            document.getElementById('editProductCategory').value = product.product_category || '';
             document.getElementById('editProductSupplier').value = product.supplier || '';
             document.getElementById('editProductCostRetail').value = product.product_cost_retail;
             document.getElementById('editProductCostWholesale').value = product.product_cost_wholesale || '';
@@ -14571,9 +14776,18 @@ console.log(`
             document.getElementById('editProductStock').value = product.stock_quantity;
             document.getElementById('editProductMinStock').value = product.min_stock;
             
-            // ملء قائمة التصنيفات
+            // ملء قائمة التصنيفات أولاً
             populateCategorySelects();
-            document.getElementById('editProductCategory').value = product.product_category || '';
+            
+            // ثم تعيين القيمة المحددة
+            setTimeout(() => {
+                const editSelect = document.getElementById('editProductCategory');
+                if (editSelect) {
+                    editSelect.value = product.product_category || '';
+                    console.log('✅ تم تعيين التصنيف:', product.product_category);
+                    console.log('📊 عدد التصنيفات المتاحة:', categories.length);
+                }
+            }, 100);
             
             showModal('editProductModal');
         }
@@ -14582,7 +14796,6 @@ console.log(`
         async function handleEditProduct(event) {
             event.preventDefault();
             
-            // فحص الصلاحية
             if (!window.securityManager.checkPermission('products_edit')) {
                 return;
             }
@@ -14595,12 +14808,12 @@ console.log(`
             
             if (!product) {
                 showToast('المنتج غير موجود', 'error');
-                console.error('المنتج غير موجود - product_id:', productId);
+                console.error('❌ المنتج غير موجود - product_id:', productId);
                 setLoading(false);
                 return;
             }
             
-            console.log('✏️ محاولة تعديل المنتج:', {
+            console.log('✏️ بدء تحديث المنتج:', {
                 product_id: product.product_id,
                 product_name: product.product_name,
                 id: product.id,
@@ -14618,41 +14831,44 @@ console.log(`
                 product_price_wholesale: parseFloat(document.getElementById('editProductPriceWholesale').value) || parseFloat(document.getElementById('editProductPriceRetail').value),
                 stock_quantity: parseInt(document.getElementById('editProductStock').value),
                 min_stock: parseInt(document.getElementById('editProductMinStock').value),
-                // معلومات التعديل
                 modified_by: window.securityManager.getCurrentUsername(),
                 modified_by_name: window.securityManager.getCurrentUserFullName(),
                 modified_at: new Date().toISOString()
             };
             
-            // الحصول على معرف التحديث (دعم id و __backendId)
             const updateId = product.id || product.__backendId;
             
-            if (window.dataSdk && updateId) {
-                console.log('🔄 تحديث المنتج - updateId:', updateId);
-                const result = await window.dataSdk.update(updateId, updatedData);
+            if (updateId) {
+                // استخدام نظام التخزين الثلاثي
+                const results = await window.tripleStorage.updateProduct(productId, updateId, updatedData);
                 
-                if (result.isOk) {
-                    // تسجيل العملية
+                const successCount = [results.indexedDB, results.firebase, results.localStorage].filter(Boolean).length;
+                
+                if (successCount > 0) {
                     window.securityManager.logOperation('تعديل منتج', {
                         productId: product.product_id,
                         productName: updatedData.product_name,
-                        barcode: updatedData.product_barcode
+                        barcode: updatedData.product_barcode,
+                        updatedIn: `${successCount}/3 قواعد بيانات`
                     });
                     
                     closeModal('editProductModal');
-                    showToast('تم تحديث المنتج بنجاح', 'success');
-                    console.log('✅ تم تحديث المنتج بنجاح');
+                    
+                    if (successCount === 3) {
+                        showToast('✅ تم تحديث المنتج في جميع قواعد البيانات', 'success');
+                    } else {
+                        showToast(`⚠️ تم تحديث المنتج في ${successCount} من 3 قواعد بيانات`, 'warning');
+                        console.warn('أخطاء التحديث:', results.errors);
+                    }
+                    
+                    console.log('✅ تم تحديث المنتج بنجاح - النتائج:', results);
                 } else {
-                    showToast('فشل في تحديث المنتج: ' + (result.error || ''), 'error');
-                    console.error('❌ فشل في تحديث المنتج:', result);
+                    showToast('❌ فشل تحديث المنتج في جميع قواعد البيانات', 'error');
+                    console.error('❌ جميع عمليات التحديث فشلت:', results.errors);
                 }
             } else {
-                showToast('لا يمكن تحديث المنتج - معرف غير صالح', 'error');
-                console.error('❌ معرف التحديث غير موجود - product:', {
-                    product_id: product.product_id,
-                    id: product.id,
-                    __backendId: product.__backendId
-                });
+                showToast('❌ لا يمكن تحديث المنتج - معرف غير صالح', 'error');
+                console.error('❌ معرف التحديث غير موجود:', { product_id: product.product_id, id: product.id, __backendId: product.__backendId });
             }
             
             setLoading(false);
@@ -14719,7 +14935,8 @@ console.log(`
 
         // ملء قوائم التصنيفات
         function populateCategorySelects() {
-            const selects = ['productCategory', 'inventoryCategory'];
+            // إضافة editProductCategory إلى القائمة
+            const selects = ['productCategory', 'inventoryCategory', 'editProductCategory'];
             
             selects.forEach(selectId => {
                 const select = document.getElementById(selectId);
@@ -14742,6 +14959,8 @@ console.log(`
                     if (currentValue) {
                         select.value = currentValue;
                     }
+                    
+                    console.log(`✅ تم ملء ${selectId} بـ ${categories.length} تصنيف`);
                 }
             });
         }
@@ -16890,7 +17109,6 @@ console.log(`
 
         // حذف منتج
         async function deleteProduct(productId) {
-            // فحص الصلاحية
             if (!window.securityManager.checkPermission('products_delete')) {
                 return;
             }
@@ -16899,49 +17117,54 @@ console.log(`
             
             if (!product) {
                 showToast('المنتج غير موجود', 'error');
-                console.error('المنتج غير موجود - product_id:', productId);
-                console.log('المنتجات المتاحة:', products.map(p => ({
-                    product_id: p.product_id,
-                    product_name: p.product_name,
-                    id: p.id,
-                    __backendId: p.__backendId
-                })));
+                console.error('❌ المنتج غير موجود - product_id:', productId);
                 return;
             }
             
-            // تأكيد الحذف
             if (!confirm(`هل أنت متأكد من حذف المنتج: ${product.product_name}؟`)) {
                 return;
             }
             
-            // الحصول على معرف الحذف (دعم id و __backendId)
+            console.log('🗑️ بدء حذف المنتج:', {
+                product_id: product.product_id,
+                product_name: product.product_name,
+                id: product.id,
+                __backendId: product.__backendId
+            });
+            
             const deleteId = product.id || product.__backendId;
             
-            if (window.dataSdk && deleteId) {
-                console.log('🗑️ محاولة حذف المنتج - product_id:', productId, 'deleteId:', deleteId);
-                const result = await window.dataSdk.delete(deleteId);
-                if (result.isOk) {
-                    // تسجيل العملية
+            if (deleteId) {
+                // استخدام نظام التخزين الثلاثي
+                const results = await window.tripleStorage.deleteProduct(productId, deleteId);
+                
+                const successCount = [results.indexedDB, results.firebase, results.localStorage].filter(Boolean).length;
+                
+                if (successCount > 0) {
                     window.securityManager.logOperation('حذف منتج', {
                         productId: product.product_id,
                         productName: product.product_name,
-                        barcode: product.product_barcode
+                        barcode: product.product_barcode,
+                        deletedFrom: `${successCount}/3 قواعد بيانات`
                     });
                     
-                    showToast('تم حذف المنتج بنجاح', 'success');
                     updateQuickStats();
-                    console.log('✅ تم حذف المنتج بنجاح');
+                    
+                    if (successCount === 3) {
+                        showToast('✅ تم حذف المنتج من جميع قواعد البيانات', 'success');
+                    } else {
+                        showToast(`⚠️ تم حذف المنتج من ${successCount} من 3 قواعد بيانات`, 'warning');
+                        console.warn('أخطاء الحذف:', results.errors);
+                    }
+                    
+                    console.log('✅ تم حذف المنتج بنجاح - النتائج:', results);
                 } else {
-                    showToast('فشل في حذف المنتج: ' + (result.error || ''), 'error');
-                    console.error('❌ فشل في حذف المنتج:', result);
+                    showToast('❌ فشل حذف المنتج من جميع قواعد البيانات', 'error');
+                    console.error('❌ جميع عمليات الحذف فشلت:', results.errors);
                 }
             } else {
-                showToast('لا يمكن حذف المنتج - معرف غير صالح', 'error');
-                console.error('❌ معرف الحذف غير موجود - product:', {
-                    product_id: product.product_id,
-                    id: product.id,
-                    __backendId: product.__backendId
-                });
+                showToast('❌ لا يمكن حذف المنتج - معرف غير صالح', 'error');
+                console.error('❌ معرف الحذف غير موجود:', { product_id: product.product_id, id: product.id, __backendId: product.__backendId });
             }
         }
 
@@ -16949,14 +17172,12 @@ console.log(`
         function showProductDetails(productId) {
             const product = products.find(p => p.product_id === productId);
             
-            // التحقق من وجود المنتج أولاً
             if (!product) {
                 showToast('لم يتم العثور على المنتج', 'error');
-                console.error('المنتج غير موجود - product_id:', productId);
-                console.log('المنتجات المتاحة:', products.map(p => ({
+                console.error('❌ المنتج غير موجود - product_id:', productId);
+                console.log('📦 المنتجات المتاحة:', products.map(p => ({
                     product_id: p.product_id,
-                    product_name: p.product_name,
-                    id: p.id
+                    product_name: p.product_name
                 })));
                 return;
             }

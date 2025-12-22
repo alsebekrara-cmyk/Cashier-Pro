@@ -9,8 +9,8 @@ function generateInstallmentPaymentReceipt({debt, paidInstallment, storeSettings
     // إعداد البيانات
     const customerName = debt.customer_name || '';
     const customerPhone = debt.customer_phone || '';
-    const storeName = storeSettings?.storeName || storeSettings?.store_name || 'معرض يعقوب للأجهزة الكهربائية';
-    const storePhone = storeSettings?.storePhone || storeSettings?.store_phone || '07803092185';
+    const storeName = storeSettings?.storeName || storeSettings?.store_name || 'يعقوب للأجهزة الكهربائية';
+    const storePhone = storeSettings?.storePhone || storeSettings?.store_phone || '07901234567';
     const paidMonth = paidInstallment.month;
     const paidAmount = paidInstallment.amount;
     const paidDate = paidInstallment.paid_date ? new Date(paidInstallment.paid_date) : new Date();
@@ -188,182 +188,6 @@ function showPage(page) {
         }, 100);
     }
 }
-
-// دالة فتح نافذة إدارة النظام
-function openSystemManagement() {
-    console.log('🔧 فتح إدارة النظام...');
-    showModal('systemManagementModal');
-    updateSystemStatus();
-}
-
-// دالة تحديث حالة النظام
-async function updateSystemStatus() {
-    try {
-        const uid = localStorage.getItem('app_uid');
-        const version = localStorage.getItem('app_version') || '1.0.0';
-        
-        document.getElementById('systemStatusUID').textContent = uid || 'غير متوفر';
-        document.getElementById('systemStatusVersion').textContent = version;
-        
-        if (window.authFix) {
-            const accountCheck = await window.authFix.checkCurrentAccount();
-            const statusElem = document.getElementById('systemStatusAccount');
-            if (accountCheck.hasAccount && accountCheck.isValid) {
-                statusElem.textContent = '✅ صالح';
-                statusElem.style.color = '#10b981';
-            } else if (accountCheck.hasAccount && !accountCheck.isValid) {
-                statusElem.textContent = '⚠️ غير صالح';
-                statusElem.style.color = '#f59e0b';
-            } else {
-                statusElem.textContent = 'لا يوجد حساب';
-                statusElem.style.color = '#6b7280';
-            }
-        }
-        
-        const firebaseElem = document.getElementById('systemStatusFirebase');
-        if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
-            firebaseElem.textContent = '✅ متصل';
-            firebaseElem.style.color = '#10b981';
-        } else {
-            firebaseElem.textContent = '⚠️ غير متصل';
-            firebaseElem.style.color = '#ef4444';
-        }
-    } catch (error) {
-        console.error('خطأ في تحديث حالة النظام:', error);
-    }
-}
-
-// دوال إدارة النظام
-async function systemCheckAccount() {
-    const logDiv = document.getElementById('systemConsoleLog');
-    logDiv.innerHTML += '<div style="color:#3b82f6">⏳ جاري فحص الحساب...</div>';
-    
-    try {
-        const result = await window.authFix.checkCurrentAccount();
-        if (result.hasAccount && result.isValid) {
-            logDiv.innerHTML += '<div style="color:#10b981">✅ الحساب صالح ويعمل بشكل صحيح</div>';
-            showToast('الحساب صالح ويعمل بشكل صحيح', 'success');
-        } else if (result.hasAccount && !result.isValid) {
-            logDiv.innerHTML += `<div style="color:#f59e0b">⚠️ الحساب غير صالح: ${result.reason}</div>`;
-            showToast('تم اكتشاف مشكلة في الحساب', 'warning');
-        } else {
-            logDiv.innerHTML += '<div style="color:#6b7280">ℹ️ لا يوجد حساب محفوظ</div>';
-            showToast('لا يوجد حساب محفوظ', 'info');
-        }
-        updateSystemStatus();
-    } catch (error) {
-        logDiv.innerHTML += `<div style="color:#ef4444">❌ خطأ: ${error.message}</div>`;
-        showToast('حدث خطأ في الفحص', 'error');
-    }
-    logDiv.scrollTop = logDiv.scrollHeight;
-}
-
-async function systemFixRegistration() {
-    const logDiv = document.getElementById('systemConsoleLog');
-    logDiv.innerHTML += '<div style="color:#3b82f6">⏳ جاري إصلاح مشكلة التسجيل...</div>';
-    
-    try {
-        const result = await window.authFix.attemptRegistrationFix();
-        if (result.success) {
-            logDiv.innerHTML += `<div style="color:#10b981">✅ ${result.message}</div>`;
-            showToast(result.message, 'success');
-        } else {
-            logDiv.innerHTML += `<div style="color:#ef4444">❌ فشل الإصلاح: ${result.error}</div>`;
-            showToast('فشل الإصلاح', 'error');
-        }
-        updateSystemStatus();
-    } catch (error) {
-        logDiv.innerHTML += `<div style="color:#ef4444">❌ خطأ: ${error.message}</div>`;
-        showToast('حدث خطأ في الإصلاح', 'error');
-    }
-    logDiv.scrollTop = logDiv.scrollHeight;
-}
-
-async function systemSoftReset() {
-    if (!confirm('هل أنت متأكد من إعادة التعيين الخفيفة؟\n\nسيتم مسح بيانات الحساب مع الاحتفاظ بالإعدادات.')) {
-        return;
-    }
-    
-    const logDiv = document.getElementById('systemConsoleLog');
-    logDiv.innerHTML += '<div style="color:#f59e0b">⏳ جاري إعادة التعيين الخفيفة...</div>';
-    
-    try {
-        const result = await window.systemReset.softReset();
-        if (result.success) {
-            logDiv.innerHTML += '<div style="color:#10b981">✅ تمت إعادة التعيين بنجاح</div>';
-            showToast('تمت إعادة التعيين بنجاح', 'success');
-            setTimeout(() => window.location.reload(), 2000);
-        } else {
-            logDiv.innerHTML += `<div style="color:#ef4444">❌ فشلت إعادة التعيين: ${result.error}</div>`;
-            showToast('فشلت العملية', 'error');
-        }
-    } catch (error) {
-        logDiv.innerHTML += `<div style="color:#ef4444">❌ خطأ: ${error.message}</div>`;
-        showToast('حدث خطأ', 'error');
-    }
-    logDiv.scrollTop = logDiv.scrollHeight;
-}
-
-async function systemFullReset() {
-    if (!confirm('⚠️ تحذير: إعادة تعيين كاملة\n\nسيتم مسح جميع البيانات والإعدادات نهائياً!\n\nهل أنت متأكد؟')) {
-        return;
-    }
-    
-    if (!confirm('هل أنت متأكد 100%؟\n\nلا يمكن التراجع عن هذا الإجراء!')) {
-        return;
-    }
-    
-    const logDiv = document.getElementById('systemConsoleLog');
-    logDiv.innerHTML += '<div style="color:#ef4444">⏳ جاري إعادة التعيين الكاملة...</div>';
-    
-    try {
-        const result = await window.systemReset.fullReset(true);
-        if (result.success) {
-            logDiv.innerHTML += '<div style="color:#10b981">✅ تمت إعادة التعيين الكاملة</div>';
-            showToast('جاري إعادة تحميل التطبيق...', 'success');
-        }
-    } catch (error) {
-        logDiv.innerHTML += `<div style="color:#ef4444">❌ خطأ: ${error.message}</div>`;
-        showToast('حدث خطأ', 'error');
-    }
-    logDiv.scrollTop = logDiv.scrollHeight;
-}
-
-async function systemClearInvalidData() {
-    const logDiv = document.getElementById('systemConsoleLog');
-    logDiv.innerHTML += '<div style="color:#3b82f6">⏳ جاري مسح البيانات غير الصالحة...</div>';
-    
-    try {
-        const cleared = await window.authFix.clearInvalidAccount();
-        if (cleared) {
-            logDiv.innerHTML += '<div style="color:#10b981">✅ تم مسح البيانات غير الصالحة</div>';
-            showToast('تم مسح البيانات بنجاح', 'success');
-        } else {
-            logDiv.innerHTML += '<div style="color:#6b7280">ℹ️ لم يتم العثور على بيانات غير صالحة</div>';
-            showToast('لا توجد بيانات غير صالحة', 'info');
-        }
-        updateSystemStatus();
-    } catch (error) {
-        logDiv.innerHTML += `<div style="color:#ef4444">❌ خطأ: ${error.message}</div>`;
-        showToast('حدث خطأ', 'error');
-    }
-    logDiv.scrollTop = logDiv.scrollHeight;
-}
-
-async function systemExportBackup(type = 'full') {
-    const logDiv = document.getElementById('systemConsoleLog');
-    logDiv.innerHTML += '<div style="color:#3b82f6">⏳ جاري تصدير النسخة الاحتياطية...</div>';
-    try {
-        await window.systemReset.exportBackup(type);
-        logDiv.innerHTML += '<div style="color:#10b981">✅ تم تصدير النسخة الاحتياطية بنجاح</div>';
-        showToast('تم التصدير بنجاح', 'success');
-    } catch (error) {
-        logDiv.innerHTML += `<div style="color:#ef4444">❌ خطأ: ${error.message}</div>`;
-        showToast('حدث خطأ في التصدير', 'error');
-    }
-    logDiv.scrollTop = logDiv.scrollHeight;
-}
-
 (function() {
     console.log('🔧 تطبيق إصلاح الطباعة الصامتة...');
     // حفظ الدالة الأصلية
@@ -621,7 +445,7 @@ window.testSilentPrint = function() {
 console.log(`
 ╔════════════════════════════════════════════╗
 ║   🖨️  نظام الطباعة الصامتة v2.0.1         ║
-║   شركة الإبداع الرقمي - كرار السعبري      ║
+║   شركة الإبداع الرقمي - كرار الشعبري      ║
 ╚════════════════════════════════════════════╝
 
 ✅ التحسينات:
@@ -647,604 +471,21 @@ console.log(`
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
   
- <!-- ✅ استخدم هذا -->
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-<script src="./firebase-config.js"></script>
-  <!-- Firebase Initialization Check - نسخة محسّنة أكثر صبراً -->
-  <script>
-(function() {
-    'use strict';
-    
-    console.log('🔍 فحص تهيئة Firebase...');
-    
-    // وظيفة الفحص المحسّنة
-    function checkFirebaseInit() {
-        return new Promise((resolve, reject) => {
-            let attempts = 0;
-            const maxAttempts = 50; // زيادة إلى 50 محاولة = 10 ثوانٍ
-            
-            const checkInterval = setInterval(() => {
-                attempts++;
-                
-                // فحص Firebase
-                if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
-                    // فحص database
-                    if (window.database && typeof window.database.ref === 'function') {
-                        clearInterval(checkInterval);
-                        console.log('✅ Firebase جاهز وتم تهيئته بنجاح');
-                        console.log('📊 Firebase Apps:', firebase.apps.length);
-                        console.log('🔗 Database متصل:', !!window.database);
-                        resolve(true);
-                        return;
-                    }
-                    
-                    // إذا Firebase موجود لكن database غير معرّف
-                    if (!window.database) {
-                        try {
-                            window.database = firebase.database();
-                            console.log('✅ تم إعادة تهيئة database بنجاح');
-                        } catch (error) {
-                            console.error('❌ خطأ في تهيئة database:', error);
-                        }
-                    }
-                }
-                
-                // رسائل تقدم كل 10 محاولات
-                if (attempts % 10 === 0 && attempts < maxAttempts) {
-                    console.log(`⏳ جاري الانتظار... (محاولة ${attempts}/${maxAttempts})`);
-                }
-                
-                // إذا وصلنا للحد الأقصى من المحاولات
-                if (attempts >= maxAttempts) {
-                    clearInterval(checkInterval);
-                    console.warn('⚠️ لم يتم تهيئة Firebase خلال الوقت المتوقع');
-                    console.log('ℹ️ سيحاول التطبيق الاتصال عند الحاجة');
-                    // نحلّها بدون reject لكي لا تظهر الرسالة المزعجة
-                    resolve(false); // ✅ تغيير من reject إلى resolve(false)
-                }
-            }, 200); // فحص كل 200ms
-        });
-    }
-    
-    // تنفيذ الفحص عند تحميل الصفحة
-    window.addEventListener('DOMContentLoaded', async () => {
-        try {
-            const isReady = await checkFirebaseInit();
-            
-            if (isReady) {
-                console.log('🎉 التطبيق جاهز للاستخدام');
-            } else {
-                console.log('⚠️ Firebase لم يتم تهيئته بعد، سيتم المحاولة عند الحاجة');
-                // لا تعرض رسالة للمستخدم، فقط سجل في Console
-            }
-            
-        } catch (error) {
-            // هذا لن يحدث الآن لأننا نستخدم resolve بدلاً من reject
-            console.error('❌ خطأ في تهيئة Firebase:', error);
-        }
-    });
-    
-    // إضافة مساعد للتحقق من Firebase في أي وقت
-    window.checkFirebaseConnection = async function() {
-        if (!window.database) {
-            console.error('❌ database غير معرّف');
-            return false;
-        }
-        
-        try {
-            // محاولة قراءة بسيطة للتحقق من الاتصال
-            await database.ref('.info/connected').once('value');
-            console.log('✅ Firebase متصل');
-            return true;
-        } catch (error) {
-            console.error('❌ خطأ في الاتصال:', error);
-            return false;
-        }
-    };
-    
-    // دالة لإعادة المحاولة يدوياً
-    window.retryFirebaseInit = async function() {
-        console.log('🔄 إعادة محاولة تهيئة Firebase...');
-        
-        try {
-            if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
-                if (!window.database) {
-                    window.database = firebase.database();
-                    console.log('✅ تم تهيئة Database');
-                }
-                
-                if (!window.firestore) {
-                    window.firestore = firebase.firestore();
-                    console.log('✅ تم تهيئة Firestore');
-                }
-                
-                console.log('✅ تمت إعادة التهيئة بنجاح');
-                return true;
-            } else {
-                console.error('❌ Firebase SDK غير محمّل');
-                return false;
-            }
-        } catch (error) {
-            console.error('❌ فشل إعادة التهيئة:', error);
-            return false;
-        }
-    };
-    
-    console.log('✅ تم تحميل Firebase Initialization Check');
-})();
-  </script>
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+  <script src="./firebase-config.js"></script>
   
   <script src="./_sdk/data_sdk.js"></script>
-  <script src="./_sdk/element_sdk.js"></script>
-  
-  <!-- System Reset SDK - نظام إعادة التعيين الشامل -->
-  <script>
-/**
- * System Reset SDK - نظام إعادة تعيين التطبيق بالكامل
- * يحل مشكلة البيانات المحفوظة عند إعادة التثبيت
- * Digital Creativity Company - المطور: كرار
- */
-(function() {
-    'use strict';
-    const RESET_KEY = 'app_reset_token';
-    const VERSION_KEY = 'app_version';
-    const CURRENT_VERSION = '1.0.0';
-    class SystemReset {
-        constructor() { this.resetInProgress = false; }
-        async validateStoredData() {
-            try {
-                const uid = localStorage.getItem('app_uid');
-                const secret = localStorage.getItem('app_secret');
-                const version = localStorage.getItem(VERSION_KEY);
-                if (version !== CURRENT_VERSION) {
-                    console.log('⚠️ إصدار التطبيق تغير، يحتاج إعادة تعيين');
-                    return { isValid: false, reason: 'version_mismatch', message: 'تم تحديث التطبيق، يجب إعادة التهيئة' };
-                }
-                if (uid && secret) {
-                    try {
-                        if (typeof database !== 'undefined') {
-                            const snap = await database.ref(`users/${uid}`).once('value');
-                            if (!snap.exists()) {
-                                console.log('⚠️ المستخدم غير موجود في Firebase');
-                                return { isValid: false, reason: 'user_not_found', message: 'الحساب غير موجود في قاعدة البيانات' };
-                            }
-                            const userData = snap.val();
-                            if (userData.profile && userData.profile.secret !== secret) {
-                                console.log('⚠️ Secret Key غير صحيح');
-                                return { isValid: false, reason: 'invalid_secret', message: 'بيانات التحقق غير صحيحة' };
-                            }
-                            console.log('✅ البيانات المحفوظة صالحة');
-                            return { isValid: true };
-                        }
-                    } catch (error) {
-                        console.error('خطأ في التحقق من Firebase:', error);
-                        return { isValid: false, reason: 'firebase_error', message: 'خطأ في الاتصال بقاعدة البيانات' };
-                    }
-                }
-                return { isValid: false, reason: 'no_data', message: 'لا توجد بيانات محفوظة' };
-            } catch (error) {
-                console.error('خطأ في التحقق من البيانات:', error);
-                return { isValid: false, reason: 'validation_error', message: error.message };
-            }
-        }
-        async clearAllLocalData(keepVersion = false) {
-            if (this.resetInProgress) {
-                console.log('⚠️ إعادة التعيين قيد التنفيذ بالفعل');
-                return { success: false, error: 'reset_in_progress' };
-            }
-            this.resetInProgress = true;
-            const cleared = [];
-            try {
-                console.log('🔄 بدء مسح جميع البيانات المحلية...');
-                try {
-                    const keysToKeep = keepVersion ? [VERSION_KEY] : [];
-                    const savedData = {};
-                    keysToKeep.forEach(key => {
-                        const value = localStorage.getItem(key);
-                        if (value) savedData[key] = value;
-                    });
-                    localStorage.clear();
-                    keysToKeep.forEach(key => {
-                        if (savedData[key]) localStorage.setItem(key, savedData[key]);
-                    });
-                    cleared.push('localStorage');
-                    console.log('✅ تم مسح localStorage');
-                } catch (error) { console.error('خطأ في مسح localStorage:', error); }
-                try {
-                    const databases = await indexedDB.databases();
-                    for (const db of databases) {
-                        await new Promise((resolve, reject) => {
-                            const request = indexedDB.deleteDatabase(db.name);
-                            request.onsuccess = () => { console.log(`✅ تم مسح قاعدة البيانات: ${db.name}`); resolve(); };
-                            request.onerror = () => reject(request.error);
-                            request.onblocked = () => { console.warn(`⚠️ مسح ${db.name} محظور`); resolve(); };
-                        });
-                    }
-                    cleared.push('IndexedDB');
-                    console.log('✅ تم مسح IndexedDB');
-                } catch (error) { console.error('خطأ في مسح IndexedDB:', error); }
-                try {
-                    sessionStorage.clear();
-                    cleared.push('sessionStorage');
-                    console.log('✅ تم مسح sessionStorage');
-                } catch (error) { console.error('خطأ في مسح sessionStorage:', error); }
-                try {
-                    if ('caches' in window) {
-                        const cacheNames = await caches.keys();
-                        await Promise.all(cacheNames.map(cacheName => caches.delete(cacheName)));
-                        cleared.push('caches');
-                        console.log('✅ تم مسح Cache Storage');
-                    }
-                } catch (error) { console.error('خطأ في مسح Cache:', error); }
-                try {
-                    if (window.elementSdk && typeof window.elementSdk.clearConfig === 'function') {
-                        await window.elementSdk.clearConfig();
-                        cleared.push('elementSdk');
-                        console.log('✅ تم إعادة تعيين Element SDK');
-                    }
-                    if (window.dataSdk && typeof window.dataSdk.clearAllData === 'function') {
-                        await window.dataSdk.clearAllData();
-                        cleared.push('dataSdk');
-                        console.log('✅ تم إعادة تعيين Data SDK');
-                    }
-                } catch (error) { console.error('خطأ في إعادة تعيين SDKs:', error); }
-                console.log('✅ تم مسح جميع البيانات المحلية بنجاح');
-                console.log('📊 العناصر التي تم مسحها:', cleared);
-                return { success: true, cleared };
-            } catch (error) {
-                console.error('❌ خطأ في مسح البيانات:', error);
-                return { success: false, error: error.message };
-            } finally { this.resetInProgress = false; }
-        }
-        async fullReset(reloadPage = true) {
-            try {
-                console.log('🔄 بدء إعادة التعيين الكاملة...');
-                const result = await this.clearAllLocalData(false);
-                if (!result.success) throw new Error('فشل مسح البيانات');
-                localStorage.setItem(VERSION_KEY, CURRENT_VERSION);
-                console.log('✅ تمت إعادة التعيين الكاملة بنجاح');
-                if (reloadPage) {
-                    console.log('🔄 إعادة تحميل التطبيق...');
-                    setTimeout(() => { window.location.reload(); }, 500);
-                }
-                return { success: true, message: 'تمت إعادة التعيين بنجاح' };
-            } catch (error) {
-                console.error('❌ خطأ في إعادة التعيين الكاملة:', error);
-                return { success: false, error: error.message };
-            }
-        }
-        async softReset() {
-            try {
-                console.log('🔄 بدء إعادة التعيين الخفيفة...');
-                const settingsToKeep = {
-                    theme: localStorage.getItem('currentTheme'),
-                    language: localStorage.getItem('app_language'),
-                    storeSettings: localStorage.getItem('storeSettings'),
-                    systemSettings: localStorage.getItem('systemSettings')
-                };
-                await this.clearAllLocalData(true);
-                Object.keys(settingsToKeep).forEach(key => {
-                    if (settingsToKeep[key]) localStorage.setItem(key, settingsToKeep[key]);
-                });
-                console.log('✅ تمت إعادة التعيين الخفيفة بنجاح');
-                return { success: true, message: 'تمت إعادة التعيين مع الاحتفاظ بالإعدادات' };
-            } catch (error) {
-                console.error('❌ خطأ في إعادة التعيين الخفيفة:', error);
-                return { success: false, error: error.message };
-            }
-        }
-        async autoCheck() {
-            try {
-                console.log('🔍 التحقق التلقائي من صلاحية البيانات...');
-                const savedVersion = localStorage.getItem(VERSION_KEY);
-                if (!savedVersion) {
-                    localStorage.setItem(VERSION_KEY, CURRENT_VERSION);
-                    console.log('✅ أول تشغيل - تم حفظ الإصدار');
-                    return { needsReset: false, reason: 'first_run' };
-                }
-                if (savedVersion !== CURRENT_VERSION) {
-                    console.log('⚠️ تم اكتشاف إصدار مختلف');
-                    return { needsReset: true, reason: 'version_changed' };
-                }
-                const validation = await this.validateStoredData();
-                if (!validation.isValid && validation.reason !== 'no_data') {
-                    console.log('⚠️ البيانات المحفوظة غير صالحة');
-                    return { needsReset: true, reason: validation.reason, validation };
-                }
-                console.log('✅ التحقق التلقائي اكتمل بنجاح');
-                return { needsReset: false, validation };
-            } catch (error) {
-                console.error('❌ خطأ في التحقق التلقائي:', error);
-                return { needsReset: false, error: error.message };
-            }
-        }
-        async exportBackup(type = 'full') {
-            try {
-                const backup = {
-                    timestamp: Date.now(),
-                    date: new Date().toISOString(),
-                    version: CURRENT_VERSION,
-                    localStorage: {},
-                    indexedDB: {},
-                    elementConfig: null
-                };
-                // Always export localStorage
-                for (let i = 0; i < localStorage.length; i++) {
-                    const key = localStorage.key(i);
-                    backup.localStorage[key] = localStorage.getItem(key);
-                }
-                // Export elementSdk config
-                if (window.elementSdk && typeof window.elementSdk.getConfig === 'function') {
-                    backup.elementConfig = window.elementSdk.getConfig();
-                }
-                // Export IndexedDB data
-                if (window.dataSdk && typeof window.dataSdk.getAll === 'function') {
-                    const allData = window.dataSdk.getAll();
-                    if (type === 'full') {
-                        backup.indexedDB.all = allData;
-                    } else if (type === 'selective') {
-                        // Only products, invoices, debts, payments
-                        backup.indexedDB.products = allData.filter(item => item.type === 'product');
-                        backup.indexedDB.invoices = allData.filter(item => item.type === 'invoice');
-                        backup.indexedDB.debts = allData.filter(item => item.type === 'debt');
-                        backup.indexedDB.payments = allData.filter(item => item.type === 'payment');
-                    }
-                }
-                const dataStr = JSON.stringify(backup, null, 2);
-                const dataBlob = new Blob([dataStr], { type: 'application/json' });
-                const url = URL.createObjectURL(dataBlob);
-                const link = document.createElement('a');
-                link.href = url;
-                link.download = `app-backup-${type}-${Date.now()}.json`;
-                link.click();
-                URL.revokeObjectURL(url);
-                console.log('✅ تم تصدير النسخة الاحتياطية');
-            } catch (error) {
-                console.error('❌ خطأ في تصدير النسخة الاحتياطية:', error);
-                throw error;
-            }
-        }
-    }
-    window.systemReset = new SystemReset();
-    window.addEventListener('DOMContentLoaded', async () => {
-        try {
-            const checkResult = await window.systemReset.autoCheck();
-            if (checkResult.needsReset) {
-                console.log('⚠️ يحتاج التطبيق إلى إعادة تعيين:', checkResult.reason);
-                const shouldReset = confirm(`تم اكتشاف مشكلة في البيانات المحفوظة.\n\nالسبب: ${checkResult.validation?.message || checkResult.reason}\n\nهل تريد إعادة تعيين التطبيق؟`);
-                if (shouldReset) await window.systemReset.fullReset(true);
-            }
-        } catch (error) { console.error('خطأ في التحقق التلقائي:', error); }
-    });
-    console.log('✅ System Reset SDK تم تحميله بنجاح');
-})();
-  </script>
-  
-  <!-- Authentication Fix SDK - إصلاح نظام المصادقة -->
-  <script>
-/**
- * Authentication Fix - إصلاح مشكلة إنشاء الحسابات
- * Digital Creativity Company - المطور: كرار
- */
-(function() {
-    'use strict';
-    class AuthFix {
-        constructor() { this.registrationAttempts = 0; this.maxAttempts = 3; }
-        async checkCurrentAccount() {
-            try {
-                const uid = localStorage.getItem('app_uid');
-                const secret = localStorage.getItem('app_secret');
-                if (!uid || !secret) {
-                    console.log('ℹ️ لا يوجد حساب محفوظ');
-                    return { hasAccount: false, isValid: false };
-                }
-                if (typeof database !== 'undefined') {
-                    try {
-                        const snap = await database.ref(`users/${uid}`).once('value');
-                        if (!snap.exists()) {
-                            console.log('⚠️ الحساب غير موجود في Firebase');
-                            return { hasAccount: true, isValid: false, uid, reason: 'not_found_in_firebase' };
-                        }
-                        const userData = snap.val();
-                        if (userData.profile && userData.profile.secret !== secret) {
-                            console.log('⚠️ Secret Key غير صحيح');
-                            return { hasAccount: true, isValid: false, uid, reason: 'invalid_secret' };
-                        }
-                        console.log('✅ الحساب صالح');
-                        return { hasAccount: true, isValid: true, uid, userData };
-                    } catch (error) {
-                        console.error('خطأ في التحقق من Firebase:', error);
-                        return { hasAccount: true, isValid: false, uid, reason: 'firebase_error', error: error.message };
-                    }
-                }
-                return { hasAccount: true, isValid: false, uid };
-            } catch (error) {
-                console.error('خطأ في التحقق من الحساب:', error);
-                return { hasAccount: false, isValid: false, error: error.message };
-            }
-        }
-        async clearInvalidAccount() {
-            try {
-                console.log('🔄 مسح بيانات الحساب غير الصالح...');
-                localStorage.removeItem('app_uid');
-                localStorage.removeItem('app_secret');
-                localStorage.removeItem('user_id');
-                if (window.currentUser) window.currentUser = null;
-                console.log('✅ تم مسح بيانات الحساب غير الصالح');
-                return true;
-            } catch (error) {
-                console.error('❌ خطأ في مسح بيانات الحساب:', error);
-                return false;
-            }
-        }
-        async createNewAccount(userData) {
-            try {
-                const { fullName, phone, address, storeName, lat, lng } = userData;
-                if (!fullName || !phone || !address || !storeName) {
-                    return { success: false, error: 'missing_data', message: 'يرجى تعبئة جميع الحقول المطلوبة' };
-                }
-                const accountCheck = await this.checkCurrentAccount();
-                if (accountCheck.hasAccount && accountCheck.isValid) {
-                    return { success: false, error: 'account_exists', message: 'يوجد حساب صالح بالفعل' };
-                }
-                if (accountCheck.hasAccount && !accountCheck.isValid) {
-                    console.log('⚠️ حساب غير صالح موجود، سيتم مسحه');
-                    await this.clearInvalidAccount();
-                }
-                console.log('🔄 إنشاء حساب جديد...');
-                if (typeof database === 'undefined') {
-                    return { success: false, error: 'firebase_not_ready', message: 'قاعدة البيانات غير جاهزة' };
-                }
-                const newUserRef = database.ref('users').push();
-                const uid = newUserRef.key;
-                const secret = this.generateRandomKey(10);
-                const appSettingsSnap = await database.ref('appSettings/trialDays').once('value');
-                const trialDays = appSettingsSnap.exists() ? Number(appSettingsSnap.val()) : 30;
-                const createdAt = Date.now();
-                const trialUntil = createdAt + (trialDays * 24 * 60 * 60 * 1000);
-                const userObj = {
-                    profile: {
-                        uid, secret, fullName, phone, address, storeName,
-                        lat: lat || null, lng: lng || null, createdAt,
-                        deviceInfo: {
-                            platform: navigator.platform || '',
-                            userAgent: navigator.userAgent || '',
-                            appVersion: localStorage.getItem('app_version') || '1.0.0'
-                        }
-                    },
-                    trialUntil, subscription: null, status: 'active', createdBy: 'web_app'
-                };
-                await database.ref(`users/${uid}`).set(userObj);
-                localStorage.setItem('app_uid', uid);
-                localStorage.setItem('app_secret', secret);
-                if (typeof window !== 'undefined') {
-                    window.currentUser = userObj;
-                    window.currentUser.uid = uid;
-                }
-                console.log('✅ تم إنشاء الحساب بنجاح');
-                console.log('📝 UID:', uid);
-                return { success: true, uid, secret, trialDays, userData: userObj, message: 'تم إنشاء الحساب بنجاح' };
-            } catch (error) {
-                console.error('❌ خطأ في إنشاء الحساب:', error);
-                this.registrationAttempts++;
-                return { success: false, error: 'creation_failed', message: error.message, attempts: this.registrationAttempts };
-            }
-        }
-        async attemptRegistrationFix() {
-            try {
-                console.log('🔧 محاولة إصلاح مشكلة التسجيل...');
-                const accountCheck = await this.checkCurrentAccount();
-                console.log('📊 حالة الحساب:', accountCheck);
-                if (accountCheck.hasAccount && !accountCheck.isValid) {
-                    console.log('🔄 مسح الحساب غير الصالح...');
-                    await this.clearInvalidAccount();
-                    return { success: true, action: 'cleared_invalid_account', message: 'تم مسح الحساب غير الصالح، يمكنك الآن إنشاء حساب جديد' };
-                }
-                if (accountCheck.hasAccount && accountCheck.isValid) {
-                    return { success: true, action: 'account_valid', message: 'الحساب الحالي صالح', userData: accountCheck.userData };
-                }
-                return { success: true, action: 'ready_for_registration', message: 'جاهز لإنشاء حساب جديد' };
-            } catch (error) {
-                console.error('❌ خطأ في إصلاح التسجيل:', error);
-                return { success: false, error: error.message };
-            }
-        }
-        generateRandomKey(length = 10) {
-            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-            let result = '';
-            for (let i = 0; i < length; i++) {
-                result += chars.charAt(Math.floor(Math.random() * chars.length));
-            }
-            return result;
-        }
-        async canRegister() {
-            try {
-                const accountCheck = await this.checkCurrentAccount();
-                if (accountCheck.hasAccount && accountCheck.isValid) {
-                    return { canRegister: false, reason: 'valid_account_exists', message: 'يوجد حساب صالح بالفعل' };
-                }
-                if (accountCheck.hasAccount && !accountCheck.isValid) {
-                    await this.clearInvalidAccount();
-                }
-                return { canRegister: true, message: 'يمكنك إنشاء حساب جديد' };
-            } catch (error) {
-                console.error('خطأ في التحقق من إمكانية التسجيل:', error);
-                return { canRegister: false, reason: 'check_failed', message: error.message };
-            }
-        }
-    }
-    window.authFix = new AuthFix();
-    window.createUserAccount_original = window.createUserAccount;
-    window.createUserAccount = async function(formData) {
-        try {
-            console.log('🔐 استدعاء createUserAccount المحسّن...');
-            const canRegisterCheck = await window.authFix.canRegister();
-            if (!canRegisterCheck.canRegister) {
-                if (typeof showToast === 'function') showToast(canRegisterCheck.message, 'warning');
-                return;
-            }
-            const result = await window.authFix.createNewAccount(formData);
-            if (result.success) {
-                if (typeof showToast === 'function') showToast('تم إنشاء الحساب بنجاح', 'success');
-                if (typeof showModal === 'function' && typeof document !== 'undefined') {
-                    const form = document.getElementById('userDetailsForm');
-                    if (form) form.style.display = 'none';
-                    showModal('userInfoModal');
-                    const uidElem = document.getElementById('userUID');
-                    const secretElem = document.getElementById('userSecret');
-                    const trialElem = document.getElementById('trialDaysDisplay');
-                    if (uidElem) uidElem.textContent = result.uid;
-                    if (secretElem) secretElem.textContent = result.secret;
-                    if (trialElem) trialElem.textContent = result.trialDays;
-                }
-                return result;
-            } else {
-                if (typeof showToast === 'function') showToast(result.message || 'حدث خطأ في إنشاء الحساب', 'error');
-                if (result.attempts >= 2) {
-                    console.log('🔧 محاولة إصلاح المشكلة...');
-                    const fixResult = await window.authFix.attemptRegistrationFix();
-                    if (fixResult.success && fixResult.action === 'cleared_invalid_account') {
-                        if (typeof showToast === 'function') showToast('تم إصلاح المشكلة، يرجى المحاولة مرة أخرى', 'info');
-                    }
-                }
-                return result;
-            }
-        } catch (error) {
-            console.error('❌ خطأ في createUserAccount:', error);
-            if (typeof showToast === 'function') showToast('حدث خطأ غير متوقع', 'error');
-            return { success: false, error: error.message };
-        }
-    };
-    window.addEventListener('DOMContentLoaded', async () => {
-        try {
-            console.log('🔍 التحقق من حالة المصادقة...');
-            const accountCheck = await window.authFix.checkCurrentAccount();
-            if (accountCheck.hasAccount && !accountCheck.isValid) {
-                console.log('⚠️ تم اكتشاف حساب غير صالح');
-                const shouldClear = confirm('تم اكتشاف بيانات حساب غير صالحة.\n\nهل تريد مسح هذه البيانات لتتمكن من إنشاء حساب جديد؟');
-                if (shouldClear) {
-                    await window.authFix.clearInvalidAccount();
-                    if (typeof showToast === 'function') showToast('تم مسح البيانات القديمة، يمكنك الآن التسجيل', 'success');
-                }
-            }
-        } catch (error) { console.error('خطأ في التحقق من المصادقة:', error); }
-    });
-    console.log('✅ Authentication Fix تم تحميله بنجاح');
-})();
-  </script>
-  
-  <!-- Font Awesome Icons -->
+  <script src="./_sdk/element_sdk.js"></script><!-- Font Awesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   
   <!-- تحسينات CSS للنوافذ المنبثقة -->
-<link rel="stylesheet" href="./enhanced-modals.css">
+  <link rel="stylesheet" href="enhanced-modals.css">
   
   <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"><!-- Animate.css -->
-
-  
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
   <!-- SheetJS for Excel support -->
   <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
@@ -7357,12 +6598,6 @@ console.log(`
     <div class="nav-section-title">النظام</div>
     <div class="nav-item" id="printerNavItem"><a class="nav-link" onclick="showPage('printer')"> <i class="fas fa-print nav-icon"></i> <span class="nav-text">إدارة الطابعة</span> </a></div>
     <div class="nav-item" id="settingsNavItem"><a class="nav-link" onclick="showPage('settings')"> <i class="fas fa-cog nav-icon"></i> <span class="nav-text">الإعدادات العامة</span> </a></div>
-    <!-- <div class="nav-item" id="systemManagementNavItem">
-        <a class="nav-link" onclick="openSystemManagement()" style="cursor: pointer;">
-            <i class="fas fa-tools nav-icon" style="color:#f59e0b"></i>
-            <span class="nav-text">إدارة النظام والإصلاح</span>
-        </a>
-    </div> -->
      </div>
             <div class="nav-item" id="securityNavItem" style="display:none">
                 <a class="nav-link" onclick="window.securityManager && window.securityManager.openSecurityPanel ? window.securityManager.openSecurityPanel() : alert('تعذر تحميل نظام الحماية')">
@@ -8800,150 +8035,6 @@ console.log(`
                     placeholder="شكراً لزيارتكم" oninput="updateReceiptPreview()"></textarea>
          </div>
 
-         <hr style="margin: 1.5rem 0; border-color: var(--border-color);">
-
-         <!-- معلومات المتجر -->
-         <h4 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
-          <i class="fas fa-store"></i> معلومات المتجر
-         </h4>
-
-         <!-- اسم المتجر -->
-         <div class="form-group">
-          <label class="form-label">اسم المتجر</label>
-          <input type="text" class="form-control" id="storeName" 
-                 value="معرض يعقوب للأجهزة الكهربائية"
-                 placeholder="اسم المتجر" oninput="updateReceiptPreview()">
-         </div>
-
-         <!-- عنوان المتجر -->
-         <div class="form-group">
-          <label class="form-label">عنوان المتجر</label>
-          <input type="text" class="form-control" id="storeAddress" 
-                 value="باب الهاشمية قرب مدرسة الكرار"
-                 placeholder="العنوان" oninput="updateReceiptPreview()">
-         </div>
-
-         <!-- هاتف المتجر -->
-         <div class="form-group">
-          <label class="form-label">هاتف المتجر</label>
-          <input type="text" class="form-control" id="storePhone" 
-                 value="07803092185"
-                 placeholder="رقم الهاتف" oninput="updateReceiptPreview()">
-         </div>
-
-         <!-- مسار اللوجو -->
-         <div class="form-group">
-          <label class="form-label">مسار اللوجو</label>
-          <input type="text" class="form-control" id="storeLogo" 
-                 value="yaqoub_logo.png"
-                 placeholder="اسم ملف اللوجو" oninput="updateReceiptPreview()">
-          <small style="color: var(--text-secondary); font-size: 0.85rem;">
-           ضع ملف الصورة في مجلد المشروع واكتب اسمها هنا
-          </small>
-         </div>
-
-         <!-- إظهار اللوجو -->
-         <div class="form-group">
-          <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-           <input type="checkbox" id="showLogo" checked onchange="updateReceiptPreview()">
-           <span>إظهار اللوجو في الإيصال</span>
-          </label>
-         </div>
-
-         <hr style="margin: 1.5rem 0; border-color: var(--border-color);">
-
-         <!-- الملاحظات -->
-         <h4 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
-          <i class="fas fa-sticky-note"></i> الملاحظات الهامة
-         </h4>
-
-         <!-- الملاحظة 1 -->
-         <div class="form-group">
-          <label class="form-label">ملاحظة 1</label>
-          <input type="text" class="form-control" id="note1" 
-                 value="المبلغ الموجود هو وصل أمانة"
-                 oninput="updateReceiptPreview()">
-         </div>
-
-         <!-- الملاحظة 2 -->
-         <div class="form-group">
-          <label class="form-label">ملاحظة 2</label>
-          <input type="text" class="form-control" id="note2" 
-                 value="السعر محمي 24 ساعة"
-                 oninput="updateReceiptPreview()">
-         </div>
-
-         <!-- الملاحظة 3 -->
-         <div class="form-group">
-          <label class="form-label">ملاحظة 3</label>
-          <input type="text" class="form-control" id="note3" 
-                 value="المباع لا يرجع ولا يبدل"
-                 oninput="updateReceiptPreview()">
-         </div>
-
-         <!-- الملاحظة 4 -->
-         <div class="form-group">
-          <label class="form-label">ملاحظة 4</label>
-          <input type="text" class="form-control" id="note4" 
-                 value="الخطأ والسهو مرجوع للطرفين"
-                 oninput="updateReceiptPreview()">
-         </div>
-
-         <!-- الملاحظة 5 -->
-         <div class="form-group">
-          <label class="form-label">ملاحظة 5</label>
-          <input type="text" class="form-control" id="note5" 
-                 value="الشركة المصنعة مسؤولة عن الضمان"
-                 oninput="updateReceiptPreview()">
-         </div>
-
-         <!-- الملاحظة 6 -->
-         <div class="form-group">
-          <label class="form-label">ملاحظة 6</label>
-          <input type="text" class="form-control" id="note6" 
-                 value="كسر الشاشة غير داخل بالضمان"
-                 oninput="updateReceiptPreview()">
-         </div>
-
-         <hr style="margin: 1.5rem 0; border-color: var(--border-color);">
-
-         <!-- معلومات الصيانة -->
-         <h4 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
-          <i class="fas fa-tools"></i> معلومات الصيانة
-         </h4>
-
-         <!-- اسم مسؤول الصيانة -->
-         <div class="form-group">
-          <label class="form-label">اسم مسؤول الصيانة</label>
-          <input type="text" class="form-control" id="maintenanceName" 
-                 value="حمزه ابو حوراء"
-                 oninput="updateReceiptPreview()">
-         </div>
-
-         <!-- نوع الخدمة -->
-         <div class="form-group">
-          <label class="form-label">نوع خدمة الصيانة</label>
-          <input type="text" class="form-control" id="maintenanceService" 
-                 value="صيانة السبالت"
-                 oninput="updateReceiptPreview()">
-         </div>
-
-         <!-- هاتف الصيانة -->
-         <div class="form-group">
-          <label class="form-label">هاتف الصيانة</label>
-          <input type="text" class="form-control" id="maintenancePhone" 
-                 value="+964 785 570 6118"
-                 oninput="updateReceiptPreview()">
-         </div>
-
-         <!-- إظهار معلومات الصيانة -->
-         <div class="form-group">
-          <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-           <input type="checkbox" id="showMaintenance" checked onchange="updateReceiptPreview()">
-           <span>إظهار معلومات الصيانة</span>
-          </label>
-         </div>
-
         </div>
        </div>
 
@@ -9788,15 +8879,19 @@ console.log(`
               </p>
             </div>
 
-                        <div style="display: grid; gap: 1rem;">
-                            <button class="btn btn-success" onclick="systemExportBackup('full')" style="padding: 1.5rem; font-size: 1.1rem;">
-                                <i class="fas fa-download"></i> إنشاء نسخة احتياطية كاملة
-                            </button>
+            <div style="display: grid; gap: 1rem;">
+              <button class="btn btn-success" onclick="createFullBackup()" style="padding: 1.5rem; font-size: 1.1rem;">
+                <i class="fas fa-download"></i> إنشاء نسخة احتياطية كاملة
+              </button>
 
-                            <button class="btn" style="background: linear-gradient(135deg, #667eea, #764ba2); padding: 1.5rem;" onclick="systemExportBackup('selective')">
-                                <i class="fas fa-database"></i> نسخ البيانات فقط (منتجات، فواتير، ديون)
-                            </button>
-                        </div>
+              <button class="btn" style="background: linear-gradient(135deg, #667eea, #764ba2); padding: 1.5rem;" onclick="createDataBackup()">
+                <i class="fas fa-database"></i> نسخ البيانات فقط (منتجات، فواتير، ديون)
+              </button>
+
+              <button class="btn" style="background: linear-gradient(135deg, #f093fb, #f5576c); padding: 1.5rem;" onclick="createSettingsBackup()">
+                <i class="fas fa-cog"></i> نسخ الإعدادات فقط
+              </button>
+            </div>
           </div>
 
           <!-- استعادة نسخة احتياطية -->
@@ -11009,135 +10104,6 @@ console.log(`
    </div>
   </div>
 
-  <!-- نافذة إدارة النظام والإصلاح -->
-  <div id="systemManagementModal" class="modal">
-    <div class="modal-content" style="max-width: 900px;">
-      <div class="modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
-        <h3 class="modal-title">
-          <i class="fas fa-tools"></i> إدارة النظام والإصلاح
-        </h3>
-        <button class="close-btn" onclick="closeModal('systemManagementModal')" style="color: white;">
-          <i class="fas fa-times"></i>
-        </button>
-      </div>
-      
-      <div class="modal-body" style="padding: 2rem;">
-        <!-- حالة النظام -->
-        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem;">
-          <h4 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
-            <i class="fas fa-info-circle"></i> حالة النظام
-          </h4>
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
-            <div style="background: rgba(255, 255, 255, 0.2); padding: 1rem; border-radius: 8px; backdrop-filter: blur(10px);">
-              <div style="font-size: 0.9rem; opacity: 0.9; margin-bottom: 0.25rem;">معرف المستخدم</div>
-              <div id="systemStatusUID" style="font-weight: bold; font-size: 1.1rem;">---</div>
-            </div>
-            <div style="background: rgba(255, 255, 255, 0.2); padding: 1rem; border-radius: 8px; backdrop-filter: blur(10px);">
-              <div style="font-size: 0.9rem; opacity: 0.9; margin-bottom: 0.25rem;">حالة الحساب</div>
-              <div id="systemStatusAccount" style="font-weight: bold; font-size: 1.1rem;">---</div>
-            </div>
-            <div style="background: rgba(255, 255, 255, 0.2); padding: 1rem; border-radius: 8px; backdrop-filter: blur(10px);">
-              <div style="font-size: 0.9rem; opacity: 0.9; margin-bottom: 0.25rem;">إصدار التطبيق</div>
-              <div id="systemStatusVersion" style="font-weight: bold; font-size: 1.1rem;">---</div>
-            </div>
-            <div style="background: rgba(255, 255, 255, 0.2); padding: 1rem; border-radius: 8px; backdrop-filter: blur(10px);">
-              <div style="font-size: 0.9rem; opacity: 0.9; margin-bottom: 0.25rem;">حالة Firebase</div>
-              <div id="systemStatusFirebase" style="font-weight: bold; font-size: 1.1rem;">---</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- أدوات الإصلاح -->
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
-          <!-- فحص الحساب -->
-          <div style="background: var(--theme-bg-secondary); border: 2px solid var(--theme-border); border-radius: 12px; padding: 1.5rem; transition: all 0.3s ease;">
-            <h5 style="color: var(--theme-text-primary); margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;">
-              <i class="fas fa-search" style="color: #3b82f6;"></i> فحص الحساب
-            </h5>
-            <p style="color: var(--theme-text-secondary); font-size: 0.9rem; margin-bottom: 1rem;">التحقق من صلاحية بيانات الحساب المحفوظة</p>
-            <button onclick="systemCheckAccount()" class="btn btn-primary" style="width: 100%; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);">
-              <i class="fas fa-search"></i> فحص الآن
-            </button>
-          </div>
-
-          <!-- إصلاح التسجيل -->
-          <div style="background: var(--theme-bg-secondary); border: 2px solid var(--theme-border); border-radius: 12px; padding: 1.5rem; transition: all 0.3s ease;">
-            <h5 style="color: var(--theme-text-primary); margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;">
-              <i class="fas fa-wrench" style="color: #10b981;"></i> إصلاح التسجيل
-            </h5>
-            <p style="color: var(--theme-text-secondary); font-size: 0.9rem; margin-bottom: 1rem;">حل مشاكل إنشاء الحسابات الجديدة</p>
-            <button onclick="systemFixRegistration()" class="btn btn-success" style="width: 100%; background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
-              <i class="fas fa-wrench"></i> إصلاح
-            </button>
-          </div>
-
-          <!-- إعادة تعيين خفيفة -->
-          <div style="background: var(--theme-bg-secondary); border: 2px solid var(--theme-border); border-radius: 12px; padding: 1.5rem; transition: all 0.3s ease;">
-            <h5 style="color: var(--theme-text-primary); margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;">
-              <i class="fas fa-sync" style="color: #6366f1;"></i> إعادة تعيين خفيفة
-            </h5>
-            <p style="color: var(--theme-text-secondary); font-size: 0.9rem; margin-bottom: 1rem;">مسح البيانات مع الاحتفاظ بالإعدادات</p>
-            <button onclick="systemSoftReset()" class="btn" style="width: 100%; background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); color: white;">
-              <i class="fas fa-sync"></i> إعادة تعيين
-            </button>
-          </div>
-
-          <!-- إعادة تعيين كاملة -->
-          <div style="background: var(--theme-bg-secondary); border: 2px solid var(--theme-border); border-radius: 12px; padding: 1.5rem; transition: all 0.3s ease;">
-            <h5 style="color: var(--theme-text-primary); margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;">
-              <i class="fas fa-exclamation-triangle" style="color: #ef4444;"></i> إعادة تعيين كاملة
-            </h5>
-            <p style="color: var(--theme-text-secondary); font-size: 0.9rem; margin-bottom: 1rem;">مسح جميع البيانات والإعدادات</p>
-            <button onclick="systemFullReset()" class="btn btn-danger" style="width: 100%; background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);">
-              <i class="fas fa-exclamation-triangle"></i> إعادة تعيين كاملة
-            </button>
-          </div>
-
-          <!-- مسح البيانات غير الصالحة -->
-          <div style="background: var(--theme-bg-secondary); border: 2px solid var(--theme-border); border-radius: 12px; padding: 1.5rem; transition: all 0.3s ease;">
-            <h5 style="color: var(--theme-text-primary); margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;">
-              <i class="fas fa-trash-alt" style="color: #f59e0b;"></i> مسح البيانات غير الصالحة
-            </h5>
-            <p style="color: var(--theme-text-secondary); font-size: 0.9rem; margin-bottom: 1rem;">إزالة بيانات الحسابات التالفة</p>
-            <button onclick="systemClearInvalidData()" class="btn" style="width: 100%; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white;">
-              <i class="fas fa-trash-alt"></i> مسح
-            </button>
-          </div>
-
-          <!-- تصدير نسخة احتياطية -->
-          <div style="background: var(--theme-bg-secondary); border: 2px solid var(--theme-border); border-radius: 12px; padding: 1.5rem; transition: all 0.3s ease;">
-            <h5 style="color: var(--theme-text-primary); margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;">
-              <i class="fas fa-download" style="color: #8b5cf6;"></i> تصدير نسخة احتياطية
-            </h5>
-            <p style="color: var(--theme-text-secondary); font-size: 0.9rem; margin-bottom: 1rem;">حفظ نسخة من البيانات الحالية</p>
-            <button onclick="systemExportBackup()" class="btn" style="width: 100%; background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white;">
-              <i class="fas fa-download"></i> تصدير
-            </button>
-          </div>
-        </div>
-
-        <!-- سجل العمليات -->
-        <div style="margin-bottom: 1rem;">
-          <h4 style="color: var(--theme-text-primary); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
-            <i class="fas fa-list"></i> سجل العمليات
-          </h4>
-          <div id="systemConsoleLog" style="background: #1f2937; color: #e5e7eb; padding: 1.5rem; border-radius: 8px; max-height: 250px; overflow-y: auto; font-family: 'Courier New', monospace; font-size: 0.9rem; line-height: 1.6;">
-            <div style="color: #3b82f6;">ℹ️ في انتظار العمليات...</div>
-          </div>
-        </div>
-
-        <!-- معلومات المطور -->
-        <div style="text-align: center; padding: 1rem; border-top: 2px solid var(--theme-border); color: var(--theme-text-secondary); font-size: 0.9rem;">
-          <p style="margin-bottom: 0.5rem;">
-            <strong style="color: var(--theme-text-primary);">Digital Creativity Company</strong>
-          </p>
-          <p>نظام نقاط البيع المتقدم - كاش برو</p>
-          <p style="margin-top: 0.5rem;">المطور: كرار | 07813798636</p>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <!-- نافذة الدفع النقدي الحديثة -->
   <div id="cashPaymentModal" class="modal">
    <div class="modal-content" style="max-width: 600px;">
@@ -11387,41 +10353,6 @@ console.log(`
 
         <button onclick="loginWithCredentials()" class="btn btn-primary" style="width: 100%; padding: 1rem; font-size: 1rem;">
          <i class="fas fa-sign-in-alt"></i> تسجيل الدخول
-                </button>
-                <button onclick="createLocalUserIfNeeded()" class="btn btn-success" style="width: 100%; margin-top: 0.5rem; padding: 1rem; font-size: 1rem;">
-                    <i class="fas fa-user-plus"></i> إنشاء حساب جديد
-        </button>
-        <!-- نموذج بيانات المستخدم الجديد -->
-        <div id="userDetailsForm" style="display:block; margin-top:1.5rem; background:rgb(23,25,27); border-radius:10px; padding:1.2rem; border:1px solid rgb(229,231,235);">
-            <h4 style="margin-bottom:1rem; color:var(--primary-gradient); font-weight:700; letter-spacing:1px; text-shadow:0 2px 8px rgba(99,102,241,0.10); font-family:'Cairo',sans-serif;"><i class="fas fa-user"></i> بيانات المستخدم</h4>
-            <div class="form-group" style="margin-bottom:1rem;">
-                <label style="color:var(--theme-text-secondary); font-weight:600; margin-bottom:0.3rem; display:block; font-family:'Cairo',sans-serif; font-size:1.08rem;"><i class="fas fa-user"></i> الاسم الرباعي</label>
-                <input type="text" id="newUserFullName" class="form-input" placeholder="أدخل الاسم الرباعي" required style="background:var(--theme-bg-card); color:var(--theme-text-primary); border:2px solid var(--theme-border,#d8d8d8); border-radius:8px; padding:1.1rem 0.9rem; font-size:1.13rem; font-weight:600; font-family:'Cairo',sans-serif; transition:box-shadow 0.2s;">
-            </div>
-            <div class="form-group" style="margin-bottom:1rem;">
-                <label style="color:var(--theme-text-secondary); font-weight:600; margin-bottom:0.3rem; display:block; font-family:'Cairo',sans-serif; font-size:1.08rem;"><i class="fas fa-phone"></i> رقم الهاتف</label>
-                <input type="tel" id="newUserPhone" class="form-input" placeholder="07XX XXX XXXX" required style="background:var(--theme-bg-card); color:var(--theme-text-primary); border:2px solid var(--theme-border,#d8d8d8); border-radius:8px; padding:1.1rem 0.9rem; font-size:1.13rem; font-weight:600; font-family:'Cairo',sans-serif; transition:box-shadow 0.2s;">
-            </div>
-            <div class="form-group" style="margin-bottom:1rem;">
-                <label style="color:var(--theme-text-secondary); font-weight:600; margin-bottom:0.3rem; display:block; font-family:'Cairo',sans-serif; font-size:1.08rem;"><i class="fas fa-map-marker-alt"></i> العنوان</label>
-                <input type="text" id="newUserAddress" class="form-input" placeholder="العنوان الكامل" required style="background:var(--theme-bg-card); color:var(--theme-text-primary); border:2px solid var(--theme-border,#d8d8d8); border-radius:8px; padding:1.1rem 0.9rem; font-size:1.13rem; font-weight:600; font-family:'Cairo',sans-serif; transition:box-shadow 0.2s;">
-            </div>
-            <div class="form-group" style="margin-bottom:1rem;">
-                <label style="color:var(--theme-text-secondary); font-weight:600; margin-bottom:0.3rem; display:block; font-family:'Cairo',sans-serif; font-size:1.08rem;"><i class="fas fa-store"></i> اسم المتجر</label>
-                <input type="text" id="newUserStoreName" class="form-input" placeholder="اسم المتجر/المؤسسة" required style="background:var(--theme-bg-card); color:var(--theme-text-primary); border:2px solid var(--theme-border,#d8d8d8); border-radius:8px; padding:1.1rem 0.9rem; font-size:1.13rem; font-weight:600; font-family:'Cairo',sans-serif; transition:box-shadow 0.2s;">
-            </div>
-            <div class="form-group" style="margin-bottom:1rem; display:flex; align-items:center; gap:0.7rem;">
-                <label style="color:var(--theme-text-secondary); font-weight:500;"><i class="fas fa-map-marked-alt"></i> الموقع الجغرافي</label>
-                <button type="button" class="btn btn-info" style="background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff;padding:0.5rem 1.2rem;border-radius:7px;font-weight:600;box-shadow:0 2px 8px rgba(59,130,246,0.10);" onclick="getUserLocation()"><i class="fas fa-map-marker-alt"></i> تحديد الموقع</button>
-                <span id="locationStatus" style="font-size:0.95rem; color:#059669; margin-right:8px;"></span>
-            </div>
-            <input type="hidden" id="newUserLat">
-            <input type="hidden" id="newUserLng">
-            <div style="margin-top:1.2rem; display:flex; gap:0.7rem;">
-                <button type="button" class="btn btn-success" style="width: 100%; margin-bottom: 0.5rem; padding: 1rem; font-size: 1rem; border-radius: 8px; background: linear-gradient(135deg,#10b981,#059669); color: #fff; font-weight: 700;" onclick="saveNewUserDetails()"><i class="fas fa-save"></i> حفظ البيانات وإنشاء الحساب</button>
-                <button type="button" class="btn btn-secondary" style="width: 100%; padding: 1rem; font-size: 1rem; border-radius: 8px; background: linear-gradient(135deg,#64748b,#334155); color: #fff; font-weight: 700;" onclick="hideUserDetailsForm()">إلغاء</button>
-            </div>
-        </div>
         </button>
        </div>
       </div>
@@ -11879,7 +10810,7 @@ console.log(`
         const defaultConfig = {
             store_name: 'متجر التقنية الحديثة',
             store_address: 'بغداد - المنصور',
-            store_phone: '07803092185',
+            store_phone: '07901234567',
             tax_rate: '0'
         };
 
@@ -12016,192 +10947,76 @@ console.log(`
             return s;
         }
 
-        // إظهار نموذج بيانات المستخدم
-        window.createLocalUserIfNeeded = function() {
-            document.getElementById('userDetailsForm').style.display = 'block';
-        };
+        async function createLocalUserIfNeeded() {
+            let uid = localStorage.getItem('app_uid');
+            let secret = localStorage.getItem('app_secret');
 
-        // إخفاء النموذج
-        window.hideUserDetailsForm = function() {
-            document.getElementById('userDetailsForm').style.display = 'none';
-        };
-
-        // زر تحديد الموقع الجغرافي
-        window.getUserLocation = function() {
-            const status = document.getElementById('locationStatus');
-            status.textContent = 'جاري تحديد الموقع...';
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(function(pos) {
-                    document.getElementById('newUserLat').value = pos.coords.latitude;
-                    document.getElementById('newUserLng').value = pos.coords.longitude;
-                    status.textContent = 'تم تحديد الموقع بنجاح';
-                }, function(err) {
-                    let msg = 'تعذر تحديد الموقع';
-                    if (window && window.process && window.process.type === 'renderer') {
-                        msg += ' - قد تحتاج لتفعيل صلاحية الموقع من إعدادات النظام أو تشغيل التطبيق كمسؤول.';
-                    } else if (err && err.code === 1) {
-                        msg += ' - تم رفض الإذن. يرجى السماح للتطبيق بالوصول للموقع.';
-                    } else if (err && err.code === 2) {
-                        msg += ' - الموقع غير متوفر. تأكد من اتصال الإنترنت أو GPS.';
-                    } else if (err && err.code === 3) {
-                        msg += ' - انتهت مهلة الطلب. حاول مجددًا.';
-                    }
-                    status.textContent = msg;
-                });
-            } else {
-                status.textContent = 'المتصفح أو التطبيق لا يدعم تحديد الموقع. إذا كنت تستخدم تطبيق سطح مكتب، قد تحتاج لتفعيل صلاحية الموقع من إعدادات النظام.';
-            }
-        };
-
-        // حفظ بيانات المستخدم وإنشاء الحساب
-        window.saveNewUserDetails = async function() {
-            // ✅ فحص Firebase أولاً
-            if (!window.database || typeof database === 'undefined') {
-                console.error('❌ Firebase غير متصل');
-                showToast('⚠️ لا يوجد اتصال بقاعدة البيانات. يرجى التحقق من الإنترنت وإعادة المحاولة.', 'error');
-                
-                // محاولة إعادة تهيئة Firebase
-                if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
-                    try {
-                        window.database = firebase.database();
-                        console.log('✅ تم إعادة تهيئة Firebase بنجاح');
-                        showToast('جاري إعادة المحاولة...', 'info');
-                        // إعادة استدعاء الدالة بعد ثانية
-                        setTimeout(() => window.saveNewUserDetails(), 1000);
-                        return;
-                    } catch (error) {
-                        console.error('❌ فشل إعادة تهيئة Firebase:', error);
-                    }
-                }
-                
-                alert('⚠️ خطأ في الاتصال بقاعدة البيانات!\n\nالرجاء التأكد من:\n1. الاتصال بالإنترنت\n2. إعادة تشغيل التطبيق\n3. التواصل مع الدعم الفني إذا استمرت المشكلة');
-                return;
-            }
-
-            const fullName = document.getElementById('newUserFullName').value.trim();
-            const phone = document.getElementById('newUserPhone').value.trim();
-            const address = document.getElementById('newUserAddress').value.trim();
-            const storeName = document.getElementById('newUserStoreName').value.trim();
-            const lat = document.getElementById('newUserLat').value;
-            const lng = document.getElementById('newUserLng').value;
-
-            if (!fullName || !phone || !address || !storeName) {
-                showToast('يرجى تعبئة جميع الحقول المطلوبة', 'warning');
-                return;
-            }
-
-            try {
-                let uid = localStorage.getItem('app_uid');
-                let secret = localStorage.getItem('app_secret');
-                
-                if (uid && secret) {
-                    // تحقق من عدم وجود المستخدم مسبقاً
-                    try {
-                        const snap = await database.ref(`users/${uid}`).once('value');
-                        if (snap.exists()) {
-                            showToast('الحساب موجود مسبقاً', 'info');
-                            return;
-                        }
-                    } catch (error) {
-                        console.warn('⚠️ خطأ في التحقق من الحساب الموجود:', error);
-                        // نتابع لإنشاء حساب جديد
-                    }
-                }
-
-                // إنشاء مستخدم جديد
-                console.log('🔄 جاري إنشاء حساب جديد...');
-                showToast('جاري إنشاء الحساب...', 'info');
-                
-                const newUserRef = database.ref('users').push();
-                uid = newUserRef.key;
-                secret = generateRandomKey(10);
-
-                // الحصول على أيام التجربة
-                let trialDays = 30; // القيمة الافتراضية
+            // تحقق من وجود المستخدم في DB إن وجدت بيانات محلية
+            if (uid && secret) {
                 try {
-                    const appSettingsSnap = await database.ref('appSettings/trialDays').once('value');
-                    if (appSettingsSnap.exists()) {
-                        trialDays = Number(appSettingsSnap.val());
+                    const snap = await database.ref(`users/${uid}`).once('value');
+                    if (snap.exists()) {
+                        window.currentUser = snap.val();
+                        window.currentUser.uid = uid;
+                        console.log('✅ تم تحميل بيانات المستخدم:', uid);
+                        return;
+                    } else {
+                        // تنظيف محلي
+                        console.log('⚠️ المستخدم غير موجود في DB، إنشاء حساب جديد');
+                        localStorage.removeItem('app_uid');
+                        localStorage.removeItem('app_secret');
+                        uid = secret = null;
                     }
                 } catch (error) {
-                    console.warn('⚠️ استخدام أيام التجربة الافتراضية:', error);
+                    console.error('❌ خطأ في تحميل بيانات المستخدم:', error);
                 }
+            }
 
-                const createdAt = Date.now();
-                const trialUntil = createdAt + (trialDays * 24 * 60 * 60 * 1000);
+            // إنشاء مستخدم جديد
+            console.log('🔄 إنشاء حساب مستخدم جديد...');
+            const newUserRef = database.ref('users').push();
+            uid = newUserRef.key;
+            secret = generateRandomKey(10);
 
-                const userObj = {
-                    profile: {
-                        uid,
-                        secret,
-                        fullName,
-                        phone,
-                        address,
-                        storeName,
-                        lat: lat || null,
-                        lng: lng || null,
-                        createdAt,
-                        deviceInfo: {
-                            platform: navigator.platform || '',
-                            userAgent: navigator.userAgent || '',
-                            appVersion: localStorage.getItem('app_version') || '2.0.0'
-                        }
-                    },
-                    trialUntil,
-                    subscription: null,
-                    status: 'active',
-                    createdBy: 'desktop_app'
-                };
+            const appSettingsSnap = await database.ref('appSettings/trialDays').once('value');
+            const trialDays = appSettingsSnap.exists() ? Number(appSettingsSnap.val()) : 30;
 
-                // حفظ البيانات في Firebase
+            const createdAt = Date.now();
+            const trialUntil = createdAt + (trialDays * 24 * 60 * 60 * 1000);
+
+            const userObj = {
+                profile: {
+                    uid,
+                    secret,
+                    createdAt,
+                    deviceInfo: {
+                        platform: navigator.platform || '',
+                        userAgent: navigator.userAgent || ''
+                    }
+                },
+                trialUntil,
+                subscription: null
+            };
+
+            try {
                 await database.ref(`users/${uid}`).set(userObj);
-                
-                // حفظ البيانات محلياً
                 localStorage.setItem('app_uid', uid);
                 localStorage.setItem('app_secret', secret);
                 window.currentUser = userObj;
                 window.currentUser.uid = uid;
-                
-                console.log('✅ تم إنشاء الحساب بنجاح');
-                console.log('📝 UID:', uid);
-                
-                showToast('تم إنشاء الحساب بنجاح! 🎉', 'success');
-                
-                // إخفاء النموذج
-                const formElement = document.getElementById('userDetailsForm');
-                if (formElement) {
-                    formElement.style.display = 'none';
-                }
-                
-                // إظهار معلومات الحساب
+
+                console.log('✅ تم إنشاء المستخدم بنجاح:', uid);
+
+                // إظهار رسالة للمستخدم بمعلومات الحساب
                 showModal('userInfoModal');
-                
-                const uidElement = document.getElementById('userUID');
-                const secretElement = document.getElementById('userSecret');
-                const trialElement = document.getElementById('trialDaysDisplay');
-                
-                if (uidElement) uidElement.textContent = uid;
-                if (secretElement) secretElement.textContent = secret;
-                if (trialElement) trialElement.textContent = trialDays;
-                
+                document.getElementById('userUID').textContent = uid;
+                document.getElementById('userSecret').textContent = secret;
+                document.getElementById('trialDaysDisplay').textContent = trialDays;
             } catch (error) {
                 console.error('❌ خطأ في إنشاء المستخدم:', error);
-                console.error('تفاصيل الخطأ:', error.message, error.stack);
-                
-                let errorMessage = 'حدث خطأ في إنشاء الحساب.';
-                
-                if (error.code === 'PERMISSION_DENIED') {
-                    errorMessage = '⚠️ لا توجد صلاحيات للوصول إلى قاعدة البيانات.';
-                } else if (error.message && error.message.includes('network')) {
-                    errorMessage = '⚠️ خطأ في الاتصال بالإنترنت. يرجى التحقق من الاتصال.';
-                } else if (error.message) {
-                    errorMessage = `⚠️ خطأ: ${error.message}`;
-                }
-                
-                showToast(errorMessage, 'error');
-                alert(errorMessage + '\n\nالرجاء:\n1. التحقق من الاتصال بالإنترنت\n2. إعادة تشغيل التطبيق\n3. التواصل مع الدعم الفني: 07813798636');
+                alert('حدث خطأ في إنشاء الحساب. الرجاء المحاولة مرة أخرى.');
             }
-        };
+        }
 
         async function checkSubscriptionAndGate() {
             const uid = localStorage.getItem('app_uid');
@@ -15687,22 +14502,35 @@ console.log(`
                 created_at: new Date().toISOString()
             };
 
+            console.log('➕ محاولة إضافة منتج جديد:', {
+                product_id: productData.product_id,
+                product_name: productData.product_name,
+                product_barcode: productData.product_barcode
+            });
+
             if (window.dataSdk) {
                 const result = await window.dataSdk.create(productData);
                 if (result.isOk) {
+                    console.log('✅ تم إضافة المنتج بنجاح - IndexedDB id:', result.id);
+                    
                     // تسجيل العملية
                     window.securityManager.logOperation('إضافة منتج', {
                         productId: productData.product_id,
                         productName: productData.product_name,
-                        barcode: productData.product_barcode
+                        barcode: productData.product_barcode,
+                        dbId: result.id
                     });
                     
                     closeModal('addProductModal');
                     document.getElementById('addProductForm').reset();
                     showToast('تم إضافة المنتج بنجاح', 'success');
                 } else {
-                    showToast('فشل في إضافة المنتج', 'error');
+                    showToast('فشل في إضافة المنتج: ' + (result.error || ''), 'error');
+                    console.error('❌ فشل في إضافة المنتج:', result);
                 }
+            } else {
+                showToast('قاعدة البيانات غير مهيأة', 'error');
+                console.error('❌ dataSdk غير متاح');
             }
             
             setLoading(false);
@@ -15713,8 +14541,22 @@ console.log(`
             const product = products.find(p => p.product_id === productId);
             if (!product) {
                 showToast('المنتج غير موجود', 'error');
+                console.error('المنتج غير موجود - product_id:', productId);
+                console.log('المنتجات المتاحة:', products.map(p => ({
+                    product_id: p.product_id,
+                    product_name: p.product_name,
+                    id: p.id,
+                    __backendId: p.__backendId
+                })));
                 return;
             }
+            
+            console.log('📝 فتح نافذة تعديل المنتج:', {
+                product_id: product.product_id,
+                product_name: product.product_name,
+                id: product.id,
+                __backendId: product.__backendId
+            });
             
             // ملء البيانات في النموذج
             document.getElementById('editProductId').value = productId;
@@ -15753,9 +14595,17 @@ console.log(`
             
             if (!product) {
                 showToast('المنتج غير موجود', 'error');
+                console.error('المنتج غير موجود - product_id:', productId);
                 setLoading(false);
                 return;
             }
+            
+            console.log('✏️ محاولة تعديل المنتج:', {
+                product_id: product.product_id,
+                product_name: product.product_name,
+                id: product.id,
+                __backendId: product.__backendId
+            });
             
             const updatedData = {
                 product_name: document.getElementById('editProductName').value,
@@ -15774,8 +14624,11 @@ console.log(`
                 modified_at: new Date().toISOString()
             };
             
-            if (window.dataSdk && (product.id || product.__backendId)) {
-                const updateId = product.id || product.__backendId;
+            // الحصول على معرف التحديث (دعم id و __backendId)
+            const updateId = product.id || product.__backendId;
+            
+            if (window.dataSdk && updateId) {
+                console.log('🔄 تحديث المنتج - updateId:', updateId);
                 const result = await window.dataSdk.update(updateId, updatedData);
                 
                 if (result.isOk) {
@@ -15788,9 +14641,18 @@ console.log(`
                     
                     closeModal('editProductModal');
                     showToast('تم تحديث المنتج بنجاح', 'success');
+                    console.log('✅ تم تحديث المنتج بنجاح');
                 } else {
-                    showToast('فشل في تحديث المنتج', 'error');
+                    showToast('فشل في تحديث المنتج: ' + (result.error || ''), 'error');
+                    console.error('❌ فشل في تحديث المنتج:', result);
                 }
+            } else {
+                showToast('لا يمكن تحديث المنتج - معرف غير صالح', 'error');
+                console.error('❌ معرف التحديث غير موجود - product:', {
+                    product_id: product.product_id,
+                    id: product.id,
+                    __backendId: product.__backendId
+                });
             }
             
             setLoading(false);
@@ -17136,84 +15998,86 @@ console.log(`
                     console.log('❌ فشل الدفع بالأقساط');
                 }
             }
-// طباعة فاتورة تقسيط مفصلة (نطاق عام)
-function printInstallmentInvoice(invoiceId, silent = false, extraData = {}) {
-    const settings = JSON.parse(localStorage.getItem('printerSettings') || '{}');
-    let sale = null;
-    let foundSource = '';
-    console.log('🖨️ بدء طباعة فاتورة الأقساط:', invoiceId);
-    console.log('📦 بيانات إضافية:', extraData);
-
-    // 1. جلب من salesData
-    if (typeof salesData !== 'undefined' && Array.isArray(salesData)) {
-        sale = salesData.find(s => s.invoice_id === invoiceId);
-        if (sale) foundSource = 'salesData';
-    }
-    // 2. جلب من dataSdk
-    if ((!sale || !sale.items) && window.dataSdk && window.dataSdk.getAll) {
-        const allSales = window.dataSdk.getAll();
-        const found = allSales.find(s => s.invoice_id === invoiceId);
-        if (found) { sale = found; foundSource = 'dataSdk'; }
-    }
-    // 3. جلب من extraData (إذا احتوى على كل شيء)
-    if (!sale && extraData && extraData.items && extraData.final_total) {
-        sale = { ...extraData, invoice_id: invoiceId };
-        foundSource = 'extraData';
-    }
-    if (!sale) {
-        console.error('❌ الفاتورة غير موجودة في أي مصدر:', invoiceId);
-        showToast('الفاتورة غير موجودة للطباعة', 'error');
-        return;
-    }
-    console.log('✅ تم العثور على الفاتورة من:', foundSource, sale);
-
-    // تأكد من أن items مصفوفة
-    if (typeof sale.items === 'string') {
-        try { sale.items = JSON.parse(sale.items); } catch { sale.items = []; }
-    }
-    if (!Array.isArray(sale.items)) sale.items = [];
-
-    // دمج بيانات extraData فوق بيانات sale (الأولوية للأحدث)
-    if (extraData && typeof extraData === 'object') {
-        for (const key of Object.keys(extraData)) {
-            if (extraData[key] !== undefined && extraData[key] !== null && extraData[key] !== '') {
-                sale[key] = extraData[key];
+        // طباعة فاتورة تقسيط مفصلة
+        function printInstallmentInvoice(invoiceId, silent = false, extraData = {}) {
+            const settings = JSON.parse(localStorage.getItem('printerSettings') || '{}');
+            let sale = null;
+            
+            console.log('🖨️ بدء طباعة فاتورة الأقساط:', invoiceId);
+            console.log('📦 بيانات إضافية:', extraData);
+            
+            // Always fetch the latest sale from both memory and persistent storage
+            if (typeof salesData !== 'undefined' && Array.isArray(salesData)) {
+                sale = salesData.find(s => s.invoice_id === invoiceId);
             }
+            if (window.dataSdk && window.dataSdk.getAll) {
+                const allSales = window.dataSdk.getAll();
+                // Prefer the most recent sale with this invoice_id
+                const found = allSales.find(s => s.invoice_id === invoiceId);
+                if (found) sale = found;
+            }
+            if (!sale) {
+                console.error('❌ الفاتورة غير موجودة:', invoiceId);
+                showToast('الفاتورة غير موجودة', 'error');
+                return;
+            }
+            
+            console.log('✅ تم العثور على الفاتورة:', sale);
+            
+            // Always parse items to ensure latest products are shown
+            if (typeof sale.items === 'string') {
+                try { sale.items = JSON.parse(sale.items); } catch { sale.items = []; }
+            }
+            
+            // استخدام المنتجات والمبالغ الجديدة إذا كانت موجودة في extraData
+            if (extraData.new_items && Array.isArray(extraData.new_items) && extraData.new_items.length > 0) {
+                console.log('🔄 استخدام المنتجات الجديدة من extraData');
+                sale.items = extraData.new_items;
+            }
+            
+            if (extraData.new_subtotal) {
+                console.log('🔄 استخدام المجموع الجزئي الجديد:', extraData.new_subtotal);
+                sale.subtotal = extraData.new_subtotal;
+            }
+            
+            if (extraData.new_final_total) {
+                console.log('🔄 استخدام الإجمالي النهائي الجديد:', extraData.new_final_total);
+                sale.final_total = extraData.new_final_total;
+                sale.total_amount = extraData.new_final_total;
+            }
+            
+            // دمج بيانات العميل والأقساط
+            sale.customer_name = extraData.customer_name || sale.customer_name || '';
+            sale.customer_phone = extraData.customer_phone || sale.customer_phone || '';
+            sale.customer_address = extraData.customer_address || sale.customer_address || '';
+            sale.installment_months = extraData.installment_months || sale.installment_months || '';
+            sale.monthly_amount = extraData.monthly_amount || sale.monthly_amount || '';
+            sale.down_payment = extraData.down_payment || sale.down_payment || '';
+            sale.additional_amount = extraData.additional_amount || sale.additional_amount || '';
+            sale.remaining_amount = extraData.remaining_amount || sale.remaining_amount || '';
+            
+            console.log('📄 بيانات الفاتورة النهائية للطباعة:', {
+                invoice_id: sale.invoice_id,
+                items_count: sale.items.length,
+                subtotal: sale.subtotal,
+                final_total: sale.final_total,
+                customer_name: sale.customer_name
+            });
+            
+            // توليد HTML الفاتورة
+            const receiptContent = generateInstallmentInvoiceReceipt(sale, settings);
+            const printHtml = `<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8"><title>فاتورة تقسيط ${sale.invoice_id}</title><link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet"><style>* { margin: 0; padding: 0; box-sizing: border-box; } body { font-family: 'Cairo', sans-serif; direction: rtl; background: white; } @media print { body { margin: 0; } @page { margin: 0; } }</style></head><body>${receiptContent}</body></html>`;
+            // إجبار الطباعة الصامتة دائمًا
+            if (window.electronAPI && window.electronAPI.printInvoiceHtml) {
+                window.safePrintInvoice(printHtml, {
+                    silent: true,
+                    pageSize: 'A4',
+                    printBackground: true
+                });
+            }
+            if (typeof updatePrintStats === 'function') updatePrintStats();
+            showToast('تم إرسال فاتورة التقسيط للطابعة', 'success');
         }
-    }
-
-    // تحقق من الحقول الأساسية
-    const requiredFields = ['customer_name','installment_months','monthly_amount','final_total'];
-    for (const field of requiredFields) {
-        if (!sale[field]) {
-            console.warn('⚠️ الحقل ناقص للطباعة:', field, sale);
-        }
-    }
-
-    // توليد HTML الفاتورة
-    const receiptContent = generateInstallmentInvoiceReceipt(sale, settings);
-    const printHtml = `<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8"><title>فاتورة تقسيط ${sale.invoice_id}</title><link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet"><style>* { margin: 0; padding: 0; box-sizing: border-box; } body { font-family: 'Cairo', sans-serif; direction: rtl; background: white; } @media print { body { margin: 0; } @page { margin: 0; } }</style></head><body>${receiptContent}</body></html>`;
-
-    // إجبار الطباعة الصامتة دائمًا
-    if (typeof window.safePrintInvoice === 'function') {
-        window.safePrintInvoice(printHtml, {
-            silent: true,
-            pageSize: 'A4',
-            printBackground: true
-        });
-        showToast('تم إرسال فاتورة التقسيط للطابعة', 'success');
-    } else {
-        // fallback: نافذة طباعة عادية
-        const printWindow = window.open('', '_blank');
-        printWindow.document.write(printHtml);
-        printWindow.document.close();
-        printWindow.focus();
-        setTimeout(() => { printWindow.print(); }, 500);
-        showToast('تم إرسال الفاتورة للطابعة (بدون صمت)', 'info');
-    }
-    if (typeof updatePrintStats === 'function') updatePrintStats();
-}
-window.printInstallmentInvoice = printInstallmentInvoice;
         // توليد محتوى فاتورة التقسيط
         function generateInstallmentInvoiceReceipt(sale, settings) {
             // استخراج التاريخ والساعة
@@ -17259,7 +16123,7 @@ window.printInstallmentInvoice = printInstallmentInvoice;
                 <!-- اليمين: العنوان والهاتف -->
                 <div style="flex:0 0 60%;text-align:left;">
                     <div style="font-size:0.95rem;color:#374151;font-weight:600;margin-bottom:2px;">${settings?.store_address || 'باب الهاشميه قرب مدرسه الكرار'}</div>
-                    <div style="font-size:0.9rem;color:#6366f1;font-weight:600;">📞 ${settings?.store_phone || '07803092185'}</div>
+                    <div style="font-size:0.9rem;color:#6366f1;font-weight:600;">📞 ${settings?.store_phone || '07901234567'}</div>
                 </div>
             </div>
             
@@ -18035,6 +16899,13 @@ window.printInstallmentInvoice = printInstallmentInvoice;
             
             if (!product) {
                 showToast('المنتج غير موجود', 'error');
+                console.error('المنتج غير موجود - product_id:', productId);
+                console.log('المنتجات المتاحة:', products.map(p => ({
+                    product_id: p.product_id,
+                    product_name: p.product_name,
+                    id: p.id,
+                    __backendId: p.__backendId
+                })));
                 return;
             }
             
@@ -18043,8 +16914,12 @@ window.printInstallmentInvoice = printInstallmentInvoice;
                 return;
             }
             
-            if (window.dataSdk && product.id) {
-                const result = await window.dataSdk.delete(product.id);
+            // الحصول على معرف الحذف (دعم id و __backendId)
+            const deleteId = product.id || product.__backendId;
+            
+            if (window.dataSdk && deleteId) {
+                console.log('🗑️ محاولة حذف المنتج - product_id:', productId, 'deleteId:', deleteId);
+                const result = await window.dataSdk.delete(deleteId);
                 if (result.isOk) {
                     // تسجيل العملية
                     window.securityManager.logOperation('حذف منتج', {
@@ -18055,58 +16930,76 @@ window.printInstallmentInvoice = printInstallmentInvoice;
                     
                     showToast('تم حذف المنتج بنجاح', 'success');
                     updateQuickStats();
+                    console.log('✅ تم حذف المنتج بنجاح');
                 } else {
-                    showToast('فشل في حذف المنتج', 'error');
+                    showToast('فشل في حذف المنتج: ' + (result.error || ''), 'error');
+                    console.error('❌ فشل في حذف المنتج:', result);
                 }
             } else {
-                showToast('المنتج غير موجود', 'error');
+                showToast('لا يمكن حذف المنتج - معرف غير صالح', 'error');
+                console.error('❌ معرف الحذف غير موجود - product:', {
+                    product_id: product.product_id,
+                    id: product.id,
+                    __backendId: product.__backendId
+                });
             }
         }
 
         // إظهار تفاصيل المنتج
         function showProductDetails(productId) {
             const product = products.find(p => p.product_id === productId);
+            
+            // التحقق من وجود المنتج أولاً
+            if (!product) {
+                showToast('لم يتم العثور على المنتج', 'error');
+                console.error('المنتج غير موجود - product_id:', productId);
+                console.log('المنتجات المتاحة:', products.map(p => ({
+                    product_id: p.product_id,
+                    product_name: p.product_name,
+                    id: p.id
+                })));
+                return;
+            }
+            
             const category = categories.find(c => c.category_id === product.product_category);
             
-            if (product) {
-                const content = `
-                    <div class="detail-row">
-                        <span class="detail-label">اسم المنتج:</span>
-                        <span class="detail-value">${product.product_name}</span>
-                    </div>
-                    <div class="detail-row">
-                        <span class="detail-label">الباركود:</span>
-                        <span class="detail-value">${product.product_barcode || 'غير محدد'}</span>
-                    </div>
-                    <div class="detail-row">
-                        <span class="detail-label">التصنيف:</span>
-                        <span class="detail-value">${category ? category.category_name : 'غير محدد'}</span>
-                    </div>
-                    <div class="detail-row">
-                        <span class="detail-label">المورد:</span>
-                        <span class="detail-value">${product.supplier || 'غير محدد'}</span>
-                    </div>
-                    <div class="detail-row">
-                        <span class="detail-label">سعر التكلفة (مفرد):</span>
-                        <span class="detail-value">${formatCurrency(product.product_cost_retail)}</span>
-                    </div>
-                    <div class="detail-row">
-                        <span class="detail-label">سعر البيع (مفرد):</span>
-                        <span class="detail-value">${formatCurrency(product.product_price_retail)}</span>
-                    </div>
-                    <div class="detail-row">
-                        <span class="detail-label">الكمية الحالية:</span>
-                        <span class="detail-value">${product.stock_quantity}</span>
-                    </div>
-                    <div class="detail-row">
-                        <span class="detail-label">الحد الأدنى للمخزون:</span>
-                        <span class="detail-value">${product.min_stock}</span>
-                    </div>
-                `;
-                
-                document.getElementById('productDetailsContent').innerHTML = content;
-                showModal('productDetailsModal');
-            }
+            const content = `
+                <div class="detail-row">
+                    <span class="detail-label">اسم المنتج:</span>
+                    <span class="detail-value">${product.product_name}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">الباركود:</span>
+                    <span class="detail-value">${product.product_barcode || 'غير محدد'}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">التصنيف:</span>
+                    <span class="detail-value">${category ? category.category_name : 'غير محدد'}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">المورد:</span>
+                    <span class="detail-value">${product.supplier || 'غير محدد'}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">سعر التكلفة (مفرد):</span>
+                    <span class="detail-value">${formatCurrency(product.product_cost_retail)}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">سعر البيع (مفرد):</span>
+                    <span class="detail-value">${formatCurrency(product.product_price_retail)}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">الكمية الحالية:</span>
+                    <span class="detail-value">${product.stock_quantity}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">الحد الأدنى للمخزون:</span>
+                    <span class="detail-value">${product.min_stock}</span>
+                </div>
+            `;
+            
+            document.getElementById('productDetailsContent').innerHTML = content;
+            showModal('productDetailsModal');
         }
 
         // Helper functions
@@ -19139,9 +18032,23 @@ window.printInstallmentInvoice = printInstallmentInvoice;
                     showToast('لم يتم العثور على الفاتورة', 'error');
                     return;
                 }
+                
                 console.log('✅ تم العثور على فاتورة الأقساط:', sale);
-                // مرر كل بيانات الفاتورة لضمان طباعة جميع التفاصيل
-                printInstallmentInvoice(invoiceId, false, sale);
+                
+                // استخدام بيانات من installment_details إذا كانت موجودة
+                const installmentDetails = sale.installment_details || {};
+                
+                printInstallmentInvoice(invoiceId, false, {
+                    customer_name: sale.customer_name || installmentDetails.customer_name,
+                    customer_phone: sale.customer_phone || installmentDetails.customer_phone,
+                    customer_address: sale.customer_address || installmentDetails.customer_address,
+                    installment_months: sale.installment_months || installmentDetails.installment_months,
+                    monthly_amount: sale.monthly_amount || installmentDetails.monthly_amount,
+                    down_payment: sale.down_payment || installmentDetails.down_payment,
+                    additional_amount: sale.additional_amount || installmentDetails.additional_amount,
+                    remaining_amount: sale.remaining_amount || installmentDetails.remaining_amount,
+                    start_date: sale.start_date || installmentDetails.start_date
+                });
             } else {
                 console.log('✅ طباعة فاتورة نقدية:', invoiceId);
                 printInvoice(invoiceId, false);
@@ -19341,7 +18248,7 @@ window.printInstallmentInvoice = printInstallmentInvoice;
             // الحصول على معلومات المتجر
             const storeName = localStorage.getItem('storeName') || 'متجر التقنية الحديثة';
             const storeAddress = localStorage.getItem('storeAddress') || 'بغداد - المنصور';
-            const storePhone = localStorage.getItem('storePhone') || '07803092185';
+            const storePhone = localStorage.getItem('storePhone') || '07901234567';
             
             // تاريخ ووقت الفاتورة
             const now = new Date();
@@ -19361,15 +18268,9 @@ window.printInstallmentInvoice = printInstallmentInvoice;
             
             // الشعار (إذا كان مفعلاً)
             if (settings.showLogo) {
-                // استخدم نفس مسار اللوجو كما في إدارة الطابعة
-                let logoSrc = document.getElementById('storeLogo')?.value?.trim() || 'yaqoub_logo.png';
-                // إذا كان المسار base64 أو اسم ملف
-                if (!logoSrc.startsWith('data:') && !logoSrc.startsWith('http') && !logoSrc.startsWith('./') && !logoSrc.startsWith('/')) {
-                    logoSrc = './' + logoSrc;
-                }
                 receiptHTML += `
                     <div style="text-align: ${settings.titleAlign}; margin-bottom: 10px;">
-                        <img src="${logoSrc}" alt="Logo" style="max-width:90px;max-height:90px;display:inline-block;vertical-align:middle;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.08);margin-bottom:8px;" />
+                        <i class="fas fa-store" style="font-size: ${settings.storeTitleSize * 1.5}px; color: #6366f1;"></i>
                     </div>
                 `;
             }
@@ -19609,9 +18510,9 @@ window.printInstallmentInvoice = printInstallmentInvoice;
                     // دالة مساعدة لتحويل الأرقام العربية إلى إنجليزية
                     // استخدم الدالة العامة toEnglishDigits
             // بيانات المتجر بالعربية
-            const storeName = 'معرض يعقوب للأجهزة الكهربائية';
+            const storeName = 'يعقوب للأجهزة الكهربائية';
             const storeAddress = 'باب الهاشمية قرب مدرسة الكرار';
-            const storePhone = localStorage.getItem('storePhone') || '07803092185';
+            const storePhone = localStorage.getItem('storePhone') || '07901234567';
 
             // قالب A4 دائمًا
             let receiptWidth = '210mm';
@@ -19647,13 +18548,7 @@ window.printInstallmentInvoice = printInstallmentInvoice;
                 <div style="font-size: 1.2rem; color: #374151; margin-bottom: 4px;">${storeAddress}</div>
                 <div style="font-size: 1.1rem; color: #6366f1;">📞 ${storePhone}</div>
                 <div style="width:100%;text-align:center;margin:12px 0 0 0;">
-                                <img src="${(function(){
-                                    let logoSrc = document.getElementById('storeLogo')?.value?.trim() || 'yaqoub_logo.png';
-                                    if (!logoSrc.startsWith('data:') && !logoSrc.startsWith('http') && !logoSrc.startsWith('./') && !logoSrc.startsWith('/')) {
-                                        logoSrc = './' + logoSrc;
-                                    }
-                                    return logoSrc;
-                                })()}" alt="Logo" style="max-width:120px;max-height:120px;display:inline-block;vertical-align:middle;border-radius:16px;box-shadow:0 2px 8px rgba(0,0,0,0.08);margin-bottom:8px;" />
+                <img src="yaqoub_logo.png" alt="Logo" style="max-width:120px;max-height:120px;display:inline-block;vertical-align:middle;border-radius:16px;box-shadow:0 2px 8px rgba(0,0,0,0.08);margin-bottom:8px;" />
                 </div>
             </div>
             <div style="border-top: 2px solid #6366f1; margin: 24px 0 16px 0;"></div>
@@ -19751,7 +18646,7 @@ window.printInstallmentInvoice = printInstallmentInvoice;
 
             // التذييل بالعربية
             html += `<div style="text-align: center; margin-top: 40px; font-size: 1.1rem; color: #666; direction: rtl;">
-            <p style="margin: 4px 0;">شكراً لتعاملكم مع معرض يعقوب للأجهزة الكهربائية</p>
+            <p style="margin: 4px 0;">شكراً لتعاملكم مع متجر يعقوب للأجهزة الكهربائية</p>
             <p style="margin: 4px 0;">نتطلع لخدمتكم مرة أخرى</p>
             <p style="margin-top: 18px; color: #6366f1; font-size: 1.2rem;">━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</p>
             </div>`;
@@ -19918,7 +18813,7 @@ window.printInstallmentInvoice = printInstallmentInvoice;
                 invoice_id: 'INV-' + Math.floor(Math.random() * 10000),
                 timestamp: new Date().toISOString(),
                 customer_name: templateType === 'installment' ? 'محمد أحمد علي' : 'عميل نقدي',
-                customer_phone: templateType === 'installment' ? '07803092185' : '',
+                customer_phone: templateType === 'installment' ? '07901234567' : '',
                 customer_address: templateType === 'installment' ? 'بغداد - المنصور' : '',
                 items: [
                     { product_name: 'ثلاجة سامسونج', quantity: 1, price: 800000, total: 800000 },
@@ -19991,7 +18886,7 @@ window.printInstallmentInvoice = printInstallmentInvoice;
             // Fallback للقالب القديم
             const storeName = localStorage.getItem('storeName') || 'متجر يعقوب بالأجهزة الكهربائية';
             const storeAddress = localStorage.getItem('storeAddress') || 'باب الهاشمية قرب مدرسة الكرار';
-            const storePhone = localStorage.getItem('storePhone') || '07803092185';
+            const storePhone = localStorage.getItem('storePhone') || '07901234567';
             
             // تحديد عرض الإيصال
             let receiptWidth = '210mm'; // A4
@@ -20117,7 +19012,7 @@ window.printInstallmentInvoice = printInstallmentInvoice;
             // Fallback للقالب القديم
             const storeName = localStorage.getItem('storeName') || 'متجر يعقوب بالأجهزة الكهربائية';
             const storeAddress = localStorage.getItem('storeAddress') || 'باب الهاشمية قرب مدرسة الكرار';
-            const storePhone = localStorage.getItem('storePhone') || '07803092185';
+            const storePhone = localStorage.getItem('storePhone') || '07901234567';
             
             // تحديد عرض الإيصال
             let receiptWidth = '210mm'; // A4
@@ -20335,33 +19230,10 @@ window.printInstallmentInvoice = printInstallmentInvoice;
                 sidePadding: parseInt(document.getElementById('sidePadding')?.value || 15),
                 showDateTime: document.getElementById('showDateTime')?.checked !== false,
                 showInvoiceNumber: document.getElementById('showInvoiceNumber')?.checked !== false,
-                customFooter: document.getElementById('customFooter')?.value || '',
-                // معلومات المتجر
-                store_name: document.getElementById('storeName')?.value || 'معرض يعقوب للأجهزة الكهربائية',
-                store_address: document.getElementById('storeAddress')?.value || 'باب الهاشمية قرب مدرسة الكرار',
-                store_phone: document.getElementById('storePhone')?.value || '07803092185',
-                store_logo: document.getElementById('storeLogo')?.value || 'yaqoub_logo.png',
-                show_logo: document.getElementById('showLogo')?.checked !== false,
-                // الملاحظات
-                note1: document.getElementById('note1')?.value || '',
-                note2: document.getElementById('note2')?.value || '',
-                note3: document.getElementById('note3')?.value || '',
-                note4: document.getElementById('note4')?.value || '',
-                note5: document.getElementById('note5')?.value || '',
-                note6: document.getElementById('note6')?.value || '',
-                // معلومات الصيانة
-                maintenance_name: document.getElementById('maintenanceName')?.value || 'حمزه ابو حوراء',
-                maintenance_service: document.getElementById('maintenanceService')?.value || 'صيانة السبالت',
-                maintenance_phone: document.getElementById('maintenancePhone')?.value || '+964 785 570 6118',
-                show_maintenance: document.getElementById('showMaintenance')?.checked !== false
+                customFooter: document.getElementById('customFooter')?.value || ''
             };
             
             localStorage.setItem('printerSettings', JSON.stringify(settings));
-            // حفظ في localStorage للوصول السريع
-            localStorage.setItem('storeName', settings.store_name);
-            localStorage.setItem('storeAddress', settings.store_address);
-            localStorage.setItem('storePhone', settings.store_phone);
-            
             showToast('تم حفظ إعدادات الطباعة بنجاح', 'success');
             
             console.log('✅ تم حفظ إعدادات الطابعة:', settings);
@@ -20385,27 +19257,6 @@ window.printInstallmentInvoice = printInstallmentInvoice;
                 if (document.getElementById('showDateTime')) document.getElementById('showDateTime').checked = settings.showDateTime !== false;
                 if (document.getElementById('showInvoiceNumber')) document.getElementById('showInvoiceNumber').checked = settings.showInvoiceNumber !== false;
                 if (document.getElementById('customFooter')) document.getElementById('customFooter').value = settings.customFooter || '';
-                
-                // تحميل معلومات المتجر
-                if (document.getElementById('storeName')) document.getElementById('storeName').value = settings.store_name || 'معرض يعقوب للأجهزة الكهربائية';
-                if (document.getElementById('storeAddress')) document.getElementById('storeAddress').value = settings.store_address || 'باب الهاشمية قرب مدرسة الكرار';
-                if (document.getElementById('storePhone')) document.getElementById('storePhone').value = settings.store_phone || '07803092185';
-                if (document.getElementById('storeLogo')) document.getElementById('storeLogo').value = settings.store_logo || 'yaqoub_logo.png';
-                if (document.getElementById('showLogo')) document.getElementById('showLogo').checked = settings.show_logo !== false;
-                
-                // تحميل الملاحظات
-                if (document.getElementById('note1')) document.getElementById('note1').value = settings.note1 || 'المبلغ الموجود هو وصل أمانة';
-                if (document.getElementById('note2')) document.getElementById('note2').value = settings.note2 || 'السعر محمي 24 ساعة';
-                if (document.getElementById('note3')) document.getElementById('note3').value = settings.note3 || 'المباع لا يرجع ولا يبدل';
-                if (document.getElementById('note4')) document.getElementById('note4').value = settings.note4 || 'الخطأ والسهو مرجوع للطرفين';
-                if (document.getElementById('note5')) document.getElementById('note5').value = settings.note5 || 'الشركة المصنعة مسؤولة عن الضمان';
-                if (document.getElementById('note6')) document.getElementById('note6').value = settings.note6 || 'كسر الشاشة غير داخل بالضمان';
-                
-                // تحميل معلومات الصيانة
-                if (document.getElementById('maintenanceName')) document.getElementById('maintenanceName').value = settings.maintenance_name || 'حمزه ابو حوراء';
-                if (document.getElementById('maintenanceService')) document.getElementById('maintenanceService').value = settings.maintenance_service || 'صيانة السبالت';
-                if (document.getElementById('maintenancePhone')) document.getElementById('maintenancePhone').value = settings.maintenance_phone || '+964 785 570 6118';
-                if (document.getElementById('showMaintenance')) document.getElementById('showMaintenance').checked = settings.show_maintenance !== false;
                 
                 // تحديث القيم المعروضة
                 if (document.getElementById('storeTitleSizeValue')) document.getElementById('storeTitleSizeValue').textContent = settings.storeTitleSize || 24;
@@ -22686,44 +21537,32 @@ window.printInstallmentInvoice = printInstallmentInvoice;
             if (!file) return;
 
             const reader = new FileReader();
-            reader.onload = async function(e) {
+            reader.onload = function(e) {
                 try {
                     const backupData = JSON.parse(e.target.result);
-                    if (!confirm('هل أنت متأكد من استعادة هذه النسخة؟ سيتم استبدال جميع البيانات الحالية!')) return;
-
-                    // 1. استعادة localStorage
-                    if (backupData.localStorage) {
-                        localStorage.clear();
-                        for (const key in backupData.localStorage) {
-                            try { localStorage.setItem(key, backupData.localStorage[key]); } catch (e) {}
+                    
+                    if (confirm('هل أنت متأكد من استعادة هذه النسخة؟ سيتم استبدال جميع البيانات الحالية!')) {
+                        if (backupData.type === 'full' || backupData.type === 'data') {
+                            if (backupData.data.products) products = backupData.data.products;
+                            if (backupData.data.categories) categories = backupData.data.categories;
+                            if (backupData.data.suppliers) suppliers = backupData.data.suppliers;
+                            if (backupData.data.sales) salesData = backupData.data.sales;
+                            if (backupData.data.debts) debtsData = backupData.data.debts;
+                            
+                            saveToLocalStorage();
                         }
-                    }
-
-                    // 2. استعادة إعدادات elementSdk
-                    if (backupData.elementConfig && window.elementSdk && typeof window.elementSdk.importConfig === 'function') {
-                        await window.elementSdk.importConfig(JSON.stringify(backupData.elementConfig));
-                    }
-
-                    // 3. استعادة بيانات indexedDB (dataSdk)
-                    if (backupData.indexedDB && window.dataSdk && typeof window.dataSdk.importData === 'function') {
-                        // حدد نوع النسخة: كاملة أم انتقائية
-                        let dataArr = [];
-                        if (backupData.indexedDB.all) {
-                            dataArr = backupData.indexedDB.all;
-                        } else {
-                            // انتقائية: دمج كل ما هو موجود
-                            ['products','invoices','debts','payments'].forEach(type => {
-                                if (Array.isArray(backupData.indexedDB[type])) dataArr = dataArr.concat(backupData.indexedDB[type]);
-                            });
+                        
+                        if (backupData.type === 'full' || backupData.type === 'settings') {
+                            if (backupData.data.settings) {
+                                Object.keys(backupData.data.settings).forEach(key => {
+                                    localStorage.setItem(`${key}Settings`, JSON.stringify(backupData.data.settings[key]));
+                                });
+                            }
                         }
-                        if (dataArr.length > 0) {
-                            await window.dataSdk.clearAll();
-                            await window.dataSdk.importData(JSON.stringify(dataArr));
-                        }
+                        
+                        showToast('تم استعادة النسخة الاحتياطية بنجاح', 'success');
+                        setTimeout(() => location.reload(), 1500);
                     }
-
-                    showToast('تم استعادة النسخة الاحتياطية بنجاح', 'success');
-                    setTimeout(() => location.reload(), 1500);
                 } catch (error) {
                     showToast('خطأ في قراءة ملف النسخة الاحتياطية', 'error');
                     console.error(error);
@@ -23803,6 +22642,8 @@ window.printInstallmentInvoice = printInstallmentInvoice;
 
         // ربط أزرار التحكم بالنافذة
         document.addEventListener('DOMContentLoaded', () => {
+            const { ipcRenderer } = require('electron');
+            
             // إعداد مستمعات أحداث السلة للتمرير التلقائي
             const cartSection = document.querySelector('.cart-section');
             const cartItems = document.getElementById('cartItems');
@@ -23823,9 +22664,7 @@ window.printInstallmentInvoice = printInstallmentInvoice;
             const closeBtn = document.querySelector('.titlebar-btn.close');
             if (closeBtn) {
                 closeBtn.addEventListener('click', () => {
-                    if (window.electronAPI && window.electronAPI.windowClose) {
-                        window.electronAPI.windowClose();
-                    }
+                    ipcRenderer.send('window-close');
                 });
             }
             
@@ -23833,9 +22672,7 @@ window.printInstallmentInvoice = printInstallmentInvoice;
             const minimizeBtn = document.querySelector('.titlebar-btn.minimize');
             if (minimizeBtn) {
                 minimizeBtn.addEventListener('click', () => {
-                    if (window.electronAPI && window.electronAPI.windowMinimize) {
-                        window.electronAPI.windowMinimize();
-                    }
+                    ipcRenderer.send('window-minimize');
                 });
             }
             
@@ -23843,9 +22680,7 @@ window.printInstallmentInvoice = printInstallmentInvoice;
             const maximizeBtn = document.querySelector('.titlebar-btn.maximize');
             if (maximizeBtn) {
                 maximizeBtn.addEventListener('click', () => {
-                    if (window.electronAPI && window.electronAPI.windowMaximize) {
-                        window.electronAPI.windowMaximize();
-                    }
+                    ipcRenderer.send('window-maximize');
                 });
             }
         });
@@ -26010,7 +24845,7 @@ window.printInstallmentInvoice = printInstallmentInvoice;
             
             <div style="margin-top:30px;text-align:center;color:#666;font-size:0.9rem;">
                 <p style="margin:5px 0;">تم إنشاء التقرير بواسطة نظام نقاط البيع المتقدم</p>
-                <p style="margin:5px 0;">شركة الإبداع الرقمي - إدارة كرار السعبري</p>
+                <p style="margin:5px 0;">شركة الإبداع الرقمي - إدارة كرار الشعبري</p>
             </div>
         </div>`;
         
@@ -27532,456 +26367,13 @@ window.printInstallmentInvoice = printInstallmentInvoice;
 
         console.log('✅ تم تحميل نظام إدارة التسديدات');
     })();
-
-
-
-    
     </script>
     
 
     <script src="./reports-system.js"></script>
     <script src="./expenses-system.js"></script>
     
-    <!-- قوالب الطباعة المحدثة -->
-    <script>
-/**
- * قوالب الطباعة المحسنة - معرض يعقوب للأجهزة الكهربائية
- * نسخة محدثة بتصميم مضغوط واحترافي
- */
-
-(function() {
-    'use strict';
     
-    /**
-     * دالة مساعدة لتحويل الأرقام العربية إلى إنجليزية
-     */
-    function toEnglishDigits(str) {
-        if (!str) return str;
-        const arabicDigits = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
-        const englishDigits = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
-        
-        let result = String(str);
-        for (let i = 0; i < 10; i++) {
-            result = result.replace(new RegExp(arabicDigits[i], 'g'), englishDigits[i]);
-        }
-        return result;
-    }
-    
-    /**
-     * قالب الطباعة للدفع النقدي - تصميم محسن
-     */
-    window.generateYaqoubCashReceipt = function(sale, settings) {
-        // دمج الإعدادات المحفوظة مع الإعدادات الممررة
-        const savedSettings = JSON.parse(localStorage.getItem('printerSettings') || '{}');
-        const finalSettings = { ...savedSettings, ...settings };
-        
-        // بيانات المتجر من الإعدادات
-        const storeName = finalSettings.store_name || 'معرض يعقوب للأجهزة الكهربائية';
-        const storeAddress = finalSettings.store_address || 'باب الهاشمية قرب مدرسة الكرار';
-        const storePhone = finalSettings.store_phone || localStorage.getItem('storePhone') || '07803092185';
-        const storeLogo = finalSettings.store_logo || 'yaqoub_logo.png';
-        const showLogo = finalSettings.show_logo !== false;
-
-        // قالب A4 دائمًا
-        let receiptWidth = '210mm';
-
-        // إصلاح التاريخ والوقت
-        let saleDate = sale.date ? new Date(sale.date) : (sale.timestamp ? new Date(sale.timestamp) : new Date());
-        if (typeof saleDate === 'string') saleDate = new Date(saleDate);
-        const dateStr = saleDate.toLocaleDateString('en-GB', { year: 'numeric', month: 'long', day: 'numeric' });
-        const timeStr = saleDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-
-        let html = `
-        <div style="
-            width: ${receiptWidth};
-            margin: 0 auto;
-            padding: 32px 32px;
-            font-family: 'Cairo', sans-serif;
-            background: #fff;
-            color: #222;
-            border: 1px solid #e5e7eb;
-            border-radius: 12px;
-            box-shadow: 0 4px 24px rgba(0,0,0,0.08);
-            line-height: 1.7;
-            font-size: 18px;
-            direction: rtl;
-            text-align: right;
-        ">
-        `;
-
-        // رأس الفاتورة
-        html += `
-        <div style="text-align: center; margin-bottom: 24px; direction: rtl;">
-            <h1 style="margin: 0 0 8px 0; font-size: 2.5rem; font-weight: bold; color: #2d3748; letter-spacing: 2px;">${storeName}</h1>
-            <div style="font-size: 1.2rem; color: #374151; margin-bottom: 4px;">${storeAddress}</div>
-            <div style="font-size: 1.1rem; color: #6366f1;">📞 ${storePhone}</div>
-            ${showLogo ? `<div style="width:100%;text-align:center;margin:12px 0 0 0;">
-            <img src="${storeLogo}" alt="Logo" style="max-width:120px;max-height:120px;display:inline-block;vertical-align:middle;border-radius:16px;box-shadow:0 2px 8px rgba(0,0,0,0.08);margin-bottom:8px;" />
-            </div>` : ''}
-        </div>
-        <div style="border-top: 2px solid #6366f1; margin: 24px 0 16px 0;"></div>
-        `;
-
-        // معلومات الفاتورة
-        html += `
-        <div style="display: flex; justify-content: flex-start; gap: 48px; margin-bottom: 18px; font-size: 1.1rem; direction: ltr;">
-            <div><b>Invoice No.:</b> ${toEnglishDigits(sale.invoice_id)}</div>
-            <div><b>Date:</b> ${toEnglishDigits(dateStr)}</div>
-            <div><b>Time:</b> ${toEnglishDigits(timeStr)}</div>
-        </div>
-        <div style="border-top: 1px dashed #bbb; margin: 18px 0 18px 0;"></div>
-        `;
-
-        // جدول المنتجات
-        let items = sale.items;
-        if (typeof items === 'string') {
-            try {
-                items = JSON.parse(items);
-            } catch {
-                items = [];
-            }
-        }
-        if (items && items.length > 0) {
-            html += `
-            <table style="width: 100%; border-collapse: collapse; font-size: 1.1rem; margin: 18px 0; background: #f9fafb; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.03); direction: ltr;">
-            <thead>
-                <tr style="background: #6366f1; color: #fff;">
-                <th style="padding: 12px 0;">#</th>
-                <th style="padding: 12px 0;">Product Name</th>
-                <th style="padding: 12px 0;">Qty</th>
-                <th style="padding: 12px 0;">Unit Price</th>
-                <th style="padding: 12px 0;">Total</th>
-                </tr>
-            </thead>
-            <tbody>
-        `;
-            items.forEach((item, index) => {
-                const name = item.product_name || item.name || '—';
-                const price = item.product_price || item.price || 0;
-                html += `
-            <tr style="background: ${index % 2 === 0 ? '#fff' : '#f3f4f6'}; text-align: center; direction: ltr;">
-                <td style="padding: 10px 0;">${toEnglishDigits(index + 1)}</td>
-                <td style="padding: 10px 0; text-align: left;">${name}</td>
-                <td style="padding: 10px 0;">${toEnglishDigits(item.quantity)}</td>
-                <td style="padding: 10px 0;">${toEnglishDigits(price.toLocaleString('en'))}</td>
-                <td style="padding: 10px 0; font-weight: bold; color: #10b981;">${toEnglishDigits((price * item.quantity).toLocaleString('en'))}</td>
-            </tr>
-            `;
-            });
-            html += `</tbody></table>`;
-        }
-
-        html += `<div style="border-top: 2px solid #6366f1; margin: 24px 0 16px 0;"></div>`;
-
-        // الإجمالي بالعربية مع الخصم الإضافي
-        const additionalDiscount = sale.additional_discount || 0;
-        const totalDiscount = (sale.discount || 0) + additionalDiscount;
-        
-        html += `
-        <div style="font-size: 1.3rem; font-weight: bold; margin: 32px 0 12px 0; text-align: right; direction: rtl;">
-            <div style="display: flex; justify-content: flex-start; gap: 48px; margin-bottom: 10px;">
-            <div><span style="color:#374151;">المجموع الجزئي:</span> <span>${toEnglishDigits((sale.total_amount || 0).toLocaleString('en'))}</span></div>
-            ${sale.discount ? `<div><span style="color:#374151;">الخصم:</span> <span style="color: #10b981;">- ${toEnglishDigits(sale.discount.toLocaleString('en'))}</span></div>` : ''}
-            ${additionalDiscount > 0 ? `<div><span style="color:#374151;">خصم إضافي:</span> <span style="color: #10b981;">- ${toEnglishDigits(additionalDiscount.toLocaleString('en'))}</span></div>` : ''}
-            </div>
-            ${totalDiscount > 0 ? `<div style="display: flex; justify-content: flex-start; gap: 48px; margin-bottom: 10px; padding: 8px; background: #f0fdf4; border-radius: 6px;">
-                <div><span style="color:#15803d;">إجمالي الخصم:</span> <span style="color: #15803d; font-weight: bold;">- ${toEnglishDigits(totalDiscount.toLocaleString('en'))}</span></div>
-            </div>` : ''}
-            <div style="display: flex; justify-content: flex-start; gap: 48px; border-top: 2px solid #6366f1; padding-top: 12px; margin-top: 8px;">
-            <div><span style="color:#2d3748;">الإجمالي النهائي:</span> <span style="color:#e11d48; font-size:1.5rem;">${toEnglishDigits((sale.final_total || sale.total_amount || 0).toLocaleString('en'))}</span></div>
-            </div>
-        </div>
-        `;
-
-        // الملاحظات من الإعدادات
-        const notes = [];
-        if (finalSettings.note1) notes.push(finalSettings.note1);
-        if (finalSettings.note2) notes.push(finalSettings.note2);
-        if (finalSettings.note3) notes.push(finalSettings.note3);
-        if (finalSettings.note4) notes.push(finalSettings.note4);
-        if (finalSettings.note5) notes.push(finalSettings.note5);
-        if (finalSettings.note6) notes.push(finalSettings.note6);
-        
-        // إضافة معلومات الصيانة
-        if (finalSettings.show_maintenance !== false) {
-            const maintenanceName = finalSettings.maintenance_name || 'حمزه أبو حوراء';
-            const maintenanceService = finalSettings.maintenance_service || 'صيانة السبالت';
-            const maintenancePhone = finalSettings.maintenance_phone || '+964 785 570 6118';
-            notes.push(`مسؤول ${maintenanceService}: ${maintenanceName} - هاتف: <span dir="ltr" style="unicode-bidi: embed;">${maintenancePhone}</span> <img src="https://upload.wikimedia.org/wikipedia/commons/2/2f/Flag_of_Iraq.svg" alt="Iraq Flag" style="height: 1em; vertical-align: middle; margin-right: 4px;" />`);
-        }
-        
-        if (notes.length > 0) {
-            html += `
-            <div style="margin-top:28px; padding:16px 12px; background:#fffbe7; border-radius:8px; border:1px solid #ffe082;">
-                <div style="font-size:1.05rem; font-weight:bold; color:#c62828; margin-bottom:6px; text-align:right; direction:rtl;">ملاحظات هامة:</div>
-                <ol style="font-size:1rem; padding-right:22px; margin:0; text-align:right; direction:rtl;">
-                ${notes.map(n => `<li>${toEnglishDigits(n)}</li>`).join('')}
-                </ol>
-            </div>
-            `;
-        }
-
-        // التذييل بالعربية
-        html += `<div style="text-align: center; margin-top: 40px; font-size: 1.1rem; color: #666; direction: rtl;">
-        <p style="margin: 4px 0;">شكراً لتعاملكم مع ${storeName}</p>
-        <p style="margin: 4px 0;">نتطلع لخدمتكم مرة أخرى</p>
-        <p style="margin-top: 18px; color: #6366f1; font-size: 1.2rem;">━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</p>
-        </div>`;
-        html += `</div>`;
-        return html;
-    };
-    
-    /**
-     * قالب الطباعة للتقسيط - تصميم مضغوط محسن
-     */
-    window.generateYaqoubInstallmentReceipt = function(sale, settings) {
-        // دمج الإعدادات المحفوظة مع الإعدادات الممررة
-        const savedSettings = JSON.parse(localStorage.getItem('printerSettings') || '{}');
-        const finalSettings = { ...savedSettings, ...settings };
-        
-        // استخراج التاريخ والساعة
-        const saleDate = new Date(sale.timestamp || sale.created_at || Date.now());
-        const dateStr = saleDate.toLocaleDateString('ar-IQ', { 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric',
-            weekday: 'long'
-        });
-        const timeStr = saleDate.toLocaleTimeString('ar-IQ', { 
-            hour: '2-digit', 
-            minute: '2-digit',
-            hour12: true
-        });
-        
-        // استخراج تفاصيل الأقساط من installment_details أو من مستوى الفاتورة
-        const installmentDetails = sale.installment_details || {};
-        const originalSubtotal = installmentDetails.original_subtotal || sale.subtotal || 0;
-        const additionalAmount = installmentDetails.additional_amount || sale.additional_amount || 0;
-        const downPayment = installmentDetails.down_payment || sale.down_payment || 0;
-        const totalBeforeDiscount = originalSubtotal + additionalAmount;
-        
-        // حساب المبلغ الإجمالي النهائي
-        let finalTotal = originalSubtotal; // البداية من المبلغ الأصلي
-        if (additionalAmount > 0) finalTotal += additionalAmount; // إضافة المبلغ الإضافي
-        if (downPayment > 0) finalTotal -= downPayment; // خصم الدفعة المقدمة
-        
-        const remainingAmount = installmentDetails.remaining_amount || sale.remaining_amount || (totalBeforeDiscount - downPayment);
-        const monthlyAmount = installmentDetails.monthly_amount || sale.monthly_amount || 0;
-        const installmentMonths = installmentDetails.installment_months || sale.installment_months || 0;
-        const startDate = installmentDetails.start_date || sale.start_date || null;
-        const advancedControlUsed = installmentDetails.advanced_control_used || installmentDetails.custom_values_used || false;
-        
-        // بيانات المتجر من الإعدادات
-        const storeName = finalSettings.store_name || 'يعقوب للاجهزه الكهربائيه';
-        const storeAddress = finalSettings.store_address || 'باب الهاشميه قرب مدرسه الكرار';
-        const storePhone = finalSettings.store_phone || '07803092185';
-        
-        let html = `<div style="width:210mm;min-height:297mm;margin:0 auto;padding:12mm 10mm;font-family:'Cairo',sans-serif;background:#fff;color:#222;line-height:1.4;font-size:11px;box-sizing:border-box;">
-        
-        <!-- الهيدر المحسّن -->
-        <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:8px;padding-bottom:6px;border-bottom:2px solid #6366f1;">
-            <!-- اليسار: اسم المحل -->
-            <div style="flex:0 0 35%;">
-                <h1 style="margin:0;font-size:1.3rem;font-weight:bold;color:#2d3748;">${storeName}</h1>
-            </div>
-            <!-- اليمين: العنوان والهاتف -->
-            <div style="flex:0 0 60%;text-align:left;">
-                <div style="font-size:0.95rem;color:#374151;font-weight:600;margin-bottom:2px;">${storeAddress}</div>
-                <div style="font-size:0.9rem;color:#6366f1;font-weight:600;">📞 ${storePhone}</div>
-            </div>
-        </div>
-        
-        <!-- عنوان الفاتورة ومعلوماتها -->
-        <div style="background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);border-radius:6px;padding:6px 10px;margin-bottom:8px;color:#fff;">
-            <div style="display:flex;justify-content:space-between;align-items:center;">
-                <div>
-                    <div style="font-size:1.05rem;font-weight:bold;">📋 فاتورة تقسيط</div>
-                    <div style="font-size:0.85rem;opacity:0.95;">رقم: ${sale.invoice_id || ''}</div>
-                </div>
-                <div style="text-align:left;font-size:0.85rem;">
-                    <div>📅 ${dateStr}</div>
-                    <div>🕐 ${timeStr}</div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- معلومات العميل - صف واحد -->
-        <div style="background:#f8fafc;border-radius:6px;padding:6px 8px;margin-bottom:8px;border:1px solid #e2e8f0;">
-            <div style="font-weight:bold;color:#1e293b;margin-bottom:4px;font-size:0.95rem;">👤 معلومات العميل</div>
-            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;font-size:0.9rem;">
-                <div><strong>الاسم:</strong> ${sale.customer_name || ''}</div>
-                <div><strong>الهاتف:</strong> ${sale.customer_phone || ''}</div>
-                <div><strong>العنوان:</strong> ${sale.customer_address || ''}</div>
-            </div>
-        </div>
-        
-        <!-- تفاصيل الأقساط - مضغوط -->
-        <div style="background:#f0f9ff;border-radius:6px;padding:6px 8px;margin-bottom:8px;border:1px solid #bae6fd;">
-            <div style="font-weight:bold;color:#0c4a6e;margin-bottom:4px;font-size:0.95rem;">💳 تفاصيل الأقساط</div>
-            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;font-size:0.85rem;">
-                <div style="background:#dbeafe;padding:4px;border-radius:4px;text-align:center;">
-                    <div style="font-weight:600;color:#1e40af;font-size:0.8rem;">المبلغ الأصلي</div>
-                    <div style="font-weight:bold;color:#1e3a8a;">${originalSubtotal.toLocaleString()}</div>
-                </div>
-                ${additionalAmount > 0 ? `<div style="background:#fce7f3;padding:4px;border-radius:4px;text-align:center;">
-                    <div style="font-weight:600;color:#9f1239;font-size:0.8rem;">مبلغ إضافي</div>
-                    <div style="font-weight:bold;color:#be123c;">${additionalAmount.toLocaleString()}</div>
-                </div>` : ''}
-                ${downPayment > 0 ? `<div style="background:#d1fae5;padding:4px;border-radius:4px;text-align:center;">
-                    <div style="font-weight:600;color:#065f46;font-size:0.8rem;">دفعة مقدمة</div>
-                    <div style="font-weight:bold;color:#047857;">${downPayment.toLocaleString()}</div>
-                </div>` : ''}
-                <div style="background:#fee2e2;padding:4px;border-radius:4px;text-align:center;">
-                    <div style="font-weight:600;color:#7f1d1d;font-size:0.8rem;">المتبقي</div>
-                    <div style="font-weight:bold;color:#991b1b;">${remainingAmount.toLocaleString()}</div>
-                </div>
-                <div style="background:#fef3c7;padding:4px;border-radius:4px;text-align:center;">
-                    <div style="font-weight:600;color:#78350f;font-size:0.8rem;">عدد الأشهر</div>
-                    <div style="font-weight:bold;color:#92400e;">${installmentMonths}</div>
-                </div>
-                <div style="background:#ffedd5;padding:4px;border-radius:4px;text-align:center;">
-                    <div style="font-weight:600;color:#7c2d12;font-size:0.8rem;">القسط الشهري</div>
-                    <div style="font-weight:bold;color:#9a3412;">${monthlyAmount.toLocaleString()}</div>
-                </div>
-                ${startDate ? `<div style="background:#e0e7ff;padding:4px;border-radius:4px;text-align:center;">
-                    <div style="font-weight:600;color:#3730a3;font-size:0.8rem;">تاريخ البداية</div>
-                    <div style="font-weight:bold;color:#4338ca;font-size:0.8rem;">${new Date(startDate).toLocaleDateString('ar-IQ')}</div>
-                </div>` : ''}
-                ${advancedControlUsed ? `<div style="background:#ede9fe;padding:4px;border-radius:4px;text-align:center;grid-column:1/-1;">
-                    <div style="font-weight:600;color:#5b21b6;font-size:0.8rem;">⚙️ تحكم متقدم</div>
-                </div>` : ''}
-            </div>
-        </div>
-        
-        <!-- جدول المنتجات - مضغوط -->
-        <div style="margin-bottom:8px;">
-            <table style="width:100%;border-collapse:collapse;font-size:0.9rem;border:1px solid #e5e7eb;">
-            <thead>
-                <tr style="background:#6366f1;color:#fff;">
-                    <th style="padding:4px 6px;width:6%;text-align:center;border:1px solid rgba(255,255,255,0.2);">#</th>
-                    <th style="padding:4px 6px;width:44%;text-align:right;border:1px solid rgba(255,255,255,0.2);">المنتج</th>
-                    <th style="padding:4px 6px;width:12%;text-align:center;border:1px solid rgba(255,255,255,0.2);">الكمية</th>
-                    <th style="padding:4px 6px;width:18%;text-align:center;border:1px solid rgba(255,255,255,0.2);">السعر</th>
-                    <th style="padding:4px 6px;width:20%;text-align:center;border:1px solid rgba(255,255,255,0.2);">الإجمالي</th>
-                </tr>
-            </thead>
-            <tbody>`;
-        
-        let items = sale.items;
-        if (typeof items === 'string') {
-            try { items = JSON.parse(items); } catch { items = []; }
-        }
-        
-        items.forEach((item, index) => {
-            const name = item.product_name || item.name || '—';
-            const price = item.product_price || item.price || 0;
-            const qty = item.quantity || 1;
-            const total = price * qty;
-            html += `<tr style="background:${index%2===0?'#fff':'#f9fafb'};">
-                <td style="padding:4px 6px;text-align:center;border:1px solid #e5e7eb;font-weight:600;">${index+1}</td>
-                <td style="padding:4px 6px;text-align:right;border:1px solid #e5e7eb;">${name}</td>
-                <td style="padding:4px 6px;text-align:center;border:1px solid #e5e7eb;font-weight:600;">${qty}</td>
-                <td style="padding:4px 6px;text-align:center;border:1px solid #e5e7eb;font-weight:600;">${price.toLocaleString()}</td>
-                <td style="padding:4px 6px;text-align:center;border:1px solid #e5e7eb;font-weight:bold;color:#10b981;">${total.toLocaleString()}</td>
-            </tr>`;
-        });
-        
-        html += `</tbody></table></div>
-        
-        <!-- ملخص المبالغ - مضغوط -->
-        <div style="background:#fef3c7;border-radius:6px;padding:6px 8px;margin-bottom:8px;border:1px solid #fde68a;">
-            <div style="font-weight:bold;color:#78350f;margin-bottom:4px;font-size:0.95rem;">💰 ملخص المبالغ</div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:0.9rem;">
-                <div style="display:flex;justify-content:space-between;padding:3px 6px;background:#e0f2fe;border-radius:4px;">
-                    <span>المجموع الجزئي:</span>
-                    <strong>${originalSubtotal.toLocaleString()}</strong>
-                </div>
-                ${additionalAmount > 0 ? `<div style="display:flex;justify-content:space-between;padding:3px 6px;background:#fce7f3;border-radius:4px;">
-                    <span>مبلغ إضافي:</span>
-                    <strong style="color:#be123c;">+${additionalAmount.toLocaleString()}</strong>
-                </div>` : ''}
-                ${downPayment > 0 ? `<div style="display:flex;justify-content:space-between;padding:3px 6px;background:#d1fae5;border-radius:4px;">
-                    <span>دفعة مقدمة:</span>
-                    <strong style="color:#047857;">-${downPayment.toLocaleString()}</strong>
-                </div>` : ''}
-                <div style="grid-column:1/-1;display:flex;justify-content:space-between;padding:6px;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);border-radius:4px;color:#fff;">
-                    <span style="font-size:1rem;font-weight:bold;">💵 الإجمالي النهائي:</span>
-                    <strong style="font-size:1.1rem;">${finalTotal.toLocaleString()} دينار</strong>
-                </div>
-            </div>
-        </div>
-        
-        <!-- ملاحظات مضغوطة -->
-        <div style="background:#fffbeb;border-radius:6px;padding:6px 8px;margin-bottom:8px;border:1px solid #fbbf24;">
-            <div style="font-weight:bold;color:#b91c1c;margin-bottom:4px;font-size:0.9rem;">⚠️ ملاحظات هامة</div>
-            <ol style="font-size:0.8rem;padding-right:18px;margin:0;line-height:1.5;">`;
-        
-        // الملاحظات من الإعدادات
-        const notes = [];
-        if (finalSettings.note1) notes.push(finalSettings.note1);
-        if (finalSettings.note2) notes.push(finalSettings.note2);
-        if (finalSettings.note3) notes.push(finalSettings.note3);
-        if (finalSettings.note4) notes.push(finalSettings.note4);
-        if (finalSettings.note5) notes.push(finalSettings.note5);
-        if (finalSettings.note6) notes.push(finalSettings.note6);
-        
-        // قيم افتراضية إذا لم يكن هناك ملاحظات
-        if (notes.length === 0) {
-            notes.push('المبلغ الموجود هو وصل أمانة');
-            notes.push('السعر محمي 24 ساعة');
-            notes.push('المباع لا يرجع ولا يبدل');
-            notes.push('الخطأ والسهو مرجوع للطرفين');
-            notes.push('الشركة المصنعة مسؤولة عن الضمان');
-            notes.push('كسر الشاشة غير داخل بالضمان');
-        }
-        
-        notes.forEach(note => {
-            html += `<li>${note}</li>`;
-        });
-        
-        // إضافة معلومات الصيانة
-        if (finalSettings.show_maintenance !== false) {
-            const maintenanceName = finalSettings.maintenance_name || 'حمزه ابو حوراء';
-            const maintenanceService = finalSettings.maintenance_service || 'صيانة السبالت';
-            const maintenancePhone = finalSettings.maintenance_phone || '+964 785 570 6118';
-            
-            html += `<li style="margin-top:4px;">
-                    <div style="background:#e0f2fe;padding:4px 6px;border-radius:4px;border:1px solid #bae6fd;">
-                        <strong style="color:#0c4a6e;">👨‍🔧 ${maintenanceService}:</strong> ${maintenanceName}
-                        <div style="direction:ltr;text-align:left;font-weight:bold;color:#0c4a6e;margin-top:2px;">
-                            📱 <span style="letter-spacing:1px;">${maintenancePhone}</span>
-                        </div>
-                    </div>
-                </li>`;
-        }
-        
-        html += `</ol>
-        </div>
-        
-        <!-- التوقيعات -->
-        <div style="display:flex;justify-content:space-between;gap:30px;margin-top:10px;">
-            <div style="flex:1;text-align:center;">
-                <div style="font-size:0.9rem;font-weight:bold;margin-bottom:15px;">✍️ توقيع البائع</div>
-                <div style="border-bottom:1px dashed #9ca3af;"></div>
-            </div>
-            <div style="flex:1;text-align:center;">
-                <div style="font-size:0.9rem;font-weight:bold;margin-bottom:15px;">✍️ توقيع العميل</div>
-                <div style="border-bottom:1px dashed #9ca3af;"></div>
-            </div>
-        </div>
-        
-        <!-- الختام -->
-        <div style="text-align:center;margin-top:10px;padding-top:6px;border-top:2px solid #e5e7eb;">
-            <p style="margin:2px 0;font-size:0.95rem;font-weight:bold;color:#6366f1;">🌟 شكراً لتعاملكم معنا 🌟</p>
-            <p style="margin:2px 0;font-size:0.85rem;color:#6b7280;">نتطلع لخدمتكم مرة أخرى</p>
-        </div>
-        </div>`;
-        return html;
-    };
-    
-    console.log('✅ تم تحميل قوالب الطباعة المحدثة - معرض يعقوب');
-})();
-    </script>
     
 
  </body>

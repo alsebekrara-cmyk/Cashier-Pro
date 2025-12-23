@@ -182,6 +182,7 @@ body {
 </style>
 
   <style>
+
 /* ==========================================
    🎨 نظام الإشعارات الحديث v2.0 - CSS
    ========================================== */
@@ -206,6 +207,10 @@ body {
     box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
 }
 
+.modern-notification-btn:active {
+    transform: translateY(0);
+}
+
 .modern-notification-btn i {
     font-size: 20px;
     color: #fff;
@@ -218,6 +223,7 @@ body {
     20%, 40% { transform: rotate(10deg); }
 }
 
+/* شارة العدد */
 .modern-notification-badge {
     position: absolute;
     top: -8px;
@@ -243,7 +249,7 @@ body {
     display: none;
 }
 
-/* نافذة الإشعارات */
+/* نافذة الإشعارات الرئيسية */
 .modern-notifications-modal {
     display: none;
     position: fixed;
@@ -282,10 +288,17 @@ body {
 }
 
 @keyframes containerSlideUp {
-    from { transform: translateY(50px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
+    from {
+        transform: translateY(50px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
 }
 
+/* رأس النافذة */
 .modern-notifications-header {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: #fff;
@@ -293,6 +306,7 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .modern-notifications-header h2 {
@@ -302,6 +316,10 @@ body {
     align-items: center;
     gap: 12px;
     margin: 0;
+}
+
+.modern-notifications-header h2 i {
+    font-size: 28px;
 }
 
 .modern-close-btn {
@@ -330,16 +348,16 @@ body {
 /* شريط الإحصائيات */
 .modern-notifications-stats {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     gap: 16px;
     padding: 20px 28px;
-    background: #f8f9fa;
+    background: linear-gradient(to bottom, #f8f9fa, #fff);
     border-bottom: 1px solid #e9ecef;
 }
 
 .modern-stat-card {
     background: #fff;
-    border-radius: 12px;
+    border-radius: 16px;
     padding: 16px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
     transition: all 0.3s;
@@ -354,7 +372,7 @@ body {
 
 .modern-stat-card.active {
     border-color: #667eea;
-    background: rgba(102, 126, 234, 0.05);
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05));
 }
 
 .modern-stat-icon {
@@ -465,8 +483,12 @@ body {
 
 .modern-action-btn:hover {
     border-color: #667eea;
-    background: rgba(102, 126, 234, 0.05);
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05));
     transform: translateY(-2px);
+}
+
+.modern-action-btn i {
+    font-size: 16px;
 }
 
 .modern-action-btn.danger {
@@ -490,9 +512,18 @@ body {
     width: 8px;
 }
 
+.modern-notifications-list::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
 .modern-notifications-list::-webkit-scrollbar-thumb {
     background: linear-gradient(135deg, #667eea, #764ba2);
     border-radius: 10px;
+}
+
+.modern-notifications-list::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, #764ba2, #667eea);
 }
 
 /* بطاقة الإشعار */
@@ -505,14 +536,35 @@ body {
     transition: all 0.3s;
     cursor: pointer;
     border-right: 4px solid;
+    position: relative;
+    overflow: hidden;
     animation: cardSlideIn 0.4s ease-out;
-    display: flex;
-    gap: 16px;
 }
 
 @keyframes cardSlideIn {
-    from { opacity: 0; transform: translateX(20px); }
-    to { opacity: 1; transform: translateX(0); }
+    from {
+        opacity: 0;
+        transform: translateX(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.modern-notification-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 0;
+    height: 100%;
+    background: linear-gradient(90deg, rgba(102, 126, 234, 0.05), transparent);
+    transition: width 0.3s;
+}
+
+.modern-notification-card:hover::before {
+    width: 100%;
 }
 
 .modern-notification-card:hover {
@@ -536,9 +588,20 @@ body {
     border-right-color: #1dd1a1;
 }
 
+.modern-notification-card.high-priority {
+    background: linear-gradient(to right, rgba(255, 107, 107, 0.05), #fff);
+}
+
 .modern-notification-card.pinned {
     background: linear-gradient(to right, rgba(102, 126, 234, 0.05), #fff);
     box-shadow: 0 4px 16px rgba(102, 126, 234, 0.2);
+}
+
+.modern-notification-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
 }
 
 .modern-notification-icon {
@@ -563,8 +626,21 @@ body {
     color: #fff;
 }
 
+.modern-notification-card.sales .modern-notification-icon {
+    background: linear-gradient(135deg, #48dbfb, #0abde3);
+    color: #fff;
+}
+
+.modern-notification-card.system .modern-notification-icon {
+    background: linear-gradient(135deg, #1dd1a1, #10ac84);
+    color: #fff;
+}
+
 .modern-notification-content {
     flex: 1;
+    margin-right: 16px;
+    position: relative;
+    z-index: 1;
 }
 
 .modern-notification-title {
@@ -582,6 +658,7 @@ body {
     padding: 3px 8px;
     border-radius: 6px;
     font-weight: 600;
+    text-transform: uppercase;
 }
 
 .modern-priority-badge.high {
@@ -609,8 +686,13 @@ body {
 .modern-notification-meta {
     display: flex;
     gap: 16px;
+    align-items: center;
     font-size: 12px;
     color: #95a5a6;
+}
+
+.modern-notification-meta i {
+    margin-left: 4px;
 }
 
 .modern-notification-actions {
@@ -619,20 +701,17 @@ body {
     align-items: center;
 }
 
-.modern-pin-btn, .modern-delete-btn {
+.modern-pin-btn {
     width: 36px;
     height: 36px;
     border: none;
+    background: rgba(102, 126, 234, 0.1);
     border-radius: 10px;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     transition: all 0.3s;
-}
-
-.modern-pin-btn {
-    background: rgba(102, 126, 234, 0.1);
 }
 
 .modern-pin-btn:hover {
@@ -645,14 +724,31 @@ body {
     color: #fff;
 }
 
+.modern-pin-btn i {
+    font-size: 16px;
+}
+
 .modern-delete-btn {
+    width: 36px;
+    height: 36px;
+    border: none;
     background: rgba(255, 107, 107, 0.1);
+    border-radius: 10px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
     color: #ff6b6b;
 }
 
 .modern-delete-btn:hover {
     background: rgba(255, 107, 107, 0.2);
     transform: scale(1.1);
+}
+
+.modern-delete-btn i {
+    font-size: 16px;
 }
 
 /* حالة فارغة */
@@ -766,6 +862,12 @@ body {
     color: #2c3e50;
 }
 
+.modern-detail-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 24px;
+}
+
 .modern-detail-btn {
     flex: 1;
     padding: 14px;
@@ -793,23 +895,56 @@ body {
     box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
 }
 
+.modern-detail-btn.secondary {
+    background: #e9ecef;
+    color: #6c757d;
+}
+
+.modern-detail-btn.secondary:hover {
+    background: #dee2e6;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .modern-notifications-container {
         width: 95%;
+        max-height: 90vh;
         border-radius: 16px;
+    }
+    
+    .modern-notifications-header {
+        padding: 20px;
+    }
+    
+    .modern-notifications-header h2 {
+        font-size: 20px;
     }
     
     .modern-notifications-stats {
         grid-template-columns: repeat(2, 1fr);
+        padding: 16px 20px;
     }
     
     .modern-notifications-toolbar {
+        padding: 12px 20px;
         flex-direction: column;
     }
     
     .modern-search-box {
         width: 100%;
+    }
+    
+    .modern-action-btn {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .modern-notifications-list {
+        padding: 16px 20px;
+    }
+    
+    .modern-notification-card {
+        padding: 16px;
     }
 }
 
@@ -8412,7 +8547,7 @@ console.log(`
           <div id="searchResults" class="search-results"></div>
       </div>
       <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()"> <i class="fas fa-moon"></i> </button>
-      <!-- زر الإشعارات الحديث -->
+      <!-- 🔔 زر الإشعارات الحديث -->
       <div class="modern-notification-btn" id="modernNotificationBtn" style="margin-right: 10px;">
           <i class="fas fa-bell"></i>
           <span class="modern-notification-badge" id="modernNotificationBadge">0</span>
@@ -10061,21 +10196,7 @@ console.log(`
             <div class="settings-card-arrow">
               <i class="fas fa-chevron-left"></i>
             </div>
-          
-
-          <div class="settings-card" onclick="showSettingsPage('notifications')">
-            <div class="settings-card-icon" style="background: linear-gradient(135deg, #667eea, #764ba2);">
-              <i class="fas fa-bell"></i>
-            </div>
-            <div class="settings-card-content">
-              <h3>إعدادات الإشعارات</h3>
-              <p>تخصيص الإشعارات والتنبيهات</p>
-            </div>
-            <div class="settings-card-arrow">
-              <i class="fas fa-chevron-left"></i>
-            </div>
           </div>
-</div>
 
         </div>
       </div>
@@ -10283,71 +10404,152 @@ console.log(`
 
        <div class="section-header" style="margin-bottom: 2rem;">
          <div class="section-title"><i class="fas fa-bell"></i> إعدادات الإشعارات</div>
-         <div class="section-subtitle">تخصيص الإشعارات والتنبيهات</div>
+         <div class="section-subtitle">تخصيص الإشعارات والتنبيهات حسب احتياجاتك</div>
        </div>
 
        <div style="max-width: 900px; margin: 0 auto;">
          
+         <!-- إعدادات إشعارات المخزون -->
          <div style="background: var(--theme-bg-secondary); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; border: 1px solid var(--theme-border);">
            <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
              <div style="width: 48px; height: 48px; border-radius: 12px; background: linear-gradient(135deg, #feca57, #ff9ff3); display: flex; align-items: center; justify-content: center; font-size: 24px; color: #fff;">
                <i class="fas fa-box"></i>
              </div>
              <div>
-               <h3 style="font-size: 1.2rem; font-weight: 600; margin: 0 0 0.25rem 0;">إشعارات المخزون</h3>
+               <h3 style="font-size: 1.2rem; font-weight: 600; margin: 0 0 0.25rem 0; color: var(--theme-text-primary);">إشعارات المخزون</h3>
                <p style="margin: 0; font-size: 0.9rem; color: var(--theme-text-secondary);">تنبيهات عن المنتجات والكميات</p>
              </div>
            </div>
            
            <div style="display: flex; flex-direction: column; gap: 1rem;">
-             <label style="display: flex; align-items: center; cursor: pointer; padding: 0.75rem;">
-               <input type="checkbox" id="notif_lowStock" checked style="width: 20px; height: 20px; margin-left: 12px;">
+             <label style="display: flex; align-items: center; cursor: pointer; padding: 0.75rem; border-radius: 8px; transition: background 0.2s;" onmouseover="this.style.background='var(--theme-hover)'" onmouseout="this.style.background='transparent'">
+               <input type="checkbox" id="notif_lowStock" checked style="width: 20px; height: 20px; margin-left: 12px; cursor: pointer;">
                <div>
-                 <div style="font-weight: 600;">المخزون المنخفض</div>
-                 <div style="font-size: 0.85rem; color: var(--theme-text-secondary);">تنبيه عند انخفاض المخزون</div>
+                 <div style="font-weight: 600; color: var(--theme-text-primary); margin-bottom: 0.25rem;">المخزون المنخفض</div>
+                 <div style="font-size: 0.85rem; color: var(--theme-text-secondary);">تنبيه عند انخفاض المخزون عن الحد الأدنى</div>
                </div>
              </label>
              
-             <label style="display: flex; align-items: center; cursor: pointer; padding: 0.75rem;">
-               <input type="checkbox" id="notif_outOfStock" checked style="width: 20px; height: 20px; margin-left: 12px;">
+             <label style="display: flex; align-items: center; cursor: pointer; padding: 0.75rem; border-radius: 8px; transition: background 0.2s;" onmouseover="this.style.background='var(--theme-hover)'" onmouseout="this.style.background='transparent'">
+               <input type="checkbox" id="notif_outOfStock" checked style="width: 20px; height: 20px; margin-left: 12px; cursor: pointer;">
                <div>
-                 <div style="font-weight: 600;">نفاذ المخزون</div>
-                 <div style="font-size: 0.85rem; color: var(--theme-text-secondary);">تنبيه عند نفاذ المنتج</div>
+                 <div style="font-weight: 600; color: var(--theme-text-primary); margin-bottom: 0.25rem;">نفاذ المخزون</div>
+                 <div style="font-size: 0.85rem; color: var(--theme-text-secondary);">تنبيه عند نفاذ المنتج بالكامل</div>
                </div>
              </label>
              
-             <label style="display: flex; align-items: center; cursor: pointer; padding: 0.75rem;">
-               <input type="checkbox" id="notif_expiry" checked style="width: 20px; height: 20px; margin-left: 12px;">
+             <label style="display: flex; align-items: center; cursor: pointer; padding: 0.75rem; border-radius: 8px; transition: background 0.2s;" onmouseover="this.style.background='var(--theme-hover)'" onmouseout="this.style.background='transparent'">
+               <input type="checkbox" id="notif_expiry" checked style="width: 20px; height: 20px; margin-left: 12px; cursor: pointer;">
                <div>
-                 <div style="font-weight: 600;">قرب انتهاء الصلاحية</div>
-                 <div style="font-size: 0.85rem; color: var(--theme-text-secondary);">تنبيه قبل 30 يوم</div>
+                 <div style="font-weight: 600; color: var(--theme-text-primary); margin-bottom: 0.25rem;">قرب انتهاء الصلاحية</div>
+                 <div style="font-size: 0.85rem; color: var(--theme-text-secondary);">تنبيه قبل 30 يوم من انتهاء الصلاحية</div>
                </div>
              </label>
            </div>
          </div>
 
+         <!-- إعدادات إشعارات الديون -->
          <div style="background: var(--theme-bg-secondary); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; border: 1px solid var(--theme-border);">
            <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
              <div style="width: 48px; height: 48px; border-radius: 12px; background: linear-gradient(135deg, #ff6b6b, #ee5a6f); display: flex; align-items: center; justify-content: center; font-size: 24px; color: #fff;">
                <i class="fas fa-money-bill-wave"></i>
              </div>
              <div>
-               <h3 style="font-size: 1.2rem; font-weight: 600; margin: 0 0 0.25rem 0;">إشعارات الديون</h3>
+               <h3 style="font-size: 1.2rem; font-weight: 600; margin: 0 0 0.25rem 0; color: var(--theme-text-primary);">إشعارات الديون</h3>
                <p style="margin: 0; font-size: 0.9rem; color: var(--theme-text-secondary);">تنبيهات عن الديون والأقساط</p>
              </div>
            </div>
            
            <div style="display: flex; flex-direction: column; gap: 1rem;">
-             <label style="display: flex; align-items: center; cursor: pointer; padding: 0.75rem;">
-               <input type="checkbox" id="notif_debt" checked style="width: 20px; height: 20px; margin-left: 12px;">
+             <label style="display: flex; align-items: center; cursor: pointer; padding: 0.75rem; border-radius: 8px; transition: background 0.2s;" onmouseover="this.style.background='var(--theme-hover)'" onmouseout="this.style.background='transparent'">
+               <input type="checkbox" id="notif_debt" checked style="width: 20px; height: 20px; margin-left: 12px; cursor: pointer;">
                <div>
-                 <div style="font-weight: 600;">الديون المتأخرة</div>
+                 <div style="font-weight: 600; color: var(--theme-text-primary); margin-bottom: 0.25rem;">الديون المتأخرة</div>
                  <div style="font-size: 0.85rem; color: var(--theme-text-secondary);">تنبيه عند تأخر الأقساط</div>
+               </div>
+             </label>
+             
+             <label style="display: flex; align-items: center; cursor: pointer; padding: 0.75rem; border-radius: 8px; transition: background 0.2s;" onmouseover="this.style.background='var(--theme-hover)'" onmouseout="this.style.background='transparent'">
+               <input type="checkbox" id="notif_debtDue" checked style="width: 20px; height: 20px; margin-left: 12px; cursor: pointer;">
+               <div>
+                 <div style="font-weight: 600; color: var(--theme-text-primary); margin-bottom: 0.25rem;">قرب استحقاق الأقساط</div>
+                 <div style="font-size: 0.85rem; color: var(--theme-text-secondary);">تنبيه قبل 3 أيام من الاستحقاق</div>
                </div>
              </label>
            </div>
          </div>
 
+         <!-- إعدادات إشعارات المبيعات -->
+         <div style="background: var(--theme-bg-secondary); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; border: 1px solid var(--theme-border);">
+           <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
+             <div style="width: 48px; height: 48px; border-radius: 12px; background: linear-gradient(135deg, #48dbfb, #0abde3); display: flex; align-items: center; justify-content: center; font-size: 24px; color: #fff;">
+               <i class="fas fa-chart-line"></i>
+             </div>
+             <div>
+               <h3 style="font-size: 1.2rem; font-weight: 600; margin: 0 0 0.25rem 0; color: var(--theme-text-primary);">إشعارات المبيعات</h3>
+               <p style="margin: 0; font-size: 0.9rem; color: var(--theme-text-secondary);">تنبيهات عن المبيعات والإيرادات</p>
+             </div>
+           </div>
+           
+           <div style="display: flex; flex-direction: column; gap: 1rem;">
+             <label style="display: flex; align-items: center; cursor: pointer; padding: 0.75rem; border-radius: 8px; transition: background 0.2s;" onmouseover="this.style.background='var(--theme-hover)'" onmouseout="this.style.background='transparent'">
+               <input type="checkbox" id="notif_sales" style="width: 20px; height: 20px; margin-left: 12px; cursor: pointer;">
+               <div>
+                 <div style="font-weight: 600; color: var(--theme-text-primary); margin-bottom: 0.25rem;">المبيعات الكبيرة</div>
+                 <div style="font-size: 0.85rem; color: var(--theme-text-secondary);">تنبيه عند البيع بمبلغ كبير (أكثر من 1,000,000 د.ع)</div>
+               </div>
+             </label>
+             
+             <label style="display: flex; align-items: center; cursor: pointer; padding: 0.75rem; border-radius: 8px; transition: background 0.2s;" onmouseover="this.style.background='var(--theme-hover)'" onmouseout="this.style.background='transparent'">
+               <input type="checkbox" id="notif_dailySales" style="width: 20px; height: 20px; margin-left: 12px; cursor: pointer;">
+               <div>
+                 <div style="font-weight: 600; color: var(--theme-text-primary); margin-bottom: 0.25rem;">تقرير المبيعات اليومي</div>
+                 <div style="font-size: 0.85rem; color: var(--theme-text-secondary);">ملخص يومي للمبيعات (نهاية اليوم)</div>
+               </div>
+             </label>
+           </div>
+         </div>
+
+         <!-- إعدادات إشعارات النظام -->
+         <div style="background: var(--theme-bg-secondary); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; border: 1px solid var(--theme-border);">
+           <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
+             <div style="width: 48px; height: 48px; border-radius: 12px; background: linear-gradient(135deg, #1dd1a1, #10ac84); display: flex; align-items: center; justify-content: center; font-size: 24px; color: #fff;">
+               <i class="fas fa-cog"></i>
+             </div>
+             <div>
+               <h3 style="font-size: 1.2rem; font-weight: 600; margin: 0 0 0.25rem 0; color: var(--theme-text-primary);">إشعارات النظام</h3>
+               <p style="margin: 0; font-size: 0.9rem; color: var(--theme-text-secondary);">تنبيهات عامة للنظام</p>
+             </div>
+           </div>
+           
+           <div style="display: flex; flex-direction: column; gap: 1rem;">
+             <label style="display: flex; align-items: center; cursor: pointer; padding: 0.75rem; border-radius: 8px; transition: background 0.2s;" onmouseover="this.style.background='var(--theme-hover)'" onmouseout="this.style.background='transparent'">
+               <input type="checkbox" id="notif_updates" style="width: 20px; height: 20px; margin-left: 12px; cursor: pointer;">
+               <div>
+                 <div style="font-weight: 600; color: var(--theme-text-primary); margin-bottom: 0.25rem;">التحديثات المتوفرة</div>
+                 <div style="font-size: 0.85rem; color: var(--theme-text-secondary);">تنبيه عند توفر تحديثات جديدة</div>
+               </div>
+             </label>
+             
+             <label style="display: flex; align-items: center; cursor: pointer; padding: 0.75rem; border-radius: 8px; transition: background 0.2s;" onmouseover="this.style.background='var(--theme-hover)'" onmouseout="this.style.background='transparent'">
+               <input type="checkbox" id="notif_backupReminders" checked style="width: 20px; height: 20px; margin-left: 12px; cursor: pointer;">
+               <div>
+                 <div style="font-weight: 600; color: var(--theme-text-primary); margin-bottom: 0.25rem;">تذكير النسخ الاحتياطي</div>
+                 <div style="font-size: 0.85rem; color: var(--theme-text-secondary);">تذكير أسبوعي لإنشاء نسخة احتياطية</div>
+               </div>
+             </label>
+             
+             <label style="display: flex; align-items: center; cursor: pointer; padding: 0.75rem; border-radius: 8px; transition: background 0.2s;" onmouseover="this.style.background='var(--theme-hover)'" onmouseout="this.style.background='transparent'">
+               <input type="checkbox" id="notif_sound" checked style="width: 20px; height: 20px; margin-left: 12px; cursor: pointer;">
+               <div>
+                 <div style="font-weight: 600; color: var(--theme-text-primary); margin-bottom: 0.25rem;">الأصوات التنبيهية</div>
+                 <div style="font-size: 0.85rem; color: var(--theme-text-secondary);">تشغيل صوت عند ظهور إشعار جديد</div>
+               </div>
+             </label>
+           </div>
+         </div>
+
+         <!-- أزرار الحفظ -->
          <div style="display: flex; gap: 1rem; justify-content: flex-end;">
            <button class="btn btn-secondary" onclick="resetNotificationSettings()">
              <i class="fas fa-undo"></i> إعادة للافتراضي
@@ -29141,9 +29343,14 @@ body {
 
  
   
-  <!-- نوافذ نظام الإشعارات -->
+  <!-- ==========================================
+       🔔 نوافذ نظام الإشعارات الحديث v2.0
+       ========================================== -->
+  
+  <!-- نافذة الإشعارات الرئيسية -->
   <div class="modern-notifications-modal" id="modernNotificationsModal">
       <div class="modern-notifications-container">
+          <!-- رأس النافذة -->
           <div class="modern-notifications-header">
               <h2><i class="fas fa-bell"></i> الإشعارات</h2>
               <button class="modern-close-btn" id="modernCloseNotifications">
@@ -29151,34 +29358,46 @@ body {
               </button>
           </div>
 
+          <!-- شريط الإحصائيات -->
           <div class="modern-notifications-stats">
               <div class="modern-stat-card all active" data-filter="all">
-                  <div class="modern-stat-icon"><i class="fas fa-th"></i></div>
+                  <div class="modern-stat-icon">
+                      <i class="fas fa-th"></i>
+                  </div>
                   <div class="modern-stat-label">الكل</div>
                   <div class="modern-stat-value" id="modernStatAll">0</div>
               </div>
               <div class="modern-stat-card debt" data-filter="debt">
-                  <div class="modern-stat-icon"><i class="fas fa-money-bill-wave"></i></div>
+                  <div class="modern-stat-icon">
+                      <i class="fas fa-money-bill-wave"></i>
+                  </div>
                   <div class="modern-stat-label">الديون</div>
                   <div class="modern-stat-value" id="modernStatDebt">0</div>
               </div>
               <div class="modern-stat-card stock" data-filter="stock">
-                  <div class="modern-stat-icon"><i class="fas fa-box"></i></div>
+                  <div class="modern-stat-icon">
+                      <i class="fas fa-box"></i>
+                  </div>
                   <div class="modern-stat-label">المخزون</div>
                   <div class="modern-stat-value" id="modernStatStock">0</div>
               </div>
               <div class="modern-stat-card sales" data-filter="sales">
-                  <div class="modern-stat-icon"><i class="fas fa-chart-line"></i></div>
+                  <div class="modern-stat-icon">
+                      <i class="fas fa-chart-line"></i>
+                  </div>
                   <div class="modern-stat-label">المبيعات</div>
                   <div class="modern-stat-value" id="modernStatSales">0</div>
               </div>
               <div class="modern-stat-card system" data-filter="system">
-                  <div class="modern-stat-icon"><i class="fas fa-cog"></i></div>
+                  <div class="modern-stat-icon">
+                      <i class="fas fa-cog"></i>
+                  </div>
                   <div class="modern-stat-label">النظام</div>
                   <div class="modern-stat-value" id="modernStatSystem">0</div>
               </div>
           </div>
 
+          <!-- شريط الأدوات -->
           <div class="modern-notifications-toolbar">
               <div class="modern-search-box">
                   <input type="text" id="modernNotificationSearch" placeholder="البحث في الإشعارات...">
@@ -29194,11 +29413,14 @@ body {
               </button>
           </div>
 
+          <!-- قائمة الإشعارات -->
           <div class="modern-notifications-list" id="modernNotificationsList">
+              <!-- سيتم ملء الإشعارات هنا ديناميكياً -->
           </div>
       </div>
   </div>
 
+  <!-- نافذة تفاصيل الإشعار -->
   <div class="modern-notification-detail-view" id="modernNotificationDetail">
       <div class="modern-detail-container">
           <div class="modern-detail-header">
@@ -29208,13 +29430,17 @@ body {
               </button>
           </div>
           <div class="modern-detail-body" id="modernDetailBody">
+              <!-- سيتم ملء التفاصيل هنا ديناميكياً -->
           </div>
       </div>
   </div>
 
   
   
-  <!-- نظام الإشعارات الحديث v2.0 -->
+  <!-- ==========================================
+       🔔 نظام الإشعارات الحديث v2.0
+       Developer: كرار السعبري - الإبداع الرقمي
+       ========================================== -->
   <script>
 // ==========================================
 // 🔔 نظام الإشعارات الحديث v2.0
@@ -30112,11 +30338,902 @@ const NOTIFICATION_HTML = `
 */
 
 // ==========================================
-// 🔔 نظام الإشعارات الحديث v3.0 - محسّن
-// Developer: كرار السعبري
+// 🔔 نظام الإشعارات الحديث v2.0
+// ==========================================
+// تصميم حديث مع حل مشاكل التعارض
+// Developer: كرار السعبري - الإبداع الرقمي
 // ==========================================
 
+/* 
+========================
+📌 CSS للنظام الجديد
+========================
+*/
+
+const NOTIFICATION_CSS = `
+/* ==========================================
+   🎨 نظام الإشعارات الحديث - الأنماط
+   ========================================== */
+
+/* زر الإشعارات في الهيدر */
+.modern-notification-btn {
+    position: relative;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    border-radius: 12px;
+    padding: 10px 16px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: 10px;
+}
+
+.modern-notification-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.modern-notification-btn:active {
+    transform: translateY(0);
+}
+
+.modern-notification-btn i {
+    font-size: 20px;
+    color: #fff;
+    animation: bellRing 2s ease-in-out infinite;
+}
+
+@keyframes bellRing {
+    0%, 100% { transform: rotate(0deg); }
+    10%, 30% { transform: rotate(-10deg); }
+    20%, 40% { transform: rotate(10deg); }
+}
+
+/* شارة العدد */
+.modern-notification-badge {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+    color: #fff;
+    border-radius: 12px;
+    padding: 4px 8px;
+    font-size: 11px;
+    font-weight: 700;
+    min-width: 24px;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(255, 107, 107, 0.4);
+    animation: badgePulse 2s ease-in-out infinite;
+}
+
+@keyframes badgePulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+.modern-notification-badge.zero {
+    display: none;
+}
+
+/* نافذة الإشعارات الرئيسية */
+.modern-notifications-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(8px);
+    z-index: 10000;
+    animation: modalFadeIn 0.3s ease-out;
+}
+
+@keyframes modalFadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.modern-notifications-modal.active {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modern-notifications-container {
+    background: #fff;
+    border-radius: 24px;
+    width: 90%;
+    max-width: 900px;
+    max-height: 85vh;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    animation: containerSlideUp 0.4s cubic-bezier(0.4, 0.0, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+}
+
+@keyframes containerSlideUp {
+    from {
+        transform: translateY(50px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* رأس النافذة */
+.modern-notifications-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #fff;
+    padding: 24px 28px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.modern-notifications-header h2 {
+    font-size: 24px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 0;
+}
+
+.modern-notifications-header h2 i {
+    font-size: 28px;
+}
+
+.modern-close-btn {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.modern-close-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: rotate(90deg);
+}
+
+.modern-close-btn i {
+    font-size: 20px;
+    color: #fff;
+}
+
+/* شريط الإحصائيات */
+.modern-notifications-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+    padding: 20px 28px;
+    background: linear-gradient(to bottom, #f8f9fa, #fff);
+    border-bottom: 1px solid #e9ecef;
+}
+
+.modern-stat-card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s;
+    cursor: pointer;
+    border: 2px solid transparent;
+}
+
+.modern-stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+.modern-stat-card.active {
+    border-color: #667eea;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05));
+}
+
+.modern-stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    margin-bottom: 12px;
+}
+
+.modern-stat-card.all .modern-stat-icon {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: #fff;
+}
+
+.modern-stat-card.debt .modern-stat-icon {
+    background: linear-gradient(135deg, #ff6b6b, #ee5a6f);
+    color: #fff;
+}
+
+.modern-stat-card.stock .modern-stat-icon {
+    background: linear-gradient(135deg, #feca57, #ff9ff3);
+    color: #fff;
+}
+
+.modern-stat-card.sales .modern-stat-icon {
+    background: linear-gradient(135deg, #48dbfb, #0abde3);
+    color: #fff;
+}
+
+.modern-stat-card.system .modern-stat-icon {
+    background: linear-gradient(135deg, #1dd1a1, #10ac84);
+    color: #fff;
+}
+
+.modern-stat-label {
+    font-size: 13px;
+    color: #6c757d;
+    margin-bottom: 4px;
+    font-weight: 500;
+}
+
+.modern-stat-value {
+    font-size: 28px;
+    font-weight: 700;
+    color: #2c3e50;
+}
+
+/* شريط الأدوات */
+.modern-notifications-toolbar {
+    padding: 16px 28px;
+    background: #fff;
+    border-bottom: 1px solid #e9ecef;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.modern-search-box {
+    flex: 1;
+    min-width: 250px;
+    position: relative;
+}
+
+.modern-search-box input {
+    width: 100%;
+    padding: 12px 16px 12px 45px;
+    border: 2px solid #e9ecef;
+    border-radius: 12px;
+    font-size: 14px;
+    transition: all 0.3s;
+    font-family: 'Cairo', sans-serif;
+}
+
+.modern-search-box input:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.modern-search-box i {
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6c757d;
+    font-size: 16px;
+}
+
+.modern-action-btn {
+    padding: 12px 20px;
+    border: 2px solid #e9ecef;
+    background: #fff;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'Cairo', sans-serif;
+}
+
+.modern-action-btn:hover {
+    border-color: #667eea;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05));
+    transform: translateY(-2px);
+}
+
+.modern-action-btn i {
+    font-size: 16px;
+}
+
+.modern-action-btn.danger {
+    color: #ff6b6b;
+}
+
+.modern-action-btn.danger:hover {
+    border-color: #ff6b6b;
+    background: rgba(255, 107, 107, 0.05);
+}
+
+/* قائمة الإشعارات */
+.modern-notifications-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 28px;
+    background: #f8f9fa;
+}
+
+.modern-notifications-list::-webkit-scrollbar {
+    width: 8px;
+}
+
+.modern-notifications-list::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.modern-notifications-list::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border-radius: 10px;
+}
+
+.modern-notifications-list::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, #764ba2, #667eea);
+}
+
+/* بطاقة الإشعار */
+.modern-notification-card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s;
+    cursor: pointer;
+    border-right: 4px solid;
+    position: relative;
+    overflow: hidden;
+    animation: cardSlideIn 0.4s ease-out;
+}
+
+@keyframes cardSlideIn {
+    from {
+        opacity: 0;
+        transform: translateX(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.modern-notification-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 0;
+    height: 100%;
+    background: linear-gradient(90deg, rgba(102, 126, 234, 0.05), transparent);
+    transition: width 0.3s;
+}
+
+.modern-notification-card:hover::before {
+    width: 100%;
+}
+
+.modern-notification-card:hover {
+    transform: translateX(-4px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+
+.modern-notification-card.debt {
+    border-right-color: #ff6b6b;
+}
+
+.modern-notification-card.stock {
+    border-right-color: #feca57;
+}
+
+.modern-notification-card.sales {
+    border-right-color: #48dbfb;
+}
+
+.modern-notification-card.system {
+    border-right-color: #1dd1a1;
+}
+
+.modern-notification-card.high-priority {
+    background: linear-gradient(to right, rgba(255, 107, 107, 0.05), #fff);
+}
+
+.modern-notification-card.pinned {
+    background: linear-gradient(to right, rgba(102, 126, 234, 0.05), #fff);
+    box-shadow: 0 4px 16px rgba(102, 126, 234, 0.2);
+}
+
+.modern-notification-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+}
+
+.modern-notification-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.modern-notification-card.debt .modern-notification-icon {
+    background: linear-gradient(135deg, #ff6b6b, #ee5a6f);
+    color: #fff;
+}
+
+.modern-notification-card.stock .modern-notification-icon {
+    background: linear-gradient(135deg, #feca57, #ff9ff3);
+    color: #fff;
+}
+
+.modern-notification-card.sales .modern-notification-icon {
+    background: linear-gradient(135deg, #48dbfb, #0abde3);
+    color: #fff;
+}
+
+.modern-notification-card.system .modern-notification-icon {
+    background: linear-gradient(135deg, #1dd1a1, #10ac84);
+    color: #fff;
+}
+
+.modern-notification-content {
+    flex: 1;
+    margin-right: 16px;
+    position: relative;
+    z-index: 1;
+}
+
+.modern-notification-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #2c3e50;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.modern-priority-badge {
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.modern-priority-badge.high {
+    background: #ff6b6b;
+    color: #fff;
+}
+
+.modern-priority-badge.medium {
+    background: #feca57;
+    color: #fff;
+}
+
+.modern-priority-badge.low {
+    background: #1dd1a1;
+    color: #fff;
+}
+
+.modern-notification-message {
+    font-size: 14px;
+    color: #6c757d;
+    line-height: 1.6;
+    margin-bottom: 8px;
+}
+
+.modern-notification-meta {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    font-size: 12px;
+    color: #95a5a6;
+}
+
+.modern-notification-meta i {
+    margin-left: 4px;
+}
+
+.modern-notification-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.modern-pin-btn {
+    width: 36px;
+    height: 36px;
+    border: none;
+    background: rgba(102, 126, 234, 0.1);
+    border-radius: 10px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+}
+
+.modern-pin-btn:hover {
+    background: rgba(102, 126, 234, 0.2);
+    transform: rotate(15deg);
+}
+
+.modern-pin-btn.pinned {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: #fff;
+}
+
+.modern-pin-btn i {
+    font-size: 16px;
+}
+
+.modern-delete-btn {
+    width: 36px;
+    height: 36px;
+    border: none;
+    background: rgba(255, 107, 107, 0.1);
+    border-radius: 10px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+    color: #ff6b6b;
+}
+
+.modern-delete-btn:hover {
+    background: rgba(255, 107, 107, 0.2);
+    transform: scale(1.1);
+}
+
+.modern-delete-btn i {
+    font-size: 16px;
+}
+
+/* حالة فارغة */
+.modern-empty-state {
+    text-align: center;
+    padding: 60px 20px;
+}
+
+.modern-empty-icon {
+    font-size: 80px;
+    color: #e9ecef;
+    margin-bottom: 20px;
+}
+
+.modern-empty-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: #6c757d;
+    margin-bottom: 8px;
+}
+
+.modern-empty-message {
+    font-size: 14px;
+    color: #95a5a6;
+}
+
+/* تأثيرات responsive */
+@media (max-width: 768px) {
+    .modern-notifications-container {
+        width: 95%;
+        max-height: 90vh;
+        border-radius: 16px;
+    }
+    
+    .modern-notifications-header {
+        padding: 20px;
+    }
+    
+    .modern-notifications-header h2 {
+        font-size: 20px;
+    }
+    
+    .modern-notifications-stats {
+        grid-template-columns: repeat(2, 1fr);
+        padding: 16px 20px;
+    }
+    
+    .modern-notifications-toolbar {
+        padding: 12px 20px;
+        flex-direction: column;
+    }
+    
+    .modern-search-box {
+        width: 100%;
+    }
+    
+    .modern-action-btn {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .modern-notifications-list {
+        padding: 16px 20px;
+    }
+    
+    .modern-notification-card {
+        padding: 16px;
+    }
+}
+
+/* تنسيقات إضافية للتكامل */
+.modern-notification-detail-view {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(8px);
+    z-index: 10001;
+    align-items: center;
+    justify-content: center;
+}
+
+.modern-notification-detail-view.active {
+    display: flex;
+}
+
+.modern-detail-container {
+    background: #fff;
+    border-radius: 24px;
+    width: 90%;
+    max-width: 700px;
+    max-height: 85vh;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    animation: containerSlideUp 0.4s cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+.modern-detail-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #fff;
+    padding: 24px 28px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modern-detail-body {
+    padding: 28px;
+    max-height: calc(85vh - 120px);
+    overflow-y: auto;
+}
+
+.modern-detail-section {
+    margin-bottom: 24px;
+}
+
+.modern-detail-section h3 {
+    font-size: 18px;
+    font-weight: 700;
+    color: #2c3e50;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.modern-detail-info {
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+}
+
+.modern-detail-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.modern-detail-row:last-child {
+    border-bottom: none;
+}
+
+.modern-detail-label {
+    font-weight: 600;
+    color: #6c757d;
+}
+
+.modern-detail-value {
+    font-weight: 700;
+    color: #2c3e50;
+}
+
+.modern-detail-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 24px;
+}
+
+.modern-detail-btn {
+    flex: 1;
+    padding: 14px;
+    border: none;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-family: 'Cairo', sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.modern-detail-btn.primary {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.modern-detail-btn.primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.modern-detail-btn.secondary {
+    background: #e9ecef;
+    color: #6c757d;
+}
+
+.modern-detail-btn.secondary:hover {
+    background: #dee2e6;
+}
+`;
+
+/* 
+========================
+📌 HTML للنظام الجديد
+========================
+*/
+
+const NOTIFICATION_HTML = `
+<!-- 🔔 نظام الإشعارات الحديث -->
+
+<!-- زر الإشعارات في الهيدر -->
+<div class="modern-notification-btn" id="modernNotificationBtn">
+    <i class="fas fa-bell"></i>
+    <span class="modern-notification-badge" id="modernNotificationBadge">0</span>
+</div>
+
+<!-- نافذة الإشعارات الرئيسية -->
+<div class="modern-notifications-modal" id="modernNotificationsModal">
+    <div class="modern-notifications-container">
+        <!-- رأس النافذة -->
+        <div class="modern-notifications-header">
+            <h2><i class="fas fa-bell"></i> الإشعارات</h2>
+            <button class="modern-close-btn" id="modernCloseNotifications">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <!-- شريط الإحصائيات -->
+        <div class="modern-notifications-stats">
+            <div class="modern-stat-card all active" data-filter="all">
+                <div class="modern-stat-icon">
+                    <i class="fas fa-th"></i>
+                </div>
+                <div class="modern-stat-label">الكل</div>
+                <div class="modern-stat-value" id="modernStatAll">0</div>
+            </div>
+            <div class="modern-stat-card debt" data-filter="debt">
+                <div class="modern-stat-icon">
+                    <i class="fas fa-money-bill-wave"></i>
+                </div>
+                <div class="modern-stat-label">الديون</div>
+                <div class="modern-stat-value" id="modernStatDebt">0</div>
+            </div>
+            <div class="modern-stat-card stock" data-filter="stock">
+                <div class="modern-stat-icon">
+                    <i class="fas fa-box"></i>
+                </div>
+                <div class="modern-stat-label">المخزون</div>
+                <div class="modern-stat-value" id="modernStatStock">0</div>
+            </div>
+            <div class="modern-stat-card sales" data-filter="sales">
+                <div class="modern-stat-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <div class="modern-stat-label">المبيعات</div>
+                <div class="modern-stat-value" id="modernStatSales">0</div>
+            </div>
+            <div class="modern-stat-card system" data-filter="system">
+                <div class="modern-stat-icon">
+                    <i class="fas fa-cog"></i>
+                </div>
+                <div class="modern-stat-label">النظام</div>
+                <div class="modern-stat-value" id="modernStatSystem">0</div>
+            </div>
+        </div>
+
+        <!-- شريط الأدوات -->
+        <div class="modern-notifications-toolbar">
+            <div class="modern-search-box">
+                <input type="text" id="modernNotificationSearch" placeholder="البحث في الإشعارات...">
+                <i class="fas fa-search"></i>
+            </div>
+            <button class="modern-action-btn" id="modernMarkAllRead">
+                <i class="fas fa-check-double"></i>
+                تعليم الكل كمقروء
+            </button>
+            <button class="modern-action-btn danger" id="modernClearAll">
+                <i class="fas fa-trash"></i>
+                مسح الكل
+            </button>
+        </div>
+
+        <!-- قائمة الإشعارات -->
+        <div class="modern-notifications-list" id="modernNotificationsList">
+            <!-- سيتم ملء الإشعارات هنا ديناميكياً -->
+        </div>
+    </div>
+</div>
+
+<!-- نافذة تفاصيل الإشعار -->
+<div class="modern-notification-detail-view" id="modernNotificationDetail">
+    <div class="modern-detail-container">
+        <div class="modern-detail-header">
+            <h2 id="modernDetailTitle">تفاصيل الإشعار</h2>
+            <button class="modern-close-btn" id="modernCloseDetail">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modern-detail-body" id="modernDetailBody">
+            <!-- سيتم ملء التفاصيل هنا ديناميكياً -->
+        </div>
+    </div>
+</div>
+`;
+
+/* 
+========================
+📌 JavaScript للنظام الجديد
+========================
+*/
+
 const NotificationSystem = {
+    // البيانات
     notifications: [],
     currentFilter: 'all',
     searchTerm: '',
@@ -30124,53 +31241,101 @@ const NotificationSystem = {
     
     // التهيئة
     init() {
-        console.log('🔔 تهيئة نظام الإشعارات v3.0...');
+        console.log('🔔 تهيئة نظام الإشعارات الحديث v2.0...');
         
-        // فحص dataSdk
-        if (typeof dataSdk === 'undefined') {
-            console.error('❌ dataSdk غير متوفر! المحاولة بعد 2 ثانية...');
-            setTimeout(() => this.init(), 2000);
+        // فحص توفر البيانات
+        if (typeof products === 'undefined' || typeof debtsData === 'undefined') {
+            console.warn('⚠️ البيانات غير متوفرة بعد! سيتم المحاولة مرة أخرى بعد 1 ثانية...');
+            setTimeout(() => this.init(), 1000);
             return;
         }
         
-        console.log('✅ dataSdk متوفر');
+        console.log('✅ البيانات متوفرة:', { 
+            products: products.length, 
+            debts: debtsData.length 
+        });
+        
+        // إضافة الـ CSS
+        this.injectCSS();
+        
+        // إضافة الـ HTML (النوافذ)
+        this.injectHTML();
         
         // ربط الأحداث
         this.bindEvents();
         
-        // تحميل من localStorage
+        // تحميل الإشعارات والمثبتات من التخزين
         this.loadNotifications();
         this.loadPinnedNotifications();
         
         console.log('📊 الإشعارات المحملة:', this.notifications.length);
+        console.log('📌 الإشعارات المثبتة:', this.pinnedNotifications.length);
         
-        // التحديث الفوري
+        // تحديث الإشعارات على الفور
         console.log('🔄 بدء التحديث الأول...');
         this.updateNotifications();
         
-        // تحديث دوري
+        // تحديث دوري كل دقيقة
         setInterval(() => {
             console.log('🔄 تحديث دوري...');
             this.updateNotifications();
         }, 60000);
         
-        console.log('✅ تم تهيئة النظام بنجاح!');
+        console.log('✅ تم تهيئة نظام الإشعارات بنجاح');
+    },
+    
+    // إضافة CSS
+    injectCSS() {
+        const style = document.createElement('style');
+        style.textContent = NOTIFICATION_CSS;
+        document.head.appendChild(style);
+    },
+    
+    // إضافة HTML
+    injectHTML() {
+        // إزالة أي نظام قديم
+        const oldBtn = document.querySelector('.notification-btn');
+        if (oldBtn) oldBtn.remove();
+        
+        // إضافة الزر في الهيدر
+        const header = document.querySelector('.header');
+        if (header) {
+            const btnContainer = document.createElement('div');
+            btnContainer.innerHTML = NOTIFICATION_HTML.split('<!-- نافذة')[0];
+            const themeBtn = header.querySelector('.theme-toggle') || header.querySelector('.user-info');
+            if (themeBtn) {
+                themeBtn.parentNode.insertBefore(btnContainer.firstElementChild, themeBtn);
+            }
+        }
+        
+        // إضافة النوافذ في body
+        const modalsContainer = document.createElement('div');
+        modalsContainer.innerHTML = NOTIFICATION_HTML.split('<!-- نافذة')[1] ? '<!-- نافذة' + NOTIFICATION_HTML.split('<!-- نافذة')[1] : '';
+        document.body.appendChild(modalsContainer);
     },
     
     // ربط الأحداث
     bindEvents() {
+        // زر فتح الإشعارات
         const btn = document.getElementById('modernNotificationBtn');
-        const modal = document.getElementById('modernNotificationsModal');
-        const closeBtn = document.getElementById('modernCloseNotifications');
-        
         if (btn) {
-            btn.addEventListener('click', () => this.showModal());
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.showModal();
+            });
         }
         
+        // زر إغلاق النافذة
+        const closeBtn = document.getElementById('modernCloseNotifications');
         if (closeBtn) {
-            closeBtn.addEventListener('click', () => this.hideModal());
+            closeBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.hideModal();
+            });
         }
         
+        // إغلاق عند الضغط على الخلفية
+        const modal = document.getElementById('modernNotificationsModal');
         if (modal) {
             modal.addEventListener('click', (e) => {
                 if (e.target === modal) {
@@ -30179,10 +31344,20 @@ const NotificationSystem = {
             });
         }
         
+        // منع إغلاق النافذة عند الضغط على المحتوى
+        const container = document.querySelector('.modern-notifications-container');
+        if (container) {
+            container.addEventListener('click', (e) => {
+                e.stopPropagation();
+            });
+        }
+        
         // بطاقات التصفية
-        document.querySelectorAll('.modern-stat-card').forEach(card => {
-            card.addEventListener('click', () => {
-                const filter = card.dataset.filter;
+        const filterCards = document.querySelectorAll('.modern-stat-card');
+        filterCards.forEach(card => {
+            card.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const filter = card.getAttribute('data-filter');
                 this.setFilter(filter);
             });
         });
@@ -30191,222 +31366,47 @@ const NotificationSystem = {
         const searchInput = document.getElementById('modernNotificationSearch');
         if (searchInput) {
             searchInput.addEventListener('input', (e) => {
-                this.searchTerm = e.target.value.toLowerCase();
+                this.searchTerm = e.target.value;
                 this.renderNotifications();
             });
         }
         
-        // أزرار الأدوات
+        // تعليم الكل كمقروء
         const markAllBtn = document.getElementById('modernMarkAllRead');
         if (markAllBtn) {
-            markAllBtn.addEventListener('click', () => this.markAllAsRead());
+            markAllBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.markAllAsRead();
+            });
         }
         
-        const clearBtn = document.getElementById('modernClearAll');
-        if (clearBtn) {
-            clearBtn.addEventListener('click', () => this.clearAll());
+        // مسح الكل
+        const clearAllBtn = document.getElementById('modernClearAll');
+        if (clearAllBtn) {
+            clearAllBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.clearAll();
+            });
         }
         
-        // نافذة التفاصيل
-        const closeDetail = document.getElementById('modernCloseDetail');
-        if (closeDetail) {
-            closeDetail.addEventListener('click', () => this.hideDetailView());
+        // إغلاق نافذة التفاصيل
+        const closeDetailBtn = document.getElementById('modernCloseDetail');
+        if (closeDetailBtn) {
+            closeDetailBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.hideDetailView();
+            });
         }
         
-        console.log('✅ تم ربط جميع الأحداث');
-    },
-    
-    // تحديث الإشعارات
-    async updateNotifications() {
-        console.log('🔄 تحديث الإشعارات...');
-        
-        try {
-            // فحص الديون
-            await this.checkOverdueDebts();
-            
-            // فحص المخزون
-            await this.checkLowStock();
-            
-            // فحص الصلاحية
-            await this.checkExpiredProducts();
-            
-            // حفظ
-            this.saveNotifications();
-            
-            // تحديث الواجهة
-            this.updateBadge();
-            this.updateStats();
-            this.renderNotifications();
-            
-            console.log(`✅ اكتمل التحديث - ${this.notifications.length} إشعار`);
-            
-        } catch (error) {
-            console.error('❌ خطأ في التحديث:', error);
-        }
-    },
-    
-    // فحص الديون المتأخرة
-    async checkOverdueDebts() {
-        console.log('💰 فحص الديون المتأخرة...');
-        
-        try {
-            if (!dataSdk || !dataSdk.debts) {
-                console.warn('⚠️ dataSdk.debts غير متوفر');
-                return;
-            }
-            
-            const allDebts = await dataSdk.debts.getAll();
-            console.log('📋 عدد الديون:', allDebts?.length || 0);
-            
-            if (!allDebts || allDebts.length === 0) {
-                console.log('ℹ️ لا توجد ديون');
-                return;
-            }
-            
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            
-            let overdueCount = 0;
-            
-            for (const debt of allDebts) {
-                if (debt.status === 'paid' || debt.payment_type !== 'installment') {
-                    continue;
+        // إغلاق التفاصيل عند الضغط على الخلفية
+        const detailView = document.getElementById('modernNotificationDetail');
+        if (detailView) {
+            detailView.addEventListener('click', (e) => {
+                if (e.target === detailView) {
+                    this.hideDetailView();
                 }
-                
-                const installments = debt.installments || [];
-                
-                for (const inst of installments) {
-                    if (inst.status === 'paid') continue;
-                    
-                    const dueDate = new Date(inst.due_date);
-                    dueDate.setHours(0, 0, 0, 0);
-                    
-                    if (dueDate < today) {
-                        overdueCount++;
-                        const daysLate = Math.floor((today - dueDate) / (1000 * 60 * 60 * 24));
-                        
-                        let priority = 'low';
-                        if (daysLate > 7) priority = 'high';
-                        else if (daysLate >= 3) priority = 'medium';
-                        
-                        const notificationId = `debt_${debt.debt_id}_${inst.month}`;
-                        const exists = this.notifications.find(n => n.id === notificationId);
-                        
-                        if (!exists) {
-                            this.notifications.push({
-                                id: notificationId,
-                                type: 'debt',
-                                priority: priority,
-                                title: `قسط متأخر - ${debt.customer_name}`,
-                                message: `القسط رقم ${inst.month} متأخر منذ ${daysLate} يوم`,
-                                timestamp: Date.now(),
-                                read: false,
-                                data: {
-                                    debtId: debt.debt_id,
-                                    customerName: debt.customer_name,
-                                    amount: inst.amount,
-                                    dueDate: inst.due_date,
-                                    daysLate: daysLate,
-                                    month: inst.month
-                                }
-                            });
-                        }
-                    }
-                }
-            }
-            
-            console.log(`✅ وجدنا ${overdueCount} قسط متأخر`);
-            
-        } catch (error) {
-            console.error('❌ خطأ في فحص الديون:', error);
+            });
         }
-    },
-    
-    // فحص المخزون
-    async checkLowStock() {
-        console.log('📦 فحص المخزون...');
-        
-        try {
-            if (!dataSdk || !dataSdk.products) {
-                console.warn('⚠️ dataSdk.products غير متوفر');
-                return;
-            }
-            
-            const allProducts = await dataSdk.products.getAll();
-            console.log('📋 عدد المنتجات:', allProducts?.length || 0);
-            
-            if (!allProducts || allProducts.length === 0) {
-                console.log('ℹ️ لا توجد منتجات');
-                return;
-            }
-            
-            let lowStockCount = 0;
-            let outOfStockCount = 0;
-            
-            for (const product of allProducts) {
-                const stock = parseInt(product.stock) || 0;
-                const minStock = parseInt(product.min_stock) || 5;
-                
-                // نفاذ المخزون
-                if (stock === 0) {
-                    outOfStockCount++;
-                    const notificationId = `stock_out_${product.id}`;
-                    const exists = this.notifications.find(n => n.id === notificationId);
-                    
-                    if (!exists) {
-                        this.notifications.push({
-                            id: notificationId,
-                            type: 'stock',
-                            priority: 'high',
-                            title: `نفاذ المخزون - ${product.name}`,
-                            message: `المنتج نفذ من المخزون`,
-                            timestamp: Date.now(),
-                            read: false,
-                            data: {
-                                productId: product.id,
-                                productName: product.name,
-                                currentStock: 0,
-                                minStock: minStock
-                            }
-                        });
-                    }
-                }
-                // مخزون منخفض
-                else if (stock <= minStock && stock > 0) {
-                    lowStockCount++;
-                    const notificationId = `stock_low_${product.id}`;
-                    const exists = this.notifications.find(n => n.id === notificationId);
-                    
-                    if (!exists) {
-                        this.notifications.push({
-                            id: notificationId,
-                            type: 'stock',
-                            priority: 'medium',
-                            title: `مخزون منخفض - ${product.name}`,
-                            message: `المخزون: ${stock} - الحد الأدنى: ${minStock}`,
-                            timestamp: Date.now(),
-                            read: false,
-                            data: {
-                                productId: product.id,
-                                productName: product.name,
-                                currentStock: stock,
-                                minStock: minStock
-                            }
-                        });
-                    }
-                }
-            }
-            
-            console.log(`✅ ${outOfStockCount} نافذ، ${lowStockCount} منخفض`);
-            
-        } catch (error) {
-            console.error('❌ خطأ في فحص المخزون:', error);
-        }
-    },
-    
-    // فحص الصلاحية
-    async checkExpiredProducts() {
-        // TODO: إضافة فحص الصلاحية
     },
     
     // عرض النافذة
@@ -30426,40 +31426,289 @@ const NotificationSystem = {
         }
     },
     
+    // عرض نافذة التفاصيل
+    showDetailView() {
+        const view = document.getElementById('modernNotificationDetail');
+        if (view) {
+            view.classList.add('active');
+        }
+    },
+    
+    // إخفاء نافذة التفاصيل
+    hideDetailView() {
+        const view = document.getElementById('modernNotificationDetail');
+        if (view) {
+            view.classList.remove('active');
+        }
+    },
+    
+    // تعيين الفلتر
+    setFilter(filter) {
+        this.currentFilter = filter;
+        
+        // تحديث البطاقات النشطة
+        const cards = document.querySelectorAll('.modern-stat-card');
+        cards.forEach(card => {
+            if (card.getAttribute('data-filter') === filter) {
+                card.classList.add('active');
+            } else {
+                card.classList.remove('active');
+            }
+        });
+        
+        // عرض الإشعارات
+        this.renderNotifications();
+    },
+    
+    // تحديث الإشعارات
+    updateNotifications() {
+        console.log('🔄 تحديث الإشعارات...');
+        console.log('📊 عدد المنتجات:', products ? products.length : 0);
+        console.log('📊 عدد الديون:', debtsData ? debtsData.length : 0);
+        
+        this.notifications = [];
+        
+        // فحص الديون المتأخرة
+        this.checkOverdueDebts();
+        
+        // فحص المخزون المنخفض
+        this.checkLowStock();
+        
+        // فحص المنتجات المنتهية الصلاحية
+        this.checkExpiredProducts();
+        
+        // حفظ الإشعارات
+        this.saveNotifications();
+        
+        // تحديث الشارة
+        this.updateBadge();
+        
+        // تحديث الإحصائيات
+        this.updateStats();
+        
+        console.log(`✅ تم العثور على ${this.notifications.length} إشعار`);
+        
+        // عرض أول 3 إشعارات في console للتأكد
+        if (this.notifications.length > 0) {
+            console.log('📋 أول 3 إشعارات:', this.notifications.slice(0, 3).map(n => ({
+                type: n.type,
+                title: n.title,
+                message: n.message
+            })));
+        }
+    },
+    
+    // فحص الديون المتأخرة
+    checkOverdueDebts() {
+        try {
+            // استخدام debtsData المتغير العام بدلاً من dataSdk
+            if (typeof debtsData === 'undefined' || !Array.isArray(debtsData)) {
+                console.warn('⚠️ debtsData غير متوفر');
+                return;
+            }
+            
+            console.log('🔍 فحص الديون المتأخرة... (عدد الديون:', debtsData.length, ')');
+            
+            const today = new Date().setHours(0, 0, 0, 0);
+            let overdueCount = 0;
+            
+            debtsData.forEach(debt => {
+                if (debt.status === 'active' && debt.installments) {
+                    debt.installments.forEach(installment => {
+                        if (installment.status !== 'paid') {
+                            const dueDate = new Date(installment.due_date).setHours(0, 0, 0, 0);
+                            
+                            if (dueDate < today) {
+                                overdueCount++;
+                                const daysOverdue = Math.floor((today - dueDate) / (1000 * 60 * 60 * 24));
+                                
+                                this.notifications.push({
+                                    id: `debt-${debt.debt_id}-${installment.month}`,
+                                    type: 'debt',
+                                    priority: daysOverdue > 7 ? 'high' : daysOverdue > 3 ? 'medium' : 'low',
+                                    title: 'دين متأخر',
+                                    message: `العميل ${debt.customer_name} لديه قسط متأخر ${daysOverdue} يوم`,
+                                    timestamp: Date.now(),
+                                    data: {
+                                        debtId: debt.debt_id,
+                                        customerId: debt.customer_id,
+                                        customerName: debt.customer_name,
+                                        amount: installment.amount,
+                                        daysOverdue: daysOverdue,
+                                        dueDate: installment.due_date
+                                    },
+                                    read: false
+                                });
+                            }
+                        }
+                    });
+                }
+            });
+            
+            console.log(`✅ تم العثور على ${overdueCount} دين متأخر`);
+        } catch (error) {
+            console.error('❌ خطأ في فحص الديون:', error);
+        }
+    },
+    
+    // فحص المخزون المنخفض
+    checkLowStock() {
+        try {
+            // استخدام products المتغير العام بدلاً من dataSdk
+            if (typeof products === 'undefined' || !Array.isArray(products)) {
+                console.warn('⚠️ products غير متوفر');
+                return;
+            }
+            
+            console.log('🔍 فحص المخزون... (عدد المنتجات:', products.length, ')');
+            
+            let lowStockCount = 0;
+            let outOfStockCount = 0;
+            
+            products.forEach(product => {
+                const stock = product.stock || 0;
+                const minStock = product.min_stock || 5;
+                
+                if (stock <= minStock && stock > 0) {
+                    lowStockCount++;
+                    this.notifications.push({
+                        id: `stock-low-${product.id}`,
+                        type: 'stock',
+                        priority: stock <= minStock / 2 ? 'high' : 'medium',
+                        title: 'مخزون منخفض',
+                        message: `المنتج "${product.name}" وصل المخزون إلى ${stock} قطعة`,
+                        timestamp: Date.now(),
+                        data: {
+                            productId: product.id,
+                            productName: product.name,
+                            currentStock: stock,
+                            minStock: minStock
+                        },
+                        read: false
+                    });
+                } else if (stock === 0) {
+                    outOfStockCount++;
+                    this.notifications.push({
+                        id: `stock-out-${product.id}`,
+                        type: 'stock',
+                        priority: 'high',
+                        title: 'نفذ من المخزون',
+                        message: `المنتج "${product.name}" نفذ من المخزون بالكامل`,
+                        timestamp: Date.now(),
+                        data: {
+                            productId: product.id,
+                            productName: product.name,
+                            currentStock: 0
+                        },
+                        read: false
+                    });
+                }
+            });
+            
+            console.log(`✅ تم العثور على ${lowStockCount} منتج منخفض و ${outOfStockCount} منتج نافذ`);
+        } catch (error) {
+            console.error('❌ خطأ في فحص المخزون:', error);
+        }
+    },
+    
+    // فحص المنتجات المنتهية الصلاحية
+    checkExpiredProducts() {
+        try {
+            // استخدام products المتغير العام بدلاً من dataSdk
+            if (typeof products === 'undefined' || !Array.isArray(products)) {
+                console.warn('⚠️ products غير متوفر');
+                return;
+            }
+            
+            console.log('🔍 فحص الصلاحية... (عدد المنتجات:', products.length, ')');
+            
+            const today = new Date().setHours(0, 0, 0, 0);
+            let expiringCount = 0;
+            let expiredCount = 0;
+            
+            products.forEach(product => {
+                if (product.expiry_date) {
+                    const expiryDate = new Date(product.expiry_date).setHours(0, 0, 0, 0);
+                    const daysUntilExpiry = Math.floor((expiryDate - today) / (1000 * 60 * 60 * 24));
+                    
+                    if (daysUntilExpiry <= 30 && daysUntilExpiry >= 0) {
+                        expiringCount++;
+                        this.notifications.push({
+                            id: `expiry-${product.id}`,
+                            type: 'stock',
+                            priority: daysUntilExpiry <= 7 ? 'high' : daysUntilExpiry <= 14 ? 'medium' : 'low',
+                            title: 'منتج قارب على انتهاء الصلاحية',
+                            message: `المنتج "${product.name}" ستنتهي صلاحيته خلال ${daysUntilExpiry} يوم`,
+                            timestamp: Date.now(),
+                            data: {
+                                productId: product.id,
+                                productName: product.name,
+                                expiryDate: product.expiry_date,
+                                daysUntilExpiry: daysUntilExpiry
+                            },
+                            read: false
+                        });
+                    } else if (daysUntilExpiry < 0) {
+                        expiredCount++;
+                        this.notifications.push({
+                            id: `expired-${product.id}`,
+                            type: 'stock',
+                            priority: 'high',
+                            title: 'منتج منتهي الصلاحية',
+                            message: `المنتج "${product.name}" انتهت صلاحيته منذ ${Math.abs(daysUntilExpiry)} يوم`,
+                            timestamp: Date.now(),
+                            data: {
+                                productId: product.id,
+                                productName: product.name,
+                                expiryDate: product.expiry_date,
+                                daysExpired: Math.abs(daysUntilExpiry)
+                            },
+                            read: false
+                        });
+                    }
+                }
+            });
+            
+            console.log(`✅ تم العثور على ${expiringCount} منتج قارب على الانتهاء و ${expiredCount} منتج منتهي`);
+        } catch (error) {
+            console.error('❌ خطأ في فحص الصلاحية:', error);
+        }
+    },
+    
     // تحديث الشارة
     updateBadge() {
         const badge = document.getElementById('modernNotificationBadge');
         if (badge) {
             const unreadCount = this.notifications.filter(n => !n.read).length;
             badge.textContent = unreadCount;
-            badge.classList.toggle('zero', unreadCount === 0);
+            
+            if (unreadCount === 0) {
+                badge.classList.add('zero');
+            } else {
+                badge.classList.remove('zero');
+            }
         }
     },
     
     // تحديث الإحصائيات
     updateStats() {
-        const allCount = this.notifications.length;
-        const debtCount = this.notifications.filter(n => n.type === 'debt').length;
-        const stockCount = this.notifications.filter(n => n.type === 'stock').length;
-        const salesCount = this.notifications.filter(n => n.type === 'sales').length;
-        const systemCount = this.notifications.filter(n => n.type === 'system').length;
+        const all = this.notifications.length;
+        const debt = this.notifications.filter(n => n.type === 'debt').length;
+        const stock = this.notifications.filter(n => n.type === 'stock').length;
+        const sales = this.notifications.filter(n => n.type === 'sales').length;
+        const system = this.notifications.filter(n => n.type === 'system').length;
         
-        document.getElementById('modernStatAll').textContent = allCount;
-        document.getElementById('modernStatDebt').textContent = debtCount;
-        document.getElementById('modernStatStock').textContent = stockCount;
-        document.getElementById('modernStatSales').textContent = salesCount;
-        document.getElementById('modernStatSystem').textContent = systemCount;
-    },
-    
-    // تصفية
-    setFilter(filter) {
-        this.currentFilter = filter;
+        const statAll = document.getElementById('modernStatAll');
+        const statDebt = document.getElementById('modernStatDebt');
+        const statStock = document.getElementById('modernStatStock');
+        const statSales = document.getElementById('modernStatSales');
+        const statSystem = document.getElementById('modernStatSystem');
         
-        document.querySelectorAll('.modern-stat-card').forEach(card => {
-            card.classList.toggle('active', card.dataset.filter === filter);
-        });
-        
-        this.renderNotifications();
+        if (statAll) statAll.textContent = all;
+        if (statDebt) statDebt.textContent = debt;
+        if (statStock) statStock.textContent = stock;
+        if (statSales) statSales.textContent = sales;
+        if (statSystem) statSystem.textContent = system;
     },
     
     // عرض الإشعارات
@@ -30467,177 +31716,294 @@ const NotificationSystem = {
         const container = document.getElementById('modernNotificationsList');
         if (!container) return;
         
+        // تصفية الإشعارات
         let filtered = this.notifications;
         
-        // التصفية حسب النوع
+        // حسب النوع
         if (this.currentFilter !== 'all') {
             filtered = filtered.filter(n => n.type === this.currentFilter);
         }
         
-        // البحث
+        // حسب البحث
         if (this.searchTerm) {
+            const term = this.searchTerm.toLowerCase();
             filtered = filtered.filter(n => 
-                n.title.toLowerCase().includes(this.searchTerm) ||
-                n.message.toLowerCase().includes(this.searchTerm)
+                n.title.toLowerCase().includes(term) ||
+                n.message.toLowerCase().includes(term)
             );
         }
         
-        // الترتيب
+        // ترتيب: المثبتة أولاً ثم حسب الأولوية والوقت
         filtered.sort((a, b) => {
-            // المثبتة أولاً
-            const aPin = this.pinnedNotifications.includes(a.id);
-            const bPin = this.pinnedNotifications.includes(b.id);
-            if (aPin !== bPin) return bPin ? 1 : -1;
+            const aIsPinned = this.pinnedNotifications.includes(a.id);
+            const bIsPinned = this.pinnedNotifications.includes(b.id);
             
-            // ثم الأولوية
+            if (aIsPinned && !bIsPinned) return -1;
+            if (!aIsPinned && bIsPinned) return 1;
+            
             const priorityOrder = { high: 3, medium: 2, low: 1 };
-            const aPriority = priorityOrder[a.priority] || 0;
-            const bPriority = priorityOrder[b.priority] || 0;
-            if (aPriority !== bPriority) return bPriority - aPriority;
+            const priorityDiff = priorityOrder[b.priority] - priorityOrder[a.priority];
             
-            // ثم الوقت
+            if (priorityDiff !== 0) return priorityDiff;
+            
             return b.timestamp - a.timestamp;
         });
         
-        // العرض
+        // عرض النتائج
         if (filtered.length === 0) {
             container.innerHTML = `
                 <div class="modern-empty-state">
-                    <div class="modern-empty-icon">🔔</div>
+                    <div class="modern-empty-icon">
+                        <i class="fas fa-bell-slash"></i>
+                    </div>
                     <div class="modern-empty-title">لا توجد إشعارات</div>
-                    <div class="modern-empty-message">جميع الإشعارات تم مسحها أو تصفيتها</div>
+                    <div class="modern-empty-message">
+                        ${this.searchTerm ? 'لم يتم العثور على نتائج للبحث' : 'جميع الأمور تسير بشكل جيد!'}
+                    </div>
                 </div>
             `;
-            return;
+        } else {
+            container.innerHTML = filtered.map(notification => this.renderNotificationCard(notification)).join('');
+            
+            // ربط أحداث البطاقات
+            this.bindCardEvents();
         }
+    },
+    
+    // عرض بطاقة الإشعار
+    renderNotificationCard(notification) {
+        const isPinned = this.pinnedNotifications.includes(notification.id);
+        const icons = {
+            debt: 'fa-money-bill-wave',
+            stock: 'fa-box',
+            sales: 'fa-chart-line',
+            system: 'fa-cog'
+        };
         
-        container.innerHTML = filtered.map(n => this.renderNotificationCard(n)).join('');
+        const priorityText = {
+            high: 'عالية',
+            medium: 'متوسطة',
+            low: 'منخفضة'
+        };
         
-        // ربط الأحداث
-        filtered.forEach(n => {
-            const card = document.getElementById(`notif-${n.id}`);
-            if (card) {
-                const pinBtn = card.querySelector('.modern-pin-btn');
-                const deleteBtn = card.querySelector('.modern-delete-btn');
-                
-                if (pinBtn) {
-                    pinBtn.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        this.togglePin(n.id);
-                    });
+        const timeAgo = this.getTimeAgo(notification.timestamp);
+        
+        return `
+            <div class="modern-notification-card ${notification.type} ${notification.priority}-priority ${isPinned ? 'pinned' : ''}" 
+                 data-notification-id="${notification.id}">
+                <div class="modern-notification-header-row">
+                    <div class="modern-notification-icon">
+                        <i class="fas ${icons[notification.type]}"></i>
+                    </div>
+                    <div class="modern-notification-content">
+                        <div class="modern-notification-title">
+                            ${notification.title}
+                            <span class="modern-priority-badge ${notification.priority}">${priorityText[notification.priority]}</span>
+                            ${isPinned ? '<i class="fas fa-thumbtack" style="color: #667eea;"></i>' : ''}
+                        </div>
+                        <div class="modern-notification-message">${notification.message}</div>
+                        <div class="modern-notification-meta">
+                            <span><i class="far fa-clock"></i>${timeAgo}</span>
+                            <span><i class="fas fa-tag"></i>${this.getTypeLabel(notification.type)}</span>
+                        </div>
+                    </div>
+                    <div class="modern-notification-actions">
+                        <button class="modern-pin-btn ${isPinned ? 'pinned' : ''}" 
+                                onclick="NotificationSystem.togglePin('${notification.id}', event)">
+                            <i class="fas fa-thumbtack"></i>
+                        </button>
+                        <button class="modern-delete-btn" 
+                                onclick="NotificationSystem.deleteNotification('${notification.id}', event)">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    },
+    
+    // ربط أحداث البطاقات
+    bindCardEvents() {
+        const cards = document.querySelectorAll('.modern-notification-card');
+        cards.forEach(card => {
+            // إزالة أي مستمعات سابقة
+            const newCard = card.cloneNode(true);
+            card.parentNode.replaceChild(newCard, card);
+            
+            // إضافة مستمع جديد
+            newCard.addEventListener('click', (e) => {
+                // تجاهل إذا كان الضغط على زر
+                if (e.target.closest('.modern-pin-btn') || e.target.closest('.modern-delete-btn')) {
+                    return;
                 }
                 
-                if (deleteBtn) {
-                    deleteBtn.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        this.deleteNotification(n.id);
-                    });
-                }
-                
-                card.addEventListener('click', () => {
-                    this.markAsRead(n.id);
-                    this.showNotificationDetail(n);
-                });
-            }
+                const notificationId = newCard.getAttribute('data-notification-id');
+                this.showNotificationDetail(notificationId);
+            });
         });
     },
     
-    // بطاقة إشعار
-    renderNotificationCard(n) {
-        const isPinned = this.pinnedNotifications.includes(n.id);
-        const icons = { debt: 'money-bill-wave', stock: 'box', sales: 'chart-line', system: 'cog' };
-        const icon = icons[n.type] || 'bell';
+    // عرض تفاصيل الإشعار
+    showNotificationDetail(notificationId) {
+        const notification = this.notifications.find(n => n.id === notificationId);
+        if (!notification) return;
         
-        const timeAgo = this.getTimeAgo(n.timestamp);
+        const detailBody = document.getElementById('modernDetailBody');
+        const detailTitle = document.getElementById('modernDetailTitle');
+        
+        if (!detailBody || !detailTitle) return;
+        
+        detailTitle.textContent = notification.title;
+        
+        // بناء المحتوى حسب النوع
+        if (notification.type === 'debt') {
+            detailBody.innerHTML = this.renderDebtDetail(notification);
+        } else if (notification.type === 'stock') {
+            detailBody.innerHTML = this.renderStockDetail(notification);
+        } else {
+            detailBody.innerHTML = this.renderGenericDetail(notification);
+        }
+        
+        // عرض النافذة
+        this.showDetailView();
+        
+        // تعليم كمقروء
+        this.markAsRead(notificationId);
+    },
+    
+    // عرض تفاصيل الدين
+    renderDebtDetail(notification) {
+        const data = notification.data;
         
         return `
-            <div class="modern-notification-card ${n.type} ${isPinned ? 'pinned' : ''}" id="notif-${n.id}">
-                <div class="modern-notification-icon">
-                    <i class="fas fa-${icon}"></i>
-                </div>
-                <div class="modern-notification-content">
-                    <div class="modern-notification-title">
-                        ${n.title}
-                        <span class="modern-priority-badge ${n.priority}">${this.getPriorityLabel(n.priority)}</span>
+            <div class="modern-detail-section">
+                <h3><i class="fas fa-info-circle"></i> معلومات الدين</h3>
+                <div class="modern-detail-info">
+                    <div class="modern-detail-row">
+                        <span class="modern-detail-label">اسم العميل:</span>
+                        <span class="modern-detail-value">${data.customerName}</span>
                     </div>
-                    <div class="modern-notification-message">${n.message}</div>
-                    <div class="modern-notification-meta">
-                        <span><i class="fas fa-clock"></i> ${timeAgo}</span>
+                    <div class="modern-detail-row">
+                        <span class="modern-detail-label">المبلغ المستحق:</span>
+                        <span class="modern-detail-value">${data.amount.toLocaleString()} د.ع</span>
+                    </div>
+                    <div class="modern-detail-row">
+                        <span class="modern-detail-label">أيام التأخير:</span>
+                        <span class="modern-detail-value" style="color: #ff6b6b;">${data.daysOverdue} يوم</span>
+                    </div>
+                    <div class="modern-detail-row">
+                        <span class="modern-detail-label">تاريخ الاستحقاق:</span>
+                        <span class="modern-detail-value">${new Date(data.dueDate).toLocaleDateString('ar-IQ')}</span>
                     </div>
                 </div>
-                <div class="modern-notification-actions">
-                    <button class="modern-pin-btn ${isPinned ? 'pinned' : ''}">
-                        <i class="fas fa-thumbtack"></i>
-                    </button>
-                    <button class="modern-delete-btn">
-                        <i class="fas fa-trash"></i>
-                    </button>
+            </div>
+            
+            <div class="modern-detail-section">
+                <h3><i class="fas fa-exclamation-triangle"></i> الوصف</h3>
+                <div class="modern-detail-info">
+                    <p style="color: #6c757d; line-height: 1.8;">
+                        ${notification.message}
+                    </p>
                 </div>
+            </div>
+            
+            <div class="modern-detail-actions">
+                <button class="modern-detail-btn primary" onclick="NotificationSystem.goToDebt('${data.debtId}')">
+                    <i class="fas fa-external-link-alt"></i>
+                    الانتقال للدين
+                </button>
+                <button class="modern-detail-btn secondary" onclick="NotificationSystem.hideDetailView()">
+                    <i class="fas fa-times"></i>
+                    إغلاق
+                </button>
             </div>
         `;
     },
     
-    // عرض التفاصيل
-    showNotificationDetail(n) {
-        const detail = document.getElementById('modernNotificationDetail');
-        const title = document.getElementById('modernDetailTitle');
-        const body = document.getElementById('modernDetailBody');
+    // عرض تفاصيل المخزون
+    renderStockDetail(notification) {
+        const data = notification.data;
         
-        if (!detail || !title || !body) return;
-        
-        title.textContent = n.title;
-        
-        let content = `
+        return `
+            <div class="modern-detail-section">
+                <h3><i class="fas fa-info-circle"></i> معلومات المنتج</h3>
+                <div class="modern-detail-info">
+                    <div class="modern-detail-row">
+                        <span class="modern-detail-label">اسم المنتج:</span>
+                        <span class="modern-detail-value">${data.productName}</span>
+                    </div>
+                    <div class="modern-detail-row">
+                        <span class="modern-detail-label">الكمية الحالية:</span>
+                        <span class="modern-detail-value" style="color: ${data.currentStock === 0 ? '#ff6b6b' : '#feca57'};">
+                            ${data.currentStock} قطعة
+                        </span>
+                    </div>
+                    ${data.minStock ? `
+                        <div class="modern-detail-row">
+                            <span class="modern-detail-label">الحد الأدنى:</span>
+                            <span class="modern-detail-value">${data.minStock} قطعة</span>
+                        </div>
+                    ` : ''}
+                    ${data.daysUntilExpiry !== undefined ? `
+                        <div class="modern-detail-row">
+                            <span class="modern-detail-label">
+                                ${data.daysUntilExpiry >= 0 ? 'الأيام المتبقية:' : 'مضى على انتهاء الصلاحية:'}
+                            </span>
+                            <span class="modern-detail-value" style="color: #ff6b6b;">
+                                ${Math.abs(data.daysUntilExpiry)} يوم
+                            </span>
+                        </div>
+                    ` : ''}
+                    ${data.expiryDate ? `
+                        <div class="modern-detail-row">
+                            <span class="modern-detail-label">تاريخ انتهاء الصلاحية:</span>
+                            <span class="modern-detail-value">${new Date(data.expiryDate).toLocaleDateString('ar-IQ')}</span>
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+            
+            <div class="modern-detail-section">
+                <h3><i class="fas fa-exclamation-triangle"></i> الوصف</h3>
+                <div class="modern-detail-info">
+                    <p style="color: #6c757d; line-height: 1.8;">
+                        ${notification.message}
+                    </p>
+                </div>
+            </div>
+            
+            <div class="modern-detail-actions">
+                <button class="modern-detail-btn primary" onclick="NotificationSystem.goToProduct('${data.productId}')">
+                    <i class="fas fa-external-link-alt"></i>
+                    الانتقال للمنتج
+                </button>
+                <button class="modern-detail-btn secondary" onclick="NotificationSystem.hideDetailView()">
+                    <i class="fas fa-times"></i>
+                    إغلاق
+                </button>
+            </div>
+        `;
+    },
+    
+    // عرض تفاصيل عامة
+    renderGenericDetail(notification) {
+        return `
             <div class="modern-detail-section">
                 <h3><i class="fas fa-info-circle"></i> التفاصيل</h3>
                 <div class="modern-detail-info">
-                    <div class="modern-detail-row">
-                        <div class="modern-detail-label">الرسالة</div>
-                        <div class="modern-detail-value">${n.message}</div>
-                    </div>
-                    <div class="modern-detail-row">
-                        <div class="modern-detail-label">الوقت</div>
-                        <div class="modern-detail-value">${new Date(n.timestamp).toLocaleString('ar-IQ')}</div>
-                    </div>
-                    <div class="modern-detail-row">
-                        <div class="modern-detail-label">الأولوية</div>
-                        <div class="modern-detail-value">${this.getPriorityLabel(n.priority)}</div>
-                    </div>
+                    <p style="color: #6c757d; line-height: 1.8;">
+                        ${notification.message}
+                    </p>
                 </div>
             </div>
+            
+            <div class="modern-detail-actions">
+                <button class="modern-detail-btn secondary" onclick="NotificationSystem.hideDetailView()">
+                    <i class="fas fa-times"></i>
+                    إغلاق
+                </button>
+            </div>
         `;
-        
-        // إضافة أزرار الانتقال
-        if (n.type === 'debt' && n.data.debtId) {
-            content += `
-                <div style="display: flex; gap: 12px; margin-top: 24px;">
-                    <button class="modern-detail-btn primary" onclick="NotificationSystem.goToDebt('${n.data.debtId}')">
-                        <i class="fas fa-arrow-left"></i>
-                        الانتقال للدين
-                    </button>
-                </div>
-            `;
-        } else if (n.type === 'stock' && n.data.productId) {
-            content += `
-                <div style="display: flex; gap: 12px; margin-top: 24px;">
-                    <button class="modern-detail-btn primary" onclick="NotificationSystem.goToProduct('${n.data.productId}')">
-                        <i class="fas fa-arrow-left"></i>
-                        الانتقال للمنتج
-                    </button>
-                </div>
-            `;
-        }
-        
-        body.innerHTML = content;
-        detail.classList.add('active');
-    },
-    
-    // إخفاء التفاصيل
-    hideDetailView() {
-        const detail = document.getElementById('modernNotificationDetail');
-        if (detail) {
-            detail.classList.remove('active');
-        }
     },
     
     // الانتقال للدين
@@ -30645,16 +32011,27 @@ const NotificationSystem = {
         this.hideDetailView();
         this.hideModal();
         
+        // الانتقال لصفحة الديون
         if (typeof showSection === 'function') {
             showSection('debts-section');
         }
         
+        // تأخير بسيط للسماح بتحميل الصفحة
         setTimeout(() => {
-            const debtCard = document.querySelector(`[data-debt-id="${debtId}"]`);
-            if (debtCard) {
-                debtCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                debtCard.style.animation = 'highlight 2s';
-                setTimeout(() => debtCard.click(), 500);
+            // البحث عن الدين وعرض تفاصيله
+            const debtRow = document.querySelector(`[data-debt-id="${debtId}"]`);
+            if (debtRow) {
+                debtRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                debtRow.style.background = 'rgba(102, 126, 234, 0.1)';
+                setTimeout(() => {
+                    debtRow.style.background = '';
+                }, 2000);
+                
+                // محاولة فتح التفاصيل
+                const detailBtn = debtRow.querySelector('.view-details-btn');
+                if (detailBtn) {
+                    setTimeout(() => detailBtn.click(), 500);
+                }
             }
         }, 300);
     },
@@ -30664,65 +32041,85 @@ const NotificationSystem = {
         this.hideDetailView();
         this.hideModal();
         
+        // الانتقال لصفحة المخزون
         if (typeof showSection === 'function') {
-            showSection('products-section');
+            showSection('inventory-section');
         }
         
+        // تأخير بسيط للسماح بتحميل الصفحة
         setTimeout(() => {
-            const productCard = document.querySelector(`[data-product-id="${productId}"]`);
-            if (productCard) {
-                productCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                productCard.style.animation = 'highlight 2s';
+            // البحث عن المنتج وعرض تفاصيله
+            const productRow = document.querySelector(`[data-product-id="${productId}"]`);
+            if (productRow) {
+                productRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                productRow.style.background = 'rgba(102, 126, 234, 0.1)';
+                setTimeout(() => {
+                    productRow.style.background = '';
+                }, 2000);
+                
+                // محاولة فتح التفاصيل
+                const detailBtn = productRow.querySelector('.view-details-btn');
+                if (detailBtn) {
+                    setTimeout(() => detailBtn.click(), 500);
+                }
             }
         }, 300);
     },
     
-    // تثبيت/إلغاء
-    togglePin(id) {
-        const index = this.pinnedNotifications.indexOf(id);
+    // تبديل التثبيت
+    togglePin(notificationId, event) {
+        if (event) {
+            event.stopPropagation();
+        }
+        
+        const index = this.pinnedNotifications.indexOf(notificationId);
         if (index > -1) {
             this.pinnedNotifications.splice(index, 1);
         } else {
-            this.pinnedNotifications.push(id);
+            this.pinnedNotifications.push(notificationId);
         }
+        
         this.savePinnedNotifications();
         this.renderNotifications();
     },
     
-    // حذف
-    deleteNotification(id) {
-        this.notifications = this.notifications.filter(n => n.id !== id);
-        const pinIndex = this.pinnedNotifications.indexOf(id);
-        if (pinIndex > -1) {
-            this.pinnedNotifications.splice(pinIndex, 1);
+    // حذف إشعار
+    deleteNotification(notificationId, event) {
+        if (event) {
+            event.stopPropagation();
         }
-        this.saveNotifications();
-        this.savePinnedNotifications();
-        this.updateBadge();
-        this.updateStats();
-        this.renderNotifications();
+        
+        const index = this.notifications.findIndex(n => n.id === notificationId);
+        if (index > -1) {
+            this.notifications.splice(index, 1);
+            this.saveNotifications();
+            this.updateBadge();
+            this.updateStats();
+            this.renderNotifications();
+        }
     },
     
     // تعليم كمقروء
-    markAsRead(id) {
-        const notification = this.notifications.find(n => n.id === id);
-        if (notification) {
+    markAsRead(notificationId) {
+        const notification = this.notifications.find(n => n.id === notificationId);
+        if (notification && !notification.read) {
             notification.read = true;
             this.saveNotifications();
             this.updateBadge();
         }
     },
     
-    // تعليم الكل
+    // تعليم الكل كمقروء
     markAllAsRead() {
         this.notifications.forEach(n => n.read = true);
         this.saveNotifications();
         this.updateBadge();
+        this.renderNotifications();
     },
     
     // مسح الكل
     clearAll() {
-        if (confirm('هل تريد مسح جميع الإشعارات؟')) {
+        if (confirm('هل أنت متأكد من حذف جميع الإشعارات؟')) {
             this.notifications = [];
             this.pinnedNotifications = [];
             this.saveNotifications();
@@ -30733,16 +32130,16 @@ const NotificationSystem = {
         }
     },
     
-    // حفظ
+    // حفظ الإشعارات
     saveNotifications() {
         try {
             localStorage.setItem('modern_notifications', JSON.stringify(this.notifications));
         } catch (error) {
-            console.error('خطأ في الحفظ:', error);
+            console.error('❌ خطأ في حفظ الإشعارات:', error);
         }
     },
     
-    // تحميل
+    // تحميل الإشعارات
     loadNotifications() {
         try {
             const saved = localStorage.getItem('modern_notifications');
@@ -30750,7 +32147,8 @@ const NotificationSystem = {
                 this.notifications = JSON.parse(saved);
             }
         } catch (error) {
-            console.error('خطأ في التحميل:', error);
+            console.error('❌ خطأ في تحميل الإشعارات:', error);
+            this.notifications = [];
         }
     },
     
@@ -30759,7 +32157,7 @@ const NotificationSystem = {
         try {
             localStorage.setItem('modern_pinned_notifications', JSON.stringify(this.pinnedNotifications));
         } catch (error) {
-            console.error('خطأ في حفظ المثبتة:', error);
+            console.error('❌ خطأ في حفظ الإشعارات المثبتة:', error);
         }
     },
     
@@ -30771,73 +32169,77 @@ const NotificationSystem = {
                 this.pinnedNotifications = JSON.parse(saved);
             }
         } catch (error) {
-            console.error('خطأ في تحميل المثبتة:', error);
+            console.error('❌ خطأ في تحميل الإشعارات المثبتة:', error);
+            this.pinnedNotifications = [];
         }
     },
     
-    // دوال مساعدة
+    // الحصول على وقت نسبي
     getTimeAgo(timestamp) {
-        const seconds = Math.floor((Date.now() - timestamp) / 1000);
-        if (seconds < 60) return 'الآن';
-        const minutes = Math.floor(seconds / 60);
+        const now = Date.now();
+        const diff = now - timestamp;
+        const minutes = Math.floor(diff / 60000);
+        const hours = Math.floor(diff / 3600000);
+        const days = Math.floor(diff / 86400000);
+        
+        if (minutes < 1) return 'الآن';
         if (minutes < 60) return `منذ ${minutes} دقيقة`;
-        const hours = Math.floor(minutes / 60);
         if (hours < 24) return `منذ ${hours} ساعة`;
-        const days = Math.floor(hours / 24);
         return `منذ ${days} يوم`;
     },
     
-    getPriorityLabel(priority) {
-        const labels = { high: 'عالية', medium: 'متوسطة', low: 'منخفضة' };
-        return labels[priority] || priority;
+    // الحصول على تسمية النوع
+    getTypeLabel(type) {
+        const labels = {
+            debt: 'ديون',
+            stock: 'مخزون',
+            sales: 'مبيعات',
+            system: 'نظام'
+        };
+        return labels[type] || type;
     }
 };
 
-
 // تهيئة النظام عند تحميل الصفحة
 document.addEventListener('DOMContentLoaded', () => {
-    // انتظار تحميل dataSdk
-    const waitForDataSdk = setInterval(() => {
-        if (typeof dataSdk !== 'undefined') {
-            clearInterval(waitForDataSdk);
+    // انتظار تحميل البيانات
+    const waitForData = setInterval(() => {
+        if (typeof products !== 'undefined' && typeof debtsData !== 'undefined') {
+            clearInterval(waitForData);
+            console.log('📊 البيانات جاهزة، بدء تهيئة نظام الإشعارات...');
             NotificationSystem.init();
         }
     }, 100);
 });
 
-
-// تهيئة النظام بعد تحميل الصفحة
-window.addEventListener('load', () => {
-    console.log('🔔 بدء تهيئة نظام الإشعارات...');
-    
-    // انتظار تحميل dataSdk
-    const checkDataSdk = setInterval(() => {
-        if (typeof dataSdk !== 'undefined' && dataSdk.products && dataSdk.debts) {
-            clearInterval(checkDataSdk);
-            console.log('✅ dataSdk جاهز - تهيئة النظام...');
-            
-            // تأخير 2 ثانية لضمان تحميل البيانات
-            setTimeout(() => {
-                NotificationSystem.init();
-            }, 2000);
-        }
-    }, 500);
-});
   </script>
 
   
+  <script>
 
-<script>
+
+// ==========================================
+// دوال إعدادات الإشعارات
+// ==========================================
+
 function showSettingsPage(page) {
+    // إخفاء صفحة الإعدادات الرئيسية
     document.getElementById('settings').style.display = 'none';
+    
+    // إظهار الصفحة المطلوبة
     const pageId = 'settings-' + page;
     const pageElement = document.getElementById(pageId);
+    
     if (pageElement) {
         pageElement.style.display = 'block';
+        
+        // تحميل إعدادات الإشعارات إذا كانت صفحة الإشعارات
         if (page === 'notifications') {
             loadNotificationSettings();
         }
     } else {
+        console.warn('الصفحة غير موجودة:', pageId);
+        // العودة لصفحة الإعدادات
         document.getElementById('settings').style.display = 'block';
     }
 }
@@ -30848,26 +32250,38 @@ function saveNotificationSettings() {
             lowStock: document.getElementById('notif_lowStock')?.checked || false,
             outOfStock: document.getElementById('notif_outOfStock')?.checked || false,
             expiry: document.getElementById('notif_expiry')?.checked || false,
-            debt: document.getElementById('notif_debt')?.checked || false
+            debt: document.getElementById('notif_debt')?.checked || false,
+            debtDue: document.getElementById('notif_debtDue')?.checked || false,
+            sales: document.getElementById('notif_sales')?.checked || false,
+            dailySales: document.getElementById('notif_dailySales')?.checked || false,
+            updates: document.getElementById('notif_updates')?.checked || false,
+            backupReminders: document.getElementById('notif_backupReminders')?.checked || false,
+            sound: document.getElementById('notif_sound')?.checked || false
         };
         
         localStorage.setItem('notification_settings', JSON.stringify(settings));
         
         if (typeof showToast === 'function') {
-            showToast('تم حفظ الإعدادات بنجاح', 'success');
+            showToast('تم حفظ إعدادات الإشعارات بنجاح', 'success');
         } else {
-            alert('تم حفظ الإعدادات بنجاح');
+            alert('تم حفظ إعدادات الإشعارات بنجاح');
         }
+        
+        console.log('✅ تم حفظ إعدادات الإشعارات:', settings);
     } catch (error) {
-        console.error('خطأ في حفظ الإعدادات:', error);
+        console.error('❌ خطأ في حفظ إعدادات الإشعارات:', error);
+        alert('حدث خطأ أثناء حفظ الإعدادات');
     }
 }
 
 function loadNotificationSettings() {
     try {
         const saved = localStorage.getItem('notification_settings');
+        
         if (saved) {
             const settings = JSON.parse(saved);
+            
+            // تطبيق الإعدادات على الحقول
             if (document.getElementById('notif_lowStock')) 
                 document.getElementById('notif_lowStock').checked = settings.lowStock !== false;
             if (document.getElementById('notif_outOfStock')) 
@@ -30876,24 +32290,44 @@ function loadNotificationSettings() {
                 document.getElementById('notif_expiry').checked = settings.expiry !== false;
             if (document.getElementById('notif_debt')) 
                 document.getElementById('notif_debt').checked = settings.debt !== false;
+            if (document.getElementById('notif_debtDue')) 
+                document.getElementById('notif_debtDue').checked = settings.debtDue !== false;
+            if (document.getElementById('notif_sales')) 
+                document.getElementById('notif_sales').checked = settings.sales || false;
+            if (document.getElementById('notif_dailySales')) 
+                document.getElementById('notif_dailySales').checked = settings.dailySales || false;
+            if (document.getElementById('notif_updates')) 
+                document.getElementById('notif_updates').checked = settings.updates || false;
+            if (document.getElementById('notif_backupReminders')) 
+                document.getElementById('notif_backupReminders').checked = settings.backupReminders !== false;
+            if (document.getElementById('notif_sound')) 
+                document.getElementById('notif_sound').checked = settings.sound !== false;
+            
+            console.log('✅ تم تحميل إعدادات الإشعارات:', settings);
         }
     } catch (error) {
-        console.error('خطأ في تحميل الإعدادات:', error);
+        console.error('❌ خطأ في تحميل إعدادات الإشعارات:', error);
     }
 }
 
 function resetNotificationSettings() {
-    if (confirm('هل تريد إعادة تعيين الإعدادات؟')) {
+    if (confirm('هل أنت متأكد من إعادة تعيين إعدادات الإشعارات للقيم الافتراضية؟')) {
+        // حذف الإعدادات المحفوظة
         localStorage.removeItem('notification_settings');
+        
+        // إعادة تحميل القيم الافتراضية
         loadNotificationSettings();
+        
         if (typeof showToast === 'function') {
-            showToast('تم إعادة تعيين الإعدادات', 'success');
+            showToast('تم إعادة تعيين الإعدادات للقيم الافتراضية', 'success');
         } else {
-            alert('تم إعادة تعيين الإعدادات');
+            alert('تم إعادة تعيين الإعدادات للقيم الافتراضية');
         }
+        
+        console.log('✅ تم إعادة تعيين إعدادات الإشعارات');
     }
 }
-</script>
 
+  </script>
   </body>
 </html>

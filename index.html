@@ -2369,6 +2369,57 @@ console.log(`
                 opacity: 0;
             }
         }
+        
+        /* أنماط زر التوسيع والتفاصيل */
+        .notification-expand-btn {
+            background: var(--theme-bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 8px 16px;
+            font-size: 0.85rem;
+            color: var(--primary-color);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+        }
+        
+        .notification-expand-btn:hover {
+            background: var(--theme-bg-secondary);
+            transform: translateX(-3px);
+        }
+        
+        .notification-expand-btn i {
+            transition: transform 0.3s ease;
+        }
+        
+        .notification-details {
+            background: var(--theme-bg-primary);
+            border-radius: 10px;
+            padding: 15px;
+            border: 1px solid var(--border-color);
+            animation: expandDown 0.3s ease;
+        }
+        
+        @keyframes expandDown {
+            from {
+                opacity: 0;
+                max-height: 0;
+                padding: 0 15px;
+            }
+            to {
+                opacity: 1;
+                max-height: 500px;
+                padding: 15px;
+            }
+        }
+        
+        .notification-details h4 {
+            color: var(--text-primary);
+            margin-bottom: 10px;
+        }
 
         /* ===== نهاية نظام الإشعارات ===== */
 
@@ -28783,10 +28834,6 @@ body {
           <span>مركز الإشعارات</span>
         </div>
         <div class="notifications-header-actions">
-          <button class="notifications-header-btn" onclick="refreshNotificationsNow()" title="تحديث الإشعارات">
-            <i class="fas fa-sync-alt"></i>
-            تحديث
-          </button>
           <button class="notifications-header-btn" onclick="markAllNotificationsAsRead()">
             <i class="fas fa-check-double"></i>
             تعليم الكل كمقروء
@@ -28846,12 +28893,20 @@ body {
                 lowStockThreshold: 10,
                 outOfStockAlert: true,
                 overdueDebtsAlert: true,
+                criticalStockThreshold: 3, // عتبة المخزون الحرجة
                 systemAlerts: true,
                 soundEnabled: true,
                 autoRefresh: true,
-                refreshInterval: 300000 // 5 دقائق
+                refreshInterval: 300000, // 5 دقائق
+                showDesktopNotifications: true, // إشعارات سطح المكتب
+                overdueWarningDays: 7, // تحذير قبل 7 أيام من الاستحقاق
+                severeOverdueDays: 30 // دين شديد بعد 30 يوم تأخير
             };
             this.refreshTimer = null;
+            this.lastCheck = {
+                stock: null,
+                debts: null
+            };
             this.init();
         }
         
@@ -28926,12 +28981,6 @@ body {
                 newNotifications.push(...debtAlerts);
             }
             
-            // فحص إشعارات النظام
-            if (this.settings.systemAlerts) {
-                const systemAlerts = await this.checkSystemAlerts();
-                newNotifications.push(...systemAlerts);
-            }
-            
             // إضافة الإشعارات الجديدة
             newNotifications.forEach(notification => {
                 // التحقق من عدم وجود إشعار مكرر
@@ -28946,92 +28995,88 @@ body {
             });
         }
         
-        async checkSystemAlerts() {
-            const alerts = [];
-            
-            try {
-                // فحص حالة قاعدة البيانات
-                const products = await window.dataSdk.getAllProducts();
-                const debts = await window.dataSdk.getDebts();
-                
-                // إشعار بإحصائيات النظام اليومية (مرة واحدة في اليوم)
-                const lastSystemCheck = localStorage.getItem('lastSystemCheck');
-                const today = new Date().toDateString();
-                
-                if (lastSystemCheck !== today) {
-                    const totalProducts = products.length;
-                    const outOfStock = products.filter(p => (p.quantity || 0) === 0).length;
-                    const lowStock = products.filter(p => {
-                        const qty = p.quantity || 0;
-                        return qty > 0 && qty <= this.settings.lowStockThreshold;
-                    }).length;
-                    
-                    const activeDebts = debts.filter(d => d.status !== 'paid').length;
-                    const totalDebtAmount = debts
-                        .filter(d => d.status !== 'paid')
-                        .reduce((sum, d) => sum + ((d.total_amount || 0) - (d.paid_amount || 0)), 0);
-                    
-                    if (totalProducts > 0 || activeDebts > 0) {
-                        alerts.push({
-                            id: `system_daily_${Date.now()}`,
-                            type: 'system',
-                            level: 'info',
-                            title: '📊 تقرير حالة النظام اليومي',
-                            message: `🏪 المخزون:
-• إجمالي المنتجات: ${totalProducts}
-• منتجات نافذة: ${outOfStock}
-• منتجات منخفضة: ${lowStock}
-
-💰 الديون:
-• ديون نشطة: ${activeDebts}
-• إجمالي المبالغ المستحقة: ${totalDebtAmount.toLocaleString()} دينار
-
-التاريخ: ${new Date().toLocaleDateString('ar-IQ')}`,
-                            timestamp: Date.now(),
-                            read: false,
-                            referenceId: `system_daily_${today}`,
-                            referenceType: 'system',
-                            referenceData: { totalProducts, outOfStock, lowStock, activeDebts, totalDebtAmount }
-                        });
-                        
-                        localStorage.setItem('lastSystemCheck', today);
-                    }
-                }
-            } catch (error) {
-                console.error('خطأ في فحص إشعارات النظام:', error);
-            }
-            
-            return alerts;
-        }
-        
         async checkStockLevels() {
             const alerts = [];
             
             try {
                 const products = await window.dataSdk.getAllProducts();
                 
+                let outOfStockCount = 0;
+                let lowStockCount = 0;
+                let criticalStockCount = 0;
+                let totalValue = 0;
+                
                 products.forEach(product => {
                     const quantity = product.quantity || 0;
-                    const productPrice = product.price || product.sale_price || 0;
-                    const category = product.category || 'غير مصنف';
+                    const price = product.price || 0;
+                    const productValue = quantity * price;
                     
                     // منتج نافذ
                     if (quantity === 0) {
+                        outOfStockCount++;
                         alerts.push({
                             id: Date.now() + Math.random(),
                             type: 'stock',
                             level: 'danger',
-                            title: '🚫 منتج نافذ من المخزون',
-                            message: `المنتج: ${product.name}
-التصنيف: ${category}
-السعر: ${productPrice.toLocaleString()} دينار
-${product.barcode ? `الباركود: ${product.barcode}` : ''}
-الحالة: نفذ بالكامل - يحتاج لتوريد فوري!`,
+                            icon: 'fa-times-circle',
+                            title: '❌ منتج نافذ من المخزون',
+                            message: `المنتج "${product.name}" نافذ تمامًا من المخزون`,
+                            detailedMessage: `
+                                <div style="background: rgba(239, 68, 68, 0.1); padding: 12px; border-radius: 8px; margin-top: 8px;">
+                                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; font-size: 0.9rem;">
+                                        <div><strong>اسم المنتج:</strong> ${product.name}</div>
+                                        <div><strong>الباركود:</strong> ${product.barcode || 'غير متوفر'}</div>
+                                        <div><strong>الفئة:</strong> ${product.category || 'غير مصنف'}</div>
+                                        <div><strong>السعر:</strong> ${price.toLocaleString('ar-IQ')} د.ع</div>
+                                        <div><strong>الكمية:</strong> <span style="color: #ef4444; font-weight: 700;">0 قطعة</span></div>
+                                        <div><strong>الحالة:</strong> <span style="color: #ef4444; font-weight: 700;">نافذ ⛔</span></div>
+                                    </div>
+                                    <div style="margin-top: 10px; padding: 8px; background: var(--theme-bg-primary); border-radius: 6px; font-size: 0.85rem; color: var(--text-secondary);">
+                                        <strong>💡 توصية:</strong> يُنصح بإعادة تعبئة المخزون في أقرب وقت ممكن لتجنب خسارة المبيعات
+                                    </div>
+                                </div>
+                            `,
                             timestamp: Date.now(),
                             read: false,
-                            referenceId: `product_${product.id}_out`,
+                            referenceId: `product_${product.id}_outofstock`,
                             referenceType: 'product',
-                            referenceData: product,
+                            referenceData: { ...product, stockStatus: 'out_of_stock' },
+                            action: {
+                                label: 'عرض المنتج',
+                                handler: () => this.navigateToProduct(product.id)
+                            }
+                        });
+                    }
+                    // منتج حرج (أقل من 3)
+                    else if (quantity <= this.settings.criticalStockThreshold && quantity > 0) {
+                        criticalStockCount++;
+                        alerts.push({
+                            id: Date.now() + Math.random(),
+                            type: 'stock',
+                            level: 'danger',
+                            icon: 'fa-exclamation-circle',
+                            title: '🔴 منتج في حالة حرجة',
+                            message: `المنتج "${product.name}" متبقي منه ${quantity} قطعة فقط (حرج!)`,
+                            detailedMessage: `
+                                <div style="background: rgba(239, 68, 68, 0.1); padding: 12px; border-radius: 8px; margin-top: 8px;">
+                                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; font-size: 0.9rem;">
+                                        <div><strong>اسم المنتج:</strong> ${product.name}</div>
+                                        <div><strong>الباركود:</strong> ${product.barcode || 'غير متوفر'}</div>
+                                        <div><strong>الفئة:</strong> ${product.category || 'غير مصنف'}</div>
+                                        <div><strong>السعر:</strong> ${price.toLocaleString('ar-IQ')} د.ع</div>
+                                        <div><strong>الكمية:</strong> <span style="color: #ef4444; font-weight: 700;">${quantity} قطعة</span></div>
+                                        <div><strong>القيمة الإجمالية:</strong> ${productValue.toLocaleString('ar-IQ')} د.ع</div>
+                                    </div>
+                                    <div style="margin-top: 10px; padding: 8px; background: var(--theme-bg-primary); border-radius: 6px; font-size: 0.85rem; color: var(--text-secondary);">
+                                        <strong>⚠️ تحذير:</strong> المخزون في حالة حرجة! يجب إعادة الطلب فورًا
+                                    </div>
+                                </div>
+                            `,
+                            timestamp: Date.now(),
+                            read: false,
+                            referenceId: `product_${product.id}_critical`,
+                            referenceType: 'product',
+                            referenceData: { ...product, stockStatus: 'critical' },
                             action: {
                                 label: 'عرض المنتج',
                                 handler: () => this.navigateToProduct(product.id)
@@ -29039,25 +29084,35 @@ ${product.barcode ? `الباركود: ${product.barcode}` : ''}
                         });
                     }
                     // منتج منخفض
-                    else if (quantity <= this.settings.lowStockThreshold && quantity > 0) {
-                        const percentage = ((quantity / this.settings.lowStockThreshold) * 100).toFixed(0);
-                        
+                    else if (quantity <= this.settings.lowStockThreshold && quantity > this.settings.criticalStockThreshold) {
+                        lowStockCount++;
                         alerts.push({
                             id: Date.now() + Math.random(),
                             type: 'stock',
-                            level: quantity <= 3 ? 'danger' : 'warning',
-                            title: quantity <= 3 ? '⚠️ منتج قارب على النفاذ' : '⏰ مخزون منخفض',
-                            message: `المنتج: ${product.name}
-التصنيف: ${category}
-الكمية المتبقية: ${quantity} قطعة فقط
-السعر: ${productPrice.toLocaleString()} دينار
-${product.barcode ? `الباركود: ${product.barcode}` : ''}
-نسبة المخزون: ${percentage}%`,
+                            level: 'warning',
+                            icon: 'fa-exclamation-triangle',
+                            title: '⚠️ منتج قارب على النفاذ',
+                            message: `المنتج "${product.name}" متبقي منه ${quantity} قطعة`,
+                            detailedMessage: `
+                                <div style="background: rgba(251, 191, 36, 0.1); padding: 12px; border-radius: 8px; margin-top: 8px;">
+                                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; font-size: 0.9rem;">
+                                        <div><strong>اسم المنتج:</strong> ${product.name}</div>
+                                        <div><strong>الباركود:</strong> ${product.barcode || 'غير متوفر'}</div>
+                                        <div><strong>الفئة:</strong> ${product.category || 'غير مصنف'}</div>
+                                        <div><strong>السعر:</strong> ${price.toLocaleString('ar-IQ')} د.ع</div>
+                                        <div><strong>الكمية:</strong> <span style="color: #f59e0b; font-weight: 700;">${quantity} قطعة</span></div>
+                                        <div><strong>القيمة الإجمالية:</strong> ${productValue.toLocaleString('ar-IQ')} د.ع</div>
+                                    </div>
+                                    <div style="margin-top: 10px; padding: 8px; background: var(--theme-bg-primary); border-radius: 6px; font-size: 0.85rem; color: var(--text-secondary);">
+                                        <strong>📌 ملاحظة:</strong> المخزون منخفض، يُنصح بإعادة الطلب قريبًا
+                                    </div>
+                                </div>
+                            `,
                             timestamp: Date.now(),
                             read: false,
                             referenceId: `product_${product.id}_low`,
                             referenceType: 'product',
-                            referenceData: product,
+                            referenceData: { ...product, stockStatus: 'low' },
                             action: {
                                 label: 'عرض المنتج',
                                 handler: () => this.navigateToProduct(product.id)
@@ -29065,6 +29120,65 @@ ${product.barcode ? `الباركود: ${product.barcode}` : ''}
                         });
                     }
                 });
+                
+                // إضافة إشعار ملخص إذا كان هناك مشاكل مخزون متعددة
+                const totalIssues = outOfStockCount + criticalStockCount + lowStockCount;
+                if (totalIssues > 5) {
+                    alerts.push({
+                        id: Date.now() + Math.random() + 2000,
+                        type: 'stock',
+                        level: 'warning',
+                        icon: 'fa-warehouse',
+                        title: '📦 تنبيه: مشاكل مخزون متعددة',
+                        message: `لديك ${totalIssues} منتج يحتاج إلى متابعة (${outOfStockCount} نافذ، ${criticalStockCount} حرج، ${lowStockCount} منخفض)`,
+                        detailedMessage: `
+                            <div style="background: rgba(251, 191, 36, 0.1); padding: 15px; border-radius: 8px; margin-top: 10px;">
+                                <h4 style="margin-bottom: 10px; color: #f59e0b;">📊 ملخص حالة المخزون</h4>
+                                <div style="display: grid; gap: 8px; font-size: 0.95rem;">
+                                    <div style="display: flex; justify-content: space-between; padding: 8px; background: var(--theme-bg-primary); border-radius: 6px;">
+                                        <span>منتجات نافذة ❌:</span>
+                                        <strong style="color: #ef4444;">${outOfStockCount}</strong>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between; padding: 8px; background: var(--theme-bg-primary); border-radius: 6px;">
+                                        <span>منتجات حرجة 🔴:</span>
+                                        <strong style="color: #ef4444;">${criticalStockCount}</strong>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between; padding: 8px; background: var(--theme-bg-primary); border-radius: 6px;">
+                                        <span>منتجات منخفضة ⚠️:</span>
+                                        <strong style="color: #f59e0b;">${lowStockCount}</strong>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between; padding: 8px; background: var(--theme-bg-primary); border-radius: 6px; border: 2px solid rgba(251, 191, 36, 0.3);">
+                                        <span>إجمالي المنتجات المتأثرة:</span>
+                                        <strong style="color: #f59e0b;">${totalIssues}</strong>
+                                    </div>
+                                </div>
+                                <hr style="margin: 12px 0; border: 1px solid rgba(251, 191, 36, 0.2);">
+                                <div style="font-size: 0.9rem; color: var(--text-secondary);">
+                                    <strong>💡 توصية:</strong> يُنصح بمراجعة المخزون وإعادة تعبئة المنتجات الضرورية
+                                </div>
+                            </div>
+                        `,
+                        timestamp: Date.now(),
+                        read: false,
+                        referenceId: `stock_summary_${Date.now()}`,
+                        referenceType: 'summary',
+                        referenceData: { 
+                            outOfStockCount,
+                            criticalStockCount,
+                            lowStockCount,
+                            totalIssues
+                        },
+                        action: {
+                            label: 'عرض المخزون',
+                            handler: () => {
+                                showPage('inventory');
+                                this.toggleNotificationsPanel();
+                            }
+                        }
+                    });
+                }
+                
+                this.lastCheck.stock = Date.now();
             } catch (error) {
                 console.error('خطأ في فحص المخزون:', error);
             }
@@ -29079,46 +29193,156 @@ ${product.barcode ? `الباركود: ${product.barcode}` : ''}
                 const debts = await window.dataSdk.getDebts();
                 const now = Date.now();
                 
+                // إحصائيات للديون
+                let totalOverdue = 0;
+                let totalOverdueAmount = 0;
+                const debtorsList = new Map();
+                
                 debts.forEach(debt => {
                     if (debt.status !== 'paid' && debt.installments) {
+                        let debtorOverdueCount = 0;
+                        let debtorOverdueAmount = 0;
+                        
                         debt.installments.forEach((installment, index) => {
                             if (installment.status !== 'paid' && installment.due_date) {
                                 const dueDate = new Date(installment.due_date).getTime();
                                 const daysOverdue = Math.floor((now - dueDate) / (1000 * 60 * 60 * 24));
                                 
                                 if (daysOverdue > 0) {
-                                    // تحديد مستوى الخطورة حسب عدد أيام التأخير
-                                    const level = daysOverdue > 30 ? 'danger' : 
-                                                daysOverdue > 7 ? 'warning' : 'info';
+                                    const amount = installment.amount || 0;
+                                    totalOverdue++;
+                                    totalOverdueAmount += amount;
+                                    debtorOverdueCount++;
+                                    debtorOverdueAmount += amount;
                                     
-                                    const installmentAmount = installment.amount || installment.paid_amount || 0;
+                                    // تحديد مستوى الخطورة
+                                    let level = 'warning';
+                                    let severity = 'متأخر';
+                                    let icon = 'fa-exclamation-triangle';
+                                    
+                                    if (daysOverdue > this.settings.severeOverdueDays) {
+                                        level = 'danger';
+                                        severity = 'متأخر بشدة';
+                                        icon = 'fa-exclamation-circle';
+                                    } else if (daysOverdue > 14) {
+                                        level = 'danger';
+                                        severity = 'متأخر جداً';
+                                        icon = 'fa-exclamation-triangle';
+                                    }
                                     
                                     alerts.push({
                                         id: Date.now() + Math.random(),
                                         type: 'debts',
                                         level: level,
-                                        title: daysOverdue > 30 ? '⚠️ دين متأخر بشدة' : 
-                                               daysOverdue > 7 ? '⏰ دين متأخر' : 'ℹ️ تذكير بدين',
-                                        message: `العميل: ${debt.customer_name}
-الشهر: ${installment.month}
-المبلغ: ${installmentAmount.toLocaleString()} دينار
-متأخر: ${daysOverdue} يوم
-${debt.customer_phone ? `الهاتف: ${debt.customer_phone}` : ''}`,
+                                        icon: icon,
+                                        title: `${severity} - ${debt.customer_name}`,
+                                        message: `قسط رقم ${installment.month} من ${debt.installment_months} - متأخر ${daysOverdue} يوم - المبلغ: ${amount.toLocaleString('ar-IQ')} د.ع`,
+                                        detailedMessage: `
+                                            <div style="background: rgba(239, 68, 68, 0.1); padding: 12px; border-radius: 8px; margin-top: 8px;">
+                                                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; font-size: 0.9rem;">
+                                                    <div><strong>العميل:</strong> ${debt.customer_name}</div>
+                                                    <div><strong>الهاتف:</strong> ${debt.customer_phone || 'غير متوفر'}</div>
+                                                    <div><strong>رقم الفاتورة:</strong> ${debt.invoice_id || 'غير محدد'}</div>
+                                                    <div><strong>القسط:</strong> ${installment.month} من ${debt.installment_months}</div>
+                                                    <div><strong>المبلغ المستحق:</strong> ${amount.toLocaleString('ar-IQ')} د.ع</div>
+                                                    <div><strong>أيام التأخير:</strong> <span style="color: #ef4444; font-weight: 700;">${daysOverdue} يوم</span></div>
+                                                    <div><strong>تاريخ الاستحقاق:</strong> ${new Date(installment.due_date).toLocaleDateString('ar-IQ')}</div>
+                                                    <div><strong>المتبقي من الدين:</strong> ${(debt.remaining_amount || 0).toLocaleString('ar-IQ')} د.ع</div>
+                                                </div>
+                                            </div>
+                                        `,
                                         timestamp: now,
                                         read: false,
                                         referenceId: `debt_${debt.id}_installment_${index}`,
                                         referenceType: 'debt',
-                                        referenceData: { debt, installment, daysOverdue },
+                                        referenceData: { 
+                                            debt, 
+                                            installment, 
+                                            daysOverdue,
+                                            customerName: debt.customer_name,
+                                            customerPhone: debt.customer_phone,
+                                            amount: amount
+                                        },
                                         action: {
-                                            label: 'عرض تفاصيل الدين',
+                                            label: 'عرض الدين',
                                             handler: () => this.navigateToDebt(debt.id)
                                         }
                                     });
                                 }
                             }
                         });
+                        
+                        // تتبع المديونين
+                        if (debtorOverdueCount > 0) {
+                            if (!debtorsList.has(debt.customer_name)) {
+                                debtorsList.set(debt.customer_name, {
+                                    name: debt.customer_name,
+                                    phone: debt.customer_phone,
+                                    overdueCount: 0,
+                                    overdueAmount: 0,
+                                    debts: []
+                                });
+                            }
+                            const debtor = debtorsList.get(debt.customer_name);
+                            debtor.overdueCount += debtorOverdueCount;
+                            debtor.overdueAmount += debtorOverdueAmount;
+                            debtor.debts.push(debt);
+                        }
                     }
                 });
+                
+                // إضافة إشعار ملخص إذا كان هناك ديون متأخرة كثيرة
+                if (totalOverdue > 5) {
+                    alerts.push({
+                        id: Date.now() + Math.random() + 1000,
+                        type: 'debts',
+                        level: 'danger',
+                        icon: 'fa-exclamation-circle',
+                        title: '⚠️ تنبيه: ديون متأخرة متعددة',
+                        message: `لديك ${totalOverdue} قسط متأخر من ${debtorsList.size} مديون بإجمالي ${totalOverdueAmount.toLocaleString('ar-IQ')} د.ع`,
+                        detailedMessage: `
+                            <div style="background: rgba(239, 68, 68, 0.1); padding: 15px; border-radius: 8px; margin-top: 10px;">
+                                <h4 style="margin-bottom: 10px; color: #ef4444;">📊 ملخص الديون المتأخرة</h4>
+                                <div style="display: grid; gap: 8px; font-size: 0.95rem;">
+                                    <div style="display: flex; justify-content: space-between; padding: 8px; background: var(--theme-bg-primary); border-radius: 6px;">
+                                        <span>عدد الأقساط المتأخرة:</span>
+                                        <strong style="color: #ef4444;">${totalOverdue}</strong>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between; padding: 8px; background: var(--theme-bg-primary); border-radius: 6px;">
+                                        <span>عدد المديونين:</span>
+                                        <strong style="color: #f59e0b;">${debtorsList.size}</strong>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between; padding: 8px; background: var(--theme-bg-primary); border-radius: 6px;">
+                                        <span>إجمالي المبالغ المتأخرة:</span>
+                                        <strong style="color: #ef4444;">${totalOverdueAmount.toLocaleString('ar-IQ')} د.ع</strong>
+                                    </div>
+                                </div>
+                                <hr style="margin: 12px 0; border: 1px solid rgba(239, 68, 68, 0.2);">
+                                <div style="font-size: 0.9rem; color: var(--text-secondary);">
+                                    <strong>💡 توصية:</strong> يُنصح بالتواصل مع المديونين في أقرب وقت ممكن لتحصيل المستحقات
+                                </div>
+                            </div>
+                        `,
+                        timestamp: now,
+                        read: false,
+                        referenceId: `debts_summary_${Date.now()}`,
+                        referenceType: 'summary',
+                        referenceData: { 
+                            totalOverdue,
+                            totalOverdueAmount,
+                            debtorsList: Array.from(debtorsList.values())
+                        },
+                        action: {
+                            label: 'عرض جميع الديون',
+                            handler: () => {
+                                showPage('debts');
+                                this.toggleNotificationsPanel();
+                            }
+                        }
+                    });
+                }
+                
+                this.lastCheck.debts = now;
             } catch (error) {
                 console.error('خطأ في فحص الديون:', error);
             }
@@ -29230,14 +29454,14 @@ ${debt.customer_phone ? `الهاتف: ${debt.customer_phone}` : ''}`,
         renderNotificationItem(notification) {
             const iconClass = notification.level === 'danger' ? 'danger' :
                             notification.level === 'warning' ? 'warning' : 'info';
-            const icon = notification.type === 'stock' ? 'fa-boxes' :
-                        notification.type === 'debts' ? 'fa-credit-card' : 'fa-info-circle';
+            const icon = notification.icon || (notification.type === 'stock' ? 'fa-boxes' :
+                        notification.type === 'debts' ? 'fa-credit-card' : 'fa-cog');
             
             const timeAgo = this.getTimeAgo(notification.timestamp);
             const unreadClass = notification.read ? '' : 'unread';
             
-            // تنسيق الرسالة مع دعم الأسطر المتعددة
-            const formattedMessage = notification.message.replace(/\n/g, '<br>');
+            // إضافة معرف فريد للإشعار القابل للتوسع
+            const expandId = `notification-expand-${notification.id}`;
             
             return `
                 <div class="notification-item ${unreadClass}" data-id="${notification.id}">
@@ -29245,12 +29469,25 @@ ${debt.customer_phone ? `الهاتف: ${debt.customer_phone}` : ''}`,
                         <div class="notification-item-icon ${iconClass}">
                             <i class="fas ${icon}"></i>
                         </div>
-                        <div class="notification-item-content">
+                        <div class="notification-item-content" style="flex: 1;">
                             <div class="notification-item-title">
                                 ${notification.title}
                                 ${!notification.read ? '<span style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.7rem; margin-right: 8px;">جديد</span>' : ''}
                             </div>
-                            <div class="notification-item-message" style="white-space: pre-line; line-height: 1.6;">${formattedMessage}</div>
+                            <div class="notification-item-message">${notification.message}</div>
+                            
+                            ${notification.detailedMessage ? `
+                                <div style="margin-top: 10px;">
+                                    <button class="notification-expand-btn" onclick="document.getElementById('${expandId}').style.display = document.getElementById('${expandId}').style.display === 'none' ? 'block' : 'none'">
+                                        <i class="fas fa-chevron-down"></i>
+                                        عرض التفاصيل
+                                    </button>
+                                    <div id="${expandId}" class="notification-details" style="display: none; margin-top: 10px;">
+                                        ${notification.detailedMessage}
+                                    </div>
+                                </div>
+                            ` : ''}
+                            
                             <div class="notification-item-time">
                                 <i class="fas fa-clock"></i>
                                 ${timeAgo}
@@ -29432,41 +29669,6 @@ ${debt.customer_phone ? `الهاتف: ${debt.customer_phone}` : ''}`,
         }
     }
     
-    async function refreshNotificationsNow() {
-        if (notificationSystem) {
-            const btn = event.target.closest('.notifications-header-btn');
-            const icon = btn.querySelector('i');
-            
-            // إضافة تأثير الدوران
-            icon.style.animation = 'spin 1s linear infinite';
-            btn.disabled = true;
-            
-            try {
-                await notificationSystem.checkAndCreateNotifications();
-                notificationSystem.updateDisplay();
-                showAlert('success', 'تم تحديث الإشعارات بنجاح');
-            } catch (error) {
-                showAlert('error', 'حدث خطأ أثناء تحديث الإشعارات');
-            } finally {
-                icon.style.animation = '';
-                btn.disabled = false;
-            }
-        }
-    }
-    
-    // إضافة تأثير الدوران للأيقونة
-    if (!document.querySelector('#spin-animation-style')) {
-        const style = document.createElement('style');
-        style.id = 'spin-animation-style';
-        style.textContent = `
-            @keyframes spin {
-                from { transform: rotate(0deg); }
-                to { transform: rotate(360deg); }
-            }
-        `;
-        document.head.appendChild(style);
-    }
-    
     // إغلاق اللوحة عند النقر خارجها
     document.addEventListener('click', (e) => {
         const panel = document.getElementById('notificationsPanel');
@@ -29488,18 +29690,11 @@ ${debt.customer_phone ? `الهاتف: ${debt.customer_phone}` : ''}`,
         }
         
         const settings = notificationSystem.settings;
-        const stats = {
-            total: notificationSystem.notifications.length,
-            unread: notificationSystem.notifications.filter(n => !n.read).length,
-            stock: notificationSystem.notifications.filter(n => n.type === 'stock').length,
-            debts: notificationSystem.notifications.filter(n => n.type === 'debts').length,
-            system: notificationSystem.notifications.filter(n => n.type === 'system').length
-        };
         
         const modal = document.createElement('div');
         modal.className = 'modal-overlay';
         modal.innerHTML = `
-            <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-content" style="max-width: 700px;">
                 <div class="modal-header">
                     <h2><i class="fas fa-bell"></i> إعدادات الإشعارات والتنبيهات</h2>
                     <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">
@@ -29508,26 +29703,6 @@ ${debt.customer_phone ? `الهاتف: ${debt.customer_phone}` : ''}`,
                 </div>
                 <div class="modal-body" style="max-height: 600px; overflow-y: auto;">
                     
-                    <!-- إحصائيات الإشعارات -->
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 25px;">
-                        <div style="background: linear-gradient(135deg, #667eea, #764ba2); padding: 15px; border-radius: 12px; text-align: center; color: white;">
-                            <div style="font-size: 2rem; font-weight: bold; margin-bottom: 5px;">${stats.total}</div>
-                            <div style="font-size: 0.9rem; opacity: 0.9;">إجمالي الإشعارات</div>
-                        </div>
-                        <div style="background: linear-gradient(135deg, #ef4444, #dc2626); padding: 15px; border-radius: 12px; text-align: center; color: white;">
-                            <div style="font-size: 2rem; font-weight: bold; margin-bottom: 5px;">${stats.unread}</div>
-                            <div style="font-size: 0.9rem; opacity: 0.9;">غير مقروءة</div>
-                        </div>
-                        <div style="background: linear-gradient(135deg, #fbbf24, #f59e0b); padding: 15px; border-radius: 12px; text-align: center; color: white;">
-                            <div style="font-size: 2rem; font-weight: bold; margin-bottom: 5px;">${stats.stock}</div>
-                            <div style="font-size: 0.9rem; opacity: 0.9;">المخزون</div>
-                        </div>
-                        <div style="background: linear-gradient(135deg, #3b82f6, #2563eb); padding: 15px; border-radius: 12px; text-align: center; color: white;">
-                            <div style="font-size: 2rem; font-weight: bold; margin-bottom: 5px;">${stats.debts}</div>
-                            <div style="font-size: 0.9rem; opacity: 0.9;">الديون</div>
-                        </div>
-                    </div>
-                    
                     <div style="background: var(--theme-bg-secondary); padding: 20px; border-radius: 12px; margin-bottom: 20px;">
                         <h3 style="margin-bottom: 15px; color: var(--text-primary); display: flex; align-items: center; gap: 10px;">
                             <i class="fas fa-toggle-on" style="color: #667eea;"></i>
@@ -29535,10 +29710,7 @@ ${debt.customer_phone ? `الهاتف: ${debt.customer_phone}` : ''}`,
                         </h3>
                         
                         <label class="switch-container" style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: var(--theme-bg-primary); border-radius: 8px;">
-                            <div>
-                                <span style="font-weight: 600; color: var(--text-primary); display: block;">تفعيل نظام الإشعارات</span>
-                                <small style="color: var(--text-secondary);">تفعيل/إيقاف جميع الإشعارات والتنبيهات</small>
-                            </div>
+                            <span style="font-weight: 600; color: var(--text-primary);">تفعيل نظام الإشعارات</span>
                             <input type="checkbox" id="notificationEnabled" ${settings.enabled ? 'checked' : ''}>
                         </label>
                     </div>
@@ -29550,14 +29722,11 @@ ${debt.customer_phone ? `الهاتف: ${debt.customer_phone}` : ''}`,
                         </h3>
                         
                         <label class="switch-container" style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: var(--theme-bg-primary); border-radius: 8px; margin-bottom: 15px;">
-                            <div>
-                                <span style="font-weight: 600; color: var(--text-primary); display: block;">تنبيه عند نفاذ المنتجات</span>
-                                <small style="color: var(--text-secondary);">إشعار فوري عندما ينفذ أي منتج من المخزون</small>
-                            </div>
+                            <span style="font-weight: 600; color: var(--text-primary);">تنبيه عند نفاذ المنتجات</span>
                             <input type="checkbox" id="outOfStockAlert" ${settings.outOfStockAlert ? 'checked' : ''}>
                         </label>
                         
-                        <div style="padding: 12px; background: var(--theme-bg-primary); border-radius: 8px;">
+                        <div style="padding: 12px; background: var(--theme-bg-primary); border-radius: 8px; margin-bottom: 15px;">
                             <label style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-primary);">
                                 <i class="fas fa-chart-line"></i>
                                 حد المخزون المنخفض
@@ -29566,7 +29735,20 @@ ${debt.customer_phone ? `الهاتف: ${debt.customer_phone}` : ''}`,
                                    min="1" max="100" 
                                    style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--theme-bg-secondary); color: var(--text-primary);">
                             <small style="display: block; margin-top: 8px; color: var(--text-secondary);">
-                                سيتم تنبيهك عندما تكون كمية المنتج أقل من أو تساوي هذا العدد
+                                سيتم تنبيهك عندما تكون كمية المنتج أقل من أو تساوي هذا العدد (تنبيه أصفر ⚠️)
+                            </small>
+                        </div>
+                        
+                        <div style="padding: 12px; background: var(--theme-bg-primary); border-radius: 8px;">
+                            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-primary);">
+                                <i class="fas fa-exclamation-circle"></i>
+                                حد المخزون الحرج
+                            </label>
+                            <input type="number" id="criticalStockThreshold" value="${settings.criticalStockThreshold || 3}" 
+                                   min="1" max="50" 
+                                   style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--theme-bg-secondary); color: var(--text-primary);">
+                            <small style="display: block; margin-top: 8px; color: var(--text-secondary);">
+                                سيتم تنبيهك بشكل عاجل عندما تكون كمية المنتج أقل من هذا العدد (تنبيه أحمر 🔴)
                             </small>
                         </div>
                     </div>
@@ -29577,13 +29759,23 @@ ${debt.customer_phone ? `الهاتف: ${debt.customer_phone}` : ''}`,
                             إشعارات الديون
                         </h3>
                         
-                        <label class="switch-container" style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: var(--theme-bg-primary); border-radius: 8px;">
-                            <div>
-                                <span style="font-weight: 600; color: var(--text-primary); display: block;">تنبيه عند تأخر الديون</span>
-                                <small style="color: var(--text-secondary);">إشعار بالأقساط المتأخرة عن موعد استحقاقها</small>
-                            </div>
+                        <label class="switch-container" style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: var(--theme-bg-primary); border-radius: 8px; margin-bottom: 15px;">
+                            <span style="font-weight: 600; color: var(--text-primary);">تنبيه عند تأخر الديون</span>
                             <input type="checkbox" id="overdueDebtsAlert" ${settings.overdueDebtsAlert ? 'checked' : ''}>
                         </label>
+                        
+                        <div style="padding: 12px; background: var(--theme-bg-primary); border-radius: 8px;">
+                            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-primary);">
+                                <i class="fas fa-calendar-times"></i>
+                                أيام التأخير الشديدة
+                            </label>
+                            <input type="number" id="severeOverdueDays" value="${settings.severeOverdueDays || 30}" 
+                                   min="1" max="365" 
+                                   style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--theme-bg-secondary); color: var(--text-primary);">
+                            <small style="display: block; margin-top: 8px; color: var(--text-secondary);">
+                                سيتم تعليم الدين كمتأخر بشدة عند تجاوز هذا العدد من الأيام
+                            </small>
+                        </div>
                     </div>
                     
                     <div style="background: var(--theme-bg-secondary); padding: 20px; border-radius: 12px; margin-bottom: 20px;">
@@ -29593,18 +29785,12 @@ ${debt.customer_phone ? `الهاتف: ${debt.customer_phone}` : ''}`,
                         </h3>
                         
                         <label class="switch-container" style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: var(--theme-bg-primary); border-radius: 8px; margin-bottom: 15px;">
-                            <div>
-                                <span style="font-weight: 600; color: var(--text-primary); display: block;">تفعيل الصوت للإشعارات</span>
-                                <small style="color: var(--text-secondary);">إظهار إشعارات منبثقة عند وصول إشعار جديد</small>
-                            </div>
+                            <span style="font-weight: 600; color: var(--text-primary);">تفعيل الصوت للإشعارات</span>
                             <input type="checkbox" id="soundEnabled" ${settings.soundEnabled ? 'checked' : ''}>
                         </label>
                         
                         <label class="switch-container" style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: var(--theme-bg-primary); border-radius: 8px; margin-bottom: 15px;">
-                            <div>
-                                <span style="font-weight: 600; color: var(--text-primary); display: block;">التحديث التلقائي للإشعارات</span>
-                                <small style="color: var(--text-secondary);">فحص تلقائي للإشعارات الجديدة كل فترة زمنية</small>
-                            </div>
+                            <span style="font-weight: 600; color: var(--text-primary);">التحديث التلقائي للإشعارات</span>
                             <input type="checkbox" id="autoRefresh" ${settings.autoRefresh ? 'checked' : ''}>
                         </label>
                         
@@ -29617,7 +29803,7 @@ ${debt.customer_phone ? `الهاتف: ${debt.customer_phone}` : ''}`,
                                    min="1" max="60" 
                                    style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--theme-bg-secondary); color: var(--text-primary);">
                             <small style="display: block; margin-top: 8px; color: var(--text-secondary);">
-                                سيتم التحقق من الإشعارات الجديدة كل هذه الفترة (موصى به: 5 دقائق)
+                                سيتم التحقق من الإشعارات الجديدة كل هذه الفترة
                             </small>
                         </div>
                     </div>
@@ -29630,9 +29816,8 @@ ${debt.customer_phone ? `الهاتف: ${debt.customer_phone}` : ''}`,
                         <ul style="color: var(--text-secondary); line-height: 1.8; padding-right: 20px;">
                             <li>سيتم التحقق من المخزون والديون تلقائيًا حسب الإعدادات</li>
                             <li>يمكنك النقر على أي إشعار للانتقال مباشرة إلى الصفحة المرتبطة</li>
-                            <li>الإشعارات المقروءة ستبقى محفوظة حتى تقوم بحذفها يدوياً</li>
+                            <li>الإشعارات المقروءة ستبقى محفوظة حتى تقوم بحذفها</li>
                             <li>يمكنك تعطيل أنواع معينة من الإشعارات حسب حاجتك</li>
-                            <li>يتم حفظ الإشعارات محلياً وتبقى حتى بعد إغلاق البرنامج</li>
                         </ul>
                     </div>
                     
@@ -29659,8 +29844,10 @@ ${debt.customer_phone ? `الهاتف: ${debt.customer_phone}` : ''}`,
         const newSettings = {
             enabled: document.getElementById('notificationEnabled').checked,
             lowStockThreshold: parseInt(document.getElementById('lowStockThreshold').value) || 10,
+            criticalStockThreshold: parseInt(document.getElementById('criticalStockThreshold').value) || 3,
             outOfStockAlert: document.getElementById('outOfStockAlert').checked,
             overdueDebtsAlert: document.getElementById('overdueDebtsAlert').checked,
+            severeOverdueDays: parseInt(document.getElementById('severeOverdueDays').value) || 30,
             soundEnabled: document.getElementById('soundEnabled').checked,
             autoRefresh: document.getElementById('autoRefresh').checked,
             refreshInterval: (parseInt(document.getElementById('refreshInterval').value) || 5) * 60000

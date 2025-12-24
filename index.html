@@ -2076,308 +2076,160 @@ console.log(`
         /* لوحة الإشعارات */
         .notifications-panel {
             position: fixed;
-            top: 50%;
+            top: 60px;
             left: 50%;
-            transform: translate(-50%, -50%) scale(0.9);
-            width: 92%;
-            max-width: 850px;
-            max-height: 85vh;
+            transform: translateX(-50%) translateY(-20px);
+            width: 90%;
+            max-width: 700px;
+            max-height: 80vh;
             background: var(--theme-bg-primary);
-            border-radius: 24px;
-            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.6), 
-                        0 10px 30px rgba(102, 126, 234, 0.3);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
             z-index: 9999;
             opacity: 0;
             visibility: hidden;
-            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-            border: 3px solid;
-            border-image: linear-gradient(135deg, #667eea, #764ba2, #f093fb) 1;
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            border: 2px solid var(--border-color);
             overflow: hidden;
-            backdrop-filter: blur(20px);
         }
 
         .notifications-panel.active {
             opacity: 1;
             visibility: visible;
-            transform: translate(-50%, -50%) scale(1);
+            transform: translateX(-50%) translateY(0);
         }
 
         .notifications-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
-            padding: 24px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px 25px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            border-bottom: 2px solid rgba(255, 255, 255, 0.15);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .notifications-header::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, 
-                transparent, 
-                rgba(255, 255, 255, 0.2), 
-                transparent);
-            animation: shimmer 3s infinite;
-        }
-        
-        @keyframes shimmer {
-            0% { left: -100%; }
-            100% { left: 100%; }
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .notifications-header-title {
             display: flex;
             align-items: center;
-            gap: 15px;
+            gap: 12px;
             color: white;
-            font-size: 1.5rem;
-            font-weight: 800;
-            position: relative;
-            z-index: 1;
-            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-        }
-        
-        .notifications-header-title i {
-            font-size: 1.8rem;
-            animation: bellRing 2s ease-in-out infinite;
-        }
-        
-        @keyframes bellRing {
-            0%, 100% { transform: rotate(0deg); }
-            10%, 30% { transform: rotate(-15deg); }
-            20%, 40% { transform: rotate(15deg); }
-            50% { transform: rotate(0deg); }
+            font-size: 1.3rem;
+            font-weight: 700;
         }
 
         .notifications-header-actions {
             display: flex;
-            gap: 12px;
-            position: relative;
-            z-index: 1;
+            gap: 10px;
         }
 
         .notifications-header-btn {
-            padding: 10px 18px;
-            background: rgba(255, 255, 255, 0.25);
-            border: 2px solid rgba(255, 255, 255, 0.4);
-            border-radius: 12px;
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
             color: white;
             cursor: pointer;
-            font-size: 0.9rem;
-            font-weight: 600;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-size: 0.85rem;
+            transition: all 0.3s ease;
             display: flex;
             align-items: center;
-            gap: 8px;
-            backdrop-filter: blur(10px);
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            gap: 6px;
         }
 
         .notifications-header-btn:hover {
-            background: rgba(255, 255, 255, 0.4);
-            transform: translateY(-3px) scale(1.05);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
-        }
-        
-        .notifications-header-btn:active {
-            transform: translateY(-1px) scale(1.02);
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
         }
 
         .notifications-tabs {
             display: flex;
             background: var(--theme-bg-secondary);
-            border-bottom: 3px solid var(--border-color);
-            padding: 0;
-            position: relative;
-        }
-        
-        .notifications-tabs::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            height: 3px;
-            background: linear-gradient(90deg, #667eea, #764ba2);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            border-radius: 3px 3px 0 0;
+            border-bottom: 2px solid var(--border-color);
+            padding: 0 20px;
         }
 
         .notifications-tab {
             flex: 1;
-            padding: 18px 24px;
+            padding: 15px 20px;
             background: transparent;
             border: none;
             cursor: pointer;
-            font-size: 1rem;
-            font-weight: 700;
+            font-size: 0.95rem;
+            font-weight: 600;
             color: var(--text-secondary);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.3s ease;
             position: relative;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
-        }
-        
-        .notifications-tab i {
-            font-size: 1.1rem;
-            transition: transform 0.3s ease;
+            gap: 8px;
         }
 
         .notifications-tab.active {
             color: var(--primary-color);
-            background: linear-gradient(180deg, 
-                rgba(102, 126, 234, 0.1) 0%, 
-                transparent 100%);
-        }
-        
-        .notifications-tab.active i {
-            transform: scale(1.15);
         }
 
         .notifications-tab.active::after {
             content: '';
             position: absolute;
-            bottom: -3px;
+            bottom: -2px;
             left: 0;
             right: 0;
-            height: 4px;
+            height: 3px;
             background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-            border-radius: 4px 4px 0 0;
-            box-shadow: 0 -2px 10px rgba(102, 126, 234, 0.5);
+            border-radius: 3px 3px 0 0;
         }
 
-        .notifications-tab:hover:not(.active) {
+        .notifications-tab:hover {
             background: var(--theme-bg-primary);
-            color: var(--text-primary);
-        }
-        
-        .notifications-tab:hover:not(.active) i {
-            transform: scale(1.1);
         }
 
         .notifications-content {
-            max-height: calc(85vh - 250px);
+            max-height: calc(80vh - 200px);
             overflow-y: auto;
-            overflow-x: hidden;
-            padding: 24px;
-        }
-        
-        .notifications-content::-webkit-scrollbar {
-            width: 8px;
-        }
-        
-        .notifications-content::-webkit-scrollbar-track {
-            background: var(--theme-bg-secondary);
-            border-radius: 10px;
-        }
-        
-        .notifications-content::-webkit-scrollbar-thumb {
-            background: linear-gradient(180deg, #667eea, #764ba2);
-            border-radius: 10px;
-        }
-        
-        .notifications-content::-webkit-scrollbar-thumb:hover {
-            background: linear-gradient(180deg, #764ba2, #667eea);
+            padding: 20px;
         }
 
         .notification-item {
             background: var(--theme-bg-secondary);
-            border-radius: 16px;
-            padding: 20px;
-            margin-bottom: 16px;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
             border: 2px solid var(--border-color);
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.3s ease;
             cursor: pointer;
             position: relative;
-            overflow: hidden;
-        }
-        
-        .notification-item::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, 
-                transparent, 
-                rgba(102, 126, 234, 0.1), 
-                transparent);
-            transition: left 0.5s ease;
-        }
-        
-        .notification-item:hover::before {
-            left: 100%;
         }
 
         .notification-item:hover {
-            transform: translateX(-8px) scale(1.02);
-            box-shadow: 0 12px 30px rgba(102, 126, 234, 0.25);
+            transform: translateX(-5px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.2);
             border-color: var(--primary-color);
         }
 
         .notification-item.unread {
             background: linear-gradient(135deg, 
-                rgba(102, 126, 234, 0.08) 0%, 
-                rgba(118, 75, 162, 0.08) 100%);
-            border-color: rgba(102, 126, 234, 0.4);
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.15);
-        }
-        
-        .notification-item.unread::after {
-            content: '';
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            width: 12px;
-            height: 12px;
-            background: linear-gradient(135deg, #ef4444, #dc2626);
-            border-radius: 50%;
-            animation: pulse 2s ease-in-out infinite;
-            box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
-        }
-        
-        @keyframes pulse {
-            0%, 100% {
-                transform: scale(1);
-                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
-            }
-            50% {
-                transform: scale(1.1);
-                box-shadow: 0 0 0 6px rgba(239, 68, 68, 0);
-            }
+                rgba(102, 126, 234, 0.05) 0%, 
+                rgba(118, 75, 162, 0.05) 100%);
+            border-color: rgba(102, 126, 234, 0.3);
         }
 
         .notification-item-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
         }
 
         .notification-item-icon {
-            width: 52px;
-            height: 52px;
-            border-radius: 14px;
+            width: 45px;
+            height: 45px;
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.5rem;
-            margin-left: 18px;
-            flex-shrink: 0;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            transition: transform 0.3s ease;
-        }
-        
-        .notification-item:hover .notification-item-icon {
-            transform: scale(1.1) rotate(5deg);
+            font-size: 1.3rem;
+            margin-left: 15px;
         }
 
         .notification-item-icon.warning {
@@ -2400,100 +2252,78 @@ console.log(`
         }
 
         .notification-item-title {
-            font-size: 1.1rem;
-            font-weight: 800;
+            font-size: 1rem;
+            font-weight: 700;
             color: var(--text-primary);
-            margin-bottom: 8px;
+            margin-bottom: 6px;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
         }
 
         .notification-item-message {
-            font-size: 0.95rem;
+            font-size: 0.9rem;
             color: var(--text-secondary);
-            line-height: 1.6;
-            margin-bottom: 10px;
+            line-height: 1.5;
+            margin-bottom: 8px;
         }
 
         .notification-item-time {
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             color: var(--text-tertiary);
             display: flex;
             align-items: center;
-            gap: 6px;
-            font-weight: 500;
+            gap: 5px;
         }
 
         .notification-item-actions {
             display: flex;
-            gap: 10px;
-            margin-top: 14px;
-            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
         }
 
         .notification-item-btn {
-            padding: 8px 16px;
+            padding: 6px 14px;
             border: none;
-            border-radius: 10px;
-            font-size: 0.9rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
             cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 6px;
+            transition: all 0.3s ease;
+            font-weight: 600;
         }
 
         .notification-item-btn.primary {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-        }
-        
-        .notification-item-btn.primary:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
         }
 
         .notification-item-btn.secondary {
             background: var(--theme-bg-primary);
             color: var(--text-primary);
-            border: 2px solid var(--border-color);
+            border: 1px solid var(--border-color);
         }
-        
-        .notification-item-btn.secondary:hover {
-            background: var(--theme-bg-secondary);
-            border-color: var(--primary-color);
+
+        .notification-item-btn:hover {
             transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
         }
 
         .notifications-empty {
             text-align: center;
-            padding: 80px 30px;
+            padding: 60px 20px;
             color: var(--text-secondary);
         }
 
         .notifications-empty i {
-            font-size: 5rem;
-            margin-bottom: 25px;
-            opacity: 0.4;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.5;
         }
 
         .notifications-empty h3 {
-            font-size: 1.5rem;
-            margin-bottom: 12px;
+            font-size: 1.3rem;
+            margin-bottom: 10px;
             color: var(--text-primary);
-            font-weight: 700;
-        }
-        
-        .notifications-empty p {
-            font-size: 1rem;
-            opacity: 0.7;
         }
 
         /* إشعار توست */
@@ -2537,38 +2367,6 @@ console.log(`
             to {
                 transform: translateX(400px);
                 opacity: 0;
-            }
-        }
-
-        
-        /* أنيميشن للتمييز */
-        @keyframes highlightProduct {
-            0%, 100% {
-                transform: scale(1);
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            }
-            25% {
-                transform: scale(1.05);
-                box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
-            }
-            50% {
-                transform: scale(1.03);
-                box-shadow: 0 8px 24px rgba(118, 75, 162, 0.4);
-            }
-            75% {
-                transform: scale(1.05);
-                box-shadow: 0 8px 24px rgba(240, 147, 251, 0.4);
-            }
-        }
-        
-        @keyframes highlightDebt {
-            0%, 100% {
-                background: var(--theme-bg-secondary);
-            }
-            50% {
-                background: linear-gradient(90deg, 
-                    rgba(102, 126, 234, 0.15), 
-                    rgba(118, 75, 162, 0.15));
             }
         }
 
@@ -19227,13 +19025,13 @@ if (typeof window !== 'undefined') {
         // إظهار تفاصيل المنتج
         function showProductDetails(productId) {
             const product = products.find(p => p.product_id === productId);
-            let content = '';
+            const category = categories.find(c => c.category_id === product.product_category);
+            
             if (product) {
-                const category = categories.find(c => c.category_id === product.product_category);
-                content = `
+                const content = `
                     <div class="detail-row">
                         <span class="detail-label">اسم المنتج:</span>
-                        <span class="detail-value">${product.product_name || 'اسم المنتج غير متوفر'}</span>
+                        <span class="detail-value">${product.product_name}</span>
                     </div>
                     <div class="detail-row">
                         <span class="detail-label">الباركود:</span>
@@ -19264,11 +19062,10 @@ if (typeof window !== 'undefined') {
                         <span class="detail-value">${product.min_stock}</span>
                     </div>
                 `;
-            } else {
-                content = `<div style="padding:2em;text-align:center;color:#ef4444;font-weight:bold;">لم يتم العثور على المنتج أو أن بياناته غير متوفرة!</div>`;
+                
+                document.getElementById('productDetailsContent').innerHTML = content;
+                showModal('productDetailsModal');
             }
-            document.getElementById('productDetailsContent').innerHTML = content;
-            showModal('productDetailsModal');
         }
 
         // Helper functions
@@ -19711,13 +19508,7 @@ if (typeof window !== 'undefined') {
         function goToDebtDetails(debtId) {
             hideSearchResults();
             navigateTo('debts');
-            setTimeout(() => {
-                if (typeof showDebtDetails === 'function') {
-                    showDebtDetails(debtId);
-                } else {
-                    showToast('تعذر عرض تفاصيل الدين: الدالة غير متوفرة', 'error');
-                }
-            }, 100);
+            setTimeout(() => showDebtDetails(debtId), 100);
         }
         
         // الانتقال إلى التصنيف من نتائج البحث
@@ -28992,6 +28783,10 @@ body {
           <span>مركز الإشعارات</span>
         </div>
         <div class="notifications-header-actions">
+          <button class="notifications-header-btn" onclick="refreshNotificationsNow()" title="تحديث الإشعارات">
+            <i class="fas fa-sync-alt"></i>
+            تحديث
+          </button>
           <button class="notifications-header-btn" onclick="markAllNotificationsAsRead()">
             <i class="fas fa-check-double"></i>
             تعليم الكل كمقروء
@@ -29103,20 +28898,6 @@ body {
             if (saved) {
                 try {
                     this.notifications = JSON.parse(saved);
-                    // إعادة ربط دوال الإجراءات بعد التحميل
-                    this.notifications.forEach(n => {
-                        if (n && n.action && !n.action.handler) {
-                            if (n.type === 'debts' && n.referenceData && n.referenceData.debt) {
-                                n.action.handler = () => this.navigateToDebt(n.referenceData.debt.id);
-                            } else if (n.type === 'stock' && n.referenceData && n.referenceData.id) {
-                                n.action.handler = () => this.navigateToProduct(n.referenceData.id);
-                            } else if (n.referenceType === 'product' && n.referenceData && n.referenceData.id) {
-                                n.action.handler = () => this.navigateToProduct(n.referenceData.id);
-                            } else if (n.referenceType === 'debt' && n.referenceData && n.referenceData.debt) {
-                                n.action.handler = () => this.navigateToDebt(n.referenceData.debt.id);
-                            }
-                        }
-                    });
                 } catch (error) {
                     console.error('خطأ في تحميل الإشعارات:', error);
                     this.notifications = [];
@@ -29145,6 +28926,12 @@ body {
                 newNotifications.push(...debtAlerts);
             }
             
+            // فحص إشعارات النظام
+            if (this.settings.systemAlerts) {
+                const systemAlerts = await this.checkSystemAlerts();
+                newNotifications.push(...systemAlerts);
+            }
+            
             // إضافة الإشعارات الجديدة
             newNotifications.forEach(notification => {
                 // التحقق من عدم وجود إشعار مكرر
@@ -29159,26 +28946,90 @@ body {
             });
         }
         
+        async checkSystemAlerts() {
+            const alerts = [];
+            
+            try {
+                // فحص حالة قاعدة البيانات
+                const products = await window.dataSdk.getAllProducts();
+                const debts = await window.dataSdk.getDebts();
+                
+                // إشعار بإحصائيات النظام اليومية (مرة واحدة في اليوم)
+                const lastSystemCheck = localStorage.getItem('lastSystemCheck');
+                const today = new Date().toDateString();
+                
+                if (lastSystemCheck !== today) {
+                    const totalProducts = products.length;
+                    const outOfStock = products.filter(p => (p.quantity || 0) === 0).length;
+                    const lowStock = products.filter(p => {
+                        const qty = p.quantity || 0;
+                        return qty > 0 && qty <= this.settings.lowStockThreshold;
+                    }).length;
+                    
+                    const activeDebts = debts.filter(d => d.status !== 'paid').length;
+                    const totalDebtAmount = debts
+                        .filter(d => d.status !== 'paid')
+                        .reduce((sum, d) => sum + ((d.total_amount || 0) - (d.paid_amount || 0)), 0);
+                    
+                    if (totalProducts > 0 || activeDebts > 0) {
+                        alerts.push({
+                            id: `system_daily_${Date.now()}`,
+                            type: 'system',
+                            level: 'info',
+                            title: '📊 تقرير حالة النظام اليومي',
+                            message: `🏪 المخزون:
+• إجمالي المنتجات: ${totalProducts}
+• منتجات نافذة: ${outOfStock}
+• منتجات منخفضة: ${lowStock}
+
+💰 الديون:
+• ديون نشطة: ${activeDebts}
+• إجمالي المبالغ المستحقة: ${totalDebtAmount.toLocaleString()} دينار
+
+التاريخ: ${new Date().toLocaleDateString('ar-IQ')}`,
+                            timestamp: Date.now(),
+                            read: false,
+                            referenceId: `system_daily_${today}`,
+                            referenceType: 'system',
+                            referenceData: { totalProducts, outOfStock, lowStock, activeDebts, totalDebtAmount }
+                        });
+                        
+                        localStorage.setItem('lastSystemCheck', today);
+                    }
+                }
+            } catch (error) {
+                console.error('خطأ في فحص إشعارات النظام:', error);
+            }
+            
+            return alerts;
+        }
+        
         async checkStockLevels() {
             const alerts = [];
             
             try {
                 const products = await window.dataSdk.getAllProducts();
+                
                 products.forEach(product => {
                     const quantity = product.quantity || 0;
-                    // استخدم اسم المنتج الصحيح أو بديل مناسب
-                    const productName = product.name || product.product_name || product.title || product.label || 'منتج غير معروف';
+                    const productPrice = product.price || product.sale_price || 0;
+                    const category = product.category || 'غير مصنف';
+                    
                     // منتج نافذ
                     if (quantity === 0) {
                         alerts.push({
                             id: Date.now() + Math.random(),
                             type: 'stock',
                             level: 'danger',
-                            title: 'منتج نافذ من المخزون',
-                            message: `المنتج "${productName}" نافذ من المخزون تمامًا`,
+                            title: '🚫 منتج نافذ من المخزون',
+                            message: `المنتج: ${product.name}
+التصنيف: ${category}
+السعر: ${productPrice.toLocaleString()} دينار
+${product.barcode ? `الباركود: ${product.barcode}` : ''}
+الحالة: نفذ بالكامل - يحتاج لتوريد فوري!`,
                             timestamp: Date.now(),
                             read: false,
-                            referenceId: `product_${product.id}`,
+                            referenceId: `product_${product.id}_out`,
                             referenceType: 'product',
                             referenceData: product,
                             action: {
@@ -29189,15 +29040,22 @@ body {
                     }
                     // منتج منخفض
                     else if (quantity <= this.settings.lowStockThreshold && quantity > 0) {
+                        const percentage = ((quantity / this.settings.lowStockThreshold) * 100).toFixed(0);
+                        
                         alerts.push({
                             id: Date.now() + Math.random(),
                             type: 'stock',
-                            level: 'warning',
-                            title: 'منتج قارب على النفاذ',
-                            message: `المنتج "${productName}" متبقي منه ${quantity} قطعة فقط`,
+                            level: quantity <= 3 ? 'danger' : 'warning',
+                            title: quantity <= 3 ? '⚠️ منتج قارب على النفاذ' : '⏰ مخزون منخفض',
+                            message: `المنتج: ${product.name}
+التصنيف: ${category}
+الكمية المتبقية: ${quantity} قطعة فقط
+السعر: ${productPrice.toLocaleString()} دينار
+${product.barcode ? `الباركود: ${product.barcode}` : ''}
+نسبة المخزون: ${percentage}%`,
                             timestamp: Date.now(),
                             read: false,
-                            referenceId: `product_${product.id}`,
+                            referenceId: `product_${product.id}_low`,
                             referenceType: 'product',
                             referenceData: product,
                             action: {
@@ -29229,19 +29087,30 @@ body {
                                 const daysOverdue = Math.floor((now - dueDate) / (1000 * 60 * 60 * 24));
                                 
                                 if (daysOverdue > 0) {
+                                    // تحديد مستوى الخطورة حسب عدد أيام التأخير
+                                    const level = daysOverdue > 30 ? 'danger' : 
+                                                daysOverdue > 7 ? 'warning' : 'info';
+                                    
+                                    const installmentAmount = installment.amount || installment.paid_amount || 0;
+                                    
                                     alerts.push({
-                                        id: `debt_${debt.id}_installment_${index}_${now}_${Math.floor(Math.random()*100000)}`,
+                                        id: Date.now() + Math.random(),
                                         type: 'debts',
-                                        level: 'danger',
-                                        title: 'دين متأخر',
-                                        message: `قسط متأخر للعميل "${debt.customer_name}" - الشهر ${installment.month} - متأخر ${daysOverdue} يوم`,
+                                        level: level,
+                                        title: daysOverdue > 30 ? '⚠️ دين متأخر بشدة' : 
+                                               daysOverdue > 7 ? '⏰ دين متأخر' : 'ℹ️ تذكير بدين',
+                                        message: `العميل: ${debt.customer_name}
+الشهر: ${installment.month}
+المبلغ: ${installmentAmount.toLocaleString()} دينار
+متأخر: ${daysOverdue} يوم
+${debt.customer_phone ? `الهاتف: ${debt.customer_phone}` : ''}`,
                                         timestamp: now,
                                         read: false,
                                         referenceId: `debt_${debt.id}_installment_${index}`,
                                         referenceType: 'debt',
                                         referenceData: { debt, installment, daysOverdue },
                                         action: {
-                                            label: 'عرض الدين',
+                                            label: 'عرض تفاصيل الدين',
                                             handler: () => this.navigateToDebt(debt.id)
                                         }
                                     });
@@ -29362,10 +29231,13 @@ body {
             const iconClass = notification.level === 'danger' ? 'danger' :
                             notification.level === 'warning' ? 'warning' : 'info';
             const icon = notification.type === 'stock' ? 'fa-boxes' :
-                        notification.type === 'debts' ? 'fa-credit-card' : 'fa-cog';
+                        notification.type === 'debts' ? 'fa-credit-card' : 'fa-info-circle';
             
             const timeAgo = this.getTimeAgo(notification.timestamp);
             const unreadClass = notification.read ? '' : 'unread';
+            
+            // تنسيق الرسالة مع دعم الأسطر المتعددة
+            const formattedMessage = notification.message.replace(/\n/g, '<br>');
             
             return `
                 <div class="notification-item ${unreadClass}" data-id="${notification.id}">
@@ -29378,7 +29250,7 @@ body {
                                 ${notification.title}
                                 ${!notification.read ? '<span style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.7rem; margin-right: 8px;">جديد</span>' : ''}
                             </div>
-                            <div class="notification-item-message">${notification.message}</div>
+                            <div class="notification-item-message" style="white-space: pre-line; line-height: 1.6;">${formattedMessage}</div>
                             <div class="notification-item-time">
                                 <i class="fas fa-clock"></i>
                                 ${timeAgo}
@@ -29430,146 +29302,37 @@ body {
         }
         
         navigateToProduct(productId) {
-            console.log('🔍 الانتقال إلى المنتج:', productId);
-            
-            // الانتقال لصفحة المنتجات
             showPage('products');
-            
-            // الانتظار حتى يتم تحميل الصفحة
-            setTimeout(async () => {
-                try {
-                    // محاولة الحصول على بيانات المنتج
-                    const product = await window.dataSdk.getProduct(productId);
-                    
-                    if (product) {
-                        // إذا كان هناك دالة لعرض تفاصيل المنتج
-                        if (typeof showProductDetails === 'function') {
-                            showProductDetails(product);
-                        } else if (typeof openProductModal === 'function') {
-                            openProductModal(product);
-                        } else {
-                            // البحث عن المنتج في الصفحة
-                            const searchInput = document.getElementById('productSearchInput');
-                            if (searchInput) {
-                                searchInput.value = product.name || product.product_name || '';
-                                searchInput.dispatchEvent(new Event('keyup'));
-                                searchInput.focus();
-                            }
-                        }
-                        
-                        // تمييز بطاقة المنتج
-                        setTimeout(() => {
-                            const productCard = document.querySelector(`.product-card[data-id="${productId}"]`) ||
-                                              document.querySelector(`[data-product-id="${productId}"]`);
-                            
-                            if (productCard) {
-                                productCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                                productCard.style.animation = 'highlightProduct 2s ease';
-                                
-                                // إضافة تأثير مؤقت
-                                const originalBorder = productCard.style.border;
-                                productCard.style.border = '3px solid #667eea';
-                                productCard.style.boxShadow = '0 0 20px rgba(102, 126, 234, 0.5)';
-                                
-                                setTimeout(() => {
-                                    productCard.style.border = originalBorder;
-                                    productCard.style.boxShadow = '';
-                                }, 2000);
-                            }
-                        }, 500);
-                        
-                        console.log('✅ تم الانتقال للمنتج بنجاح');
-                    } else {
-                        console.warn('⚠️ لم يتم العثور على المنتج');
-                        showAlert('warning', 'لم يتم العثور على المنتج المطلوب');
-                    }
-                } catch (error) {
-                    console.error('❌ خطأ في الانتقال للمنتج:', error);
-                    // في حالة الخطأ، على الأقل افتح صفحة المنتجات
-                    const searchInput = document.getElementById('productSearchInput');
-                    if (searchInput) {
-                        searchInput.focus();
-                    }
+            setTimeout(() => {
+                const searchInput = document.getElementById('productSearchInput');
+                if (searchInput) {
+                    searchInput.focus();
                 }
-            }, 400);
+            }, 300);
         }
         
         navigateToDebt(debtId) {
-            console.log('🔍 الانتقال إلى الدين:', debtId);
-            
-            // الانتقال لصفحة الديون
             showPage('debts');
-            
-            // محاولة عرض تفاصيل الدين
-            const tryShowDetails = async (attempts = 0) => {
-                try {
-                    // الحصول على بيانات الدين
-                    const debt = await window.dataSdk.getDebt(debtId);
-                    
-                    if (debt) {
-                        // محاولة استخدام دالة عرض التفاصيل إذا كانت موجودة
-                        if (typeof showDebtDetails === 'function') {
-                            setTimeout(() => {
-                                showDebtDetails(debtId);
-                                console.log('✅ تم فتح تفاصيل الدين');
-                            }, 300);
-                        } else if (typeof viewDebt === 'function') {
-                            setTimeout(() => {
-                                viewDebt(debt);
-                                console.log('✅ تم فتح عرض الدين');
-                            }, 300);
-                        } else if (typeof openDebtModal === 'function') {
-                            setTimeout(() => {
-                                openDebtModal(debt);
-                                console.log('✅ تم فتح نافذة الدين');
-                            }, 300);
-                        }
-                        
-                        // تمييز الدين في الجدول
+            // انتظر حتى يتم تحميل الديون في الصفحة
+            const tryShowDetails = () => {
+                if (typeof debtsData !== 'undefined' && Array.isArray(debtsData) && debtsData.length > 0) {
+                    if (typeof showDebtDetails === 'function') {
+                        showDebtDetails(debtId);
+                        // تمييز العنصر في الجدول إذا كان موجوداً
                         setTimeout(() => {
-                            const debtRow = document.querySelector(`tr[data-debt-id="${debtId}"]`) ||
-                                          document.querySelector(`[data-debt-id="${debtId}"]`) ||
-                                          document.querySelector(`.debt-item[data-id="${debtId}"]`);
-                            
-                            if (debtRow) {
-                                debtRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                                
-                                // إضافة تأثير مرئي
-                                const originalBg = debtRow.style.background;
-                                const originalBorder = debtRow.style.border;
-                                
-                                debtRow.style.background = 'linear-gradient(90deg, rgba(102, 126, 234, 0.2), rgba(118, 75, 162, 0.2))';
-                                debtRow.style.border = '2px solid #667eea';
-                                debtRow.style.boxShadow = '0 0 20px rgba(102, 126, 234, 0.5)';
-                                
-                                setTimeout(() => {
-                                    debtRow.style.background = originalBg;
-                                    debtRow.style.border = originalBorder;
-                                    debtRow.style.boxShadow = '';
-                                }, 2500);
-                                
-                                console.log('✅ تم تمييز الدين في القائمة');
+                            const debtElement = document.querySelector(`[data-debt-id="${debtId}"]`);
+                            if (debtElement) {
+                                debtElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                debtElement.style.animation = 'highlight 2s ease';
                             }
-                        }, 600);
-                        
-                        return true;
-                    } else if (attempts < 5) {
-                        // إذا لم يتم العثور على الدين، أعد المحاولة
-                        setTimeout(() => tryShowDetails(attempts + 1), 300);
-                    } else {
-                        console.warn('⚠️ لم يتم العثور على الدين');
-                        showAlert('warning', 'لم يتم العثور على الدين المطلوب');
-                    }
-                } catch (error) {
-                    console.error('❌ خطأ في الانتقال للدين:', error);
-                    if (attempts < 5) {
-                        setTimeout(() => tryShowDetails(attempts + 1), 300);
+                        }, 300);
+                        return;
                     }
                 }
+                // إذا لم تكن الديون جاهزة، أعد المحاولة بعد قليل
+                setTimeout(tryShowDetails, 200);
             };
-            
-            // بدء المحاولة بعد 400 ملي ثانية
-            setTimeout(() => tryShowDetails(0), 400);
+            tryShowDetails();
         }
         
         markAsRead(notificationId) {
@@ -29669,6 +29432,41 @@ body {
         }
     }
     
+    async function refreshNotificationsNow() {
+        if (notificationSystem) {
+            const btn = event.target.closest('.notifications-header-btn');
+            const icon = btn.querySelector('i');
+            
+            // إضافة تأثير الدوران
+            icon.style.animation = 'spin 1s linear infinite';
+            btn.disabled = true;
+            
+            try {
+                await notificationSystem.checkAndCreateNotifications();
+                notificationSystem.updateDisplay();
+                showAlert('success', 'تم تحديث الإشعارات بنجاح');
+            } catch (error) {
+                showAlert('error', 'حدث خطأ أثناء تحديث الإشعارات');
+            } finally {
+                icon.style.animation = '';
+                btn.disabled = false;
+            }
+        }
+    }
+    
+    // إضافة تأثير الدوران للأيقونة
+    if (!document.querySelector('#spin-animation-style')) {
+        const style = document.createElement('style');
+        style.id = 'spin-animation-style';
+        style.textContent = `
+            @keyframes spin {
+                from { transform: rotate(0deg); }
+                to { transform: rotate(360deg); }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+    
     // إغلاق اللوحة عند النقر خارجها
     document.addEventListener('click', (e) => {
         const panel = document.getElementById('notificationsPanel');
@@ -29685,162 +29483,166 @@ body {
     
     function showNotificationsSettings() {
         if (!notificationSystem) {
-            showAlert('error', 'نظام الإشعارات غير متاح حاليًا');
+            alert('نظام الإشعارات غير متاح حاليًا');
             return;
         }
         
         const settings = notificationSystem.settings;
+        const stats = {
+            total: notificationSystem.notifications.length,
+            unread: notificationSystem.notifications.filter(n => !n.read).length,
+            stock: notificationSystem.notifications.filter(n => n.type === 'stock').length,
+            debts: notificationSystem.notifications.filter(n => n.type === 'debts').length,
+            system: notificationSystem.notifications.filter(n => n.type === 'system').length
+        };
         
         const modal = document.createElement('div');
         modal.className = 'modal-overlay';
         modal.innerHTML = `
-            <div class="modal-content" style="max-width: 850px;">
-                <div class="modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 25px 30px;">
-                    <h2 style="display: flex; align-items: center; gap: 12px; margin: 0;">
-                        <i class="fas fa-bell" style="font-size: 1.8rem;"></i> 
-                        <span>إعدادات الإشعارات والتنبيهات</span>
-                    </h2>
-                    <button class="modal-close" onclick="this.closest('.modal-overlay').remove()" style="background: rgba(255,255,255,0.2); border: 2px solid rgba(255,255,255,0.3); color: white;">
+            <div class="modal-content" style="max-width: 800px;">
+                <div class="modal-header">
+                    <h2><i class="fas fa-bell"></i> إعدادات الإشعارات والتنبيهات</h2>
+                    <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
-                <div class="modal-body" style="max-height: 650px; overflow-y: auto; padding: 30px;">
+                <div class="modal-body" style="max-height: 600px; overflow-y: auto;">
                     
-                    <!-- قسم التفعيل العام -->
-                    <div style="background: linear-gradient(135deg, rgba(102,126,234,0.1), rgba(118,75,162,0.1)); padding: 25px; border-radius: 16px; margin-bottom: 25px; border: 2px solid rgba(102,126,234,0.2);">
-                        <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
-                            <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.5rem;">
-                                <i class="fas fa-power-off"></i>
-                            </div>
-                            <div>
-                                <h3 style="margin: 0; color: var(--text-primary); font-size: 1.3rem; font-weight: 800;">التفعيل العام</h3>
-                                <p style="margin: 5px 0 0 0; color: var(--text-secondary); font-size: 0.9rem;">تشغيل أو إيقاف نظام الإشعارات بالكامل</p>
-                            </div>
+                    <!-- إحصائيات الإشعارات -->
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 25px;">
+                        <div style="background: linear-gradient(135deg, #667eea, #764ba2); padding: 15px; border-radius: 12px; text-align: center; color: white;">
+                            <div style="font-size: 2rem; font-weight: bold; margin-bottom: 5px;">${stats.total}</div>
+                            <div style="font-size: 0.9rem; opacity: 0.9;">إجمالي الإشعارات</div>
                         </div>
+                        <div style="background: linear-gradient(135deg, #ef4444, #dc2626); padding: 15px; border-radius: 12px; text-align: center; color: white;">
+                            <div style="font-size: 2rem; font-weight: bold; margin-bottom: 5px;">${stats.unread}</div>
+                            <div style="font-size: 0.9rem; opacity: 0.9;">غير مقروءة</div>
+                        </div>
+                        <div style="background: linear-gradient(135deg, #fbbf24, #f59e0b); padding: 15px; border-radius: 12px; text-align: center; color: white;">
+                            <div style="font-size: 2rem; font-weight: bold; margin-bottom: 5px;">${stats.stock}</div>
+                            <div style="font-size: 0.9rem; opacity: 0.9;">المخزون</div>
+                        </div>
+                        <div style="background: linear-gradient(135deg, #3b82f6, #2563eb); padding: 15px; border-radius: 12px; text-align: center; color: white;">
+                            <div style="font-size: 2rem; font-weight: bold; margin-bottom: 5px;">${stats.debts}</div>
+                            <div style="font-size: 0.9rem; opacity: 0.9;">الديون</div>
+                        </div>
+                    </div>
+                    
+                    <div style="background: var(--theme-bg-secondary); padding: 20px; border-radius: 12px; margin-bottom: 20px;">
+                        <h3 style="margin-bottom: 15px; color: var(--text-primary); display: flex; align-items: center; gap: 10px;">
+                            <i class="fas fa-toggle-on" style="color: #667eea;"></i>
+                            التفعيل والإيقاف
+                        </h3>
                         
-                        <label class="switch-container" style="display: flex; align-items: center; justify-content: space-between; padding: 15px; background: var(--theme-bg-primary); border-radius: 12px; border: 2px solid var(--border-color); cursor: pointer;">
+                        <label class="switch-container" style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: var(--theme-bg-primary); border-radius: 8px;">
                             <div>
-                                <span style="font-weight: 700; color: var(--text-primary); font-size: 1.05rem; display: block;">تفعيل نظام الإشعارات</span>
-                                <small style="color: var(--text-secondary); margin-top: 5px; display: block;">عند التعطيل، لن تتلقى أي إشعارات</small>
+                                <span style="font-weight: 600; color: var(--text-primary); display: block;">تفعيل نظام الإشعارات</span>
+                                <small style="color: var(--text-secondary);">تفعيل/إيقاف جميع الإشعارات والتنبيهات</small>
                             </div>
                             <input type="checkbox" id="notificationEnabled" ${settings.enabled ? 'checked' : ''}>
                         </label>
                     </div>
                     
-                    <div class="settings-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 20px; margin-bottom: 25px;">
+                    <div style="background: var(--theme-bg-secondary); padding: 20px; border-radius: 12px; margin-bottom: 20px;">
+                        <h3 style="margin-bottom: 15px; color: var(--text-primary); display: flex; align-items: center; gap: 10px;">
+                            <i class="fas fa-boxes" style="color: #fbbf24;"></i>
+                            إشعارات المخزون
+                        </h3>
                         
-                        <!-- قسم إشعارات المخزون -->
-                        <div style="background: var(--theme-bg-secondary); padding: 22px; border-radius: 16px; border: 2px solid var(--border-color); transition: all 0.3s ease;">
-                            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 18px;">
-                                <div style="width: 45px; height: 45px; background: linear-gradient(135deg, #fbbf24, #f59e0b); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.3rem;">
-                                    <i class="fas fa-boxes"></i>
-                                </div>
-                                <h3 style="margin: 0; color: var(--text-primary); font-size: 1.2rem; font-weight: 700;">إشعارات المخزون</h3>
+                        <label class="switch-container" style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: var(--theme-bg-primary); border-radius: 8px; margin-bottom: 15px;">
+                            <div>
+                                <span style="font-weight: 600; color: var(--text-primary); display: block;">تنبيه عند نفاذ المنتجات</span>
+                                <small style="color: var(--text-secondary);">إشعار فوري عندما ينفذ أي منتج من المخزون</small>
                             </div>
-                            
-                            <label class="switch-container" style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: var(--theme-bg-primary); border-radius: 10px; margin-bottom: 15px; cursor: pointer;">
-                                <span style="font-weight: 600; color: var(--text-primary);">تنبيه عند نفاذ المنتجات</span>
-                                <input type="checkbox" id="outOfStockAlert" ${settings.outOfStockAlert ? 'checked' : ''}>
-                            </label>
-                            
-                            <div style="padding: 15px; background: var(--theme-bg-primary); border-radius: 10px; border: 2px solid var(--border-color);">
-                                <label style="display: block; margin-bottom: 10px; font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 8px;">
-                                    <i class="fas fa-chart-line" style="color: #fbbf24;"></i>
-                                    حد المخزون المنخفض
-                                </label>
-                                <input type="number" id="lowStockThreshold" value="${settings.lowStockThreshold}" 
-                                       min="1" max="100" 
-                                       style="width: 100%; padding: 12px; border-radius: 10px; border: 2px solid var(--border-color); background: var(--theme-bg-secondary); color: var(--text-primary); font-size: 1rem; font-weight: 600;">
-                                <small style="display: block; margin-top: 10px; color: var(--text-secondary); line-height: 1.5;">
-                                    <i class="fas fa-info-circle"></i> سيتم تنبيهك عندما تكون كمية المنتج أقل من أو تساوي هذا العدد
-                                </small>
-                            </div>
-                        </div>
+                            <input type="checkbox" id="outOfStockAlert" ${settings.outOfStockAlert ? 'checked' : ''}>
+                        </label>
                         
-                        <!-- قسم إشعارات الديون -->
-                        <div style="background: var(--theme-bg-secondary); padding: 22px; border-radius: 16px; border: 2px solid var(--border-color); transition: all 0.3s ease;">
-                            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 18px;">
-                                <div style="width: 45px; height: 45px; background: linear-gradient(135deg, #ef4444, #dc2626); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.3rem;">
-                                    <i class="fas fa-credit-card"></i>
-                                </div>
-                                <h3 style="margin: 0; color: var(--text-primary); font-size: 1.2rem; font-weight: 700;">إشعارات الديون</h3>
-                            </div>
-                            
-                            <label class="switch-container" style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: var(--theme-bg-primary); border-radius: 10px; cursor: pointer;">
-                                <div>
-                                    <span style="font-weight: 600; color: var(--text-primary); display: block;">تنبيه عند تأخر الديون</span>
-                                    <small style="color: var(--text-secondary); margin-top: 5px; display: block;">إشعار يومي بالأقساط المتأخرة</small>
-                                </div>
-                                <input type="checkbox" id="overdueDebtsAlert" ${settings.overdueDebtsAlert ? 'checked' : ''}>
+                        <div style="padding: 12px; background: var(--theme-bg-primary); border-radius: 8px;">
+                            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-primary);">
+                                <i class="fas fa-chart-line"></i>
+                                حد المخزون المنخفض
                             </label>
-                        </div>
-                        
-                    </div>
-                    
-                    <!-- قسم الإعدادات المتقدمة -->
-                    <div style="background: var(--theme-bg-secondary); padding: 25px; border-radius: 16px; border: 2px solid var(--border-color); margin-bottom: 25px;">
-                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
-                            <div style="width: 45px; height: 45px; background: linear-gradient(135deg, #3b82f6, #2563eb); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.3rem;">
-                                <i class="fas fa-cog"></i>
-                            </div>
-                            <h3 style="margin: 0; color: var(--text-primary); font-size: 1.2rem; font-weight: 700;">إعدادات متقدمة</h3>
-                        </div>
-                        
-                        <div class="settings-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px;">
-                            
-                            <label class="switch-container" style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: var(--theme-bg-primary); border-radius: 10px; cursor: pointer;">
-                                <div>
-                                    <span style="font-weight: 600; color: var(--text-primary); display: block;">إشعارات توست</span>
-                                    <small style="color: var(--text-secondary); display: block; margin-top: 4px;">نوافذ صغيرة عند الإشعارات الجديدة</small>
-                                </div>
-                                <input type="checkbox" id="soundEnabled" ${settings.soundEnabled ? 'checked' : ''}>
-                            </label>
-                            
-                            <label class="switch-container" style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: var(--theme-bg-primary); border-radius: 10px; cursor: pointer;">
-                                <div>
-                                    <span style="font-weight: 600; color: var(--text-primary); display: block;">التحديث التلقائي</span>
-                                    <small style="color: var(--text-secondary); display: block; margin-top: 4px;">فحص دوري للإشعارات الجديدة</small>
-                                </div>
-                                <input type="checkbox" id="autoRefresh" ${settings.autoRefresh ? 'checked' : ''}>
-                            </label>
-                            
-                        </div>
-                        
-                        <div style="padding: 15px; background: var(--theme-bg-primary); border-radius: 10px; margin-top: 15px; border: 2px solid var(--border-color);">
-                            <label style="display: block; margin-bottom: 10px; font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 8px;">
-                                <i class="fas fa-clock" style="color: #3b82f6;"></i>
-                                فترة التحديث (بالدقائق)
-                            </label>
-                            <input type="number" id="refreshInterval" value="${settings.refreshInterval / 60000}" 
-                                   min="1" max="60" 
-                                   style="width: 100%; padding: 12px; border-radius: 10px; border: 2px solid var(--border-color); background: var(--theme-bg-secondary); color: var(--text-primary); font-size: 1rem; font-weight: 600;">
-                            <small style="display: block; margin-top: 10px; color: var(--text-secondary); line-height: 1.5;">
-                                <i class="fas fa-info-circle"></i> سيتم التحقق من الإشعارات الجديدة كل هذه المدة
+                            <input type="number" id="lowStockThreshold" value="${settings.lowStockThreshold}" 
+                                   min="1" max="100" 
+                                   style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--theme-bg-secondary); color: var(--text-primary);">
+                            <small style="display: block; margin-top: 8px; color: var(--text-secondary);">
+                                سيتم تنبيهك عندما تكون كمية المنتج أقل من أو تساوي هذا العدد
                             </small>
                         </div>
                     </div>
                     
-                    <!-- معلومات مهمة -->
+                    <div style="background: var(--theme-bg-secondary); padding: 20px; border-radius: 12px; margin-bottom: 20px;">
+                        <h3 style="margin-bottom: 15px; color: var(--text-primary); display: flex; align-items: center; gap: 10px;">
+                            <i class="fas fa-credit-card" style="color: #ef4444;"></i>
+                            إشعارات الديون
+                        </h3>
+                        
+                        <label class="switch-container" style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: var(--theme-bg-primary); border-radius: 8px;">
+                            <div>
+                                <span style="font-weight: 600; color: var(--text-primary); display: block;">تنبيه عند تأخر الديون</span>
+                                <small style="color: var(--text-secondary);">إشعار بالأقساط المتأخرة عن موعد استحقاقها</small>
+                            </div>
+                            <input type="checkbox" id="overdueDebtsAlert" ${settings.overdueDebtsAlert ? 'checked' : ''}>
+                        </label>
+                    </div>
+                    
+                    <div style="background: var(--theme-bg-secondary); padding: 20px; border-radius: 12px; margin-bottom: 20px;">
+                        <h3 style="margin-bottom: 15px; color: var(--text-primary); display: flex; align-items: center; gap: 10px;">
+                            <i class="fas fa-cog" style="color: #3b82f6;"></i>
+                            إعدادات متقدمة
+                        </h3>
+                        
+                        <label class="switch-container" style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: var(--theme-bg-primary); border-radius: 8px; margin-bottom: 15px;">
+                            <div>
+                                <span style="font-weight: 600; color: var(--text-primary); display: block;">تفعيل الصوت للإشعارات</span>
+                                <small style="color: var(--text-secondary);">إظهار إشعارات منبثقة عند وصول إشعار جديد</small>
+                            </div>
+                            <input type="checkbox" id="soundEnabled" ${settings.soundEnabled ? 'checked' : ''}>
+                        </label>
+                        
+                        <label class="switch-container" style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: var(--theme-bg-primary); border-radius: 8px; margin-bottom: 15px;">
+                            <div>
+                                <span style="font-weight: 600; color: var(--text-primary); display: block;">التحديث التلقائي للإشعارات</span>
+                                <small style="color: var(--text-secondary);">فحص تلقائي للإشعارات الجديدة كل فترة زمنية</small>
+                            </div>
+                            <input type="checkbox" id="autoRefresh" ${settings.autoRefresh ? 'checked' : ''}>
+                        </label>
+                        
+                        <div style="padding: 12px; background: var(--theme-bg-primary); border-radius: 8px;">
+                            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-primary);">
+                                <i class="fas fa-clock"></i>
+                                فترة التحديث (بالدقائق)
+                            </label>
+                            <input type="number" id="refreshInterval" value="${settings.refreshInterval / 60000}" 
+                                   min="1" max="60" 
+                                   style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--theme-bg-secondary); color: var(--text-primary);">
+                            <small style="display: block; margin-top: 8px; color: var(--text-secondary);">
+                                سيتم التحقق من الإشعارات الجديدة كل هذه الفترة (موصى به: 5 دقائق)
+                            </small>
+                        </div>
+                    </div>
+                    
                     <div style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1)); padding: 20px; border-radius: 12px; border: 2px solid rgba(102, 126, 234, 0.3);">
-                        <h4 style="margin: 0 0 12px 0; color: var(--primary-color); display: flex; align-items: center; gap: 10px; font-size: 1.1rem;">
-                            <i class="fas fa-lightbulb"></i>
-                            نصائح وإرشادات
+                        <h4 style="margin-bottom: 10px; color: var(--primary-color); display: flex; align-items: center; gap: 8px;">
+                            <i class="fas fa-info-circle"></i>
+                            معلومات مهمة
                         </h4>
-                        <ul style="color: var(--text-secondary); line-height: 2; padding-right: 25px; margin: 0;">
-                            <li>سيتم التحقق من المخزون والديون تلقائيًا حسب الإعدادات المحددة</li>
-                            <li>انقر على أي إشعار للانتقال مباشرة إلى الصفحة المرتبطة به</li>
+                        <ul style="color: var(--text-secondary); line-height: 1.8; padding-right: 20px;">
+                            <li>سيتم التحقق من المخزون والديون تلقائيًا حسب الإعدادات</li>
+                            <li>يمكنك النقر على أي إشعار للانتقال مباشرة إلى الصفحة المرتبطة</li>
                             <li>الإشعارات المقروءة ستبقى محفوظة حتى تقوم بحذفها يدوياً</li>
-                            <li>يمكنك تعطيل أنواع معينة من الإشعارات حسب احتياجك</li>
+                            <li>يمكنك تعطيل أنواع معينة من الإشعارات حسب حاجتك</li>
+                            <li>يتم حفظ الإشعارات محلياً وتبقى حتى بعد إغلاق البرنامج</li>
                         </ul>
                     </div>
                     
                 </div>
-                <div class="modal-footer" style="display: flex; gap: 12px; justify-content: flex-end; padding: 20px 30px; border-top: 2px solid var(--border-color); background: var(--theme-bg-secondary);">
-                    <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()" style="padding: 12px 24px; font-size: 1rem; font-weight: 600;">
+                <div class="modal-footer" style="display: flex; gap: 10px; justify-content: flex-end;">
+                    <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">
                         <i class="fas fa-times"></i>
                         إلغاء
                     </button>
-                    <button class="btn btn-primary" onclick="saveNotificationSettings()" style="padding: 12px 30px; font-size: 1rem; font-weight: 600; background: linear-gradient(135deg, #667eea, #764ba2); border: none;">
+                    <button class="btn btn-primary" onclick="saveNotificationSettings()">
                         <i class="fas fa-save"></i>
                         حفظ الإعدادات
                     </button>

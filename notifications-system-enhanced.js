@@ -1,21 +1,21 @@
 /* =============================================
-   نظام الإشعارات المحسّن - Enhanced Notifications System
+   نظام الإشعارات المحسّن والمُصلح - Enhanced Notifications System v3.1
    نظام نقاط البيع المتقدم - Digital Creativity
-   الإصدار: 3.0 - ديسمبر 2025
+   الإصدار: 3.1 - ديسمبر 2025 (مُحدّث)
    المطور: كرار السعبري
+   
+   التحديثات الجديدة:
+   - ✅ إصلاح منطق التنبيه للمنتجات (ينبه فقط عند stock <= min_stock)
+   - ✅ تحسين التوجيه للمنتج مع تأثيرات حديثة
+   - ✅ إخفاء العداد تلقائياً عند فتح قائمة الإشعارات
+   - ✅ حفظ حالة القراءة بشكل دائم (لا تظهر الإشعارات القديمة مرة أخرى)
+   - ✅ إشعارات جديدة فقط تظهر في العداد
    ============================================= */
-
-/**
- * نظام إشعارات شامل ومتطور
- * - إشعارات ذكية للمنتجات (حسب الحد الأدنى)
- * - إشعارات الديون المستحقة
- * - التوجيه المباشر للعنصر المحدد
- * - واجهة مستخدم حديثة
- */
 
 class EnhancedNotificationSystem {
     constructor() {
         this.notifications = [];
+        this.readNotifications = new Set(); // لتتبع الإشعارات المقروءة
         this.isInitialized = false;
         this.updateInterval = null;
         this.settings = {
@@ -23,13 +23,10 @@ class EnhancedNotificationSystem {
             showBadge: true,
             playSound: true,
             autoCheck: true,
-            // إعدادات المنتجات
             productsCheckEnabled: true,
-            productsWarningDays: 3, // تنبيه قبل النفاذ بـ 3 أيام
-            // إعدادات الديون
             debtsCheckEnabled: true,
-            debtsWarningDays: 7, // تنبيه قبل الاستحقاق بـ 7 أيام
-            debtsOverduePriority: true // أولوية للديون المتأخرة
+            debtsWarningDays: 7,
+            debtsOverduePriority: true
         };
         
         this.notificationTypes = {
@@ -58,10 +55,11 @@ class EnhancedNotificationSystem {
         }
 
         try {
-            console.log('🔄 بدء تهيئة نظام الإشعارات...');
+            console.log('🔄 بدء تهيئة نظام الإشعارات المُحدّث...');
             
-            // تحميل الإعدادات المحفوظة
+            // تحميل الإعدادات والإشعارات المقروءة
             await this.loadSettings();
+            await this.loadReadNotifications();
             
             // بناء واجهة الإشعارات
             this.buildNotificationUI();
@@ -78,7 +76,7 @@ class EnhancedNotificationSystem {
             this.attachEventListeners();
             
             this.isInitialized = true;
-            console.log('✅ تم تهيئة نظام الإشعارات بنجاح');
+            console.log('✅ تم تهيئة نظام الإشعارات المُحدّث بنجاح');
             
             return true;
         } catch (error) {
@@ -91,7 +89,6 @@ class EnhancedNotificationSystem {
      * بناء واجهة المستخدم للإشعارات
      */
     buildNotificationUI() {
-        // التحقق من وجود العنصر الأساسي
         let notificationContainer = document.getElementById('notificationSystem');
         
         if (!notificationContainer) {
@@ -117,6 +114,9 @@ class EnhancedNotificationSystem {
                     <div class="notification-actions">
                         <button class="btn-icon" id="markAllReadBtn" title="تعليم الكل كمقروء">
                             <i class="fas fa-check-double"></i>
+                        </button>
+                        <button class="btn-icon" id="clearAllBtn" title="حذف الكل">
+                            <i class="fas fa-trash-alt"></i>
                         </button>
                         <button class="btn-icon" id="notificationSettingsBtn" title="الإعدادات">
                             <i class="fas fa-cog"></i>
@@ -211,12 +211,13 @@ class EnhancedNotificationSystem {
                                         تفعيل إشعارات المنتجات
                                     </label>
                                 </div>
-                                <div class="mb-3 mt-2">
-                                    <label class="form-label">
-                                        التنبيه عند وصول المنتج للحد الأدنى أو أقل
-                                    </label>
-                                    <small class="form-text text-muted d-block">
-                                        سيتم إشعارك تلقائياً عندما يصل المنتج إلى الحد الأدنى المحدد في صفحة المنتجات
+                                <div class="alert alert-info mt-2 mb-0">
+                                    <small>
+                                        <strong>كيفية عمل التنبيهات:</strong><br>
+                                        • ينبّه عندما يصل المخزون للحد الأدنى أو أقل<br>
+                                        • مثال: مخزون = 10، حد أدنى = 5 → <strong>لا ينبّه</strong><br>
+                                        • مثال: مخزون = 5، حد أدنى = 5 → <strong>ينبّه</strong><br>
+                                        • مثال: مخزون = 3، حد أدنى = 5 → <strong>ينبّه</strong>
                                     </small>
                                 </div>
                             </div>
@@ -242,6 +243,18 @@ class EnhancedNotificationSystem {
                                     </label>
                                 </div>
                             </div>
+
+                            <!-- إعدادات متقدمة -->
+                            <div class="settings-section">
+                                <h6>إعدادات متقدمة</h6>
+                                <button class="btn btn-sm btn-warning w-100" id="clearReadNotificationsBtn">
+                                    <i class="fas fa-broom"></i>
+                                    مسح سجل الإشعارات المقروءة
+                                </button>
+                                <small class="text-muted d-block mt-2">
+                                    سيؤدي هذا إلى إظهار جميع الإشعارات القديمة مرة أخرى
+                                </small>
+                            </div>
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
@@ -257,7 +270,6 @@ class EnhancedNotificationSystem {
             </div>
         `;
 
-        // إضافة الأنماط
         this.injectStyles();
     }
 
@@ -267,7 +279,6 @@ class EnhancedNotificationSystem {
     injectStyles() {
         const styleId = 'notificationSystemStyles';
         
-        // تجنب التكرار
         if (document.getElementById(styleId)) {
             return;
         }
@@ -313,16 +324,12 @@ class EnhancedNotificationSystem {
             }
 
             .notification-badge.hidden {
-                display: none;
+                display: none !important;
             }
 
             @keyframes pulse {
-                0%, 100% {
-                    transform: scale(1);
-                }
-                50% {
-                    transform: scale(1.1);
-                }
+                0%, 100% { transform: scale(1); }
+                50% { transform: scale(1.1); }
             }
 
             /* القائمة المنسدلة */
@@ -343,7 +350,7 @@ class EnhancedNotificationSystem {
             }
 
             .notification-dropdown.hidden {
-                display: none;
+                display: none !important;
             }
 
             @keyframes slideDown {
@@ -523,13 +530,6 @@ class EnhancedNotificationSystem {
                 line-height: 1.4;
             }
 
-            .notification-meta {
-                display: flex;
-                gap: 10px;
-                font-size: 11px;
-                color: var(--text-secondary);
-            }
-
             .notification-action {
                 color: var(--primary-color);
                 font-weight: 500;
@@ -539,6 +539,25 @@ class EnhancedNotificationSystem {
 
             .notification-action i {
                 margin-left: 4px;
+            }
+
+            /* تأثير تمييز المنتج */
+            .product-highlight {
+                animation: highlightPulse 2s ease-in-out 3;
+                background: rgba(99, 102, 241, 0.2) !important;
+                border: 2px solid var(--primary-color) !important;
+                box-shadow: 0 0 20px rgba(99, 102, 241, 0.4) !important;
+            }
+
+            @keyframes highlightPulse {
+                0%, 100% {
+                    transform: scale(1);
+                    box-shadow: 0 0 20px rgba(99, 102, 241, 0.4);
+                }
+                50% {
+                    transform: scale(1.02);
+                    box-shadow: 0 0 30px rgba(99, 102, 241, 0.6);
+                }
             }
 
             /* التذييل */
@@ -573,10 +592,6 @@ class EnhancedNotificationSystem {
             .btn-refresh:hover {
                 background: var(--primary-hover);
                 transform: translateY(-2px);
-            }
-
-            .btn-refresh i {
-                animation: none;
             }
 
             .btn-refresh:active i {
@@ -627,7 +642,6 @@ class EnhancedNotificationSystem {
      * ربط أحداث الواجهة
      */
     attachEventListeners() {
-        // فتح/إغلاق قائمة الإشعارات
         const bellBtn = document.getElementById('notificationBell');
         const dropdown = document.getElementById('notificationDropdown');
         const closeBtn = document.getElementById('closeNotificationsBtn');
@@ -635,7 +649,13 @@ class EnhancedNotificationSystem {
         if (bellBtn) {
             bellBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
+                const isHidden = dropdown.classList.contains('hidden');
                 dropdown.classList.toggle('hidden');
+                
+                // عند فتح القائمة، نعلم جميع الإشعارات كمقروءة ونخفي العداد
+                if (isHidden) {
+                    this.markAllAsReadSilently();
+                }
             });
         }
 
@@ -660,14 +680,29 @@ class EnhancedNotificationSystem {
             });
         }
 
+        // حذف جميع الإشعارات
+        const clearAllBtn = document.getElementById('clearAllBtn');
+        if (clearAllBtn) {
+            clearAllBtn.addEventListener('click', () => {
+                if (confirm('هل تريد حذف جميع الإشعارات؟')) {
+                    this.clearAllNotifications();
+                }
+            });
+        }
+
         // تحديث الإشعارات
         const refreshBtn = document.getElementById('refreshNotificationsBtn');
         if (refreshBtn) {
             refreshBtn.addEventListener('click', async () => {
                 refreshBtn.disabled = true;
+                const icon = refreshBtn.querySelector('i');
+                icon.classList.add('fa-spin');
+                
                 await this.checkAll();
+                
                 setTimeout(() => {
                     refreshBtn.disabled = false;
+                    icon.classList.remove('fa-spin');
                 }, 1000);
             });
         }
@@ -685,6 +720,16 @@ class EnhancedNotificationSystem {
         if (saveSettingsBtn) {
             saveSettingsBtn.addEventListener('click', () => {
                 this.saveSettings();
+            });
+        }
+
+        // مسح سجل الإشعارات المقروءة
+        const clearReadBtn = document.getElementById('clearReadNotificationsBtn');
+        if (clearReadBtn) {
+            clearReadBtn.addEventListener('click', () => {
+                if (confirm('سيؤدي هذا إلى إظهار جميع الإشعارات القديمة مرة أخرى. هل تريد المتابعة؟')) {
+                    this.clearReadNotificationsHistory();
+                }
             });
         }
 
@@ -708,6 +753,9 @@ class EnhancedNotificationSystem {
         try {
             console.log('🔍 بدء فحص الإشعارات...');
             
+            // حفظ الإشعارات القديمة للمقارنة
+            const oldNotificationsCount = this.notifications.filter(n => !this.readNotifications.has(n.id)).length;
+            
             this.notifications = [];
 
             // فحص المنتجات
@@ -720,6 +768,9 @@ class EnhancedNotificationSystem {
                 await this.checkDebts();
             }
 
+            // تصفية الإشعارات المقروءة
+            this.notifications = this.notifications.filter(n => !this.readNotifications.has(n.id));
+
             // ترتيب الإشعارات حسب الأولوية
             this.sortNotificationsByPriority();
 
@@ -729,7 +780,13 @@ class EnhancedNotificationSystem {
             // تحديث وقت آخر فحص
             this.updateLastCheckTime();
 
-            console.log(`✅ تم الفحص - عدد الإشعارات: ${this.notifications.length}`);
+            // تشغيل الصوت إذا كانت هناك إشعارات جديدة
+            const newNotificationsCount = this.notifications.length;
+            if (newNotificationsCount > oldNotificationsCount && this.settings.playSound) {
+                this.playNotificationSound();
+            }
+
+            console.log(`✅ تم الفحص - إشعارات جديدة: ${this.notifications.length}`);
 
             return this.notifications;
         } catch (error) {
@@ -740,9 +797,11 @@ class EnhancedNotificationSystem {
 
     /**
      * فحص المنتجات ذات المخزون المنخفض
+     * ملاحظة مهمة: ينبه فقط عندما stock <= min_stock
      */
     async checkLowStockProducts() {
         try {
+            // الاستعلام المُحسّن: يُرجع المنتجات التي stock <= min_stock فقط
             const query = `
                 SELECT 
                     id, 
@@ -754,9 +813,9 @@ class EnhancedNotificationSystem {
                     price
                 FROM products 
                 WHERE active = 1 
-                AND stock <= min_stock 
                 AND min_stock > 0
-                ORDER BY (stock - min_stock) ASC
+                AND stock <= min_stock
+                ORDER BY (stock - min_stock) ASC, stock ASC
             `;
 
             const result = await window.electronAPI.dbQuery({ sql: query });
@@ -767,32 +826,49 @@ class EnhancedNotificationSystem {
 
             const products = result.data || [];
 
+            console.log(`📦 تم العثور على ${products.length} منتج يحتاج تنبيه`);
+
             products.forEach(product => {
-                const stockDifference = product.min_stock - product.stock;
-                const percentageLeft = Math.round((product.stock / product.min_stock) * 100);
+                const notificationId = `product_${product.id}`;
+                
+                // تجاهل إذا كان مقروءاً مسبقاً
+                if (this.readNotifications.has(notificationId)) {
+                    return;
+                }
+
+                const percentageLeft = product.min_stock > 0 
+                    ? Math.round((product.stock / product.min_stock) * 100)
+                    : 0;
 
                 let priority = this.priorityLevels.MEDIUM;
                 let type = this.notificationTypes.LOW_STOCK;
                 let message = '';
+                let title = '';
 
                 if (product.stock === 0) {
+                    // نفذ تماماً - أولوية قصوى
                     priority = this.priorityLevels.CRITICAL;
                     type = this.notificationTypes.OUT_OF_STOCK;
-                    message = `المنتج "${product.name}" نفذ من المخزون تماماً! الحد الأدنى: ${product.min_stock}`;
+                    title = '⚠️ نفذ من المخزون!';
+                    message = `المنتج "${product.name}" نفذ من المخزون تماماً! (الحد الأدنى: ${product.min_stock})`;
                 } else if (product.stock < product.min_stock) {
+                    // أقل من الحد الأدنى - أولوية عالية
                     priority = this.priorityLevels.HIGH;
+                    title = '⚠️ مخزون منخفض';
                     message = `المنتج "${product.name}" أقل من الحد الأدنى! المتوفر: ${product.stock}، الحد الأدنى: ${product.min_stock}`;
-                } else if (product.stock === product.min_stock) {
+                } else {
+                    // يساوي الحد الأدنى - أولوية متوسطة
                     priority = this.priorityLevels.MEDIUM;
+                    title = '⚠️ وصل للحد الأدنى';
                     message = `المنتج "${product.name}" وصل للحد الأدنى. المتوفر: ${product.stock}`;
                 }
 
                 this.notifications.push({
-                    id: `product_${product.id}_${Date.now()}`,
+                    id: notificationId,
                     type: type,
                     category: 'products',
                     priority: priority,
-                    title: product.stock === 0 ? 'نفذ من المخزون!' : 'مخزون منخفض',
+                    title: title,
                     message: message,
                     icon: product.stock === 0 ? 'fa-times-circle' : 'fa-exclamation-triangle',
                     timestamp: new Date(),
@@ -814,7 +890,6 @@ class EnhancedNotificationSystem {
                 });
             });
 
-            console.log(`📦 تم فحص المنتجات: ${products.length} منتج يحتاج تنبيه`);
         } catch (error) {
             console.error('❌ خطأ في فحص المنتجات:', error);
         }
@@ -862,6 +937,13 @@ class EnhancedNotificationSystem {
             const debts = result.data || [];
 
             debts.forEach(debt => {
+                const notificationId = `debt_${debt.id}`;
+                
+                // تجاهل إذا كان مقروءاً مسبقاً
+                if (this.readNotifications.has(notificationId)) {
+                    return;
+                }
+
                 const dueDate = new Date(debt.due_date);
                 const today = new Date();
                 const daysUntilDue = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24));
@@ -872,30 +954,26 @@ class EnhancedNotificationSystem {
                 let title = '';
 
                 if (daysUntilDue < 0) {
-                    // متأخر
                     priority = this.priorityLevels.CRITICAL;
                     type = this.notificationTypes.DEBT_OVERDUE;
-                    title = `دين متأخر منذ ${Math.abs(daysUntilDue)} يوم`;
+                    title = `💰 دين متأخر منذ ${Math.abs(daysUntilDue)} يوم`;
                     message = `العميل "${debt.customer_name}" - القسط #${debt.payment_number} متأخر ${Math.abs(daysUntilDue)} يوم. المبلغ: ${debt.remaining.toLocaleString('ar-IQ')} د.ع`;
                 } else if (daysUntilDue === 0) {
-                    // يستحق اليوم
                     priority = this.priorityLevels.HIGH;
-                    title = 'دين يستحق اليوم';
+                    title = '💰 دين يستحق اليوم';
                     message = `العميل "${debt.customer_name}" - القسط #${debt.payment_number} يستحق اليوم. المبلغ: ${debt.remaining.toLocaleString('ar-IQ')} د.ع`;
                 } else if (daysUntilDue <= 3) {
-                    // يستحق قريباً
                     priority = this.priorityLevels.HIGH;
-                    title = `دين يستحق خلال ${daysUntilDue} يوم`;
+                    title = `💰 دين يستحق خلال ${daysUntilDue} يوم`;
                     message = `العميل "${debt.customer_name}" - القسط #${debt.payment_number}. المبلغ: ${debt.remaining.toLocaleString('ar-IQ')} د.ع`;
                 } else {
-                    // تنبيه مسبق
                     priority = this.priorityLevels.MEDIUM;
-                    title = `دين يستحق خلال ${daysUntilDue} يوم`;
+                    title = `💰 دين يستحق خلال ${daysUntilDue} يوم`;
                     message = `العميل "${debt.customer_name}" - القسط #${debt.payment_number}. المبلغ: ${debt.remaining.toLocaleString('ar-IQ')} د.ع`;
                 }
 
                 this.notifications.push({
-                    id: `debt_${debt.id}_${Date.now()}`,
+                    id: notificationId,
                     type: type,
                     category: 'debts',
                     priority: priority,
@@ -943,11 +1021,8 @@ class EnhancedNotificationSystem {
         };
 
         this.notifications.sort((a, b) => {
-            // الأولوية أولاً
             const priorityDiff = priorityOrder[a.priority] - priorityOrder[b.priority];
             if (priorityDiff !== 0) return priorityDiff;
-
-            // ثم التاريخ (الأحدث أولاً)
             return b.timestamp - a.timestamp;
         });
     }
@@ -966,10 +1041,10 @@ class EnhancedNotificationSystem {
      */
     updateBadge() {
         const badge = document.getElementById('notificationBadge');
-        const unreadCount = this.notifications.filter(n => !n.read).length;
+        const unreadCount = this.notifications.filter(n => !this.readNotifications.has(n.id)).length;
 
         if (badge) {
-            if (unreadCount > 0) {
+            if (unreadCount > 0 && this.settings.showBadge) {
                 badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
                 badge.classList.remove('hidden');
             } else {
@@ -985,7 +1060,6 @@ class EnhancedNotificationSystem {
         const listContainer = document.getElementById('notificationList');
         if (!listContainer) return;
 
-        // تصفية الإشعارات
         let filteredNotifications = this.notifications;
         if (filter !== 'all') {
             filteredNotifications = this.notifications.filter(n => n.category === filter);
@@ -1003,7 +1077,6 @@ class EnhancedNotificationSystem {
 
         listContainer.innerHTML = filteredNotifications.map(notification => this.renderNotification(notification)).join('');
 
-        // ربط أحداث النقر
         listContainer.querySelectorAll('.notification-item').forEach((item, index) => {
             item.addEventListener('click', () => {
                 const notification = filteredNotifications[index];
@@ -1017,9 +1090,10 @@ class EnhancedNotificationSystem {
      */
     renderNotification(notification) {
         const timeAgo = this.getTimeAgo(notification.timestamp);
+        const isRead = this.readNotifications.has(notification.id);
         
         return `
-            <div class="notification-item ${notification.read ? '' : 'unread'} ${notification.priority}" 
+            <div class="notification-item ${isRead ? '' : 'unread'} ${notification.priority}" 
                  data-id="${notification.id}">
                 <div class="notification-item-header">
                     <div class="notification-title">
@@ -1033,8 +1107,8 @@ class EnhancedNotificationSystem {
                 </div>
                 ${notification.action ? `
                     <div class="notification-action">
-                        ${notification.action.label}
                         <i class="fas fa-arrow-left"></i>
+                        ${notification.action.label}
                     </div>
                 ` : ''}
             </div>
@@ -1046,7 +1120,7 @@ class EnhancedNotificationSystem {
      */
     getTimeAgo(timestamp) {
         const now = new Date();
-        const diff = Math.floor((now - timestamp) / 1000); // بالثواني
+        const diff = Math.floor((now - timestamp) / 1000);
 
         if (diff < 60) return 'الآن';
         if (diff < 3600) return `منذ ${Math.floor(diff / 60)} دقيقة`;
@@ -1078,7 +1152,8 @@ class EnhancedNotificationSystem {
      */
     handleNotificationClick(notification) {
         // تعليم كمقروء
-        notification.read = true;
+        this.readNotifications.add(notification.id);
+        this.saveReadNotifications();
         this.updateUI();
 
         // تنفيذ الإجراء
@@ -1094,7 +1169,7 @@ class EnhancedNotificationSystem {
     }
 
     /**
-     * الانتقال إلى صفحة المنتج
+     * الانتقال إلى صفحة المنتج مع تأثيرات حديثة
      */
     navigateToProduct(productId) {
         console.log('📍 التوجه إلى المنتج:', productId);
@@ -1107,39 +1182,54 @@ class EnhancedNotificationSystem {
 
         // الانتظار قليلاً ثم البحث عن المنتج وتمييزه
         setTimeout(() => {
-            this.highlightProduct(productId);
+            this.highlightProductModern(productId);
         }, 300);
     }
 
     /**
-     * تمييز المنتج في الجدول
+     * تمييز المنتج في الجدول بطريقة حديثة
      */
-    highlightProduct(productId) {
+    highlightProductModern(productId) {
         // البحث عن صف المنتج في الجدول
         const productRow = document.querySelector(`tr[data-product-id="${productId}"]`);
         
         if (productRow) {
-            // تمييز الصف
-            productRow.style.backgroundColor = 'rgba(99, 102, 241, 0.2)';
-            productRow.style.border = '2px solid var(--primary-color)';
-            
-            // التمرير إلى الصف
-            productRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            
-            // إزالة التمييز بعد 5 ثواني
-            setTimeout(() => {
-                productRow.style.backgroundColor = '';
-                productRow.style.border = '';
-            }, 5000);
+            // إزالة أي تمييز سابق
+            document.querySelectorAll('.product-highlight').forEach(el => {
+                el.classList.remove('product-highlight');
+            });
 
-            // إظهار toast
+            // إضافة تأثير التمييز
+            productRow.classList.add('product-highlight');
+            
+            // التمرير إلى الصف بسلاسة
+            productRow.scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'center' 
+            });
+
+            // إزالة التمييز بعد 6 ثواني
+            setTimeout(() => {
+                productRow.classList.remove('product-highlight');
+            }, 6000);
+
+            // إظهار رسالة نجاح
             if (typeof window.showToast === 'function') {
-                window.showToast('تم العثور على المنتج', 'success');
+                window.showToast('تم العثور على المنتج ✓', 'success');
             }
+
+            console.log('✅ تم تمييز المنتج بنجاح');
         } else {
-            // إذا لم يتم العثور على المنتج، فتح نافذة التعديل
+            // إذا لم يتم العثور على المنتج في الجدول، فتح نافذة التعديل
+            console.log('ℹ️ المنتج غير موجود في الجدول، فتح نافذة التعديل...');
+            
             if (typeof window.openEditProduct === 'function') {
                 window.openEditProduct(productId);
+            } else {
+                console.warn('⚠️ دالة openEditProduct غير موجودة');
+                if (typeof window.showToast === 'function') {
+                    window.showToast('لم يتم العثور على المنتج', 'warning');
+                }
             }
         }
     }
@@ -1166,11 +1256,9 @@ class EnhancedNotificationSystem {
      * عرض تفاصيل القسط
      */
     async showInstallmentDetails(invoiceId, installmentId) {
-        // محاولة فتح نافذة تفاصيل القسط إذا كانت موجودة
         if (typeof window.showInstallmentPayments === 'function') {
             await window.showInstallmentPayments(installmentId);
             
-            // إظهار toast
             if (typeof window.showToast === 'function') {
                 window.showToast('تم فتح تفاصيل القسط', 'info');
             }
@@ -1179,25 +1267,63 @@ class EnhancedNotificationSystem {
             const invoiceRow = document.querySelector(`tr[data-invoice-id="${invoiceId}"]`);
             
             if (invoiceRow) {
-                invoiceRow.style.backgroundColor = 'rgba(239, 68, 68, 0.2)';
+                invoiceRow.classList.add('product-highlight');
                 invoiceRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 
                 setTimeout(() => {
-                    invoiceRow.style.backgroundColor = '';
-                }, 5000);
+                    invoiceRow.classList.remove('product-highlight');
+                }, 6000);
             }
         }
     }
 
     /**
-     * تعليم جميع الإشعارات كمقروءة
+     * تعليم جميع الإشعارات كمقروءة (بصمت - بدون إظهار رسالة)
+     */
+    markAllAsReadSilently() {
+        this.notifications.forEach(n => {
+            this.readNotifications.add(n.id);
+        });
+        
+        this.saveReadNotifications();
+        this.updateUI();
+    }
+
+    /**
+     * تعليم جميع الإشعارات كمقروءة (مع رسالة)
      */
     markAllAsRead() {
-        this.notifications.forEach(n => n.read = true);
-        this.updateUI();
+        this.markAllAsReadSilently();
         
         if (typeof window.showToast === 'function') {
             window.showToast('تم تعليم جميع الإشعارات كمقروءة', 'success');
+        }
+    }
+
+    /**
+     * حذف جميع الإشعارات
+     */
+    clearAllNotifications() {
+        this.notifications = [];
+        this.updateUI();
+        
+        if (typeof window.showToast === 'function') {
+            window.showToast('تم حذف جميع الإشعارات', 'success');
+        }
+    }
+
+    /**
+     * مسح سجل الإشعارات المقروءة
+     */
+    clearReadNotificationsHistory() {
+        this.readNotifications.clear();
+        localStorage.removeItem('notificationReadList');
+        
+        // إعادة فحص الإشعارات
+        this.checkAll();
+        
+        if (typeof window.showToast === 'function') {
+            window.showToast('تم مسح سجل الإشعارات المقروءة', 'success');
         }
     }
 
@@ -1234,7 +1360,6 @@ class EnhancedNotificationSystem {
      */
     async saveSettings() {
         try {
-            // قراءة القيم
             this.settings.autoCheck = document.getElementById('autoCheckSetting').checked;
             this.settings.showBadge = document.getElementById('showBadgeSetting').checked;
             this.settings.playSound = document.getElementById('playSoundSetting').checked;
@@ -1244,16 +1369,13 @@ class EnhancedNotificationSystem {
             this.settings.debtsWarningDays = parseInt(document.getElementById('debtsWarningDaysSetting').value);
             this.settings.debtsOverduePriority = document.getElementById('debtsOverdueSetting').checked;
 
-            // حفظ في التخزين المحلي
             localStorage.setItem('notificationSettings', JSON.stringify(this.settings));
 
-            // إعادة تشغيل الفحص الدوري
             this.stopPeriodicCheck();
             if (this.settings.autoCheck) {
                 this.startPeriodicCheck();
             }
 
-            // إغلاق النافذة
             const modal = document.getElementById('notificationSettingsModal');
             if (modal && typeof bootstrap !== 'undefined') {
                 const bsModal = bootstrap.Modal.getInstance(modal);
@@ -1264,7 +1386,6 @@ class EnhancedNotificationSystem {
                 window.showToast('تم حفظ الإعدادات بنجاح', 'success');
             }
 
-            // إجراء فحص فوري
             await this.checkAll();
 
         } catch (error) {
@@ -1288,6 +1409,35 @@ class EnhancedNotificationSystem {
             }
         } catch (error) {
             console.error('❌ خطأ في تحميل الإعدادات:', error);
+        }
+    }
+
+    /**
+     * تحميل قائمة الإشعارات المقروءة
+     */
+    async loadReadNotifications() {
+        try {
+            const saved = localStorage.getItem('notificationReadList');
+            if (saved) {
+                this.readNotifications = new Set(JSON.parse(saved));
+                console.log(`📖 تم تحميل ${this.readNotifications.size} إشعار مقروء`);
+            }
+        } catch (error) {
+            console.error('❌ خطأ في تحميل الإشعارات المقروءة:', error);
+        }
+    }
+
+    /**
+     * حفظ قائمة الإشعارات المقروءة
+     */
+    saveReadNotifications() {
+        try {
+            localStorage.setItem(
+                'notificationReadList', 
+                JSON.stringify([...this.readNotifications])
+            );
+        } catch (error) {
+            console.error('❌ خطأ في حفظ الإشعارات المقروءة:', error);
         }
     }
 
@@ -1337,8 +1487,10 @@ class EnhancedNotificationSystem {
      * إضافة إشعار يدوي
      */
     addNotification(notification) {
+        const id = `manual_${Date.now()}`;
+        
         this.notifications.unshift({
-            id: `manual_${Date.now()}`,
+            id: id,
             timestamp: new Date(),
             read: false,
             ...notification
@@ -1346,7 +1498,6 @@ class EnhancedNotificationSystem {
 
         this.updateUI();
 
-        // تشغيل الصوت إذا كان مفعلاً
         if (this.settings.playSound) {
             this.playNotificationSound();
         }
@@ -1357,8 +1508,9 @@ class EnhancedNotificationSystem {
      */
     playNotificationSound() {
         try {
-            const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBDGH0fPTgjMGHm7A7+OZSA0PVqzn77BdGAg+ltryxnMpBSp+zPLaizsIGGS57OihUhELTKXh8bllHAU2kdH00YAyBSB1xe7fmUMLD1mu5O+wXhoINZXY88p2KwYteM3y2o4+CRxqvOzjnE4OCVOq5O+zYBsIOJPY88p3LAUse8/y24w/CRxtvOvjnlIOC1Sp5PC1ZBwGOpXX88p3LAUueMzy2Ys+CRxrvOvjn04PClWq5PC1ZBsGOJPY88p3LAUsc87y2Ys+CRxrvOvjnlIOC1Sp5PC1ZBwGOpXX88p3LAUueMzy2Ys+CRxrvOvjn04PClWq5PC1ZBsGOJPY88p3LAUsc87y2Ys+CRxrvOvjnlIOC1Sp5PC1ZBwGOpXX88p3LAUueMzy2Ys+CRxrvOvjn04PClWq5PC1ZBsGOJPY88p3LAUsc87y2Ys+CRxrvOvjnlIOC1Sp5PC1ZBwGOpXX88p3LAUueMzy2Ys+CRxrvOvjn04PClWq5PC1ZBsGOJPY88p3LAUsc87y2Ys+CRxrvOvjnlIOC1Sp5PC1ZBwGOpXX88p3LAUueMzy2Ys+CRxrvOvjn04PClWq5PC1ZBsGOJPY88p3LAUsc87y2Ys+CRxrvOvjnlIOC1Sp5PC1ZBwGOpXX88p3LAUueMzy2Ys+CRxrvOvjn04PClWq5PC1ZBsGOJPY88p3LAUsc87y2Ys+CRxrvOvjnlIOC1Sp5PC1ZBwGOpXX88p3LAUueMzy2Ys+CRxrvOvjn04PClWq5PC1ZBsGOJPY88p3LAUsc87y2Ys+CRxrvOvjnlIOC1Sp5PC1ZBwGOpXX88p3LAUueMzy2Ys+CRxrvOvjn04PClWq5PC1ZBsGOJPY88p3LAUsc87y2Ys+CRxrvOvjnlIOC1Sp5PC1ZBwGOpXX88p3LAUueMzy2Ys+CRxrvOvjn04PClWq5PC1ZBsGOJPY88p3LAUsc87y2Ys+');
-            audio.play();
+            const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBDGH0fPTgjMGHm7A7+OZSA0PVqzn77BdGAg+ltryxnMpBSp+zPLaizsIGGS57OihUhELTKXh8bllHAU2kdH00YAyBSB1xe7fmUMLD1mu5O+wXhoINZXY88p2KwYteM3y2o4+CRxqvOzjnE4OCVOq5O+zYBsIOJPY88p3LAUse8/y24w/CRxtvOvjnlIOC1Sp5PC1ZBwGOpXX88p3LAUueMzy2Ys+CRxrvOvjn04PClWq5PC1ZBsGOJPY88p3LAUsc87y2Ys+CRxrvOvjnlIOC1Sp5PC1ZBwGOpXX88p3LAUueMzy2Ys+CRxrvOvjn04PClWq5PC1ZBsGOJPY88p3LAUsc87y2Ys+CRxrvOvjnlIOC1Sp5PC1ZBwGOpXX88p3LAUueMzy2Ys+CRxrvOvjn04PClWq5PC1ZBsGOJPY88p3LAUsc87y2Ys+CRxrvOvjnlIOC1Sp5PC1ZBwGOpXX88p3LAUueMzy2Ys+CRxrvOvjn04PClWq5PC1ZBsGOJPY88p3LAUsc87y2Ys+CRxrvOvjnlIOC1Sp5PC1ZBwGOpXX88p3LAUueMzy2Ys+CRxrvOvjn04PClWq5PC1ZBsGOJPY88p3LAUsc87y2Ys+CRxrvOvjnlIOC1Sp5PC1ZBwGOpXX88p3LAUueMzy2Ys+CRxrvOvjn04PClWq5PC1ZBsGOJPY88p3LAUsc87y2Ys+CRxrvOvjnlIOC1Sp5PC1ZBwGOpXX88p3LAUueMzy2Ys+CRxrvOvjn04PClWq5PC1ZBsGOJPY88p3LAUsc87y2Ys+');
+            audio.volume = 0.3;
+            audio.play().catch(() => {});
         } catch (error) {
             console.warn('⚠️ فشل تشغيل صوت الإشعار');
         }
@@ -1370,6 +1522,7 @@ class EnhancedNotificationSystem {
     destroy() {
         this.stopPeriodicCheck();
         this.notifications = [];
+        this.readNotifications.clear();
         this.isInitialized = false;
         
         const container = document.getElementById('notificationSystem');
@@ -1390,10 +1543,8 @@ class EnhancedNotificationSystem {
 // التهيئة التلقائية
 // ========================================
 
-// إنشاء نسخة عامة من نظام الإشعارات
 window.notificationSystem = new EnhancedNotificationSystem();
 
-// التهيئة عند تحميل الصفحة
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => {
@@ -1406,9 +1557,8 @@ if (document.readyState === 'loading') {
     }, 1000);
 }
 
-// تصدير للاستخدام في وحدات أخرى
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = EnhancedNotificationSystem;
 }
 
-console.log('✅ تم تحميل نظام الإشعارات المحسّن بنجاح');
+console.log('✅ تم تحميل نظام الإشعارات المُحدّث v3.1 بنجاح');

@@ -1,4 +1,16 @@
 <script>
+// دالة عامة لحفظ البيانات في localStorage بشكل آمن (مع دعم await)
+async function saveToLocalStorage(key, value) {
+    try {
+        localStorage.setItem(key, JSON.stringify(value));
+        // يمكن إضافة رسالة لوج هنا إذا رغبت
+        // console.log(`✅ تم حفظ ${key} في localStorage`);
+        return true;
+    } catch (e) {
+        console.error('❌ خطأ في حفظ البيانات في localStorage:', e);
+        return false;
+    }
+}
 // دالة مساعدة لتحويل الأرقام العربية إلى إنجليزية (تعمل على كل النصوص)
 function toEnglishDigits(str) {
     if (typeof str !== 'string') str = String(str);
@@ -28318,11 +28330,1301 @@ body {
     .switch-container input[type="checkbox"]:checked::before {
         transform: translateX(-24px);
     }
+
+    /* ==========================================
+       🔔 نظام الإشعارات v4.0 - CSS
+       ========================================== */
+/* ===================================
+   🔔 نظام الإشعارات v3.0 - CSS النهائي المحسّن
+   =================================== */
+
+/* ===== زر الإشعارات في top-actions ===== */
+.notification-bell-btn {
+    position: relative;
+    width: 42px;
+    height: 42px;
+    border: none;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 10px;
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.25);
+    margin: 0 8px;
+}
+
+.notification-bell-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(102, 126, 234, 0.35);
+}
+
+.notification-bell-btn:active {
+    transform: translateY(0);
+}
+
+.notification-bell-btn i {
+    font-size: 18px;
+}
+
+/* ===== شارة العدد ===== */
+.notification-count-badge {
+    position: absolute;
+    top: -6px;
+    left: -6px;
+    min-width: 20px;
+    height: 20px;
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    border-radius: 10px;
+    color: white;
+    font-size: 10px;
+    font-weight: 700;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 0 5px;
+    border: 2px solid white;
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
+    animation: badge-pulse 2s infinite;
+}
+
+.notification-count-badge.visible {
+    display: flex;
+}
+
+@keyframes badge-pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+/* ===== الخلفية المعتمة (Overlay) ===== */
+.notifications-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 99998;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(4px);
+}
+
+.notifications-modal-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* ===== لوحة الإشعارات المركزية ===== */
+.notifications-center-modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.9);
+    width: 98%;
+    max-width: 850px;
+    max-height: 90vh;
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 25px 70px rgba(0, 0, 0, 0.35);
+    z-index: 99999;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.notifications-center-modal.active {
+    opacity: 1;
+    visibility: visible;
+    transform: translate(-50%, -50%) scale(1);
+}
+
+/* ===== رأس اللوحة ===== */
+.notifications-modal-header {
+    padding: 24px 28px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+}
+
+.notifications-modal-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 0;
+    font-size: 28px;
+    font-weight: 800;
+}
+
+.notifications-modal-title i {
+    font-size: 32px;
+}
+
+/* ===== أزرار رأس اللوحة ===== */
+.notifications-modal-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.notifications-modal-action-btn {
+    width: 38px;
+    height: 38px;
+    border: none;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 10px;
+    color: white;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+}
+
+.notifications-modal-action-btn:hover {
+    background: rgba(255, 255, 255, 0.25);
+    transform: scale(1.05);
+}
+
+/* ===== جسم اللوحة ===== */
+.notifications-modal-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+}
+
+/* ===== رسالة فارغة ===== */
+.notifications-empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #9ca3af;
+}
+
+.notifications-empty-state i {
+    font-size: 72px;
+    margin-bottom: 20px;
+    opacity: 0.4;
+}
+
+.notifications-empty-state p {
+    font-size: 16px;
+    margin: 0;
+    font-weight: 500;
+}
+
+/* ===== عنصر الإشعار ===== */
+.notification-item-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 16px;
+    border-radius: 14px;
+    background: #f9fafb;
+    margin-bottom: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    border: 2px solid transparent;
+}
+
+.notification-item-card.unread {
+    background: linear-gradient(135deg, #eff6ff 0%, #f9fafb 100%);
+    border-color: #93c5fd;
+}
+
+.notification-item-card:hover {
+    background: #f3f4f6;
+    transform: translateX(-3px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* ===== أيقونة الإشعار ===== */
+.notification-item-icon {
+    flex-shrink: 0;
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* ===== محتوى الإشعار ===== */
+.notification-item-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.notification-item-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 8px;
+    line-height: 1.5;
+}
+
+.notification-item-message {
+    font-size: 18px;
+    color: #6b7280;
+    margin-bottom: 10px;
+    line-height: 1.6;
+}
+
+.notification-item-time {
+    font-size: 15px;
+    color: #9ca3af;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* ===== زر حذف الإشعار ===== */
+.notification-item-delete {
+    flex-shrink: 0;
+    width: 34px;
+    height: 34px;
+    border: none;
+    background: rgba(239, 68, 68, 0.1);
+    border-radius: 8px;
+    color: #ef4444;
+    cursor: pointer;
+    opacity: 0;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.notification-item-card:hover .notification-item-delete {
+    opacity: 1;
+}
+
+.notification-item-delete:hover {
+    background: rgba(239, 68, 68, 0.2);
+    transform: scale(1.1);
+}
+
+/* ===== Toast Notifications ===== */
+.notifications-toast-container {
+    position: fixed;
+    top: 90px;
+    left: 20px;
+    z-index: 100000;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-width: 420px;
+    pointer-events: none;
+}
+
+.notification-toast-card {
+    background: white;
+    border-radius: 14px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+    padding: 16px;
+    transform: translateX(-120%);
+    transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    opacity: 0;
+    pointer-events: all;
+    border-right: 4px solid #3b82f6;
+    max-width: 420px;
+}
+
+.notification-toast-card.visible {
+    transform: translateX(0);
+    opacity: 1;
+}
+
+/* ===== أولويات Toast ===== */
+.notification-toast-card.priority-critical {
+    border-right-color: #ef4444;
+    background: linear-gradient(135deg, #fef2f2 0%, #ffffff 100%);
+}
+
+.notification-toast-card.priority-high {
+    border-right-color: #f59e0b;
+    background: linear-gradient(135deg, #fffbeb 0%, #ffffff 100%);
+}
+
+.notification-toast-card.priority-medium {
+    border-right-color: #3b82f6;
+}
+
+.notification-toast-card.priority-low {
+    border-right-color: #10b981;
+}
+
+/* ===== محتوى Toast ===== */
+.notification-toast-content {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.notification-toast-icon {
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.9);
+    font-size: 20px;
+}
+
+.notification-toast-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.notification-toast-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 4px;
+}
+
+.notification-toast-message {
+    font-size: 13px;
+    color: #6b7280;
+    line-height: 1.5;
+}
+
+.notification-toast-close {
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    border: none;
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 6px;
+    color: #9ca3af;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.notification-toast-close:hover {
+    background: rgba(0, 0, 0, 0.1);
+    color: #6b7280;
+}
+
+/* ===== Scrollbar ===== */
+.notifications-modal-body::-webkit-scrollbar {
+    width: 8px;
+}
+
+.notifications-modal-body::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.notifications-modal-body::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border-radius: 10px;
+}
+
+.notifications-modal-body::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, #5568d3, #6a3e8a);
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 768px) {
+    .notification-bell-btn {
+        width: 38px;
+        height: 38px;
+    }
+    
+    .notifications-center-modal {
+        width: 95%;
+        max-height: 90vh;
+    }
+    
+    .notifications-modal-header {
+        padding: 20px;
+    }
+    
+    .notifications-modal-title {
+        font-size: 18px;
+    }
+    
+    .notifications-toast-container {
+        left: 10px;
+        right: 10px;
+        max-width: calc(100% - 20px);
+    }
+    
+    .notification-toast-card {
+        max-width: 100%;
+    }
+}
+
+/* ===== تجنب التضارب ===== */
+.notification-bell-btn,
+.notifications-modal-overlay,
+.notifications-center-modal,
+.notifications-toast-container {
+    font-family: 'Cairo', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
     </style>
     
     
     <script src="products-fixes.js"></script>
 
 
+    
+    <!-- ==========================================
+         🔔 نظام الإشعارات v4.0 - إشعارات تفصيلية
+         ========================================== -->
+    <script>
+/* ===================================
+   🔔 نظام الإشعارات v4.0 - إشعارات تفصيلية
+   ميزة جديدة: إشعار منفصل لكل عميل ومنتج
+   =================================== */
+
+(function() {
+    'use strict';
+    
+    if (window.NotificationsSystemV4) {
+        console.warn('⚠️ نظام الإشعارات v4 محمّل بالفعل');
+        return;
+    }
+    
+    console.log('🔔 تحميل نظام الإشعارات v4.0 - التفصيلي...');
+
+    // ==================== NotificationEngine ====================
+    class NotificationEngineV4 {
+        constructor() {
+            this.checkInterval = 5 * 60 * 1000; // 5 دقائق
+            this.isRunning = false;
+            this.lastCheck = null;
+            this.intervalId = null;
+        }
+        
+        start() {
+            if (this.isRunning) return;
+            
+            this.isRunning = true;
+            console.log('🔔 بدء محرك الإشعارات v4');
+            
+            this.performCheck();
+            
+            this.intervalId = setInterval(() => {
+                this.performCheck();
+            }, this.checkInterval);
+        }
+        
+        stop() {
+            if (this.intervalId) {
+                clearInterval(this.intervalId);
+                this.intervalId = null;
+            }
+            this.isRunning = false;
+            console.log('🔕 إيقاف محرك الإشعارات v4');
+        }
+        
+        async performCheck() {
+            console.log('🔍 فحص النظام التفصيلي...');
+            
+            const notifications = [];
+            
+            try {
+                const stockNotifs = await this.checkInventory();
+                notifications.push(...stockNotifs);
+                
+                const debtNotifs = await this.checkDebts();
+                notifications.push(...debtNotifs);
+                
+                this.lastCheck = new Date();
+                
+                if (notifications.length > 0) {
+                    await this.processNotifications(notifications);
+                }
+                
+                console.log(`✅ الفحص: ${notifications.length} إشعار تفصيلي`);
+                
+            } catch (error) {
+                console.error('❌ خطأ في الفحص:', error);
+            }
+            
+            return notifications;
+        }
+        
+        async checkInventory() {
+            const notifications = [];
+            
+            if (!window.dataSdk) return notifications;
+            
+            try {
+                const products = await window.dataSdk.query({ type: 'product' });
+                
+                if (!products || products.length === 0) return notifications;
+                
+                // المنتجات المنخفضة: فقط إذا كانت الكمية == الحد الأدنى
+                const lowStock = products.filter(p => {
+                    const stock = p.stock_quantity || 0;
+                    const minStock = p.min_stock_quantity || 10;
+                    return stock === minStock && stock > 0;
+                });
+
+                // المنتجات النافذة: الكمية = 0
+                const outOfStock = products.filter(p => {
+                    return (p.stock_quantity || 0) === 0;
+                });
+                
+                // إنشاء إشعار منفصل لكل منتج نافذ
+                outOfStock.forEach(product => {
+                    notifications.push({
+                        id: `out-stock-${product.id}-${Date.now()}`,
+                        type: 'out_of_stock',
+                        priority: 'critical',
+                        title: `نفذ من المخزون: ${product.name}`,
+                        message: `المنتج "${product.name}" نفد من المخزون تماماً`,
+                        icon: 'fa-times-circle',
+                        color: '#ef4444',
+                        timestamp: new Date().toISOString(),
+                        data: {
+                            product: product,
+                            productId: product.id,
+                            productName: product.name,
+                            stock: 0
+                        }
+                    });
+                });
+                
+                // إنشاء إشعار منفصل لكل منتج منخفض
+                lowStock.forEach(product => {
+                    const remaining = product.stock_quantity || 0;
+                    // محاولة جلب اسم المنتج من أكثر من خاصية
+                    const productName = product.name || product.product_name || product.title || product.label || 'منتج بدون اسم';
+                    notifications.push({
+                        id: `low-stock-${product.id}-${Date.now()}`,
+                        type: 'low_stock',
+                        priority: 'high',
+                        title: `منخفض: ${productName}`,
+                        message: `المنتج "${productName}" - المتبقي: ${remaining} وحدة فقط`,
+                        icon: 'fa-exclamation-triangle',
+                        color: '#f59e0b',
+                        timestamp: new Date().toISOString(),
+                        data: {
+                            product: product,
+                            productId: product.id,
+                            productName: productName,
+                            stock: remaining,
+                            minStock: product.min_stock_quantity || 10
+                        }
+                    });
+                });
+                
+                // إشعار ملخص للمنتجات النافذة (إضافي)
+                if (outOfStock.length > 0) {
+                    notifications.push({
+                        id: `summary-out-stock-${Date.now()}`,
+                        type: 'out_of_stock_summary',
+                        priority: 'critical',
+                        title: `إجمالي المنتجات النافذة`,
+                        message: `${outOfStock.length} منتج نفد من المخزون`,
+                        icon: 'fa-warehouse',
+                        color: '#ef4444',
+                        timestamp: new Date().toISOString(),
+                        data: {
+                            count: outOfStock.length,
+                            products: outOfStock
+                        }
+                    });
+                }
+                
+                // إشعار ملخص للمنتجات المنخفضة (إضافي)
+                if (lowStock.length > 0) {
+                    notifications.push({
+                        id: `summary-low-stock-${Date.now()}`,
+                        type: 'low_stock_summary',
+                        priority: 'high',
+                        title: `إجمالي المنتجات المنخفضة`,
+                        message: `${lowStock.length} منتج قارب على النفاذ`,
+                        icon: 'fa-chart-line',
+                        color: '#f59e0b',
+                        timestamp: new Date().toISOString(),
+                        data: {
+                            count: lowStock.length,
+                            products: lowStock
+                        }
+                    });
+                }
+                
+            } catch (error) {
+                console.error('❌ خطأ في فحص المخزون:', error);
+            }
+            
+            return notifications;
+        }
+        
+        async checkDebts() {
+            const notifications = [];
+            
+            if (!window.dataSdk) return notifications;
+            
+            try {
+                const debts = await window.dataSdk.query({ type: 'debt' });
+                
+                if (!debts || debts.length === 0) return notifications;
+                
+                const now = new Date();
+                
+                // الديون المتأخرة
+                const overdue = debts.filter(d => {
+                    if (d.status === 'paid') return false;
+                    const dueDate = new Date(d.due_date);
+                    return dueDate < now;
+                });
+                
+                // الديون القريبة (خلال 3 أيام)
+                const upcoming = debts.filter(d => {
+                    if (d.status === 'paid') return false;
+                    const dueDate = new Date(d.due_date);
+                    const threeDays = new Date();
+                    threeDays.setDate(threeDays.getDate() + 3);
+                    return dueDate >= now && dueDate <= threeDays;
+                });
+                
+                // إنشاء إشعار منفصل لكل دين متأخر
+                overdue.forEach(debt => {
+                    const amount = this.formatCurrency(debt.remaining_amount || 0);
+                    const customerName = debt.customer_name || 'عميل غير معروف';
+                    const daysPast = Math.floor((now - new Date(debt.due_date)) / (1000 * 60 * 60 * 24));
+                    
+                    notifications.push({
+                        id: `overdue-${debt.id}-${Date.now()}`,
+                        type: 'overdue_debt',
+                        priority: daysPast > 30 ? 'critical' : 'high',
+                        title: `دين متأخر: ${customerName}`,
+                        message: `المبلغ: ${amount} - متأخر ${daysPast} يوم`,
+                        icon: 'fa-exclamation-circle',
+                        color: '#ef4444',
+                        timestamp: new Date().toISOString(),
+                        data: {
+                            debt: debt,
+                            debtId: debt.id,
+                            customerId: debt.customer_id,
+                            customerName: customerName,
+                            amount: debt.remaining_amount,
+                            daysPast: daysPast,
+                            dueDate: debt.due_date
+                        }
+                    });
+                });
+                
+                // إنشاء إشعار منفصل لكل دين قريب
+                upcoming.forEach(debt => {
+                    const amount = this.formatCurrency(debt.remaining_amount || 0);
+                    const customerName = debt.customer_name || 'عميل غير معروف';
+                    const dueDate = new Date(debt.due_date);
+                    const daysLeft = Math.ceil((dueDate - now) / (1000 * 60 * 60 * 24));
+                    
+                    notifications.push({
+                        id: `upcoming-${debt.id}-${Date.now()}`,
+                        type: 'upcoming_debt',
+                        priority: 'medium',
+                        title: `دين قريب: ${customerName}`,
+                        message: `المبلغ: ${amount} - يستحق خلال ${daysLeft} يوم`,
+                        icon: 'fa-clock',
+                        color: '#f59e0b',
+                        timestamp: new Date().toISOString(),
+                        data: {
+                            debt: debt,
+                            debtId: debt.id,
+                            customerId: debt.customer_id,
+                            customerName: customerName,
+                            amount: debt.remaining_amount,
+                            daysLeft: daysLeft,
+                            dueDate: debt.due_date
+                        }
+                    });
+                });
+                
+                // إشعار ملخص للديون المتأخرة (إضافي)
+                if (overdue.length > 0) {
+                    const total = overdue.reduce((sum, d) => sum + (d.remaining_amount || 0), 0);
+                    notifications.push({
+                        id: `summary-overdue-${Date.now()}`,
+                        type: 'overdue_debts_summary',
+                        priority: 'critical',
+                        title: `إجمالي الديون المتأخرة`,
+                        message: `${overdue.length} دين متأخر - المجموع: ${this.formatCurrency(total)}`,
+                        icon: 'fa-money-bill-wave',
+                        color: '#ef4444',
+                        timestamp: new Date().toISOString(),
+                        data: {
+                            count: overdue.length,
+                            totalAmount: total,
+                            debts: overdue
+                        }
+                    });
+                }
+                
+                // إشعار ملخص للديون القريبة (إضافي)
+                if (upcoming.length > 0) {
+                    const total = upcoming.reduce((sum, d) => sum + (d.remaining_amount || 0), 0);
+                    notifications.push({
+                        id: `summary-upcoming-${Date.now()}`,
+                        type: 'upcoming_debts_summary',
+                        priority: 'medium',
+                        title: `إجمالي الديون القريبة`,
+                        message: `${upcoming.length} دين - المجموع: ${this.formatCurrency(total)}`,
+                        icon: 'fa-calendar-alt',
+                        color: '#f59e0b',
+                        timestamp: new Date().toISOString(),
+                        data: {
+                            count: upcoming.length,
+                            totalAmount: total,
+                            debts: upcoming
+                        }
+                    });
+                }
+                
+            } catch (error) {
+                console.error('❌ خطأ في فحص الديون:', error);
+            }
+            
+            return notifications;
+        }
+        
+        async processNotifications(notifications) {
+            // عرض Toast فقط للإشعارات الملخصة
+            const summaryNotifs = notifications.filter(n => 
+                n.type.includes('_summary')
+            );
+            
+            for (const notif of summaryNotifs) {
+                window.NotificationsSystemV4.ui.showToast(notif);
+            }
+            
+            // إضافة جميع الإشعارات للمدير (التفصيلية والملخصة)
+            for (const notif of notifications) {
+                window.NotificationsSystemV4.manager.add(notif);
+            }
+        }
+        
+        formatCurrency(amount) {
+            return new Intl.NumberFormat('ar-IQ', {
+                style: 'decimal',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }).format(amount) + ' د.ع';
+        }
+    }
+
+    // ==================== NotificationManager ====================
+    class NotificationManagerV4 {
+        constructor() {
+            this.notifications = [];
+            this.unreadCount = 0;
+        }
+        
+        add(notif) {
+            const exists = this.notifications.some(n => n.id === notif.id);
+            if (exists) return;
+            
+            this.notifications.unshift(notif);
+            this.unreadCount++;
+            this.updateBadge();
+            this.playSound();
+        }
+        
+        markAsRead(id) {
+            const notif = this.notifications.find(n => n.id === id);
+            if (notif && !notif.read) {
+                notif.read = true;
+                notif.readAt = new Date().toISOString();
+                this.unreadCount = Math.max(0, this.unreadCount - 1);
+                this.updateBadge();
+            }
+        }
+        
+        markAllAsRead() {
+            this.notifications.forEach(n => {
+                if (!n.read) {
+                    n.read = true;
+                    n.readAt = new Date().toISOString();
+                }
+            });
+            this.unreadCount = 0;
+            this.updateBadge();
+            window.NotificationsSystemV4.ui.renderModal();
+        }
+        
+        delete(id) {
+            const index = this.notifications.findIndex(n => n.id === id);
+            if (index !== -1) {
+                const notif = this.notifications[index];
+                if (!notif.read) {
+                    this.unreadCount--;
+                }
+                this.notifications.splice(index, 1);
+                this.updateBadge();
+            }
+        }
+        
+        clearAll() {
+            this.notifications = [];
+            this.unreadCount = 0;
+            this.updateBadge();
+            window.NotificationsSystemV4.ui.renderModal();
+        }
+        
+        getAll() {
+            return this.notifications;
+        }
+        
+        updateBadge() {
+            const badge = document.getElementById('notificationsBadgeV4');
+            if (badge) {
+                if (this.unreadCount > 0) {
+                    badge.textContent = this.unreadCount > 99 ? '99+' : this.unreadCount;
+                    badge.classList.add('visible');
+                } else {
+                    badge.classList.remove('visible');
+                }
+            }
+        }
+        
+        playSound() {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                
+                osc.frequency.value = 800;
+                osc.type = 'sine';
+                
+                gain.gain.setValueAtTime(0.3, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
+                
+                osc.start(ctx.currentTime);
+                osc.stop(ctx.currentTime + 0.5);
+            } catch (error) {
+                console.warn('تعذر تشغيل الصوت');
+            }
+        }
+    }
+
+    // ==================== NotificationUI ====================
+    class NotificationUIV4 {
+        constructor() {
+            this.modalOverlay = null;
+            this.modal = null;
+            this.toastContainer = null;
+            this.initUI();
+        }
+        
+        initUI() {
+            this.addBellButton();
+            this.createModal();
+            this.createToastContainer();
+        }
+        
+        addBellButton() {
+            const topActions = document.querySelector('.top-actions');
+            
+            if (!topActions) {
+                console.error('❌ لم يتم العثور على .top-actions');
+                return;
+            }
+            
+            const bellBtn = document.createElement('button');
+            bellBtn.className = 'notification-bell-btn';
+            bellBtn.id = 'notificationsBellBtnV4';
+            bellBtn.innerHTML = `
+                <i class="fas fa-bell"></i>
+                <span class="notification-count-badge" id="notificationsBadgeV4">0</span>
+            `;
+            
+            bellBtn.addEventListener('click', () => {
+                this.toggleModal();
+            });
+            
+            const themeToggle = topActions.querySelector('.theme-toggle');
+            if (themeToggle) {
+                topActions.insertBefore(bellBtn, themeToggle);
+            } else {
+                topActions.appendChild(bellBtn);
+            }
+            
+            console.log('✅ تم إضافة زر الإشعارات v4');
+        }
+        
+        createModal() {
+            this.modalOverlay = document.createElement('div');
+            this.modalOverlay.className = 'notifications-modal-overlay';
+            this.modalOverlay.id = 'notificationsOverlayV4';
+            this.modalOverlay.addEventListener('click', () => {
+                this.closeModal();
+            });
+            document.body.appendChild(this.modalOverlay);
+            
+            this.modal = document.createElement('div');
+            this.modal.className = 'notifications-center-modal';
+            this.modal.id = 'notificationsModalV4';
+            this.modal.innerHTML = `
+                <div class="notifications-modal-header">
+                    <h3 class="notifications-modal-title">
+                        <i class="fas fa-bell"></i>
+                        الإشعارات التفصيلية
+                    </h3>
+                    <div class="notifications-modal-actions">
+                        <button class="notifications-modal-action-btn" id="markAllReadBtnV4" title="تعليم الكل كمقروء">
+                            <i class="fas fa-check-double"></i>
+                        </button>
+                        <button class="notifications-modal-action-btn" id="clearAllBtnV4" title="مسح الكل">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                        <button class="notifications-modal-action-btn" id="closeModalBtnV4" title="إغلاق">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="notifications-modal-body" id="notificationsBodyV4">
+                    <!-- الإشعارات ستظهر هنا -->
+                </div>
+            `;
+            
+            document.body.appendChild(this.modal);
+            
+            document.getElementById('markAllReadBtnV4').addEventListener('click', () => {
+                window.NotificationsSystemV4.manager.markAllAsRead();
+            });
+            
+            document.getElementById('clearAllBtnV4').addEventListener('click', () => {
+                if (confirm('هل تريد مسح جميع الإشعارات؟')) {
+                    window.NotificationsSystemV4.manager.clearAll();
+                }
+            });
+            
+            document.getElementById('closeModalBtnV4').addEventListener('click', () => {
+                this.closeModal();
+            });
+            
+            console.log('✅ تم إنشاء لوحة الإشعارات v4');
+        }
+        
+        createToastContainer() {
+            this.toastContainer = document.createElement('div');
+            this.toastContainer.className = 'notifications-toast-container';
+            this.toastContainer.id = 'toastsContainerV4';
+            document.body.appendChild(this.toastContainer);
+        }
+        
+        toggleModal() {
+            const isActive = this.modal.classList.contains('active');
+            
+            if (isActive) {
+                this.closeModal();
+            } else {
+                this.openModal();
+            }
+        }
+        
+        openModal() {
+            this.renderModal();
+            this.modalOverlay.classList.add('active');
+            this.modal.classList.add('active');
+        }
+        
+        closeModal() {
+            this.modalOverlay.classList.remove('active');
+            this.modal.classList.remove('active');
+        }
+        
+        renderModal() {
+            const body = document.getElementById('notificationsBodyV4');
+            if (!body) return;
+            
+            const notifications = window.NotificationsSystemV4.manager.getAll();
+            
+            if (notifications.length === 0) {
+                body.innerHTML = `
+                    <div class="notifications-empty-state">
+                        <i class="fas fa-bell-slash"></i>
+                        <p>لا توجد إشعارات</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            body.innerHTML = notifications.map(n => this.createItemHTML(n)).join('');
+        }
+        
+        createItemHTML(notif) {
+            const timeAgo = this.getTimeAgo(notif.timestamp);
+            const readClass = notif.read ? 'read' : 'unread';
+            
+            return `
+                <div class="notification-item-card ${readClass}" 
+                     data-notif-id="${notif.id}"
+                     onclick="window.NotificationsSystemV4.ui.handleItemClick('${notif.id}')">
+                    <div class="notification-item-icon" style="color: ${notif.color}">
+                        <i class="fas ${notif.icon}"></i>
+                    </div>
+                    <div class="notification-item-content">
+                        <div class="notification-item-title">${notif.title}</div>
+                        <div class="notification-item-message">${notif.message}</div>
+                        <div class="notification-item-time">
+                            <i class="fas fa-clock"></i> ${timeAgo}
+                        </div>
+                    </div>
+                    <button class="notification-item-delete" 
+                            onclick="event.stopPropagation(); window.NotificationsSystemV4.manager.delete('${notif.id}'); window.NotificationsSystemV4.ui.renderModal();">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `;
+        }
+        
+        handleItemClick(id) {
+            const notif = window.NotificationsSystemV4.manager.notifications.find(n => n.id === id);
+            if (!notif) return;
+            
+            window.NotificationsSystemV4.manager.markAsRead(id);
+            
+            // التوجيه حسب النوع
+            switch (notif.type) {
+                case 'out_of_stock':
+                case 'low_stock':
+                    // الانتقال لمنتج محدد
+                    this.navigateToProduct(notif.data.productId);
+                    break;
+                    
+                case 'out_of_stock_summary':
+                case 'low_stock_summary':
+                    // الانتقال لصفحة المخزون
+                    this.navigateToInventory();
+                    break;
+                    
+                case 'overdue_debt':
+                case 'upcoming_debt':
+                    // الانتقال لعميل محدد
+                    this.navigateToCustomer(notif.data.customerId || notif.data.debtId);
+                    break;
+                    
+                case 'overdue_debts_summary':
+                case 'upcoming_debts_summary':
+                    // الانتقال لصفحة الديون
+                    this.navigateToDebts();
+                    break;
+            }
+            
+            this.closeModal();
+        }
+        
+        navigateToProduct(productId) {
+            console.log('🎯 الانتقال للمنتج:', productId);
+            
+            // الانتقال لصفحة المخزون
+            if (typeof showPage === 'function') {
+                showPage('inventory');
+            }
+            
+            // بعد التحميل، التمرير للمنتج
+            setTimeout(() => {
+                const productElement = document.querySelector(`[data-product-id="${productId}"]`);
+                if (productElement) {
+                    productElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    productElement.style.backgroundColor = '#fef3c7';
+                    setTimeout(() => {
+                        productElement.style.backgroundColor = '';
+                    }, 2000);
+                }
+            }, 500);
+        }
+        
+        navigateToCustomer(customerId) {
+            console.log('🎯 الانتقال للعميل:', customerId);
+            
+            // الانتقال لصفحة الديون
+            if (typeof showPage === 'function') {
+                showPage('debts');
+            }
+            
+            // بعد التحميل، البحث عن العميل
+            setTimeout(() => {
+                // محاولة إيجاد الدين في الجدول
+                const debtRow = document.querySelector(`[data-debt-id="${customerId}"], [data-customer-id="${customerId}"]`);
+                if (debtRow) {
+                    debtRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    debtRow.style.backgroundColor = '#fef3c7';
+                    setTimeout(() => {
+                        debtRow.style.backgroundColor = '';
+                    }, 2000);
+                } else {
+                    // إذا لم يكن هناك data attribute، نحاول فتح تفاصيل الدين
+                    const viewButton = document.querySelector(`button[onclick*="${customerId}"]`);
+                    if (viewButton) {
+                        viewButton.click();
+                    }
+                }
+            }, 500);
+        }
+        
+        navigateToInventory() {
+            if (typeof showPage === 'function') {
+                showPage('inventory');
+            }
+        }
+        
+        navigateToDebts() {
+            if (typeof showPage === 'function') {
+                showPage('debts');
+            }
+        }
+        
+        showToast(notif) {
+            const toast = document.createElement('div');
+            toast.className = `notification-toast-card priority-${notif.priority}`;
+            toast.innerHTML = `
+                <div class="notification-toast-content">
+                    <div class="notification-toast-icon" style="color: ${notif.color}">
+                        <i class="fas ${notif.icon}"></i>
+                    </div>
+                    <div class="notification-toast-body">
+                        <div class="notification-toast-title">${notif.title}</div>
+                        <div class="notification-toast-message">${notif.message}</div>
+                    </div>
+                    <button class="notification-toast-close" onclick="this.parentElement.parentElement.remove()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `;
+            
+            this.toastContainer.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.classList.add('visible');
+            }, 100);
+            
+            const duration = this.getToastDuration(notif.priority);
+            setTimeout(() => {
+                toast.classList.remove('visible');
+                setTimeout(() => {
+                    toast.remove();
+                }, 400);
+            }, duration);
+        }
+        
+        getToastDuration(priority) {
+            switch (priority) {
+                case 'critical': return 10000;
+                case 'high': return 7000;
+                case 'medium': return 5000;
+                default: return 4000;
+            }
+        }
+        
+        getTimeAgo(timestamp) {
+            const now = new Date();
+            const then = new Date(timestamp);
+            const diffMs = now - then;
+            const diffMins = Math.floor(diffMs / 60000);
+            
+            if (diffMins < 1) return 'الآن';
+            if (diffMins < 60) return `منذ ${diffMins} دقيقة`;
+            
+            const diffHours = Math.floor(diffMins / 60);
+            if (diffHours < 24) return `منذ ${diffHours} ساعة`;
+            
+            const diffDays = Math.floor(diffHours / 24);
+            if (diffDays < 7) return `منذ ${diffDays} يوم`;
+            
+            return then.toLocaleDateString('ar-IQ');
+        }
+    }
+
+    // ==================== تهيئة النظام ====================
+    
+    function initSystemV4() {
+        console.log('🔔 تهيئة نظام الإشعارات v4.0 التفصيلي...');
+        
+        try {
+            window.NotificationsSystemV4 = {
+                engine: new NotificationEngineV4(),
+                manager: new NotificationManagerV4(),
+                ui: new NotificationUIV4()
+            };
+            
+            setTimeout(() => {
+                window.NotificationsSystemV4.engine.start();
+            }, 3000);
+            
+            console.log('✅ نظام الإشعارات v4.0 التفصيلي جاهز');
+            
+        } catch (error) {
+            console.error('❌ خطأ في تهيئة النظام:', error);
+        }
+    }
+    
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initSystemV4);
+    } else {
+        initSystemV4();
+    }
+    
+    // ==================== دوال مساعدة ====================
+    
+    window.testNotificationsV4 = function() {
+        console.log('🧪 اختبار نظام الإشعارات v4 التفصيلي...');
+        
+        // إشعار منتج محدد نافذ
+        window.NotificationsSystemV4.manager.add({
+            id: 'test-product-1',
+            type: 'out_of_stock',
+            priority: 'critical',
+            title: 'نفذ من المخزون: كولا',
+            message: 'المنتج "كولا" نفد من المخزون تماماً',
+            icon: 'fa-times-circle',
+            color: '#ef4444',
+            timestamp: new Date().toISOString(),
+            data: { productId: '123', productName: 'كولا' }
+        });
+        
+        // إشعار دين محدد متأخر
+        window.NotificationsSystemV4.manager.add({
+            id: 'test-debt-1',
+            type: 'overdue_debt',
+            priority: 'high',
+            title: 'دين متأخر: أحمد علي',
+            message: 'المبلغ: 500,000 د.ع - متأخر 15 يوم',
+            icon: 'fa-exclamation-circle',
+            color: '#ef4444',
+            timestamp: new Date().toISOString(),
+            data: { customerId: '456', customerName: 'أحمد علي', amount: 500000 }
+        });
+        
+        window.NotificationsSystemV4.ui.renderModal();
+        console.log('✅ تم إضافة إشعارات تجريبية');
+    };
+    
+    window.recheckNotificationsV4 = async function() {
+        if (window.NotificationsSystemV4 && window.NotificationsSystemV4.engine) {
+            await window.NotificationsSystemV4.engine.performCheck();
+        }
+    };
+    
+    console.log('✅ تم تحميل نظام الإشعارات v4.0 التفصيلي بنجاح');
+})();
+    </script>
  </body>
 </html>

@@ -340,18 +340,18 @@ async function systemCheckAccount() {
         const result = await window.authFix.checkCurrentAccount();
         if (result.hasAccount && result.isValid) {
             logDiv.innerHTML += '<div style="color:#10b981">✅ الحساب صالح ويعمل بشكل صحيح</div>';
-            showToast('الحساب صالح ويعمل بشكل صحيح', 'success');
+            // تم إزالة الإشعار
         } else if (result.hasAccount && !result.isValid) {
             logDiv.innerHTML += `<div style="color:#f59e0b">⚠️ الحساب غير صالح: ${result.reason}</div>`;
-            showToast('تم اكتشاف مشكلة في الحساب', 'warning');
+            // تم إزالة الإشعار
         } else {
             logDiv.innerHTML += '<div style="color:#6b7280">ℹ️ لا يوجد حساب محفوظ</div>';
-            showToast('لا يوجد حساب محفوظ', 'info');
+            // تم إزالة الإشعار
         }
         updateSystemStatus();
     } catch (error) {
         logDiv.innerHTML += `<div style="color:#ef4444">❌ خطأ: ${error.message}</div>`;
-        showToast('حدث خطأ في الفحص', 'error');
+        // تم إزالة الإشعار
     }
     logDiv.scrollTop = logDiv.scrollHeight;
 }
@@ -364,15 +364,15 @@ async function systemFixRegistration() {
         const result = await window.authFix.attemptRegistrationFix();
         if (result.success) {
             logDiv.innerHTML += `<div style="color:#10b981">✅ ${result.message}</div>`;
-            showToast(result.message, 'success');
+            // تم إزالة الإشعار
         } else {
             logDiv.innerHTML += `<div style="color:#ef4444">❌ فشل الإصلاح: ${result.error}</div>`;
-            showToast('فشل الإصلاح', 'error');
+            // تم إزالة الإشعار
         }
         updateSystemStatus();
     } catch (error) {
         logDiv.innerHTML += `<div style="color:#ef4444">❌ خطأ: ${error.message}</div>`;
-        showToast('حدث خطأ في الإصلاح', 'error');
+        // تم إزالة الإشعار
     }
     logDiv.scrollTop = logDiv.scrollHeight;
 }
@@ -389,15 +389,15 @@ async function systemSoftReset() {
         const result = await window.systemReset.softReset();
         if (result.success) {
             logDiv.innerHTML += '<div style="color:#10b981">✅ تمت إعادة التعيين بنجاح</div>';
-            showToast('تمت إعادة التعيين بنجاح', 'success');
+            // تم إزالة الإشعار
             setTimeout(() => window.location.reload(), 2000);
         } else {
             logDiv.innerHTML += `<div style="color:#ef4444">❌ فشلت إعادة التعيين: ${result.error}</div>`;
-            showToast('فشلت العملية', 'error');
+            // تم إزالة الإشعار
         }
     } catch (error) {
         logDiv.innerHTML += `<div style="color:#ef4444">❌ خطأ: ${error.message}</div>`;
-        showToast('حدث خطأ', 'error');
+        // تم إزالة الإشعار
     }
     logDiv.scrollTop = logDiv.scrollHeight;
 }
@@ -418,11 +418,11 @@ async function systemFullReset() {
         const result = await window.systemReset.fullReset(true);
         if (result.success) {
             logDiv.innerHTML += '<div style="color:#10b981">✅ تمت إعادة التعيين الكاملة</div>';
-            showToast('جاري إعادة تحميل التطبيق...', 'success');
+            // تم إزالة الإشعار
         }
     } catch (error) {
         logDiv.innerHTML += `<div style="color:#ef4444">❌ خطأ: ${error.message}</div>`;
-        showToast('حدث خطأ', 'error');
+        // تم إزالة الإشعار
     }
     logDiv.scrollTop = logDiv.scrollHeight;
 }
@@ -435,15 +435,15 @@ async function systemClearInvalidData() {
         const cleared = await window.authFix.clearInvalidAccount();
         if (cleared) {
             logDiv.innerHTML += '<div style="color:#10b981">✅ تم مسح البيانات غير الصالحة</div>';
-            showToast('تم مسح البيانات بنجاح', 'success');
+            // تم إزالة الإشعار
         } else {
             logDiv.innerHTML += '<div style="color:#6b7280">ℹ️ لم يتم العثور على بيانات غير صالحة</div>';
-            showToast('لا توجد بيانات غير صالحة', 'info');
+            // تم إزالة الإشعار
         }
         updateSystemStatus();
     } catch (error) {
         logDiv.innerHTML += `<div style="color:#ef4444">❌ خطأ: ${error.message}</div>`;
-        showToast('حدث خطأ', 'error');
+        // تم إزالة الإشعار
     }
     logDiv.scrollTop = logDiv.scrollHeight;
 }
@@ -454,10 +454,10 @@ async function systemExportBackup(type = 'full') {
     try {
         await window.systemReset.exportBackup(type);
         logDiv.innerHTML += '<div style="color:#10b981">✅ تم تصدير النسخة الاحتياطية بنجاح</div>';
-        showToast('تم التصدير بنجاح', 'success');
+        // تم إزالة الإشعار
     } catch (error) {
         logDiv.innerHTML += `<div style="color:#ef4444">❌ خطأ: ${error.message}</div>`;
-        showToast('حدث خطأ في التصدير', 'error');
+        // تم إزالة الإشعار
     }
     logDiv.scrollTop = logDiv.scrollHeight;
 }
@@ -1283,12 +1283,12 @@ console.log(`
             console.log('🔐 استدعاء createUserAccount المحسّن...');
             const canRegisterCheck = await window.authFix.canRegister();
             if (!canRegisterCheck.canRegister) {
-                if (typeof showToast === 'function') showToast(canRegisterCheck.message, 'warning');
+                // تم إزالة الإشعار
                 return;
             }
             const result = await window.authFix.createNewAccount(formData);
             if (result.success) {
-                if (typeof showToast === 'function') showToast('تم إنشاء الحساب بنجاح', 'success');
+                // تم إزالة الإشعار
                 if (typeof showModal === 'function' && typeof document !== 'undefined') {
                     const form = document.getElementById('userDetailsForm');
                     if (form) form.style.display = 'none';
@@ -1302,19 +1302,19 @@ console.log(`
                 }
                 return result;
             } else {
-                if (typeof showToast === 'function') showToast(result.message || 'حدث خطأ في إنشاء الحساب', 'error');
+                // تم إزالة الإشعار
                 if (result.attempts >= 2) {
                     console.log('🔧 محاولة إصلاح المشكلة...');
                     const fixResult = await window.authFix.attemptRegistrationFix();
                     if (fixResult.success && fixResult.action === 'cleared_invalid_account') {
-                        if (typeof showToast === 'function') showToast('تم إصلاح المشكلة، يرجى المحاولة مرة أخرى', 'info');
+                        // تم إزالة الإشعار
                     }
                 }
                 return result;
             }
         } catch (error) {
             console.error('❌ خطأ في createUserAccount:', error);
-            if (typeof showToast === 'function') showToast('حدث خطأ غير متوقع', 'error');
+            // تم إزالة الإشعار
             return { success: false, error: error.message };
         }
     };
@@ -1327,7 +1327,7 @@ console.log(`
                 const shouldClear = confirm('تم اكتشاف بيانات حساب غير صالحة.\n\nهل تريد مسح هذه البيانات لتتمكن من إنشاء حساب جديد؟');
                 if (shouldClear) {
                     await window.authFix.clearInvalidAccount();
-                    if (typeof showToast === 'function') showToast('تم مسح البيانات القديمة، يمكنك الآن التسجيل', 'success');
+                    // تم إزالة الإشعار
                 }
             }
         } catch (error) { console.error('خطأ في التحقق من المصادقة:', error); }
@@ -2020,408 +2020,6 @@ console.log(`
             transform: rotate(360deg);
         }
 
-        /* ===== نظام الإشعارات ===== */
-        
-        /* زر الإشعارات */
-        .titlebar-notification-btn {
-            position: relative;
-            padding: 8px 14px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border: none;
-            border-radius: 10px;
-            color: white;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.1rem;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-        }
-
-        .titlebar-notification-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(102, 126, 234, 0.5);
-        }
-
-        .titlebar-notification-btn:active {
-            transform: translateY(0);
-        }
-
-        .notification-badge {
-            position: absolute;
-            top: -5px;
-            right: -5px;
-            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-            color: white;
-            font-size: 0.65rem;
-            font-weight: bold;
-            padding: 3px 6px;
-            border-radius: 10px;
-            min-width: 20px;
-            text-align: center;
-            animation: notificationPulse 2s infinite;
-            box-shadow: 0 2px 8px rgba(239, 68, 68, 0.5);
-        }
-
-        @keyframes notificationPulse {
-            0%, 100% {
-                transform: scale(1);
-            }
-            50% {
-                transform: scale(1.1);
-            }
-        }
-
-        /* لوحة الإشعارات */
-        .notifications-panel {
-            position: fixed;
-            top: 60px;
-            left: 50%;
-            transform: translateX(-50%) translateY(-20px);
-            width: 90%;
-            max-width: 700px;
-            max-height: 80vh;
-            background: var(--theme-bg-primary);
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-            z-index: 9999;
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-            border: 2px solid var(--border-color);
-            overflow: hidden;
-        }
-
-        .notifications-panel.active {
-            opacity: 1;
-            visibility: visible;
-            transform: translateX(-50%) translateY(0);
-        }
-
-        .notifications-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 20px 25px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .notifications-header-title {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            color: white;
-            font-size: 1.3rem;
-            font-weight: 700;
-        }
-
-        .notifications-header-actions {
-            display: flex;
-            gap: 10px;
-        }
-
-        .notifications-header-btn {
-            padding: 8px 16px;
-            background: rgba(255, 255, 255, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 8px;
-            color: white;
-            cursor: pointer;
-            font-size: 0.85rem;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .notifications-header-btn:hover {
-            background: rgba(255, 255, 255, 0.3);
-            transform: translateY(-2px);
-        }
-
-        .notifications-tabs {
-            display: flex;
-            background: var(--theme-bg-secondary);
-            border-bottom: 2px solid var(--border-color);
-            padding: 0 20px;
-        }
-
-        .notifications-tab {
-            flex: 1;
-            padding: 15px 20px;
-            background: transparent;
-            border: none;
-            cursor: pointer;
-            font-size: 0.95rem;
-            font-weight: 600;
-            color: var(--text-secondary);
-            transition: all 0.3s ease;
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-
-        .notifications-tab.active {
-            color: var(--primary-color);
-        }
-
-        .notifications-tab.active::after {
-            content: '';
-            position: absolute;
-            bottom: -2px;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-            border-radius: 3px 3px 0 0;
-        }
-
-        .notifications-tab:hover {
-            background: var(--theme-bg-primary);
-        }
-
-        .notifications-content {
-            max-height: calc(80vh - 200px);
-            overflow-y: auto;
-            padding: 20px;
-        }
-
-        .notification-item {
-            background: var(--theme-bg-secondary);
-            border-radius: 12px;
-            padding: 16px;
-            margin-bottom: 12px;
-            border: 2px solid var(--border-color);
-            transition: all 0.3s ease;
-            cursor: pointer;
-            position: relative;
-        }
-
-        .notification-item:hover {
-            transform: translateX(-5px);
-            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.2);
-            border-color: var(--primary-color);
-        }
-
-        .notification-item.unread {
-            background: linear-gradient(135deg, 
-                rgba(102, 126, 234, 0.05) 0%, 
-                rgba(118, 75, 162, 0.05) 100%);
-            border-color: rgba(102, 126, 234, 0.3);
-        }
-
-        .notification-item-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 10px;
-        }
-
-        .notification-item-icon {
-            width: 45px;
-            height: 45px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.3rem;
-            margin-left: 15px;
-        }
-
-        .notification-item-icon.warning {
-            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
-            color: white;
-        }
-
-        .notification-item-icon.danger {
-            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-            color: white;
-        }
-
-        .notification-item-icon.info {
-            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-            color: white;
-        }
-
-        .notification-item-content {
-            flex: 1;
-        }
-
-        .notification-item-title {
-            font-size: 1rem;
-            font-weight: 700;
-            color: var(--text-primary);
-            margin-bottom: 6px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .notification-item-message {
-            font-size: 0.9rem;
-            color: var(--text-secondary);
-            line-height: 1.5;
-            margin-bottom: 8px;
-        }
-
-        .notification-item-time {
-            font-size: 0.8rem;
-            color: var(--text-tertiary);
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .notification-item-actions {
-            display: flex;
-            gap: 8px;
-            margin-top: 10px;
-        }
-
-        .notification-item-btn {
-            padding: 6px 14px;
-            border: none;
-            border-radius: 6px;
-            font-size: 0.85rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-weight: 600;
-        }
-
-        .notification-item-btn.primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
-
-        .notification-item-btn.secondary {
-            background: var(--theme-bg-primary);
-            color: var(--text-primary);
-            border: 1px solid var(--border-color);
-        }
-
-        .notification-item-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-        }
-
-        .notifications-empty {
-            text-align: center;
-            padding: 60px 20px;
-            color: var(--text-secondary);
-        }
-
-        .notifications-empty i {
-            font-size: 4rem;
-            margin-bottom: 20px;
-            opacity: 0.5;
-        }
-
-        .notifications-empty h3 {
-            font-size: 1.3rem;
-            margin-bottom: 10px;
-            color: var(--text-primary);
-        }
-
-        /* إشعار توست */
-        .toast-notification {
-            position: fixed;
-            top: 60px;
-            right: 20px;
-            background: var(--theme-bg-primary);
-            border-radius: 12px;
-            padding: 16px 20px;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
-            z-index: 10001;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            min-width: 350px;
-            border: 2px solid var(--border-color);
-            animation: slideInRight 0.3s ease;
-        }
-
-        @keyframes slideInRight {
-            from {
-                transform: translateX(400px);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
-        }
-
-        .toast-notification.hide {
-            animation: slideOutRight 0.3s ease forwards;
-        }
-
-        @keyframes slideOutRight {
-            from {
-                transform: translateX(0);
-                opacity: 1;
-            }
-            to {
-                transform: translateX(400px);
-                opacity: 0;
-            }
-        }
-        
-        /* أنماط زر التوسيع والتفاصيل */
-        .notification-expand-btn {
-            background: var(--theme-bg-primary);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 8px 16px;
-            font-size: 0.85rem;
-            color: var(--primary-color);
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-weight: 600;
-        }
-        
-        .notification-expand-btn:hover {
-            background: var(--theme-bg-secondary);
-            transform: translateX(-3px);
-        }
-        
-        .notification-expand-btn i {
-            transition: transform 0.3s ease;
-        }
-        
-        .notification-details {
-            background: var(--theme-bg-primary);
-            border-radius: 10px;
-            padding: 15px;
-            border: 1px solid var(--border-color);
-            animation: expandDown 0.3s ease;
-        }
-        
-        @keyframes expandDown {
-            from {
-                opacity: 0;
-                max-height: 0;
-                padding: 0 15px;
-            }
-            to {
-                opacity: 1;
-                max-height: 500px;
-                padding: 15px;
-            }
-        }
-        
-        .notification-details h4 {
-            color: var(--text-primary);
-            margin-bottom: 10px;
-        }
-
-        /* ===== نهاية نظام الإشعارات ===== */
 
         /* نافذة الترحيب */
         .welcome-overlay {
@@ -2555,89 +2153,6 @@ console.log(`
 
         .welcome-btn:active {
             transform: translateY(0);
-        }
-
-        /* Toast Notifications */
-        .toast-notification {
-            position: fixed;
-            top: 60px;
-            right: 20px;
-            background: var(--theme-bg-secondary);
-            border-radius: 12px;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
-            padding: 16px 20px;
-            min-width: 300px;
-            max-width: 400px;
-            z-index: 9999;
-            transform: translateX(120%);
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            border: 1px solid var(--theme-border-color);
-        }
-
-        .toast-notification.show {
-            transform: translateX(0);
-        }
-
-        .toast-content {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .toast-icon {
-            font-size: 1.5rem;
-            flex-shrink: 0;
-        }
-
-        .toast-message {
-            color: var(--theme-text-primary);
-            font-size: 0.95rem;
-            font-weight: 500;
-        }
-
-        .toast-success {
-            border-right: 4px solid var(--success-color);
-        }
-
-        .toast-error {
-            border-right: 4px solid var(--danger-color);
-        }
-
-        .toast-warning {
-            border-right: 4px solid var(--warning-color);
-        }
-
-        .toast-info {
-            border-right: 4px solid var(--info-color);
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-            }
-            to {
-                opacity: 1;
-            }
-        }
-
-        @keyframes fadeOut {
-            from {
-                opacity: 1;
-            }
-            to {
-                opacity: 0;
-            }
-        }
-
-        @keyframes slideUp {
-            from {
-                transform: translateY(50px);
-                opacity: 0;
-            }
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
         }
 
         /* شريط الإحصائيات السريعة - مخفي عندما يكون في top-bar */
@@ -3397,7 +2912,6 @@ console.log(`
             color: var(--theme-text-secondary);
         }
 
-        /* تحسين toast notifications */
 
         /* محتوى الصفحات */
         .page-content {
@@ -7082,7 +6596,6 @@ console.log(`
             box-shadow: 0 4px 20px rgba(99, 102, 241, 0.15);
         }
 
-        /* تحسين toast notifications */
         .toast.success {
             background: linear-gradient(135deg, var(--success-color) 0%, rgba(16, 185, 129, 0.9) 100%);
         }
@@ -7918,7 +7431,6 @@ console.log(`
    </div>
    
     <div class="titlebar-right">
-     <!-- زر الإشعارات تم نقله إلى الشريط العلوي بجانب زر الثيم -->
     </div>
   </div>
   
@@ -8184,10 +7696,6 @@ console.log(`
                     <div id="searchResults" class="search-results"></div>
             </div>
             <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()"> <i class="fas fa-moon"></i> </button>
-            <button class="titlebar-notification-btn" onclick="toggleNotificationsPanel()" title="الإشعارات">
-                <i class="fas fa-bell"></i>
-                <span class="notification-badge" id="notificationBadge" style="display: flex;">29</span>
-            </button>
          </div>
     </div><!-- محتوى الصفحات -->
     <div class="page-content"><!-- صفحة نقطة البيع -->
@@ -9828,20 +9336,6 @@ console.log(`
             <div class="settings-card-content">
               <h3>حساب المستخدم</h3>
               <p>معلومات الحساب، الاشتراك والشركة</p>
-            </div>
-            <div class="settings-card-arrow">
-              <i class="fas fa-chevron-left"></i>
-            </div>
-          </div>
-
-          <!-- بطاقة إعدادات الإشعارات -->
-          <div class="settings-card" onclick="showSettingsPage('notifications')">
-            <div class="settings-card-icon" style="background: linear-gradient(135deg, #8b5cf6, #6366f1);">
-              <i class="fas fa-bell"></i>
-            </div>
-            <div class="settings-card-content">
-              <h3>إعدادات الإشعارات</h3>
-              <p>إدارة التنبيهات والإشعارات</p>
             </div>
             <div class="settings-card-arrow">
               <i class="fas fa-chevron-left"></i>
@@ -12652,14 +12146,14 @@ console.log(`
             // ✅ فحص Firebase أولاً
             if (!window.database || typeof database === 'undefined') {
                 console.error('❌ Firebase غير متصل');
-                showToast('⚠️ لا يوجد اتصال بقاعدة البيانات. يرجى التحقق من الإنترنت وإعادة المحاولة.', 'error');
+                // تم إزالة الإشعار
                 
                 // محاولة إعادة تهيئة Firebase
                 if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
                     try {
                         window.database = firebase.database();
                         console.log('✅ تم إعادة تهيئة Firebase بنجاح');
-                        showToast('جاري إعادة المحاولة...', 'info');
+                        // تم إزالة الإشعار
                         // إعادة استدعاء الدالة بعد ثانية
                         setTimeout(() => window.saveNewUserDetails(), 1000);
                         return;
@@ -12680,7 +12174,7 @@ console.log(`
             const lng = document.getElementById('newUserLng').value;
 
             if (!fullName || !phone || !address || !storeName) {
-                showToast('يرجى تعبئة جميع الحقول المطلوبة', 'warning');
+                // تم إزالة الإشعار
                 return;
             }
 
@@ -12693,7 +12187,7 @@ console.log(`
                     try {
                         const snap = await database.ref(`users/${uid}`).once('value');
                         if (snap.exists()) {
-                            showToast('الحساب موجود مسبقاً', 'info');
+                            // تم إزالة الإشعار
                             return;
                         }
                     } catch (error) {
@@ -12704,7 +12198,7 @@ console.log(`
 
                 // إنشاء مستخدم جديد
                 console.log('🔄 جاري إنشاء حساب جديد...');
-                showToast('جاري إنشاء الحساب...', 'info');
+                // تم إزالة الإشعار
                 
                 const newUserRef = database.ref('users').push();
                 uid = newUserRef.key;
@@ -12759,7 +12253,7 @@ console.log(`
                 console.log('✅ تم إنشاء الحساب بنجاح');
                 console.log('📝 UID:', uid);
                 
-                showToast('تم إنشاء الحساب بنجاح! 🎉', 'success');
+                // تم إزالة الإشعار
                 
                 // إخفاء النموذج
                 const formElement = document.getElementById('userDetailsForm');
@@ -12792,7 +12286,7 @@ console.log(`
                     errorMessage = `⚠️ خطأ: ${error.message}`;
                 }
                 
-                showToast(errorMessage, 'error');
+                // تم إزالة الإشعار
                 alert(errorMessage + '\n\nالرجاء:\n1. التحقق من الاتصال بالإنترنت\n2. إعادة تشغيل التطبيق\n3. التواصل مع الدعم الفني: 07813798636');
             }
         };
@@ -12873,17 +12367,17 @@ console.log(`
             const code = document.getElementById('activationCodeInput').value.trim().toUpperCase();
             
             if (!code) {
-                showToast('الرجاء إدخال رمز التفعيل', 'warning');
+                // تم إزالة الإشعار
                 return;
             }
 
-            showToast('جاري التحقق من رمز التفعيل...', 'info');
+            // تم إزالة الإشعار
 
             try {
                 await redeemCode(code);
             } catch (error) {
                 console.error('❌ خطأ في التفعيل:', error);
-                showToast('حدث خطأ أثناء التفعيل', 'error');
+                // تم إزالة الإشعار
             }
         }
 
@@ -12893,17 +12387,17 @@ console.log(`
             const secret = document.getElementById('loginSecretInput').value.trim();
 
             if (!uid || !secret) {
-                showToast('الرجاء إدخال UID والمفتاح السري', 'warning');
+                // تم إزالة الإشعار
                 return;
             }
 
-            showToast('جاري التحقق من البيانات...', 'info');
+            // تم إزالة الإشعار
 
             try {
                 await handleLogin(uid, secret);
             } catch (error) {
                 console.error('❌ خطأ في تسجيل الدخول:', error);
-                showToast('حدث خطأ أثناء تسجيل الدخول', 'error');
+                // تم إزالة الإشعار
             }
         }
 
@@ -12916,12 +12410,12 @@ console.log(`
             try {
                 const snap = await database.ref(`users/${uid}/profile`).once('value');
                 if (!snap.exists()) {
-                    showToast('معرف المستخدم غير موجود', 'error');
+                    // تم إزالة الإشعار
                     return;
                 }
                 const profile = snap.val();
                 if (profile.secret !== secret) {
-                    showToast('المفتاح السري غير صحيح', 'error');
+                    // تم إزالة الإشعار
                     return;
                 }
                 
@@ -12935,7 +12429,7 @@ console.log(`
                 window.currentUser.uid = uid;
                 
                 console.log('✅ تم تسجيل الدخول بنجاح');
-                showToast('تم تسجيل الدخول بنجاح! جاري تحميل التطبيق...', 'success');
+                // تم إزالة الإشعار
                 
                 // إغلاق نافذة التفعيل
                 closeActivationModal();
@@ -12946,7 +12440,7 @@ console.log(`
                 }, 1000);
             } catch (error) {
                 console.error('❌ خطأ في تسجيل الدخول:', error);
-                showToast('حدث خطأ في تسجيل الدخول', 'error');
+                // تم إزالة الإشعار
             }
         }
 
@@ -12954,19 +12448,19 @@ console.log(`
             try {
                 const codeSnap = await database.ref(`subscriptionCodes/${code}`).once('value');
                 if (!codeSnap.exists()) {
-                    showToast('رمز التفعيل غير صالح', 'error');
+                    // تم إزالة الإشعار
                     return;
                 }
                 
                 const codeData = codeSnap.val();
                 if (codeData.used) {
-                    showToast('هذا الرمز مستخدم مسبقاً', 'error');
+                    // تم إزالة الإشعار
                     return;
                 }
 
                 const uid = localStorage.getItem('app_uid');
                 if (!uid) {
-                    showToast('لا يوجد مستخدم مسجل. الرجاء تسجيل الدخول أولاً', 'error');
+                    // تم إزالة الإشعار
                     return;
                 }
 
@@ -12987,7 +12481,7 @@ console.log(`
                 });
 
                 console.log('✅ تم تفعيل الاشتراك بنجاح');
-                showToast(`تم تفعيل الاشتراك بنجاح لمدة ${validDays} يوم!`, 'success');
+                // تم إزالة الإشعار
                 
                 // إغلاق نافذة التفعيل
                 closeActivationModal();
@@ -12998,7 +12492,7 @@ console.log(`
                 }, 2000);
             } catch (error) {
                 console.error('❌ خطأ في استرداد الرمز:', error);
-                showToast('حدث خطأ في تفعيل الرمز', 'error');
+                // تم إزالة الإشعار
             }
         }
 
@@ -13567,7 +13061,7 @@ console.log(`
         // حفظ نسخة احتياطية كاملة
         async function createFullBackup() {
             try {
-                showToast('🔄 جاري إنشاء النسخة الاحتياطية...', 'info');
+                // تم إزالة الإشعار
 
                 const userId = getUserId();
                 const backupId = 'backup_' + new Date().toISOString().replace(/[:.]/g, '-');
@@ -13601,12 +13095,12 @@ console.log(`
                     .set(backupData);
 
                 console.log('✅ تم إنشاء النسخة الاحتياطية:', backupId);
-                showToast('✅ تم حفظ النسخة الاحتياطية بنجاح!', 'success');
+                // تم إزالة الإشعار
                 
                 return { success: true, backupId };
             } catch (error) {
                 console.error('❌ خطأ في إنشاء النسخة الاحتياطية:', error);
-                showToast('❌ فشل حفظ النسخة الاحتياطية: ' + error.message, 'error');
+                // تم إزالة الإشعار
                 return { success: false, error: error.message };
             }
         }
@@ -13614,7 +13108,7 @@ console.log(`
         // استرجاع النسخة الاحتياطية
         async function restoreFromBackup(backupId) {
             try {
-                showToast('🔄 جاري استرجاع النسخة الاحتياطية...', 'info');
+                // تم إزالة الإشعار
 
                 const userId = getUserId();
                 const backupDoc = await window.firestore
@@ -13696,7 +13190,7 @@ console.log(`
                 }
 
                 console.log('✅ تم استرجاع النسخة الاحتياطية بنجاح');
-                showToast(`✅ تم الاسترجاع بنجاح! (${totalAdded} جديد، ${totalUpdated} محدث)`, 'success');
+                // تم إزالة الإشعار
                 
                 // إعادة تحميل الصفحة لتطبيق التغييرات
                 if (confirm('تم الاسترجاع بنجاح! هل تريد إعادة تحميل الصفحة؟')) {
@@ -13706,7 +13200,7 @@ console.log(`
                 return { success: true, added: totalAdded, updated: totalUpdated };
             } catch (error) {
                 console.error('❌ خطأ في استرجاع النسخة الاحتياطية:', error);
-                showToast('❌ فشل استرجاع النسخة الاحتياطية: ' + error.message, 'error');
+                // تم إزالة الإشعار
                 return { success: false, error: error.message };
             }
         }
@@ -14168,7 +13662,7 @@ console.log(`
                         loadAllData();
                     }
                     
-                    showToast('تم تسجيل الدخول بنجاح', 'success');
+                    // تم إزالة الإشعار
                 } else {
                     console.error('❌ فشل تسجيل الدخول:', result.message);
                     alert(result.message);
@@ -14357,7 +13851,7 @@ console.log(`
                 if (result.success) {
                     this.closeUserModal();
                     this.loadUsersTable();
-                    showToast(userId ? 'تم تحديث المستخدم بنجاح' : 'تم إضافة المستخدم بنجاح', 'success');
+                    // تم إزالة الإشعار
                 } else {
                     alert(result.message);
                 }
@@ -14374,7 +13868,7 @@ console.log(`
                     const result = this.deleteUser(userId);
                     if (result.success) {
                         this.loadUsersTable();
-                        showToast('تم حذف المستخدم بنجاح', 'success');
+                        // تم إزالة الإشعار
                     } else {
                         alert(result.message);
                     }
@@ -14745,13 +14239,13 @@ console.log(`
                     const initResult = await window.dataSdk.init(dataHandler);
                     if (!initResult.isOk) {
                         console.error('❌ فشل في تهيئة قاعدة البيانات');
-                        showToast('فشل في تحميل قاعدة البيانات', 'error');
+                        // تم إزالة الإشعار
                         return;
                     }
                     console.log('✅ تم تهيئة قاعدة البيانات المحلية');
                 } else {
                     console.error('❌ Data SDK غير موجود!');
-                    showToast('خطأ في تحميل النظام', 'error');
+                    // تم إزالة الإشعار
                     return;
                 }
 
@@ -14872,7 +14366,7 @@ console.log(`
                 // رسالة للوضع المحلي
                 if (!isOnline) {
                     console.log('⚠️ التطبيق يعمل بالوضع المحلي (بدون اتصال)');
-                    showToast('التطبيق يعمل بدون اتصال - جميع البيانات محفوظة محلياً', 'info');
+                    // تم إزالة الإشعار
                 }
                 
                 console.log('✅ تم تهيئة التطبيق بنجاح!');
@@ -14907,7 +14401,7 @@ console.log(`
                     }
                 }
                 
-                showToast('فشل في تهيئة التطبيق - يرجى إعادة المحاولة', 'error');
+                // تم إزالة الإشعار
             }
         }
 
@@ -14941,9 +14435,9 @@ console.log(`
             setTimeout(async () => {
                 try {
                     await updateAllViews();
-                    showToast('تم تحديث الواجهة بنجاح', 'success');
+                    // تم إزالة الإشعار
                 } catch (error) {
-                    showToast('حدث خطأ أثناء التحديث', 'error');
+                    // تم إزالة الإشعار
                 }
                 
                 icon.style.transform = 'rotate(0deg)';
@@ -15302,7 +14796,7 @@ console.log(`
             if (!product) return;
             
             if (product.stock_quantity <= 0) {
-                showToast('المنتج غير متوفر في المخزون', 'error');
+                // تم إزالة الإشعار
                 return;
             }
             
@@ -15310,7 +14804,7 @@ console.log(`
             
             if (existingItem) {
                 if (existingItem.quantity >= product.stock_quantity) {
-                    showToast('لا يمكن إضافة كمية أكثر من المتوفر', 'warning');
+                    // تم إزالة الإشعار
                     return;
                 }
                 existingItem.quantity += 1;
@@ -15337,7 +14831,7 @@ console.log(`
             }, 500);
             
             // تأثير بصري
-            showToast('تم إضافة المنتج للسلة', 'success');
+            // تم إزالة الإشعار
         }
 
 
@@ -15478,7 +14972,7 @@ console.log(`
                 if (newQuantity <= 0) {
                     removeFromCart(productId);
                 } else if (newQuantity > product.stock_quantity) {
-                    showToast('لا يمكن إضافة كمية أكثر من المتوفر', 'warning');
+                    // تم إزالة الإشعار
                 } else {
                     item.quantity = newQuantity;
                     renderCart();
@@ -15494,7 +14988,7 @@ console.log(`
             renderCart();
             updateCartSummary();
             updateCartCount();
-            showToast('تم حذف المنتج من السلة', 'info');
+            // تم إزالة الإشعار
         }
 
         // تحديث ملخص السلة
@@ -15798,15 +15292,15 @@ console.log(`
         // دالة نسخ النص
         function copyToClipboard(text) {
             if (!text || text === 'جاري التحميل...' || text === '**********') {
-                showNotification('⚠️ لا يوجد نص للنسخ', 'warning');
+                // تم إزالة الإشعار
                 return;
             }
 
             navigator.clipboard.writeText(text).then(() => {
-                showNotification('✅ تم النسخ إلى الحافظة', 'success');
+                // تم إزالة الإشعار
             }).catch(err => {
                 console.error('خطأ في النسخ:', err);
-                showNotification('❌ فشل النسخ', 'error');
+                // تم إزالة الإشعار
             });
         }
         
@@ -15971,7 +15465,7 @@ console.log(`
                     console.log('عدد المنتجات في السلة:', cart.length);
                     
                     if (cart.length === 0) {
-                        showToast('السلة فارغة! أضف منتجات أولاً', 'error');
+                        // تم إزالة الإشعار
                         return;
                     }
                     
@@ -15988,7 +15482,7 @@ console.log(`
                     console.log('عدد المنتجات في السلة:', cart.length);
                     
                     if (cart.length === 0) {
-                        showToast('السلة فارغة! أضف منتجات أولاً', 'error');
+                        // تم إزالة الإشعار
                         return;
                     }
                     
@@ -16006,7 +15500,7 @@ console.log(`
                     console.log('عدد المنتجات في السلة:', cart.length);
                     
                     if (cart.length === 0) {
-                        showToast('السلة فارغة! أضف منتجات أولاً', 'error');
+                        // تم إزالة الإشعار
                         return;
                     }
                     
@@ -16333,9 +15827,9 @@ console.log(`
                     
                     closeModal('addProductModal');
                     document.getElementById('addProductForm').reset();
-                    showToast('تم إضافة المنتج بنجاح', 'success');
+                    // تم إزالة الإشعار
                 } else {
-                    showToast('فشل في إضافة المنتج', 'error');
+                    // تم إزالة الإشعار
                 }
             }
             
@@ -16346,7 +15840,7 @@ console.log(`
         function showEditProductModal(productId) {
             const product = products.find(p => p.product_id === productId);
             if (!product) {
-                showToast('المنتج غير موجود', 'error');
+                // تم إزالة الإشعار
                 return;
             }
             
@@ -16386,7 +15880,7 @@ console.log(`
             const product = products.find(p => p.product_id === productId);
             
             if (!product) {
-                showToast('المنتج غير موجود', 'error');
+                // تم إزالة الإشعار
                 setLoading(false);
                 return;
             }
@@ -16421,9 +15915,9 @@ console.log(`
                     });
                     
                     closeModal('editProductModal');
-                    showToast('تم تحديث المنتج بنجاح', 'success');
+                    // تم إزالة الإشعار
                 } else {
-                    showToast('فشل في تحديث المنتج', 'error');
+                    // تم إزالة الإشعار
                 }
             }
             
@@ -16442,7 +15936,7 @@ console.log(`
             
             // التحقق من البيانات
             if (!categoryName || !categoryName.trim()) {
-                showToast('الرجاء إدخال اسم التصنيف', 'error');
+                // تم إزالة الإشعار
                 setLoading(false);
                 return;
             }
@@ -16469,16 +15963,16 @@ console.log(`
                         closeModal('addCategoryModal');
                         document.getElementById('addCategoryForm').reset();
                         
-                        showToast('تم إضافة التصنيف بنجاح', 'success');
+                        // تم إزالة الإشعار
                     } else {
-                        showToast('فشل في إضافة التصنيف: ' + (result.error || 'خطأ غير معروف'), 'error');
+                        // تم إزالة الإشعار
                     }
                 } else {
-                    showToast('خطأ: نظام قاعدة البيانات غير متاح', 'error');
+                    // تم إزالة الإشعار
                 }
             } catch (error) {
                 console.error('خطأ في إضافة التصنيف:', error);
-                showToast('حدث خطأ أثناء إضافة التصنيف', 'error');
+                // تم إزالة الإشعار
             }
             
             setLoading(false);
@@ -16945,7 +16439,7 @@ console.log(`
                 'active': 'عرض الديون النشطة فقط'
             };
             
-            showToast(filterMessages[status] || 'تطبيق الفلتر', 'info');
+            // تم إزالة الإشعار
         }
         
         // ✅ ==== دوال إدارة الإيصالات ====
@@ -17138,7 +16632,7 @@ console.log(`
             });
             
             if (todayReceipts.length === 0) {
-                showToast('⚠️ لا توجد إيصالات لليوم الحالي لدمجها', 'warning');
+                // تم إزالة الإشعار
                 return;
             }
             
@@ -17209,14 +16703,14 @@ console.log(`
             // تحديث الواجهة
             renderReceiptsTable();
             
-            showToast(`✅ تم دمج ${toEnglishDigits(todayReceipts.length)} إيصال بنجاح!`, 'success');
+            // تم إزالة الإشعار
         }
         
         // عرض تفاصيل إيصال
         function viewReceiptDetails(invoiceId) {
             const receipt = salesData.find(s => s.invoice_id === invoiceId);
             if (!receipt) {
-                showToast('⚠️ لم يتم العثور على الإيصال', 'warning');
+                // تم إزالة الإشعار
                 return;
             }
             
@@ -17237,7 +16731,7 @@ console.log(`
         function printReceipt(invoiceId) {
             const receipt = salesData.find(s => s.invoice_id === invoiceId);
             if (!receipt) {
-                showToast('⚠️ لم يتم العثور على الإيصال', 'warning');
+                // تم إزالة الإشعار
                 return;
             }
             
@@ -17245,7 +16739,7 @@ console.log(`
             if (typeof printInvoice === 'function') {
                 printInvoice(receipt);
             } else {
-                showToast('⚠️ وظيفة الطباعة غير متاحة', 'warning');
+                // تم إزالة الإشعار
             }
         }
 
@@ -17468,7 +16962,7 @@ console.log(`
                 resultsContainer.innerHTML = '';
             }
             
-            showToast(`تم اختيار العميل: ${name}`, 'success');
+            // تم إزالة الإشعار
         }
         
         // دالة مساعدة لتجنب XSS
@@ -17743,7 +17237,7 @@ console.log(`
             };
             
             // إظهار رسالة توضيحية
-            showToast(`تم تعديل عدد الأشهر إلى ${calculatedMonths} شهر بناءً على القسط الشهري المحدد`, 'info');
+            // تم إزالة الإشعار
         }
         
         // دالة مساعدة لتنسيق الأرقام بدون عملة
@@ -17759,7 +17253,7 @@ console.log(`
             console.log('المبلغ المخصص:', customFinalAmount);
             
             if (cart.length === 0) {
-                showToast('السلة فارغة!', 'error');
+                // تم إزالة الإشعار
                 return;
             }
             
@@ -17791,7 +17285,7 @@ console.log(`
             console.log('🪟 فتح نافذة الدفع النقدي الحديثة');
             
             if (cart.length === 0) {
-                showToast('السلة فارغة! أضف منتجات أولاً', 'error');
+                // تم إزالة الإشعار
                 return;
             }
             
@@ -17904,7 +17398,7 @@ console.log(`
             console.log('عدد المنتجات في السلة:', cart.length);
             
             if (cart.length === 0) {
-                showToast('السلة فارغة!', 'error');
+                // تم إزالة الإشعار
                 return;
             }
             
@@ -17912,7 +17406,7 @@ console.log(`
             const customerPhone = document.getElementById('customerPhone').value.trim();
             
             if (!customerName || !customerPhone) {
-                showToast('يرجى إدخال اسم العميل ورقم الهاتف', 'error');
+                // تم إزالة الإشعار
                 return;
             }
             
@@ -17992,12 +17486,12 @@ console.log(`
             
             // التحقق من صحة البيانات
             if (isNaN(newTotalAmount) || newTotalAmount <= 0) {
-                showToast('خطأ في حساب المبلغ الإجمالي', 'error');
+                // تم إزالة الإشعار
                 return;
             }
             
             if (isNaN(newMonthlyAmount) || newMonthlyAmount <= 0) {
-                showToast('خطأ في حساب القسط الشهري', 'error');
+                // تم إزالة الإشعار
                 return;
             }
             
@@ -18019,7 +17513,7 @@ console.log(`
                     `(سيتم دمج الديون في سجل واحد)`
                 );
                 if (!confirmMerge) {
-                    showToast('تم إلغاء العملية', 'info');
+                    // تم إزالة الإشعار
                     return;
                 }
                 // دمج الدين الجديد مع الدين الموجود
@@ -18155,7 +17649,7 @@ function printInstallmentInvoice(invoiceId, silent = false, extraData = {}) {
         }
         if (!sale) {
             console.error('❌ الفاتورة غير موجودة في أي مصدر:', invoiceId);
-            showToast('الفاتورة غير موجودة للطباعة', 'error');
+            // تم إزالة الإشعار
             return;
         }
         console.log('✅ تم العثور على الفاتورة من:', foundSource, sale);
@@ -18194,7 +17688,7 @@ function printInstallmentInvoice(invoiceId, silent = false, extraData = {}) {
                 pageSize: 'A4',
                 printBackground: true
             });
-            showToast('تم إرسال فاتورة التقسيط للطابعة', 'success');
+            // تم إزالة الإشعار
         } else {
             // fallback: نافذة طباعة عادية
             const printWindow = window.open('', '_blank');
@@ -18202,7 +17696,7 @@ function printInstallmentInvoice(invoiceId, silent = false, extraData = {}) {
             printWindow.document.close();
             printWindow.focus();
             setTimeout(() => { printWindow.print(); }, 500);
-            showToast('تم إرسال الفاتورة للطابعة (بدون صمت)', 'info');
+            // تم إزالة الإشعار
         }
         if (typeof updatePrintStats === 'function') updatePrintStats();
     })();
@@ -18478,7 +17972,7 @@ if (typeof window !== 'undefined') {
                 const saleResult = await window.dataSdk.create(saleData);
                 let newInvoiceId = saleData.invoice_id;
                 if (!saleResult.isOk) {
-                    showToast('فشل في حفظ الفاتورة', 'error');
+                    // تم إزالة الإشعار
                     setLoading(false);
                     return false;
                 }
@@ -18676,14 +18170,14 @@ if (typeof window !== 'undefined') {
                     return true;
                 } else {
                     console.error('❌ فشل في تحديث الدين');
-                    showToast('فشل في دمج الدين', 'error');
+                    // تم إزالة الإشعار
                     setLoading(false);
                     return false;
                 }
                 
             } catch (error) {
                 console.error('❌ خطأ في دمج الديون:', error);
-                showToast('حدث خطأ أثناء دمج الديون', 'error');
+                // تم إزالة الإشعار
                 setLoading(false);
                 return false;
             }
@@ -18747,7 +18241,7 @@ if (typeof window !== 'undefined') {
             
             if (cart.length === 0) {
                 console.error('❌ السلة فارغة!');
-                showToast('السلة فارغة! أضف منتجات أولاً', 'error');
+                // تم إزالة الإشعار
                 return false;
             }
             
@@ -18922,7 +18416,7 @@ if (typeof window !== 'undefined') {
                                 console.error('  totalAmount:', totalAmount);
                                 console.error('  monthlyAmount:', monthlyAmount);
                                 console.error('  installmentMonths:', installmentMonths);
-                                showToast('خطأ في بيانات الدين - تحقق من البيانات المدخلة', 'error');
+                                // تم إزالة الإشعار
                                 setLoading(false);
                                 return false;
                             }
@@ -19001,20 +18495,20 @@ if (typeof window !== 'undefined') {
 
                     } else {
                         console.error('❌ فشل في حفظ البيع:', result);
-                        showToast('فشل في إتمام البيع', 'error');
+                        // تم إزالة الإشعار
                         setLoading(false);
                         return false;
                     }
                 } else {
                     console.error('❌ dataSdk غير متوفر');
-                    showToast('خطأ في النظام', 'error');
+                    // تم إزالة الإشعار
                     setLoading(false);
                     return false;
                 }
 
             } catch (error) {
                 console.error('❌ خطأ في معالجة الدفع:', error);
-                showToast('حدث خطأ أثناء معالجة الدفع', 'error');
+                // تم إزالة الإشعار
                 setLoading(false);
                 return false;
             }
@@ -19044,7 +18538,7 @@ if (typeof window !== 'undefined') {
             const product = products.find(p => p.product_id === productId);
             
             if (!product) {
-                showToast('المنتج غير موجود', 'error');
+                // تم إزالة الإشعار
                 return;
             }
             
@@ -19063,13 +18557,13 @@ if (typeof window !== 'undefined') {
                         barcode: product.product_barcode
                     });
                     
-                    showToast('تم حذف المنتج بنجاح', 'success');
+                    // تم إزالة الإشعار
                     updateQuickStats();
                 } else {
-                    showToast('فشل في حذف المنتج', 'error');
+                    // تم إزالة الإشعار
                 }
             } else {
-                showToast('المنتج غير موجود', 'error');
+                // تم إزالة الإشعار
             }
         }
 
@@ -19123,7 +18617,7 @@ if (typeof window !== 'undefined') {
         function copyToClipboard(text) {
             if (navigator.clipboard && navigator.clipboard.writeText) {
                 navigator.clipboard.writeText(text).then(() => {
-                    showNotification('تم النسخ بنجاح', 'success');
+                    // تم إزالة الإشعار
                 }).catch(err => {
                     console.error('فشل النسخ:', err);
                 });
@@ -19137,7 +18631,7 @@ if (typeof window !== 'undefined') {
                 textarea.select();
                 try {
                     document.execCommand('copy');
-                    showNotification('تم النسخ بنجاح', 'success');
+                    // تم إزالة الإشعار
                 } catch (err) {
                     console.error('فشل النسخ:', err);
                 }
@@ -19215,42 +18709,6 @@ if (typeof window !== 'undefined') {
             }
         }
 
-        function showToast(message, type = 'info') {
-            console.log(`[${type}] ${message}`);
-            
-            // إنشاء عنصر Toast
-            const toast = document.createElement('div');
-            toast.className = `toast-notification toast-${type}`;
-            toast.innerHTML = `
-                <div class="toast-content">
-                    <span class="toast-icon">${getToastIcon(type)}</span>
-                    <span class="toast-message">${message}</span>
-                </div>
-            `;
-            
-            // إضافة Toast إلى الصفحة
-            document.body.appendChild(toast);
-            
-            // إظهار Toast
-            setTimeout(() => toast.classList.add('show'), 100);
-            
-            // إخفاء وحذف Toast
-            setTimeout(() => {
-                toast.classList.remove('show');
-                setTimeout(() => toast.remove(), 300);
-            }, 3000);
-        }
-        
-        function getToastIcon(type) {
-            const icons = {
-                'success': '✅',
-                'error': '❌',
-                'warning': '⚠️',
-                'info': 'ℹ️'
-            };
-            return icons[type] || icons['info'];
-        }
-        
         function showWelcomeMessage() {
             const welcomeHTML = `
                 <div class="welcome-overlay">
@@ -19603,7 +19061,7 @@ if (typeof window !== 'undefined') {
         function showInvoiceDetails(invoiceId) {
             const sale = salesData.find(s => s.invoice_id === invoiceId);
             if (!sale) {
-                showToast('الفاتورة غير موجودة', 'error');
+                // تم إزالة الإشعار
                 return;
             }
             
@@ -19813,7 +19271,7 @@ if (typeof window !== 'undefined') {
                 }
                 if (!sale) {
                     console.error('❌ لم يتم العثور على الفاتورة:', invoiceId);
-                    showToast('لم يتم العثور على الفاتورة', 'error');
+                    // تم إزالة الإشعار
                     return;
                 }
                 console.log('✅ تم العثور على فاتورة الأقساط:', sale);
@@ -19944,7 +19402,7 @@ if (typeof window !== 'undefined') {
             };
             
             localStorage.setItem('printerSettings', JSON.stringify(settings));
-            showToast('تم حفظ إعدادات الطباعة بنجاح', 'success');
+            // تم إزالة الإشعار
             updatePrinterStats();
         }
 
@@ -19954,7 +19412,7 @@ if (typeof window !== 'undefined') {
                 localStorage.setItem('printerSettings', JSON.stringify(defaultPrinterSettings));
                 loadPrinterSettings();
                 updatePreview();
-                showToast('تم استعادة الإعدادات الافتراضية', 'info');
+                // تم إزالة الإشعار
             }
         }
 
@@ -20223,7 +19681,7 @@ if (typeof window !== 'undefined') {
                 if (found) sale = found;
             }
             if (!sale) {
-                showToast('الفاتورة غير موجودة', 'error');
+                // تم إزالة الإشعار
                 return;
             }
             // Always parse items to ensure latest products are shown
@@ -20277,7 +19735,7 @@ if (typeof window !== 'undefined') {
             
             // تحديث إحصائيات الطباعة
             if (typeof updatePrintStats === 'function') updatePrintStats();
-            showToast('تم إرسال الفاتورة للطابعة', 'success');
+            // تم إزالة الإشعار
         }
 
         // توليد محتوى إيصال الفاتورة (نسخة إنجليزية - اتجاه LTR)
@@ -20564,7 +20022,7 @@ if (typeof window !== 'undefined') {
             const select = document.getElementById('selectedPrinter');
             if (select) {
                 select.value = printerName;
-                showToast(`تم اختيار الطابعة: ${printerName}`, 'success');
+                // تم إزالة الإشعار
             }
         }
 
@@ -21038,7 +20496,7 @@ if (typeof window !== 'undefined') {
             localStorage.setItem('storeAddress', settings.store_address);
             localStorage.setItem('storePhone', settings.store_phone);
             
-            showToast('تم حفظ إعدادات الطباعة بنجاح', 'success');
+            // تم إزالة الإشعار
             
             console.log('✅ تم حفظ إعدادات الطابعة:', settings);
         }
@@ -21120,7 +20578,7 @@ if (typeof window !== 'undefined') {
                 localStorage.setItem('printerSettings', JSON.stringify(defaultSettings));
                 loadPrinterSettings();
                 updateReceiptPreview();
-                showToast('تم استعادة الإعدادات الافتراضية', 'info');
+                // تم إزالة الإشعار
             }
         }
 
@@ -21217,7 +20675,7 @@ if (typeof window !== 'undefined') {
                 printWindow.print();
             }, 500);
             
-            showToast('تم فتح نافذة الطباعة التجريبية', 'success');
+            // تم إزالة الإشعار
         }
 
         // تهيئة صفحة إدارة الطابعة عند التحميل
@@ -21275,7 +20733,7 @@ if (typeof window !== 'undefined') {
                 const saleIndex = salesData.findIndex(s => s.invoice_id === invoiceId);
                 
                 if (saleIndex === -1) {
-                    showToast('الفاتورة غير موجودة', 'error');
+                    // تم إزالة الإشعار
                     return;
                 }
                 
@@ -21331,11 +20789,11 @@ if (typeof window !== 'undefined') {
                 renderInvoicesTable();
                 updateStatistics();
                 
-                showToast('تم حذف الفاتورة واسترجاع الكميات بنجاح', 'success');
+                // تم إزالة الإشعار
                 
             } catch (error) {
                 console.error('خطأ في حذف الفاتورة:', error);
-                showToast('حدث خطأ أثناء حذف الفاتورة', 'error');
+                // تم إزالة الإشعار
             }
         }
 
@@ -21384,7 +20842,7 @@ if (typeof window !== 'undefined') {
                     __backendId: d.__backendId,
                     debt_id: d.debt_id
                 })));
-                showToast('الدين غير موجود', 'error');
+                // تم إزالة الإشعار
                 return;
             }
             
@@ -22044,7 +21502,7 @@ if (typeof window !== 'undefined') {
             );
             
             if (!debt) {
-                showToast('الدين غير موجود', 'error');
+                // تم إزالة الإشعار
                 return;
             }
             
@@ -22085,12 +21543,12 @@ if (typeof window !== 'undefined') {
             // العثور على القسط
             const installment = debt.installments.find(inst => inst.month === monthNumber);
             if (!installment) {
-                showToast('القسط غير موجود', 'error');
+                // تم إزالة الإشعار
                 return;
             }
             
             if (installment.status === 'paid') {
-                showToast('هذا القسط مسدد بالفعل', 'info');
+                // تم إزالة الإشعار
                 return;
             }
             
@@ -22150,7 +21608,7 @@ if (typeof window !== 'undefined') {
             const notes = document.getElementById('installmentNotes').value.trim();
             
             if (paidAmount <= 0) {
-                showToast('يرجى إدخال مبلغ صحيح', 'error');
+                // تم إزالة الإشعار
                 return;
             }
             
@@ -22161,14 +21619,14 @@ if (typeof window !== 'undefined') {
             );
             
             if (!debt) {
-                showToast('الدين غير موجود', 'error');
+                // تم إزالة الإشعار
                 return;
             }
             
             // العثور على القسط
             const installment = debt.installments.find(inst => inst.month === currentInstallmentMonth);
             if (!installment) {
-                showToast('القسط غير موجود', 'error');
+                // تم إزالة الإشعار
                 return;
             }
             
@@ -22263,13 +21721,13 @@ if (typeof window !== 'undefined') {
                 }
             } catch (err) {
                 console.error('خطأ في طباعة إيصال التسديد:', err);
-                showToast('حدث خطأ أثناء طباعة الإيصال', 'error');
+                // تم إزالة الإشعار
             }
 
             // إغلاق النافذة المنبثقة
             closeModal('payInstallmentModal');
             // تحديث العرض
-            showToast('تم تسديد القسط بنجاح', 'success');
+            // تم إزالة الإشعار
             showDebtDetails(currentInstallmentDebtId);
         }
         
@@ -22282,7 +21740,7 @@ if (typeof window !== 'undefined') {
             );
             
             if (!debt) {
-                showToast('الدين غير موجود', 'error');
+                // تم إزالة الإشعار
                 return;
             }
             
@@ -22301,7 +21759,7 @@ if (typeof window !== 'undefined') {
             }
             
             if (!nextUnpaidInstallment) {
-                showToast('جميع الأقساط مسددة', 'info');
+                // تم إزالة الإشعار
                 return;
             }
             
@@ -22340,7 +21798,7 @@ if (typeof window !== 'undefined') {
                 );
                 
                 if (!debt) {
-                    showToast('الدين غير موجود', 'error');
+                    // تم إزالة الإشعار
                     return;
                 }
                 
@@ -22360,17 +21818,17 @@ if (typeof window !== 'undefined') {
                             updateStatistics();
                             updateQuickStats();
                             
-                            showToast('تم حذف الدين بنجاح', 'success');
+                            // تم إزالة الإشعار
                         }
                     } else {
-                        showToast('فشل في حذف الدين', 'error');
+                        // تم إزالة الإشعار
                     }
                 } else {
-                    showToast('لا يمكن حذف الدين', 'error');
+                    // تم إزالة الإشعار
                 }
             } catch (error) {
                 console.error('Error deleting debt:', error);
-                showToast('حدث خطأ أثناء حذف الدين', 'error');
+                // تم إزالة الإشعار
             }
         }
         
@@ -22590,7 +22048,7 @@ body {
                     printWindow.print();
                 }, 500);
             } else {
-                showToast('⚠️ لا يمكن فتح نافذة الطباعة', 'warning');
+                // تم إزالة الإشعار
             }
         }
         
@@ -22652,7 +22110,7 @@ body {
                     storeSettings.logo = e.target.result;
                     localStorage.setItem('storeSettings', JSON.stringify(storeSettings));
                     applyStoreSettings(storeSettings);
-                    showToast('تم حفظ إعدادات المتجر بنجاح', 'success');
+                    // تم إزالة الإشعار
                 };
                 reader.readAsDataURL(logoInput.files[0]);
             } else {
@@ -22662,7 +22120,7 @@ body {
                 }
                 localStorage.setItem('storeSettings', JSON.stringify(storeSettings));
                 applyStoreSettings(storeSettings);
-                showToast('تم حفظ إعدادات المتجر بنجاح', 'success');
+                // تم إزالة الإشعار
             }
         }
 
@@ -22742,7 +22200,7 @@ body {
             // تطبيق الإعدادات فوراً
             applySystemSettings(systemSettings);
             
-            showToast('✅ تم حفظ وتطبيق إعدادات النظام بنجاح', 'success');
+            // تم إزالة الإشعار
         }
 
         // تطبيق إعدادات النظام
@@ -22829,7 +22287,7 @@ body {
             };
             
             const themeName = themeNames[theme] || theme;
-            showToast('✨ تم تطبيق مظهر: ' + themeName, 'success');
+            // تم إزالة الإشعار
         }
 
         // وظيفة التبديل السريع بين الثيمات
@@ -22934,7 +22392,7 @@ body {
         function previewColorScheme(scheme) {
             const colors = colorSchemes[scheme] || colorSchemes.default;
             applyCustomColors(colors);
-            showToast('تم تطبيق مجموعة الألوان: ' + scheme, 'success');
+            // تم إزالة الإشعار
         }
 
         // تطبيق الألوان المخصصة
@@ -23006,7 +22464,7 @@ body {
                 applyCustomColors(colorSchemes.default);
                 const colorSchemeSelect = document.getElementById('colorSchemeSelect');
                 if (colorSchemeSelect) colorSchemeSelect.value = 'default';
-                showToast('✅ تم استعادة الألوان الافتراضية', 'success');
+                // تم إزالة الإشعار
             }
         }
 
@@ -23320,7 +22778,7 @@ body {
             // تطبيق إعدادات الطباعة
             applyPrintingSettings(printingSettings);
             
-            showToast('تم حفظ وتطبيق إعدادات الطباعة بنجاح', 'success');
+            // تم إزالة الإشعار
         }
 
         // تطبيق إعدادات الطباعة
@@ -23345,7 +22803,7 @@ body {
             // تطبيق إعدادات الأمان
             applySecuritySettings(securitySettings);
             
-            showToast('تم حفظ وتطبيق إعدادات الأمان بنجاح', 'success');
+            // تم إزالة الإشعار
         }
 
         // تطبيق إعدادات الأمان
@@ -23363,7 +22821,7 @@ body {
             };
 
             localStorage.setItem('backupSettings', JSON.stringify(backupSettings));
-            showToast('تم حفظ إعدادات النسخ الاحتياطي بنجاح', 'success');
+            // تم إزالة الإشعار
         }
 
         // إنشاء نسخة احتياطية كاملة
@@ -23410,7 +22868,7 @@ body {
                     });
                     
                     if (result.success) {
-                        showToast('✅ تم حفظ النسخة الاحتياطية في: ' + result.path, 'success');
+                        // تم إزالة الإشعار
                     } else {
                         throw new Error('Failed to save via Electron');
                     }
@@ -23426,13 +22884,13 @@ body {
                     document.body.removeChild(link);
                     URL.revokeObjectURL(url);
                     
-                    showToast('✅ تم إنشاء النسخة الاحتياطية الكاملة بنجاح', 'success');
+                    // تم إزالة الإشعار
                 }
                 
                 console.log('📦 تم إنشاء نسخة احتياطية:', backupData.stats);
             } catch (error) {
                 console.error('❌ خطأ في إنشاء النسخة الاحتياطية:', error);
-                showToast('❌ حدث خطأ أثناء إنشاء النسخة الاحتياطية', 'error');
+                // تم إزالة الإشعار
             }
         }
 
@@ -23469,11 +22927,11 @@ body {
                 document.body.removeChild(link);
                 URL.revokeObjectURL(url);
 
-                showToast('✅ تم نسخ البيانات بنجاح', 'success');
+                // تم إزالة الإشعار
                 console.log('📦 تم نسخ البيانات:', backupData.stats);
             } catch (error) {
                 console.error('❌ خطأ في نسخ البيانات:', error);
-                showToast('❌ حدث خطأ أثناء نسخ البيانات', 'error');
+                // تم إزالة الإشعار
             }
         }
 
@@ -23505,11 +22963,11 @@ body {
                 document.body.removeChild(link);
                 URL.revokeObjectURL(url);
 
-                showToast('✅ تم نسخ الإعدادات بنجاح', 'success');
+                // تم إزالة الإشعار
                 console.log('📦 تم نسخ الإعدادات');
             } catch (error) {
                 console.error('❌ خطأ في نسخ الإعدادات:', error);
-                showToast('❌ حدث خطأ أثناء نسخ الإعدادات', 'error');
+                // تم إزالة الإشعار
             }
         }
 
@@ -23555,10 +23013,10 @@ body {
                         }
                     }
 
-                    showToast('تم استعادة النسخة الاحتياطية بنجاح', 'success');
+                    // تم إزالة الإشعار
                     setTimeout(() => location.reload(), 1500);
                 } catch (error) {
-                    showToast('خطأ في قراءة ملف النسخة الاحتياطية', 'error');
+                    // تم إزالة الإشعار
                     console.error(error);
                 }
             };
@@ -23589,7 +23047,7 @@ body {
             if (!confirm('⚠️ تأكيد نهائي:\n\nآخر فرصة للتراجع!\nاضغط موافق لحذف كل شيء الآن!')) return;
             
             try {
-                showToast('🔄 جاري حذف جميع البيانات...', 'info');
+                // تم إزالة الإشعار
                 
                 // حفظ بيانات الحساب قبل الحذف
                 const savedUID = localStorage.getItem('app_uid');
@@ -23627,7 +23085,7 @@ body {
                                 await Promise.all(deletePromises);
                                 
                                 console.log('✅ تم حذف جميع البيانات من Firebase بنجاح');
-                                showToast('✅ تم حذف البيانات من الخادم', 'success');
+                                // تم إزالة الإشعار
                             })(),
                             new Promise((_, reject) => 
                                 setTimeout(() => reject(new Error('timeout')), 5000)
@@ -23637,17 +23095,17 @@ body {
                     } catch (firebaseError) {
                         if (firebaseError.message === 'timeout') {
                             console.warn('⚠️ انتهت مهلة الحذف من Firebase - الاستمرار بالحذف المحلي');
-                            showToast('⚠️ الحذف من الخادم استغرق وقتاً طويلاً - الاستمرار بالحذف المحلي', 'warning');
+                            // تم إزالة الإشعار
                         } else {
                             console.error('❌ خطأ في حذف البيانات من Firebase:', firebaseError);
-                            showToast('⚠️ خطأ في حذف البيانات من الخادم - الاستمرار بالحذف المحلي', 'warning');
+                            // تم إزالة الإشعار
                         }
                         // نستمر في الحذف المحلي حتى لو فشل Firebase
                     }
                 } else {
                     if (!isOnline) {
                         console.warn('⚠️ لا يوجد اتصال بالإنترنت - سيتم الحذف المحلي فقط');
-                        showToast('⚠️ الحذف المحلي فقط (لا يوجد اتصال)', 'warning');
+                        // تم إزالة الإشعار
                     } else {
                         console.warn('⚠️ Firebase غير متاح - سيتم الحذف المحلي فقط');
                     }
@@ -23848,7 +23306,7 @@ body {
                 console.log('✅ تم حذف جميع البيانات بنجاح!');
                 console.log('✅ تم الحفاظ على بيانات الحساب والاشتراك');
                 
-                showToast('✅ تم إعادة ضبط المصنع بنجاح!', 'success');
+                // تم إزالة الإشعار
                 
                 // رسالة تأكيد نهائية
                 await new Promise(resolve => setTimeout(resolve, 1500));
@@ -23871,7 +23329,7 @@ body {
                 
             } catch (error) {
                 console.error('❌ خطأ في إعادة ضبط المصنع:', error);
-                showToast('❌ حدث خطأ أثناء الحذف: ' + error.message, 'error');
+                // تم إزالة الإشعار
                 alert('❌ حدث خطأ أثناء إعادة ضبط المصنع:\n\n' + 
                       error.message + '\n\n' +
                       'يرجى المحاولة مرة أخرى أو التواصل مع الدعم الفني');
@@ -23882,7 +23340,7 @@ body {
         async function clearSampleData() {
             if (confirm('🧹 مسح البيانات التجريبية\n\nهل تريد حذف جميع البيانات التجريبية والبدء بتطبيق نظيف؟\n\n✅ سيتم الاحتفاظ بالإعدادات وبيانات الحساب')) {
                 try {
-                    showToast('🔄 جاري مسح البيانات التجريبية...', 'info');
+                    // تم إزالة الإشعار
                     
                     // حفظ بيانات الحساب
                     const savedUID = localStorage.getItem('app_uid');
@@ -23945,7 +23403,7 @@ body {
                     renderCart();
                     
                     console.log('✅ تم مسح جميع البيانات التجريبية');
-                    showToast('✅ تم مسح البيانات التجريبية بنجاح!', 'success');
+                    // تم إزالة الإشعار
                     
                     setTimeout(() => {
                         alert('✅ تم مسح البيانات بنجاح!\n\n' +
@@ -23956,14 +23414,14 @@ body {
                     
                 } catch (error) {
                     console.error('❌ خطأ في مسح البيانات:', error);
-                    showToast('❌ حدث خطأ أثناء المسح', 'error');
+                    // تم إزالة الإشعار
                 }
             }
         }
 
         // دوال إضافية
         function refreshPrinters() {
-            showToast('جاري تحديث قائمة الطابعات...', 'info');
+            // تم إزالة الإشعار
             // هنا يمكن إضافة كود للحصول على قائمة الطابعات من النظام
         }
 
@@ -23974,7 +23432,7 @@ body {
                     const locationInput = document.getElementById('backupLocation');
                     if (locationInput) {
                         locationInput.value = result.filePaths[0];
-                        showToast('✅ تم اختيار المجلد بنجاح', 'success');
+                        // تم إزالة الإشعار
                     }
                 }
             } else {
@@ -23984,14 +23442,14 @@ body {
                     const path = prompt('أدخل مسار المجلد للنسخ الاحتياطي:', locationInput.value || 'C:\\Backups');
                     if (path) {
                         locationInput.value = path;
-                        showToast('✅ تم تحديد المجلد', 'success');
+                        // تم إزالة الإشعار
                     }
                 }
             }
         }
 
         function printTestPage() {
-            showToast('جاري طباعة صفحة تجريبية...', 'info');
+            // تم إزالة الإشعار
             window.print();
         }
 
@@ -24001,18 +23459,18 @@ body {
             const confirm = document.getElementById('confirmPassword')?.value;
 
             if (!current || !newPass || !confirm) {
-                showToast('يرجى ملء جميع الحقول', 'warning');
+                // تم إزالة الإشعار
                 return;
             }
 
             if (newPass !== confirm) {
-                showToast('كلمتا المرور غير متطابقتين', 'error');
+                // تم إزالة الإشعار
                 return;
             }
 
             // حفظ كلمة المرور (يجب تشفيرها في التطبيق الحقيقي)
             localStorage.setItem('appPassword', newPass);
-            showToast('تم تغيير كلمة المرور بنجاح', 'success');
+            // تم إزالة الإشعار
             
             document.getElementById('currentPassword').value = '';
             document.getElementById('newPassword').value = '';
@@ -24020,7 +23478,7 @@ body {
         }
 
         function viewActivityLog() {
-            showToast('سيتم فتح سجل النشاطات', 'info');
+            // تم إزالة الإشعار
             // هنا يمكن إضافة صفحة عرض سجل النشاطات
         }
 
@@ -24212,12 +23670,12 @@ body {
                     filename = 'الديون';
                     break;
                 default:
-                    showToast('نوع البيانات غير معروف', 'error');
+                    // تم إزالة الإشعار
                     return;
             }
             
             if (data.length === 0) {
-                showToast('لا توجد بيانات للتصدير', 'warning');
+                // تم إزالة الإشعار
                 return;
             }
             
@@ -24233,11 +23691,11 @@ body {
                         exportToPDF(data, filename, type);
                         break;
                     default:
-                        showToast('صيغة التصدير غير مدعومة', 'error');
+                        // تم إزالة الإشعار
                 }
             } catch (error) {
                 console.error('خطأ في التصدير:', error);
-                showToast('حدث خطأ أثناء التصدير', 'error');
+                // تم إزالة الإشعار
             }
         }
         
@@ -24251,13 +23709,13 @@ body {
             link.download = `${filename}_${new Date().toISOString().split('T')[0]}.json`;
             link.click();
             URL.revokeObjectURL(url);
-            showToast('تم تصدير البيانات بنجاح', 'success');
+            // تم إزالة الإشعار
         }
         
         // تصدير إلى Excel
         function exportToExcel(data, filename, type) {
             if (typeof XLSX === 'undefined') {
-                showToast('مكتبة Excel غير متاحة', 'error');
+                // تم إزالة الإشعار
                 return;
             }
             
@@ -24302,13 +23760,13 @@ body {
             const workbook = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(workbook, worksheet, filename);
             XLSX.writeFile(workbook, `${filename}_${new Date().toISOString().split('T')[0]}.xlsx`);
-            showToast('تم تصدير البيانات بنجاح', 'success');
+            // تم إزالة الإشعار
         }
         
         // تصدير إلى PDF
         function exportToPDF(data, filename, type) {
             if (typeof jspdf === 'undefined' || typeof jspdf.jsPDF === 'undefined') {
-                showToast('مكتبة PDF غير متاحة', 'error');
+                // تم إزالة الإشعار
                 return;
             }
             
@@ -24363,7 +23821,7 @@ body {
             });
             
             doc.save(`${filename}_${new Date().toISOString().split('T')[0]}.pdf`);
-            showToast('تم تصدير البيانات بنجاح', 'success');
+            // تم إزالة الإشعار
         }
 
         // استيراد البيانات
@@ -24372,7 +23830,7 @@ body {
             const fileInput = document.getElementById(fileInputId);
             
             if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
-                showToast('الرجاء اختيار ملف', 'warning');
+                // تم إزالة الإشعار
                 return;
             }
             
@@ -24387,11 +23845,11 @@ body {
                 } else if (fileExtension === 'csv') {
                     await importFromCSV(file, type);
                 } else {
-                    showToast('صيغة الملف غير مدعومة. استخدم JSON أو Excel أو CSV', 'error');
+                    // تم إزالة الإشعار
                 }
             } catch (error) {
                 console.error('خطأ في الاستيراد:', error);
-                showToast('حدث خطأ أثناء استيراد البيانات: ' + error.message, 'error');
+                // تم إزالة الإشعار
             }
             
             // إعادة تعيين input
@@ -24407,14 +23865,14 @@ body {
                     const jsonData = JSON.parse(e.target.result);
                     
                     if (!Array.isArray(jsonData)) {
-                        showToast('صيغة الملف غير صحيحة. يجب أن يكون مصفوفة', 'error');
+                        // تم إزالة الإشعار
                         return;
                     }
                     
                     await processImportedData(jsonData, type);
                 } catch (error) {
                     console.error('خطأ في قراءة JSON:', error);
-                    showToast('خطأ في قراءة الملف: ' + error.message, 'error');
+                    // تم إزالة الإشعار
                 }
             };
             
@@ -24424,7 +23882,7 @@ body {
         // استيراد من Excel
         async function importFromExcel(file, type) {
             if (typeof XLSX === 'undefined') {
-                showToast('مكتبة Excel غير متاحة', 'error');
+                // تم إزالة الإشعار
                 return;
             }
             
@@ -24442,7 +23900,7 @@ body {
                     await processImportedData(convertedData, type);
                 } catch (error) {
                     console.error('خطأ في قراءة Excel:', error);
-                    showToast('خطأ في قراءة الملف: ' + error.message, 'error');
+                    // تم إزالة الإشعار
                 }
             };
             
@@ -24477,7 +23935,7 @@ body {
                     await processImportedData(convertedData, type);
                 } catch (error) {
                     console.error('خطأ في قراءة CSV:', error);
-                    showToast('خطأ في قراءة الملف: ' + error.message, 'error');
+                    // تم إزالة الإشعار
                 }
             };
             
@@ -24556,14 +24014,14 @@ body {
         // معالجة البيانات المستوردة
         async function processImportedData(data, type) {
             if (!window.dataSdk) {
-                showToast('نظام قاعدة البيانات غير متاح', 'error');
+                // تم إزالة الإشعار
                 return;
             }
             
             let successCount = 0;
             let errorCount = 0;
             
-            showToast(`جاري استيراد ${data.length} عنصر...`, 'info');
+            // تم إزالة الإشعار
             
             for (const item of data) {
                 try {
@@ -24593,9 +24051,9 @@ body {
             await new Promise(resolve => setTimeout(resolve, 500));
             
             if (successCount > 0) {
-                showToast(`تم استيراد ${successCount} عنصر بنجاح${errorCount > 0 ? ` و${errorCount} عنصر فشل` : ''}`, 'success');
+                // تم إزالة الإشعار
             } else {
-                showToast('فشل استيراد جميع العناصر', 'error');
+                // تم إزالة الإشعار
             }
         }
 
@@ -25570,7 +25028,7 @@ body {
     function openEditDebtModal(debtId) {
         const debt = debtsData.find(d => d.id === debtId);
         if (!debt) {
-            showToast('لم يتم العثور على الدين!', 'error');
+            // تم إزالة الإشعار
             return;
         }
         
@@ -25611,7 +25069,7 @@ body {
         // تحديث بيانات الدين
         const debtIndex = debtsData.findIndex(d => d.id === debtId);
         if (debtIndex === -1) {
-            showToast('خطأ في تحديث الدين!', 'error');
+            // تم إزالة الإشعار
             return;
         }
         
@@ -25633,7 +25091,7 @@ body {
         
         closeEditDebtModal();
         updateDebtsView();
-        showToast('✅ تم تحديث بيانات الدين بنجاح!', 'success');
+        // تم إزالة الإشعار
     }
     
     // فتح نافذة إضافة دين جديد محسّنة
@@ -25774,7 +25232,7 @@ body {
         const invoiceNumber = `INV-${year}${month}${day}-${random}`;
         document.getElementById('manualDebtInvoiceId').value = invoiceNumber;
         
-        showToast('تم توليد رقم الفاتورة', 'success');
+        // تم إزالة الإشعار
     }
     
     // حفظ الدين الجديد
@@ -25821,17 +25279,17 @@ body {
         }
         
         if (!customerName || !customerPhone) {
-            showToast('يرجى إدخال اسم العميل ورقم الهاتف', 'warning');
+            // تم إزالة الإشعار
             return;
         }
         
         if (totalAmount <= 0) {
-            showToast('يرجى إدخال المبلغ الإجمالي', 'warning');
+            // تم إزالة الإشعار
             return;
         }
         
         if (!manualDebtProducts || manualDebtProducts.length === 0) {
-            showToast('يرجى إضافة منتج واحد على الأقل', 'warning');
+            // تم إزالة الإشعار
             return;
         }
         
@@ -25939,7 +25397,7 @@ body {
                     
                     closeAddManualDebtModal();
                     renderDebtsTable();
-                    showToast('✅ تم إضافة الدين بنجاح!', 'success');
+                    // تم إزالة الإشعار
                 } else {
                     throw new Error('فشل حفظ الدين');
                 }
@@ -25948,7 +25406,7 @@ body {
             }
         } catch (error) {
             console.error('خطأ في حفظ الدين:', error);
-            showToast('حدث خطأ في حفظ الدين', 'error');
+            // تم إزالة الإشعار
         }
     }
     
@@ -26009,7 +25467,7 @@ body {
         const qty = parseInt(document.getElementById('manualDebtProductQty').value) || 1;
         
         if (!name || price <= 0 || qty <= 0) {
-            showToast('يرجى إدخال بيانات المنتج بشكل صحيح', 'warning');
+            // تم إزالة الإشعار
             return;
         }
         
@@ -26132,7 +25590,7 @@ body {
         const qty = parseInt(document.getElementById('editDebtProductQty').value) || 1;
         
         if (!name || price <= 0 || qty <= 0) {
-            showToast('يرجى إدخال بيانات المنتج بشكل صحيح', 'warning');
+            // تم إزالة الإشعار
             return;
         }
         
@@ -26254,7 +25712,7 @@ body {
         if (!debt) {
             console.error('❌ لم يتم العثور على الدين:', debtId);
             console.error('📋 المعرفات المتاحة في debtsData:', debtsData.map(d => d.id || d.__backendId || d.debt_id));
-            showToast('لم يتم العثور على الدين!', 'error');
+            // تم إزالة الإشعار
             return;
         }
         
@@ -26289,7 +25747,7 @@ body {
     // دالة حفظ التعديلات
     async function updateDebt() {
         if (!currentEditDebtId) {
-            showToast('خطأ: لم يتم تحديد الدين!', 'error');
+            // تم إزالة الإشعار
             return;
         }
         
@@ -26308,7 +25766,7 @@ body {
         
         if (debtIndex === -1) {
             console.error('❌ لم يتم العثور على الدين في debtsData:', currentEditDebtId);
-            showToast('لم يتم العثور على الدين!', 'error');
+            // تم إزالة الإشعار
             return;
         }
         
@@ -26316,7 +25774,7 @@ body {
         const customerPhone = document.getElementById('editDebtCustomerPhone').value.trim();
         
         if (!customerName || !customerPhone) {
-            showToast('يرجى إدخال اسم العميل ورقم الهاتف', 'warning');
+            // تم إزالة الإشعار
             return;
         }
         
@@ -26402,10 +25860,10 @@ body {
             
             closeEditDebtModal();
             renderDebtsTable();
-            showToast('✅ تم تحديث الدين بنجاح!', 'success');
+            // تم إزالة الإشعار
         } catch (error) {
             console.error('خطأ في حفظ التعديلات:', error);
-            showToast('حدث خطأ في حفظ التعديلات', 'error');
+            // تم إزالة الإشعار
         }
     }
     
@@ -26420,12 +25878,12 @@ body {
         const startDate = document.getElementById('installmentStartDate').value;
         
         if (!customerName || !customerPhone) {
-            showToast('يرجى إدخال اسم العميل ورقم الهاتف', 'warning');
+            // تم إزالة الإشعار
             return;
         }
         
         if (cart.length === 0) {
-            showToast('السلة فارغة! يرجى إضافة منتجات أولاً', 'warning');
+            // تم إزالة الإشعار
             return;
         }
         
@@ -26491,11 +25949,11 @@ body {
             cart = [];
             updateCartDisplay();
             closeModal('paymentModal');
-            showToast('✅ تمت عملية البيع بالأقساط بنجاح!', 'success');
+            // تم إزالة الإشعار
             updateDebtsView();
         } catch (error) {
             console.error('خطأ في حفظ الدين:', error);
-            showToast('حدث خطأ في حفظ الدين', 'error');
+            // تم إزالة الإشعار
         }
     }
     
@@ -26519,7 +25977,7 @@ body {
     function showProductDetails(productId) {
         const product = findProductById(productId);
         if (!product) {
-            showToast('لم يتم العثور على المنتج!', 'error');
+            // تم إزالة الإشعار
             return;
         }
         
@@ -26607,7 +26065,7 @@ body {
     function openEditProductModal(productId) {
         const product = findProductById(productId);
         if (!product) {
-            showToast('لم يتم العثور على المنتج!', 'error');
+            // تم إزالة الإشعار
             return;
         }
         document.getElementById('editProductId').value = product.id || '';
@@ -26650,7 +26108,7 @@ body {
         
         const productIndex = findProductIndexById(productId);
         if (productIndex === -1) {
-            showToast('خطأ في تحديث المنتج!', 'error');
+            // تم إزالة الإشعار
             return;
         }
         
@@ -26669,7 +26127,7 @@ body {
         }
         closeEditProductModal();
         updateInventoryView();
-        showToast('✅ تم تحديث المنتج بنجاح!', 'success');
+        // تم إزالة الإشعار
     }
     
     // حذف المنتج
@@ -26679,7 +26137,7 @@ body {
         }
         const productIndex = findProductIndexById(productId);
         if (productIndex === -1) {
-            showToast('لم يتم العثور على المنتج!', 'error');
+            // تم إزالة الإشعار
             return;
         }
         if (window.dataSdk) {
@@ -26696,14 +26154,14 @@ body {
         } else if (typeof updateInventoryView === 'function') {
             updateInventoryView();
         }
-        showToast('✅ تم حذف المنتج بنجاح!', 'success');
+        // تم إزالة الإشعار
     }
     
     // فتح نافذة نقل المنتج بين التصنيفات
     function openMoveProductCategoryModal(productId) {
         const product = findProductById(productId);
         if (!product) {
-            showToast('لم يتم العثور على المنتج!', 'error');
+            // تم إزالة الإشعار
             return;
         }
         
@@ -26739,13 +26197,13 @@ body {
         const newCategory = document.getElementById('moveProductNewCategory').value;
         
         if (!newCategory) {
-            showToast('يرجى اختيار التصنيف الجديد!', 'warning');
+            // تم إزالة الإشعار
             return;
         }
         
         const productIndex = products.findIndex(p => p.id === productId);
         if (productIndex === -1) {
-            showToast('خطأ في نقل المنتج!', 'error');
+            // تم إزالة الإشعار
             return;
         }
         
@@ -26756,7 +26214,7 @@ body {
         
         closeMoveProductCategoryModal();
         updateInventoryView();
-        showToast('✅ تم نقل المنتج إلى التصنيف الجديد بنجاح!', 'success');
+        // تم إزالة الإشعار
     }
     
     // طباعة تقرير المخزون
@@ -26853,7 +26311,7 @@ body {
         
         if (window.electronAPI && window.electronAPI.printInvoiceHtml) {
             window.electronAPI.printInvoiceHtml(html, { silent: false });
-            showToast('✅ جاري طباعة تقرير المخزون...', 'success');
+            // تم إزالة الإشعار
         } else {
             const printWindow = window.open('', '_blank');
             printWindow.document.write(html);
@@ -27023,7 +26481,7 @@ body {
                 console.log(`✅ تم تحميل ${allPayments.length} تسديد`);
             } catch (error) {
                 console.error('❌ خطأ في تحميل التسديدات:', error);
-                showToast('error', 'فشل تحميل بيانات التسديد');
+                // تم إزالة الإشعار
             }
         }
 
@@ -27346,7 +26804,7 @@ body {
             };
             
             applyPaymentsFilters();
-            showToast('success', 'تم إعادة تعيين الفلاتر');
+            // تم إزالة الإشعار
         };
 
         /**
@@ -27360,10 +26818,10 @@ body {
          * تحديث صفحة التسديدات
          */
         window.refreshPaymentsPage = async function() {
-            showToast('info', 'جاري تحديث البيانات...');
+            // تم إزالة الإشعار
             await loadAllPayments();
             applyPaymentsFilters();
-            showToast('success', 'تم تحديث البيانات بنجاح');
+            // تم إزالة الإشعار
         };
 
         /**
@@ -27374,7 +26832,7 @@ body {
             if (typeof showDebtDetails === 'function') {
                 showDebtDetails(debtId);
             } else {
-                showToast('warning', 'وظيفة عرض التفاصيل غير متاحة');
+                // تم إزالة الإشعار
             }
         };
 
@@ -27386,14 +26844,14 @@ body {
                 // الحصول على بيانات الدين
                 const debt = window.dataSdk.getById(parseInt(debtId));
                 if (!debt) {
-                    showToast('error', 'لم يتم العثور على بيانات الدين');
+                    // تم إزالة الإشعار
                     return;
                 }
 
                 // الحصول على القسط المسدد
                 const paidInstallment = debt.installments.find(inst => inst.month === month);
                 if (!paidInstallment) {
-                    showToast('error', 'لم يتم العثور على بيانات القسط');
+                    // تم إزالة الإشعار
                     return;
                 }
 
@@ -27413,7 +26871,7 @@ body {
                         silent: true,
                         pageSize: { width: 80000, height: 297000 }
                     });
-                    showToast('success', 'تم إرسال الإيصال للطباعة');
+                    // تم إزالة الإشعار
                 } else {
                     // طباعة عبر المتصفح
                     const printWindow = window.open('', '_blank');
@@ -27423,7 +26881,7 @@ body {
                 }
             } catch (error) {
                 console.error('خطأ في طباعة الإيصال:', error);
-                showToast('error', 'فشلت عملية الطباعة');
+                // تم إزالة الإشعار
             }
         };
 
@@ -27432,7 +26890,7 @@ body {
          */
         window.exportPaymentsReport = function() {
             if (filteredPayments.length === 0) {
-                showToast('warning', 'لا توجد بيانات لتصديرها');
+                // تم إزالة الإشعار
                 return;
             }
 
@@ -27464,7 +26922,7 @@ body {
             link.click();
             document.body.removeChild(link);
 
-            showToast('success', 'تم تصدير التقرير بنجاح');
+            // تم إزالة الإشعار
         };
 
         /**
@@ -27472,7 +26930,7 @@ body {
          */
         window.printPaymentsReport = function() {
             if (filteredPayments.length === 0) {
-                showToast('warning', 'لا توجد بيانات لطباعتها');
+                // تم إزالة الإشعار
                 return;
             }
 
@@ -27626,7 +27084,7 @@ body {
             if (typeof payInstallment === 'function') {
                 payInstallment(parseInt(debtId), month);
             } else {
-                showToast('error', 'دالة التسديد غير متوفرة');
+                // تم إزالة الإشعار
             }
         };
 
@@ -27635,7 +27093,7 @@ body {
             if (typeof showDebtDetails === 'function') {
                 showDebtDetails(parseInt(debtId));
             } else {
-                showToast('warning', 'دالة عرض التفاصيل غير متوفرة');
+                // تم إزالة الإشعار
             }
         };
 
@@ -27644,13 +27102,13 @@ body {
             try {
                 const debt = window.dataSdk.getById(parseInt(debtId));
                 if (!debt) {
-                    showToast('error', 'لم يتم العثور على بيانات الدين');
+                    // تم إزالة الإشعار
                     return;
                 }
 
                 const paidInstallment = debt.installments.find(inst => inst.month === month);
                 if (!paidInstallment) {
-                    showToast('error', 'لم يتم العثور على بيانات القسط');
+                    // تم إزالة الإشعار
                     return;
                 }
 
@@ -27666,7 +27124,7 @@ body {
                         silent: true,
                         pageSize: { width: 80000, height: 297000 }
                     });
-                    showToast('success', 'تم إرسال الإيصال للطباعة');
+                    // تم إزالة الإشعار
                 } else {
                     const printWindow = window.open('', '_blank');
                     printWindow.document.write(receiptHtml);
@@ -27675,7 +27133,7 @@ body {
                 }
             } catch (error) {
                 console.error('خطأ في طباعة الإيصال:', error);
-                showToast('error', 'فشلت عملية الطباعة');
+                // تم إزالة الإشعار
             }
         };
 
@@ -27688,19 +27146,19 @@ body {
             try {
                 const debt = window.dataSdk.getById(parseInt(debtId));
                 if (!debt) {
-                    showToast('error', 'لم يتم العثور على بيانات الدين');
+                    // تم إزالة الإشعار
                     return;
                 }
 
                 const installmentIndex = debt.installments.findIndex(inst => inst.month === month);
                 if (installmentIndex === -1) {
-                    showToast('error', 'لم يتم العثور على القسط');
+                    // تم إزالة الإشعار
                     return;
                 }
 
                 const installment = debt.installments[installmentIndex];
                 if (installment.status !== 'paid') {
-                    showToast('warning', 'القسط غير مسدد أصلاً');
+                    // تم إزالة الإشعار
                     return;
                 }
 
@@ -27716,15 +27174,15 @@ body {
                 const result = await window.dataSdk.update(parseInt(debtId), debt);
                 
                 if (result.isOk) {
-                    showToast('success', 'تم إلغاء التسديد بنجاح');
+                    // تم إزالة الإشعار
                     // تحديث الصفحة
                     await refreshPaymentsPage();
                 } else {
-                    showToast('error', 'فشل إلغاء التسديد: ' + (result.error || ''));
+                    // تم إزالة الإشعار
                 }
             } catch (error) {
                 console.error('خطأ في إلغاء التسديد:', error);
-                showToast('error', 'حدث خطأ أثناء إلغاء التسديد');
+                // تم إزالة الإشعار
             }
         };
 
@@ -27750,7 +27208,7 @@ body {
         // طباعة قسم إحصائيات محدد فقط
         window.printPaymentsStat = function(statType) {
             if (allPayments.length === 0) {
-                showToast('warning', 'لا توجد بيانات للطباعة');
+                // تم إزالة الإشعار
                 return;
             }
 
@@ -27890,7 +27348,7 @@ body {
         // طباعة الصفحة كاملة (جميع الإحصائيات + الجدول)
         window.printCompletePaymentsReport = function() {
             if (allPayments.length === 0) {
-                showToast('warning', 'لا توجد بيانات للطباعة');
+                // تم إزالة الإشعار
                 return;
             }
 
@@ -28075,7 +27533,7 @@ body {
         // تصدير كـ JSON
         window.exportPaymentsAsJSON = function() {
             if (allPayments.length === 0) {
-                showToast('warning', 'لا توجد بيانات للتصدير');
+                // تم إزالة الإشعار
                 return;
             }
 
@@ -28099,7 +27557,7 @@ body {
             link.click();
             URL.revokeObjectURL(url);
             
-            showToast('success', 'تم تصدير البيانات بنجاح');
+            // تم إزالة الإشعار
         };
 
         // تصدير كـ Excel (CSV)
@@ -28110,13 +27568,13 @@ body {
         // تصدير كـ PDF
         window.exportPaymentsAsPDF = function() {
             if (allPayments.length === 0) {
-                showToast('warning', 'لا توجد بيانات للتصدير');
+                // تم إزالة الإشعار
                 return;
             }
 
             // استخدام دالة الطباعة لإنشاء PDF
             printCompletePaymentsReport();
-            showToast('info', 'افتح نافذة الطباعة واختر "حفظ كـ PDF"');
+            // تم إزالة الإشعار
         };
 
         /**
@@ -28126,7 +27584,7 @@ body {
         // طباعة إحصائيات معينة مع جدول البيانات المفلترة
         window.printPaymentsStat = function(statType) {
             if (allPayments.length === 0) {
-                showToast('warning', 'لا توجد بيانات للطباعة');
+                // تم إزالة الإشعار
                 return;
             }
 
@@ -28824,1090 +28282,6 @@ body {
 
     </script>
     
-    <!-- ====== نظام الإشعارات والتنبيهات ====== -->
-    
-    <!-- لوحة الإشعارات المنبثقة -->
-    <div class="notifications-panel" id="notificationsPanel">
-      <div class="notifications-header">
-        <div class="notifications-header-title">
-          <i class="fas fa-bell"></i>
-          <span>مركز الإشعارات</span>
-        </div>
-        <div class="notifications-header-actions">
-          <button class="notifications-header-btn" onclick="markAllNotificationsAsRead()">
-            <i class="fas fa-check-double"></i>
-            تعليم الكل كمقروء
-          </button>
-          <button class="notifications-header-btn" onclick="clearAllNotifications()">
-            <i class="fas fa-trash-alt"></i>
-            حذف الكل
-          </button>
-          <button class="notifications-header-btn" onclick="toggleNotificationsPanel()">
-            <i class="fas fa-times"></i>
-          </button>
-        </div>
-      </div>
-      
-      <div class="notifications-tabs">
-        <button class="notifications-tab active" data-tab="all" onclick="switchNotificationTab('all')">
-          <i class="fas fa-list"></i>
-          الكل
-          <span id="notificationCountAll" style="display:none; margin-right: 5px; background: rgba(102, 126, 234, 0.2); padding: 2px 8px; border-radius: 10px; font-size: 0.8rem;"></span>
-        </button>
-        <button class="notifications-tab" data-tab="stock" onclick="switchNotificationTab('stock')">
-          <i class="fas fa-boxes"></i>
-          المخزون
-          <span id="notificationCountStock" style="display:none; margin-right: 5px; background: rgba(251, 191, 36, 0.2); padding: 2px 8px; border-radius: 10px; font-size: 0.8rem;"></span>
-        </button>
-        <button class="notifications-tab" data-tab="debts" onclick="switchNotificationTab('debts')">
-          <i class="fas fa-credit-card"></i>
-          الديون
-          <span id="notificationCountDebts" style="display:none; margin-right: 5px; background: rgba(239, 68, 68, 0.2); padding: 2px 8px; border-radius: 10px; font-size: 0.8rem;"></span>
-        </button>
-        <button class="notifications-tab" data-tab="system" onclick="switchNotificationTab('system')">
-          <i class="fas fa-cog"></i>
-          النظام
-          <span id="notificationCountSystem" style="display:none; margin-right: 5px; background: rgba(59, 130, 246, 0.2); padding: 2px 8px; border-radius: 10px; font-size: 0.8rem;"></span>
-        </button>
-      </div>
-      
-      <div class="notifications-content" id="notificationsContent">
-        <!-- سيتم ملء الإشعارات هنا ديناميكيًا -->
-        <div class="notifications-empty">
-          <i class="fas fa-bell-slash"></i>
-          <h3>لا توجد إشعارات</h3>
-          <p>ستظهر إشعاراتك هنا</p>
-        </div>
-      </div>
-    </div>
-    
-    <script>
-    // ====== نظام الإشعارات والتنبيهات المتكامل ======
-    
-    class NotificationSystem {
-        constructor() {
-            this.notifications = [];
-            this.currentTab = 'all';
-            this.settings = {
-                enabled: true,
-                lowStockThreshold: 10,
-                outOfStockAlert: true,
-                overdueDebtsAlert: true,
-                criticalStockThreshold: 3, // عتبة المخزون الحرجة
-                systemAlerts: true,
-                soundEnabled: true,
-                autoRefresh: true,
-                refreshInterval: 300000, // 5 دقائق
-                showDesktopNotifications: true, // إشعارات سطح المكتب
-                overdueWarningDays: 7, // تحذير قبل 7 أيام من الاستحقاق
-                severeOverdueDays: 30 // دين شديد بعد 30 يوم تأخير
-            };
-            this.refreshTimer = null;
-            this.lastCheck = {
-                stock: null,
-                debts: null
-            };
-            this.init();
-        }
-        
-        async init() {
-            console.log('🔔 جاري تهيئة نظام الإشعارات...');
-            
-            // تحميل الإعدادات من localStorage
-            this.loadSettings();
-            
-            // تحميل الإشعارات المحفوظة
-            this.loadNotifications();
-            
-            // فحص وإنشاء الإشعارات
-            await this.checkAndCreateNotifications();
-            
-            // تحديث العرض
-            this.updateDisplay();
-            
-            // بدء التحديث التلقائي إذا كان مفعلًا
-            if (this.settings.autoRefresh) {
-                this.startAutoRefresh();
-            }
-            
-            console.log('✅ تم تهيئة نظام الإشعارات بنجاح');
-        }
-        
-        loadSettings() {
-            const saved = localStorage.getItem('notificationSettings');
-            if (saved) {
-                try {
-                    this.settings = { ...this.settings, ...JSON.parse(saved) };
-                } catch (error) {
-                    console.error('خطأ في تحميل إعدادات الإشعارات:', error);
-                }
-            }
-        }
-        
-        saveSettings() {
-            localStorage.setItem('notificationSettings', JSON.stringify(this.settings));
-        }
-        
-        loadNotifications() {
-            const saved = localStorage.getItem('notifications');
-            if (saved) {
-                try {
-                    this.notifications = JSON.parse(saved);
-                } catch (error) {
-                    console.error('خطأ في تحميل الإشعارات:', error);
-                    this.notifications = [];
-                }
-            }
-        }
-        
-        saveNotifications() {
-            localStorage.setItem('notifications', JSON.stringify(this.notifications));
-        }
-        
-        async checkAndCreateNotifications() {
-            if (!this.settings.enabled) return;
-            
-            const newNotifications = [];
-            
-            // فحص المخزون المنخفض والنافذ
-            if (this.settings.outOfStockAlert) {
-                const stockAlerts = await this.checkStockLevels();
-                newNotifications.push(...stockAlerts);
-            }
-            
-            // فحص الديون المتأخرة
-            if (this.settings.overdueDebtsAlert) {
-                const debtAlerts = await this.checkOverdueDebts();
-                newNotifications.push(...debtAlerts);
-            }
-            
-            // إضافة الإشعارات الجديدة
-            newNotifications.forEach(notification => {
-                // التحقق من عدم وجود إشعار مكرر
-                const exists = this.notifications.some(n => 
-                    n.type === notification.type && 
-                    n.referenceId === notification.referenceId
-                );
-                
-                if (!exists) {
-                    this.addNotification(notification);
-                }
-            });
-        }
-        
-        async checkStockLevels() {
-            const alerts = [];
-            
-            try {
-                const products = await window.dataSdk.getAllProducts();
-                
-                let outOfStockCount = 0;
-                let lowStockCount = 0;
-                let criticalStockCount = 0;
-                let totalValue = 0;
-                
-                products.forEach(product => {
-                    const quantity = product.quantity || 0;
-                    const price = product.price || 0;
-                    const productValue = quantity * price;
-                    
-                    // منتج نافذ
-                    if (quantity === 0) {
-                        outOfStockCount++;
-                        alerts.push({
-                            id: Date.now() + Math.random(),
-                            type: 'stock',
-                            level: 'danger',
-                            icon: 'fa-times-circle',
-                            title: '❌ منتج نافذ من المخزون',
-                            message: `المنتج "${product.name}" نافذ تمامًا من المخزون`,
-                            detailedMessage: `
-                                <div style="background: rgba(239, 68, 68, 0.1); padding: 12px; border-radius: 8px; margin-top: 8px;">
-                                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; font-size: 0.9rem;">
-                                        <div><strong>اسم المنتج:</strong> ${product.name}</div>
-                                        <div><strong>الباركود:</strong> ${product.barcode || 'غير متوفر'}</div>
-                                        <div><strong>الفئة:</strong> ${product.category || 'غير مصنف'}</div>
-                                        <div><strong>السعر:</strong> ${price.toLocaleString('ar-IQ')} د.ع</div>
-                                        <div><strong>الكمية:</strong> <span style="color: #ef4444; font-weight: 700;">0 قطعة</span></div>
-                                        <div><strong>الحالة:</strong> <span style="color: #ef4444; font-weight: 700;">نافذ ⛔</span></div>
-                                    </div>
-                                    <div style="margin-top: 10px; padding: 8px; background: var(--theme-bg-primary); border-radius: 6px; font-size: 0.85rem; color: var(--text-secondary);">
-                                        <strong>💡 توصية:</strong> يُنصح بإعادة تعبئة المخزون في أقرب وقت ممكن لتجنب خسارة المبيعات
-                                    </div>
-                                </div>
-                            `,
-                            timestamp: Date.now(),
-                            read: false,
-                            referenceId: `product_${product.id}_outofstock`,
-                            referenceType: 'product',
-                            referenceData: { ...product, stockStatus: 'out_of_stock' },
-                            action: {
-                                label: 'عرض المنتج',
-                                handler: () => this.navigateToProduct(product.id)
-                            }
-                        });
-                    }
-                    // منتج حرج (أقل من 3)
-                    else if (quantity <= this.settings.criticalStockThreshold && quantity > 0) {
-                        criticalStockCount++;
-                        alerts.push({
-                            id: Date.now() + Math.random(),
-                            type: 'stock',
-                            level: 'danger',
-                            icon: 'fa-exclamation-circle',
-                            title: '🔴 منتج في حالة حرجة',
-                            message: `المنتج "${product.name}" متبقي منه ${quantity} قطعة فقط (حرج!)`,
-                            detailedMessage: `
-                                <div style="background: rgba(239, 68, 68, 0.1); padding: 12px; border-radius: 8px; margin-top: 8px;">
-                                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; font-size: 0.9rem;">
-                                        <div><strong>اسم المنتج:</strong> ${product.name}</div>
-                                        <div><strong>الباركود:</strong> ${product.barcode || 'غير متوفر'}</div>
-                                        <div><strong>الفئة:</strong> ${product.category || 'غير مصنف'}</div>
-                                        <div><strong>السعر:</strong> ${price.toLocaleString('ar-IQ')} د.ع</div>
-                                        <div><strong>الكمية:</strong> <span style="color: #ef4444; font-weight: 700;">${quantity} قطعة</span></div>
-                                        <div><strong>القيمة الإجمالية:</strong> ${productValue.toLocaleString('ar-IQ')} د.ع</div>
-                                    </div>
-                                    <div style="margin-top: 10px; padding: 8px; background: var(--theme-bg-primary); border-radius: 6px; font-size: 0.85rem; color: var(--text-secondary);">
-                                        <strong>⚠️ تحذير:</strong> المخزون في حالة حرجة! يجب إعادة الطلب فورًا
-                                    </div>
-                                </div>
-                            `,
-                            timestamp: Date.now(),
-                            read: false,
-                            referenceId: `product_${product.id}_critical`,
-                            referenceType: 'product',
-                            referenceData: { ...product, stockStatus: 'critical' },
-                            action: {
-                                label: 'عرض المنتج',
-                                handler: () => this.navigateToProduct(product.id)
-                            }
-                        });
-                    }
-                    // منتج منخفض
-                    else if (quantity <= this.settings.lowStockThreshold && quantity > this.settings.criticalStockThreshold) {
-                        lowStockCount++;
-                        alerts.push({
-                            id: Date.now() + Math.random(),
-                            type: 'stock',
-                            level: 'warning',
-                            icon: 'fa-exclamation-triangle',
-                            title: '⚠️ منتج قارب على النفاذ',
-                            message: `المنتج "${product.name}" متبقي منه ${quantity} قطعة`,
-                            detailedMessage: `
-                                <div style="background: rgba(251, 191, 36, 0.1); padding: 12px; border-radius: 8px; margin-top: 8px;">
-                                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; font-size: 0.9rem;">
-                                        <div><strong>اسم المنتج:</strong> ${product.name}</div>
-                                        <div><strong>الباركود:</strong> ${product.barcode || 'غير متوفر'}</div>
-                                        <div><strong>الفئة:</strong> ${product.category || 'غير مصنف'}</div>
-                                        <div><strong>السعر:</strong> ${price.toLocaleString('ar-IQ')} د.ع</div>
-                                        <div><strong>الكمية:</strong> <span style="color: #f59e0b; font-weight: 700;">${quantity} قطعة</span></div>
-                                        <div><strong>القيمة الإجمالية:</strong> ${productValue.toLocaleString('ar-IQ')} د.ع</div>
-                                    </div>
-                                    <div style="margin-top: 10px; padding: 8px; background: var(--theme-bg-primary); border-radius: 6px; font-size: 0.85rem; color: var(--text-secondary);">
-                                        <strong>📌 ملاحظة:</strong> المخزون منخفض، يُنصح بإعادة الطلب قريبًا
-                                    </div>
-                                </div>
-                            `,
-                            timestamp: Date.now(),
-                            read: false,
-                            referenceId: `product_${product.id}_low`,
-                            referenceType: 'product',
-                            referenceData: { ...product, stockStatus: 'low' },
-                            action: {
-                                label: 'عرض المنتج',
-                                handler: () => this.navigateToProduct(product.id)
-                            }
-                        });
-                    }
-                });
-                
-                // إضافة إشعار ملخص إذا كان هناك مشاكل مخزون متعددة
-                const totalIssues = outOfStockCount + criticalStockCount + lowStockCount;
-                if (totalIssues > 5) {
-                    alerts.push({
-                        id: Date.now() + Math.random() + 2000,
-                        type: 'stock',
-                        level: 'warning',
-                        icon: 'fa-warehouse',
-                        title: '📦 تنبيه: مشاكل مخزون متعددة',
-                        message: `لديك ${totalIssues} منتج يحتاج إلى متابعة (${outOfStockCount} نافذ، ${criticalStockCount} حرج، ${lowStockCount} منخفض)`,
-                        detailedMessage: `
-                            <div style="background: rgba(251, 191, 36, 0.1); padding: 15px; border-radius: 8px; margin-top: 10px;">
-                                <h4 style="margin-bottom: 10px; color: #f59e0b;">📊 ملخص حالة المخزون</h4>
-                                <div style="display: grid; gap: 8px; font-size: 0.95rem;">
-                                    <div style="display: flex; justify-content: space-between; padding: 8px; background: var(--theme-bg-primary); border-radius: 6px;">
-                                        <span>منتجات نافذة ❌:</span>
-                                        <strong style="color: #ef4444;">${outOfStockCount}</strong>
-                                    </div>
-                                    <div style="display: flex; justify-content: space-between; padding: 8px; background: var(--theme-bg-primary); border-radius: 6px;">
-                                        <span>منتجات حرجة 🔴:</span>
-                                        <strong style="color: #ef4444;">${criticalStockCount}</strong>
-                                    </div>
-                                    <div style="display: flex; justify-content: space-between; padding: 8px; background: var(--theme-bg-primary); border-radius: 6px;">
-                                        <span>منتجات منخفضة ⚠️:</span>
-                                        <strong style="color: #f59e0b;">${lowStockCount}</strong>
-                                    </div>
-                                    <div style="display: flex; justify-content: space-between; padding: 8px; background: var(--theme-bg-primary); border-radius: 6px; border: 2px solid rgba(251, 191, 36, 0.3);">
-                                        <span>إجمالي المنتجات المتأثرة:</span>
-                                        <strong style="color: #f59e0b;">${totalIssues}</strong>
-                                    </div>
-                                </div>
-                                <hr style="margin: 12px 0; border: 1px solid rgba(251, 191, 36, 0.2);">
-                                <div style="font-size: 0.9rem; color: var(--text-secondary);">
-                                    <strong>💡 توصية:</strong> يُنصح بمراجعة المخزون وإعادة تعبئة المنتجات الضرورية
-                                </div>
-                            </div>
-                        `,
-                        timestamp: Date.now(),
-                        read: false,
-                        referenceId: `stock_summary_${Date.now()}`,
-                        referenceType: 'summary',
-                        referenceData: { 
-                            outOfStockCount,
-                            criticalStockCount,
-                            lowStockCount,
-                            totalIssues
-                        },
-                        action: {
-                            label: 'عرض المخزون',
-                            handler: () => {
-                                showPage('inventory');
-                                this.toggleNotificationsPanel();
-                            }
-                        }
-                    });
-                }
-                
-                this.lastCheck.stock = Date.now();
-            } catch (error) {
-                console.error('خطأ في فحص المخزون:', error);
-            }
-            
-            return alerts;
-        }
-        
-        async checkOverdueDebts() {
-            const alerts = [];
-            
-            try {
-                const debts = await window.dataSdk.getDebts();
-                const now = Date.now();
-                
-                // إحصائيات للديون
-                let totalOverdue = 0;
-                let totalOverdueAmount = 0;
-                const debtorsList = new Map();
-                
-                debts.forEach(debt => {
-                    if (debt.status !== 'paid' && debt.installments) {
-                        let debtorOverdueCount = 0;
-                        let debtorOverdueAmount = 0;
-                        
-                        debt.installments.forEach((installment, index) => {
-                            if (installment.status !== 'paid' && installment.due_date) {
-                                const dueDate = new Date(installment.due_date).getTime();
-                                const daysOverdue = Math.floor((now - dueDate) / (1000 * 60 * 60 * 24));
-                                
-                                if (daysOverdue > 0) {
-                                    const amount = installment.amount || 0;
-                                    totalOverdue++;
-                                    totalOverdueAmount += amount;
-                                    debtorOverdueCount++;
-                                    debtorOverdueAmount += amount;
-                                    
-                                    // تحديد مستوى الخطورة
-                                    let level = 'warning';
-                                    let severity = 'متأخر';
-                                    let icon = 'fa-exclamation-triangle';
-                                    
-                                    if (daysOverdue > this.settings.severeOverdueDays) {
-                                        level = 'danger';
-                                        severity = 'متأخر بشدة';
-                                        icon = 'fa-exclamation-circle';
-                                    } else if (daysOverdue > 14) {
-                                        level = 'danger';
-                                        severity = 'متأخر جداً';
-                                        icon = 'fa-exclamation-triangle';
-                                    }
-                                    
-                                    alerts.push({
-                                        id: Date.now() + Math.random(),
-                                        type: 'debts',
-                                        level: level,
-                                        icon: icon,
-                                        title: `${severity} - ${debt.customer_name}`,
-                                        message: `قسط رقم ${installment.month} من ${debt.installment_months} - متأخر ${daysOverdue} يوم - المبلغ: ${amount.toLocaleString('ar-IQ')} د.ع`,
-                                        detailedMessage: `
-                                            <div style="background: rgba(239, 68, 68, 0.1); padding: 12px; border-radius: 8px; margin-top: 8px;">
-                                                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; font-size: 0.9rem;">
-                                                    <div><strong>العميل:</strong> ${debt.customer_name}</div>
-                                                    <div><strong>الهاتف:</strong> ${debt.customer_phone || 'غير متوفر'}</div>
-                                                    <div><strong>رقم الفاتورة:</strong> ${debt.invoice_id || 'غير محدد'}</div>
-                                                    <div><strong>القسط:</strong> ${installment.month} من ${debt.installment_months}</div>
-                                                    <div><strong>المبلغ المستحق:</strong> ${amount.toLocaleString('ar-IQ')} د.ع</div>
-                                                    <div><strong>أيام التأخير:</strong> <span style="color: #ef4444; font-weight: 700;">${daysOverdue} يوم</span></div>
-                                                    <div><strong>تاريخ الاستحقاق:</strong> ${new Date(installment.due_date).toLocaleDateString('ar-IQ')}</div>
-                                                    <div><strong>المتبقي من الدين:</strong> ${(debt.remaining_amount || 0).toLocaleString('ar-IQ')} د.ع</div>
-                                                </div>
-                                            </div>
-                                        `,
-                                        timestamp: now,
-                                        read: false,
-                                        referenceId: `debt_${debt.id}_installment_${index}`,
-                                        referenceType: 'debt',
-                                        referenceData: { 
-                                            debt, 
-                                            installment, 
-                                            daysOverdue,
-                                            customerName: debt.customer_name,
-                                            customerPhone: debt.customer_phone,
-                                            amount: amount
-                                        },
-                                        action: {
-                                            label: 'عرض الدين',
-                                            handler: () => this.navigateToDebt(debt.id)
-                                        }
-                                    });
-                                }
-                            }
-                        });
-                        
-                        // تتبع المديونين
-                        if (debtorOverdueCount > 0) {
-                            if (!debtorsList.has(debt.customer_name)) {
-                                debtorsList.set(debt.customer_name, {
-                                    name: debt.customer_name,
-                                    phone: debt.customer_phone,
-                                    overdueCount: 0,
-                                    overdueAmount: 0,
-                                    debts: []
-                                });
-                            }
-                            const debtor = debtorsList.get(debt.customer_name);
-                            debtor.overdueCount += debtorOverdueCount;
-                            debtor.overdueAmount += debtorOverdueAmount;
-                            debtor.debts.push(debt);
-                        }
-                    }
-                });
-                
-                // إضافة إشعار ملخص إذا كان هناك ديون متأخرة كثيرة
-                if (totalOverdue > 5) {
-                    alerts.push({
-                        id: Date.now() + Math.random() + 1000,
-                        type: 'debts',
-                        level: 'danger',
-                        icon: 'fa-exclamation-circle',
-                        title: '⚠️ تنبيه: ديون متأخرة متعددة',
-                        message: `لديك ${totalOverdue} قسط متأخر من ${debtorsList.size} مديون بإجمالي ${totalOverdueAmount.toLocaleString('ar-IQ')} د.ع`,
-                        detailedMessage: `
-                            <div style="background: rgba(239, 68, 68, 0.1); padding: 15px; border-radius: 8px; margin-top: 10px;">
-                                <h4 style="margin-bottom: 10px; color: #ef4444;">📊 ملخص الديون المتأخرة</h4>
-                                <div style="display: grid; gap: 8px; font-size: 0.95rem;">
-                                    <div style="display: flex; justify-content: space-between; padding: 8px; background: var(--theme-bg-primary); border-radius: 6px;">
-                                        <span>عدد الأقساط المتأخرة:</span>
-                                        <strong style="color: #ef4444;">${totalOverdue}</strong>
-                                    </div>
-                                    <div style="display: flex; justify-content: space-between; padding: 8px; background: var(--theme-bg-primary); border-radius: 6px;">
-                                        <span>عدد المديونين:</span>
-                                        <strong style="color: #f59e0b;">${debtorsList.size}</strong>
-                                    </div>
-                                    <div style="display: flex; justify-content: space-between; padding: 8px; background: var(--theme-bg-primary); border-radius: 6px;">
-                                        <span>إجمالي المبالغ المتأخرة:</span>
-                                        <strong style="color: #ef4444;">${totalOverdueAmount.toLocaleString('ar-IQ')} د.ع</strong>
-                                    </div>
-                                </div>
-                                <hr style="margin: 12px 0; border: 1px solid rgba(239, 68, 68, 0.2);">
-                                <div style="font-size: 0.9rem; color: var(--text-secondary);">
-                                    <strong>💡 توصية:</strong> يُنصح بالتواصل مع المديونين في أقرب وقت ممكن لتحصيل المستحقات
-                                </div>
-                            </div>
-                        `,
-                        timestamp: now,
-                        read: false,
-                        referenceId: `debts_summary_${Date.now()}`,
-                        referenceType: 'summary',
-                        referenceData: { 
-                            totalOverdue,
-                            totalOverdueAmount,
-                            debtorsList: Array.from(debtorsList.values())
-                        },
-                        action: {
-                            label: 'عرض جميع الديون',
-                            handler: () => {
-                                showPage('debts');
-                                this.toggleNotificationsPanel();
-                            }
-                        }
-                    });
-                }
-                
-                this.lastCheck.debts = now;
-            } catch (error) {
-                console.error('خطأ في فحص الديون:', error);
-            }
-            
-            return alerts;
-        }
-        
-        addNotification(notification) {
-            this.notifications.unshift(notification);
-            this.saveNotifications();
-            
-            // إظهار إشعار توست
-            if (this.settings.soundEnabled) {
-                this.showToast(notification);
-            }
-        }
-        
-        showToast(notification) {
-            const toast = document.createElement('div');
-            toast.className = 'toast-notification';
-            
-            const iconClass = notification.level === 'danger' ? 'fa-exclamation-circle' :
-                            notification.level === 'warning' ? 'fa-exclamation-triangle' : 'fa-info-circle';
-            const iconColor = notification.level === 'danger' ? '#ef4444' :
-                            notification.level === 'warning' ? '#fbbf24' : '#3b82f6';
-            
-            toast.innerHTML = `
-                <div style="width: 40px; height: 40px; border-radius: 10px; background: linear-gradient(135deg, ${iconColor}, ${iconColor}dd); display: flex; align-items: center; justify-content: center; color: white; font-size: 1.2rem;">
-                    <i class="fas ${iconClass}"></i>
-                </div>
-                <div style="flex: 1;">
-                    <div style="font-weight: 700; color: var(--text-primary); margin-bottom: 4px;">${notification.title}</div>
-                    <div style="font-size: 0.9rem; color: var(--text-secondary);">${notification.message}</div>
-                </div>
-                <button onclick="this.parentElement.remove()" style="background: transparent; border: none; color: var(--text-secondary); cursor: pointer; padding: 8px;">
-                    <i class="fas fa-times"></i>
-                </button>
-            `;
-            
-            document.body.appendChild(toast);
-            
-            // إزالة التوست بعد 5 ثواني
-            setTimeout(() => {
-                toast.classList.add('hide');
-                setTimeout(() => toast.remove(), 300);
-            }, 5000);
-        }
-        
-        updateDisplay() {
-            // تحديث العداد في الشريط العلوي
-            const badge = document.getElementById('notificationBadge');
-            const unreadCount = this.notifications.filter(n => !n.read).length;
-            
-            if (unreadCount > 0) {
-                badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
-                badge.style.display = 'flex';
-            } else {
-                badge.style.display = 'none';
-            }
-            
-            // تحديث العدادات في التبويبات
-            this.updateTabCounts();
-            
-            // تحديث محتوى الإشعارات
-            this.renderNotifications();
-        }
-        
-        updateTabCounts() {
-            const counts = {
-                all: this.notifications.length,
-                stock: this.notifications.filter(n => n.type === 'stock').length,
-                debts: this.notifications.filter(n => n.type === 'debts').length,
-                system: this.notifications.filter(n => n.type === 'system').length
-            };
-            
-            ['all', 'stock', 'debts', 'system'].forEach(tab => {
-                const counter = document.getElementById(`notificationCount${tab.charAt(0).toUpperCase() + tab.slice(1)}`);
-                if (counter && counts[tab] > 0) {
-                    counter.textContent = counts[tab];
-                    counter.style.display = 'inline-block';
-                } else if (counter) {
-                    counter.style.display = 'none';
-                }
-            });
-        }
-        
-        renderNotifications() {
-            const content = document.getElementById('notificationsContent');
-            if (!content) return;
-            
-            const filtered = this.currentTab === 'all' 
-                ? this.notifications 
-                : this.notifications.filter(n => n.type === this.currentTab);
-            
-            if (filtered.length === 0) {
-                content.innerHTML = `
-                    <div class="notifications-empty">
-                        <i class="fas fa-bell-slash"></i>
-                        <h3>لا توجد إشعارات</h3>
-                        <p>ستظهر إشعاراتك هنا</p>
-                    </div>
-                `;
-                return;
-            }
-            
-            content.innerHTML = filtered.map(notification => this.renderNotificationItem(notification)).join('');
-        }
-        
-        renderNotificationItem(notification) {
-            const iconClass = notification.level === 'danger' ? 'danger' :
-                            notification.level === 'warning' ? 'warning' : 'info';
-            const icon = notification.icon || (notification.type === 'stock' ? 'fa-boxes' :
-                        notification.type === 'debts' ? 'fa-credit-card' : 'fa-cog');
-            
-            const timeAgo = this.getTimeAgo(notification.timestamp);
-            const unreadClass = notification.read ? '' : 'unread';
-            
-            // إضافة معرف فريد للإشعار القابل للتوسع
-            const expandId = `notification-expand-${notification.id}`;
-            
-            return `
-                <div class="notification-item ${unreadClass}" data-id="${notification.id}">
-                    <div style="display: flex; align-items: flex-start; gap: 15px;">
-                        <div class="notification-item-icon ${iconClass}">
-                            <i class="fas ${icon}"></i>
-                        </div>
-                        <div class="notification-item-content" style="flex: 1;">
-                            <div class="notification-item-title">
-                                ${notification.title}
-                                ${!notification.read ? '<span style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.7rem; margin-right: 8px;">جديد</span>' : ''}
-                            </div>
-                            <div class="notification-item-message">${notification.message}</div>
-                            
-                            ${notification.detailedMessage ? `
-                                <div style="margin-top: 10px;">
-                                    <button class="notification-expand-btn" onclick="document.getElementById('${expandId}').style.display = document.getElementById('${expandId}').style.display === 'none' ? 'block' : 'none'">
-                                        <i class="fas fa-chevron-down"></i>
-                                        عرض التفاصيل
-                                    </button>
-                                    <div id="${expandId}" class="notification-details" style="display: none; margin-top: 10px;">
-                                        ${notification.detailedMessage}
-                                    </div>
-                                </div>
-                            ` : ''}
-                            
-                            <div class="notification-item-time">
-                                <i class="fas fa-clock"></i>
-                                ${timeAgo}
-                            </div>
-                            <div class="notification-item-actions">
-                                ${notification.action ? `
-                                    <button class="notification-item-btn primary" onclick="notificationSystem.handleNotificationAction('${notification.id}')">
-                                        <i class="fas fa-arrow-left"></i>
-                                        ${notification.action.label}
-                                    </button>
-                                ` : ''}
-                                ${!notification.read ? `
-                                    <button class="notification-item-btn secondary" onclick="notificationSystem.markAsRead('${notification.id}')">
-                                        <i class="fas fa-check"></i>
-                                        تعليم كمقروء
-                                    </button>
-                                ` : ''}
-                                <button class="notification-item-btn secondary" onclick="notificationSystem.deleteNotification('${notification.id}')">
-                                    <i class="fas fa-trash"></i>
-                                    حذف
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-        
-        getTimeAgo(timestamp) {
-            const now = Date.now();
-            const diff = now - timestamp;
-            const minutes = Math.floor(diff / 60000);
-            const hours = Math.floor(diff / 3600000);
-            const days = Math.floor(diff / 86400000);
-            
-            if (minutes < 1) return 'الآن';
-            if (minutes < 60) return `منذ ${minutes} دقيقة`;
-            if (hours < 24) return `منذ ${hours} ساعة`;
-            return `منذ ${days} يوم`;
-        }
-        
-        handleNotificationAction(notificationId) {
-            const notification = this.notifications.find(n => n.id === notificationId);
-            if (notification && notification.action && notification.action.handler) {
-                notification.action.handler();
-                this.markAsRead(notificationId);
-                toggleNotificationsPanel(); // إغلاق اللوحة
-            }
-        }
-        
-        navigateToProduct(productId) {
-            showPage('products');
-            setTimeout(() => {
-                const searchInput = document.getElementById('productSearchInput');
-                if (searchInput) {
-                    searchInput.focus();
-                }
-            }, 300);
-        }
-        
-        navigateToDebt(debtId) {
-            showPage('debts');
-            // انتظر حتى يتم تحميل الديون في الصفحة
-            const tryShowDetails = () => {
-                if (typeof debtsData !== 'undefined' && Array.isArray(debtsData) && debtsData.length > 0) {
-                    if (typeof showDebtDetails === 'function') {
-                        showDebtDetails(debtId);
-                        // تمييز العنصر في الجدول إذا كان موجوداً
-                        setTimeout(() => {
-                            const debtElement = document.querySelector(`[data-debt-id="${debtId}"]`);
-                            if (debtElement) {
-                                debtElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                                debtElement.style.animation = 'highlight 2s ease';
-                            }
-                        }, 300);
-                        return;
-                    }
-                }
-                // إذا لم تكن الديون جاهزة، أعد المحاولة بعد قليل
-                setTimeout(tryShowDetails, 200);
-            };
-            tryShowDetails();
-        }
-        
-        markAsRead(notificationId) {
-            const notification = this.notifications.find(n => n.id === notificationId);
-            if (notification) {
-                notification.read = true;
-                this.saveNotifications();
-                this.updateDisplay();
-            }
-        }
-        
-        markAllNotificationsAsRead() {
-            this.notifications.forEach(n => n.read = true);
-            this.saveNotifications();
-            this.updateDisplay();
-        }
-        
-        deleteNotification(notificationId) {
-            this.notifications = this.notifications.filter(n => n.id !== notificationId);
-            this.saveNotifications();
-            this.updateDisplay();
-        }
-        
-        clearAllNotifications() {
-            if (confirm('هل أنت متأكد من حذف جميع الإشعارات؟')) {
-                this.notifications = [];
-                this.saveNotifications();
-                this.updateDisplay();
-            }
-        }
-        
-        switchTab(tab) {
-            this.currentTab = tab;
-            
-            // تحديث التبويبات
-            document.querySelectorAll('.notifications-tab').forEach(t => {
-                t.classList.remove('active');
-            });
-            document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
-            
-            // تحديث المحتوى
-            this.renderNotifications();
-        }
-        
-        startAutoRefresh() {
-            if (this.refreshTimer) {
-                clearInterval(this.refreshTimer);
-            }
-            
-            this.refreshTimer = setInterval(async () => {
-                console.log('🔄 تحديث الإشعارات تلقائيًا...');
-                await this.checkAndCreateNotifications();
-                this.updateDisplay();
-            }, this.settings.refreshInterval);
-        }
-        
-        stopAutoRefresh() {
-            if (this.refreshTimer) {
-                clearInterval(this.refreshTimer);
-                this.refreshTimer = null;
-            }
-        }
-    }
-    
-    // إنشاء نسخة واحدة من النظام
-    let notificationSystem = null;
-    
-    // تهيئة نظام الإشعارات عند تحميل الصفحة
-    document.addEventListener('DOMContentLoaded', () => {
-        setTimeout(async () => {
-            notificationSystem = new NotificationSystem();
-            window.notificationSystem = notificationSystem; // جعله متاحًا عالميًا
-        }, 2000); // تأخير لضمان تحميل dataSdk أولاً
-    });
-    
-    // دوال للتفاعل مع واجهة المستخدم
-    function toggleNotificationsPanel() {
-        const panel = document.getElementById('notificationsPanel');
-        panel.classList.toggle('active');
-    }
-    
-    function switchNotificationTab(tab) {
-        if (notificationSystem) {
-            notificationSystem.switchTab(tab);
-        }
-    }
-    
-    function markAllNotificationsAsRead() {
-        if (notificationSystem) {
-            notificationSystem.markAllNotificationsAsRead();
-        }
-    }
-    
-    function clearAllNotifications() {
-        if (notificationSystem) {
-            notificationSystem.clearAllNotifications();
-        }
-    }
-    
-    // إغلاق اللوحة عند النقر خارجها
-    document.addEventListener('click', (e) => {
-        const panel = document.getElementById('notificationsPanel');
-        const btn = document.querySelector('.titlebar-notification-btn');
-        
-        if (panel && panel.classList.contains('active') && 
-            !panel.contains(e.target) && 
-            !btn.contains(e.target)) {
-            panel.classList.remove('active');
-        }
-    });
-    
-    // ====== صفحة إعدادات الإشعارات ======
-    
-    function showNotificationsSettings() {
-        if (!notificationSystem) {
-            alert('نظام الإشعارات غير متاح حاليًا');
-            return;
-        }
-        
-        const settings = notificationSystem.settings;
-        
-        const modal = document.createElement('div');
-        modal.className = 'modal-overlay';
-        modal.innerHTML = `
-            <div class="modal-content" style="max-width: 700px;">
-                <div class="modal-header">
-                    <h2><i class="fas fa-bell"></i> إعدادات الإشعارات والتنبيهات</h2>
-                    <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-                <div class="modal-body" style="max-height: 600px; overflow-y: auto;">
-                    
-                    <div style="background: var(--theme-bg-secondary); padding: 20px; border-radius: 12px; margin-bottom: 20px;">
-                        <h3 style="margin-bottom: 15px; color: var(--text-primary); display: flex; align-items: center; gap: 10px;">
-                            <i class="fas fa-toggle-on" style="color: #667eea;"></i>
-                            التفعيل والإيقاف
-                        </h3>
-                        
-                        <label class="switch-container" style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: var(--theme-bg-primary); border-radius: 8px;">
-                            <span style="font-weight: 600; color: var(--text-primary);">تفعيل نظام الإشعارات</span>
-                            <input type="checkbox" id="notificationEnabled" ${settings.enabled ? 'checked' : ''}>
-                        </label>
-                    </div>
-                    
-                    <div style="background: var(--theme-bg-secondary); padding: 20px; border-radius: 12px; margin-bottom: 20px;">
-                        <h3 style="margin-bottom: 15px; color: var(--text-primary); display: flex; align-items: center; gap: 10px;">
-                            <i class="fas fa-boxes" style="color: #fbbf24;"></i>
-                            إشعارات المخزون
-                        </h3>
-                        
-                        <label class="switch-container" style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: var(--theme-bg-primary); border-radius: 8px; margin-bottom: 15px;">
-                            <span style="font-weight: 600; color: var(--text-primary);">تنبيه عند نفاذ المنتجات</span>
-                            <input type="checkbox" id="outOfStockAlert" ${settings.outOfStockAlert ? 'checked' : ''}>
-                        </label>
-                        
-                        <div style="padding: 12px; background: var(--theme-bg-primary); border-radius: 8px; margin-bottom: 15px;">
-                            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-primary);">
-                                <i class="fas fa-chart-line"></i>
-                                حد المخزون المنخفض
-                            </label>
-                            <input type="number" id="lowStockThreshold" value="${settings.lowStockThreshold}" 
-                                   min="1" max="100" 
-                                   style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--theme-bg-secondary); color: var(--text-primary);">
-                            <small style="display: block; margin-top: 8px; color: var(--text-secondary);">
-                                سيتم تنبيهك عندما تكون كمية المنتج أقل من أو تساوي هذا العدد (تنبيه أصفر ⚠️)
-                            </small>
-                        </div>
-                        
-                        <div style="padding: 12px; background: var(--theme-bg-primary); border-radius: 8px;">
-                            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-primary);">
-                                <i class="fas fa-exclamation-circle"></i>
-                                حد المخزون الحرج
-                            </label>
-                            <input type="number" id="criticalStockThreshold" value="${settings.criticalStockThreshold || 3}" 
-                                   min="1" max="50" 
-                                   style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--theme-bg-secondary); color: var(--text-primary);">
-                            <small style="display: block; margin-top: 8px; color: var(--text-secondary);">
-                                سيتم تنبيهك بشكل عاجل عندما تكون كمية المنتج أقل من هذا العدد (تنبيه أحمر 🔴)
-                            </small>
-                        </div>
-                    </div>
-                    
-                    <div style="background: var(--theme-bg-secondary); padding: 20px; border-radius: 12px; margin-bottom: 20px;">
-                        <h3 style="margin-bottom: 15px; color: var(--text-primary); display: flex; align-items: center; gap: 10px;">
-                            <i class="fas fa-credit-card" style="color: #ef4444;"></i>
-                            إشعارات الديون
-                        </h3>
-                        
-                        <label class="switch-container" style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: var(--theme-bg-primary); border-radius: 8px; margin-bottom: 15px;">
-                            <span style="font-weight: 600; color: var(--text-primary);">تنبيه عند تأخر الديون</span>
-                            <input type="checkbox" id="overdueDebtsAlert" ${settings.overdueDebtsAlert ? 'checked' : ''}>
-                        </label>
-                        
-                        <div style="padding: 12px; background: var(--theme-bg-primary); border-radius: 8px;">
-                            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-primary);">
-                                <i class="fas fa-calendar-times"></i>
-                                أيام التأخير الشديدة
-                            </label>
-                            <input type="number" id="severeOverdueDays" value="${settings.severeOverdueDays || 30}" 
-                                   min="1" max="365" 
-                                   style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--theme-bg-secondary); color: var(--text-primary);">
-                            <small style="display: block; margin-top: 8px; color: var(--text-secondary);">
-                                سيتم تعليم الدين كمتأخر بشدة عند تجاوز هذا العدد من الأيام
-                            </small>
-                        </div>
-                    </div>
-                    
-                    <div style="background: var(--theme-bg-secondary); padding: 20px; border-radius: 12px; margin-bottom: 20px;">
-                        <h3 style="margin-bottom: 15px; color: var(--text-primary); display: flex; align-items: center; gap: 10px;">
-                            <i class="fas fa-cog" style="color: #3b82f6;"></i>
-                            إعدادات متقدمة
-                        </h3>
-                        
-                        <label class="switch-container" style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: var(--theme-bg-primary); border-radius: 8px; margin-bottom: 15px;">
-                            <span style="font-weight: 600; color: var(--text-primary);">تفعيل الصوت للإشعارات</span>
-                            <input type="checkbox" id="soundEnabled" ${settings.soundEnabled ? 'checked' : ''}>
-                        </label>
-                        
-                        <label class="switch-container" style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: var(--theme-bg-primary); border-radius: 8px; margin-bottom: 15px;">
-                            <span style="font-weight: 600; color: var(--text-primary);">التحديث التلقائي للإشعارات</span>
-                            <input type="checkbox" id="autoRefresh" ${settings.autoRefresh ? 'checked' : ''}>
-                        </label>
-                        
-                        <div style="padding: 12px; background: var(--theme-bg-primary); border-radius: 8px;">
-                            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-primary);">
-                                <i class="fas fa-clock"></i>
-                                فترة التحديث (بالدقائق)
-                            </label>
-                            <input type="number" id="refreshInterval" value="${settings.refreshInterval / 60000}" 
-                                   min="1" max="60" 
-                                   style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--theme-bg-secondary); color: var(--text-primary);">
-                            <small style="display: block; margin-top: 8px; color: var(--text-secondary);">
-                                سيتم التحقق من الإشعارات الجديدة كل هذه الفترة
-                            </small>
-                        </div>
-                    </div>
-                    
-                    <div style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1)); padding: 20px; border-radius: 12px; border: 2px solid rgba(102, 126, 234, 0.3);">
-                        <h4 style="margin-bottom: 10px; color: var(--primary-color); display: flex; align-items: center; gap: 8px;">
-                            <i class="fas fa-info-circle"></i>
-                            معلومات مهمة
-                        </h4>
-                        <ul style="color: var(--text-secondary); line-height: 1.8; padding-right: 20px;">
-                            <li>سيتم التحقق من المخزون والديون تلقائيًا حسب الإعدادات</li>
-                            <li>يمكنك النقر على أي إشعار للانتقال مباشرة إلى الصفحة المرتبطة</li>
-                            <li>الإشعارات المقروءة ستبقى محفوظة حتى تقوم بحذفها</li>
-                            <li>يمكنك تعطيل أنواع معينة من الإشعارات حسب حاجتك</li>
-                        </ul>
-                    </div>
-                    
-                </div>
-                <div class="modal-footer" style="display: flex; gap: 10px; justify-content: flex-end;">
-                    <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">
-                        <i class="fas fa-times"></i>
-                        إلغاء
-                    </button>
-                    <button class="btn btn-primary" onclick="saveNotificationSettings()">
-                        <i class="fas fa-save"></i>
-                        حفظ الإعدادات
-                    </button>
-                </div>
-            </div>
-        `;
-        
-        document.body.appendChild(modal);
-    }
-    
-    function saveNotificationSettings() {
-        if (!notificationSystem) return;
-        
-        const newSettings = {
-            enabled: document.getElementById('notificationEnabled').checked,
-            lowStockThreshold: parseInt(document.getElementById('lowStockThreshold').value) || 10,
-            criticalStockThreshold: parseInt(document.getElementById('criticalStockThreshold').value) || 3,
-            outOfStockAlert: document.getElementById('outOfStockAlert').checked,
-            overdueDebtsAlert: document.getElementById('overdueDebtsAlert').checked,
-            severeOverdueDays: parseInt(document.getElementById('severeOverdueDays').value) || 30,
-            soundEnabled: document.getElementById('soundEnabled').checked,
-            autoRefresh: document.getElementById('autoRefresh').checked,
-            refreshInterval: (parseInt(document.getElementById('refreshInterval').value) || 5) * 60000
-        };
-        
-        notificationSystem.settings = newSettings;
-        notificationSystem.saveSettings();
-        
-        // إعادة تهيئة التحديث التلقائي
-        if (newSettings.autoRefresh) {
-            notificationSystem.startAutoRefresh();
-        } else {
-            notificationSystem.stopAutoRefresh();
-        }
-        
-        // إعادة فحص الإشعارات
-        notificationSystem.checkAndCreateNotifications();
-        
-        showAlert('success', 'تم حفظ إعدادات الإشعارات بنجاح');
-        document.querySelector('.modal-overlay').remove();
-    }
-    
-    // إضافة صفحة إعدادات الإشعارات إلى نظام الصفحات
-    if (typeof showSettingsPage === 'function') {
-        const originalShowSettingsPage = showSettingsPage;
-        window.showSettingsPage = function(page) {
-            if (page === 'notifications') {
-                showNotificationsSettings();
-            } else {
-                originalShowSettingsPage(page);
-            }
-        };
-    } else {
-        window.showSettingsPage = function(page) {
-            if (page === 'notifications') {
-                showNotificationsSettings();
-            }
-        };
-    }
-    
-    console.log('✅ تم تحميل نظام الإشعارات والتنبيهات بنجاح');
-    
-        // --- إصلاح: إضافة دوال وهمية لنظام الإشعارات ---
-        if (window.dataSdk) {
-            if (typeof window.dataSdk.getAllProducts !== 'function') {
-                window.dataSdk.getAllProducts = function() {
-                    // أرجع مصفوفة المنتجات من المتغير products إذا كان متاحاً
-                    if (typeof products !== 'undefined') return products;
-                    return [];
-                };
-            }
-            if (typeof window.dataSdk.getDebts !== 'function') {
-                window.dataSdk.getDebts = function() {
-                    // أرجع مصفوفة الديون من المتغير debtsData إذا كان متاحاً
-                    if (typeof debtsData !== 'undefined') return debtsData;
-                    return [];
-                };
-            }
-        }
-    </script>
     
     <style>
     /* أنماط إضافية للمفاتيح */
@@ -29946,7 +28320,6 @@ body {
     }
     </style>
     
-    <!-- ====== نهاية نظام الإشعارات والتنبيهات ====== -->
     
     <script src="products-fixes.js"></script>
 

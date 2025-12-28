@@ -698,24 +698,58 @@ async function collectAllAppData() {
  * رفع النسخة الاحتياطية إلى Firebase
  */
 async function uploadBackupToFirebase(isAutomatic = false) {
+    console.log('🚀 uploadBackupToFirebase - البدء...', { isAutomatic });
+    
     try {
         // التحقق من اتصال Firebase
-        if (typeof firebase === 'undefined' || !firebase.apps || firebase.apps.length === 0) {
-            throw new Error('Firebase غير متصل. تأكد من إعداد Firebase بشكل صحيح.');
+        console.log('🔍 فحص Firebase...', { 
+            firebaseExists: typeof firebase !== 'undefined',
+            appsLength: firebase?.apps?.length 
+        });
+        
+        if (typeof firebase === 'undefined') {
+            throw new Error('Firebase غير محمّل في الصفحة');
+        }
+        
+        if (!firebase.apps || firebase.apps.length === 0) {
+            throw new Error('Firebase غير مهيّأ. تأكد من تهيئة Firebase في firebase-config.js');
         }
 
         // التحقق من تسجيل دخول المستخدم
-        const user = firebase.auth?.()?.currentUser;
+        console.log('🔍 فحص المستخدم...', {
+            authExists: typeof firebase.auth === 'function',
+            authCalled: firebase.auth?.() !== undefined
+        });
+        
+        let user = null;
+        try {
+            if (typeof firebase.auth === 'function') {
+                const auth = firebase.auth();
+                user = auth?.currentUser;
+            }
+        } catch (authError) {
+            console.warn('⚠️ خطأ في Firebase Auth:', authError);
+        }
+        
         if (!user) {
+            const msg = 'يجب تسجيل الدخول أولاً للنسخ الاحتياطي إلى Firebase';
             if (!isAutomatic) {
-                showNotification('يجب تسجيل الدخول أولاً', 'error');
+                if (typeof showNotification === 'function') {
+                    showNotification(msg, 'error');
+                } else {
+                    alert(msg);
+                }
             }
             console.warn('⚠️ المستخدم غير مسجل دخول - تم تخطي النسخ الاحتياطي');
-            return;
+            return false;
         }
 
+        console.log('✅ المستخدم مسجل دخول:', user.uid);
+
         if (!isAutomatic) {
-            showNotification('⏳ جاري رفع النسخة الاحتياطية...', 'info');
+            if (typeof showNotification === 'function') {
+                showNotification('⏳ جاري رفع النسخة الاحتياطية...', 'info');
+            }
         }
 
         // جمع جميع البيانات
@@ -786,6 +820,8 @@ async function uploadBackupToFirebase(isAutomatic = false) {
  * تحميل آخر نسخة احتياطية من Firebase
  */
 async function downloadBackupFromFirebase() {
+    console.log('📥 downloadBackupFromFirebase - البدء...');
+    
     try {
         // التحقق من اتصال Firebase
         if (typeof firebase === 'undefined' || !firebase.apps || firebase.apps.length === 0) {
@@ -839,6 +875,8 @@ async function downloadBackupFromFirebase() {
  * عرض سجل النسخ الاحتياطية
  */
 async function viewFirebaseBackupHistory() {
+    console.log('📜 viewFirebaseBackupHistory - البدء...');
+    
     try {
         const user = firebase.auth?.()?.currentUser;
         if (!user) {
@@ -974,40 +1012,41 @@ async function autoBackupOnAppStart() {
         const now = Date.now();
         
         if (lastBackup) {
-            const data = JSON.parse(lastBackup);
-            const lastBackupTime = data.timestamp || 0;
-            const hoursSinceLastBackup = (now - lastBackupTime) / (1000 * 60 * 60);
-            
-            // إذا تم النسخ الاحتياطي في آخر 6 ساعات، تخطي
-            if (hoursSinceLastBackup < 6) {
-                console.log(`ℹ️ آخر نسخة احتياطية كانت منذ ${hoursSinceLastBackup.toFixed(1)} ساعة - تم التخطي`);
-                return;
+            try {
+                const data = JSON.parse(lastBackup);
+                const lastBackupTime = data.timestamp || 0;
+                const hoursSinceLastBackup = (now - lastBackupTime) / (1000 * 60 * 60);
+                
+                // إذا تم النسخ الاحتياطي في آخر 6 ساعات، تخطي
+                if (hoursSinceLastBackup < 6) {
+                    console.log(`ℹ️ آخر نسخة احتياطية كانت منذ ${hoursSinceLastBackup.toFixed(1)} ساعة - تم التخطي`);
+                    return;
+                }
+            } catch (e) {
+                console.warn('⚠️ خطأ في قراءة آخر نسخة احتياطية:', e);
             }
         }
 
-        // الانتظار 5 ثواني قبل بدء النسخ الاحتياطي التلقائي
-        setTimeout(async () => {
-            console.log('🤖 بدء النسخ الاحتياطي التلقائي...');
-            const success = await uploadBackupToFirebase(true);
-            if (success) {
-                console.log('✅ تم النسخ الاحتياطي التلقائي بنجاح');
-            }
-        }, 5000);
+        // بدء النسخ الاحتياطي التلقائي مباشرة
+        console.log('🤖 بدء النسخ الاحتياطي التلقائي...');
+        const success = await uploadBackupToFirebase(true);
+        if (success) {
+            console.log('✅ تم النسخ الاحتياطي التلقائي بنجاح');
+        }
     } catch (error) {
         console.error('❌ خطأ في النسخ الاحتياطي التلقائي:', error);
     }
 }
 
-// تشغيل النسخ الاحتياطي التلقائي عند تحميل الصفحة
-window.addEventListener('load', () => {
-    // تحديث واجهة النسخ الاحتياطي
-    setTimeout(() => {
-        updateFirebaseBackupUI();
-    }, 1000);
-    
-    // بدء النسخ الاحتياطي التلقائي
-    autoBackupOnAppStart();
-});
+// ============================================================================
+// تصدير الدوال إلى window object لضمان الوصول إليها
+// ============================================================================
+window.uploadBackupToFirebase = uploadBackupToFirebase;
+window.downloadBackupFromFirebase = downloadBackupFromFirebase;
+window.viewFirebaseBackupHistory = viewFirebaseBackupHistory;
+window.updateFirebaseBackupUI = updateFirebaseBackupUI;
+window.autoBackupOnAppStart = autoBackupOnAppStart;
+window.collectAllAppData = collectAllAppData;
 
 // ============================================================================
 // نهاية دوال النسخ الاحتياطي إلى Firebase
@@ -30941,6 +30980,53 @@ body {
     
     console.log('✅ تم تحميل نظام الإشعارات v4.0 التفصيلي بنجاح');
 })();
+
+// ============================================================================
+// 🔥 تفعيل النسخ الاحتياطي التلقائي إلى Firebase
+// ============================================================================
+(function() {
+    console.log('🔥 تهيئة نظام النسخ الاحتياطي إلى Firebase...');
+    
+    // تحديث واجهة النسخ الاحتياطي عند تحميل الصفحة
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initBackupSystem);
+    } else {
+        initBackupSystem();
+    }
+    
+    function initBackupSystem() {
+        console.log('📱 بدء تهيئة نظام النسخ الاحتياطي...');
+        
+        // تحديث الواجهة بعد ثانية واحدة
+        setTimeout(() => {
+            try {
+                if (typeof updateFirebaseBackupUI === 'function') {
+                    updateFirebaseBackupUI();
+                    console.log('✅ تم تحديث واجهة النسخ الاحتياطي');
+                }
+            } catch (error) {
+                console.warn('⚠️ خطأ في تحديث واجهة النسخ الاحتياطي:', error);
+            }
+        }, 1000);
+        
+        // بدء النسخ الاحتياطي التلقائي بعد 5 ثواني
+        setTimeout(() => {
+            try {
+                if (typeof autoBackupOnAppStart === 'function') {
+                    autoBackupOnAppStart();
+                } else {
+                    console.warn('⚠️ دالة autoBackupOnAppStart غير معرّفة');
+                }
+            } catch (error) {
+                console.error('❌ خطأ في النسخ الاحتياطي التلقائي:', error);
+            }
+        }, 5000);
+    }
+    
+    console.log('✅ تم تهيئة نظام النسخ الاحتياطي بنجاح');
+})();
+// ============================================================================
+
     </script>
  </body>
 </html>

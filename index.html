@@ -715,24 +715,14 @@ async function uploadBackupToFirebase(isAutomatic = false) {
             throw new Error('Firebase غير مهيّأ. تأكد من تهيئة Firebase في firebase-config.js');
         }
 
-        // التحقق من تسجيل دخول المستخدم
-        console.log('🔍 فحص المستخدم...', {
-            authExists: typeof firebase.auth === 'function',
-            authCalled: firebase.auth?.() !== undefined
-        });
+        // التحقق من تسجيل المستخدم في النظام
+        console.log('🔍 فحص تسجيل المستخدم...');
         
-        let user = null;
-        try {
-            if (typeof firebase.auth === 'function') {
-                const auth = firebase.auth();
-                user = auth?.currentUser;
-            }
-        } catch (authError) {
-            console.warn('⚠️ خطأ في Firebase Auth:', authError);
-        }
+        const userStatus = localStorage.getItem('userStatus');
+        const currentUser = localStorage.getItem('currentUser');
         
-        if (!user) {
-            const msg = 'يجب تسجيل الدخول أولاً للنسخ الاحتياطي إلى Firebase';
+        if (!userStatus || !currentUser) {
+            const msg = '⚠️ يجب التسجيل أولاً للنسخ الاحتياطي إلى Firebase. اذهب إلى: الإعدادات → النسخ الاحتياطية';
             if (!isAutomatic) {
                 if (typeof showNotification === 'function') {
                     showNotification(msg, 'error');
@@ -740,11 +730,25 @@ async function uploadBackupToFirebase(isAutomatic = false) {
                     alert(msg);
                 }
             }
-            console.warn('⚠️ المستخدم غير مسجل دخول - تم تخطي النسخ الاحتياطي');
+            console.warn('⚠️ المستخدم غير مُسجل - تم تخطي النسخ الاحتياطي');
             return false;
         }
-
-        console.log('✅ المستخدم مسجل دخول:', user.uid);
+        
+        if (userStatus !== 'active') {
+            const msg = '⚠️ حسابك في انتظار التفعيل. يرجى انتظار تفعيل الحساب من الشركة.';
+            if (!isAutomatic) {
+                if (typeof showNotification === 'function') {
+                    showNotification(msg, 'warning');
+                } else {
+                    alert(msg);
+                }
+            }
+            console.warn('⚠️ المستخدم غير مُفعّل - تم تخطي النسخ الاحتياطي');
+            return false;
+        }
+        
+        const userData = JSON.parse(currentUser);
+        console.log('✅ المستخدم مُسجل ومُفعّل:', userData.fullName, '- UID:', userData.uid);
 
         if (!isAutomatic) {
             if (typeof showNotification === 'function') {
@@ -764,7 +768,7 @@ async function uploadBackupToFirebase(isAutomatic = false) {
         // رفع إلى Firebase Database
         const database = firebase.database();
         const timestamp = Date.now();
-        const backupRef = database.ref(`users/${user.uid}/backups/${timestamp}`);
+        const backupRef = database.ref(`users/${userData.uid}/backups/${timestamp}`);
         
         await backupRef.set({
             data: backupData,
@@ -772,7 +776,7 @@ async function uploadBackupToFirebase(isAutomatic = false) {
                 timestamp: new Date().toISOString(),
                 size: dataSize,
                 sizeText: sizeText,
-                version: '2.0.7',
+                version: '2.1.0',
                 automatic: isAutomatic,
                 deviceInfo: {
                     userAgent: navigator.userAgent,
@@ -783,7 +787,7 @@ async function uploadBackupToFirebase(isAutomatic = false) {
         });
 
         // حفظ معلومات آخر نسخة احتياطية
-        await database.ref(`users/${user.uid}/lastBackup`).set({
+        await database.ref(`users/${userData.uid}/lastBackup`).set({
             timestamp: new Date().toISOString(),
             timestampMs: timestamp,
             size: sizeText,
@@ -1271,8 +1275,8 @@ async function checkActivationStatus() {
                 lastLogin: new Date().toISOString()
             });
             
-            // إخفاء صفحة التسجيل
-            hideAuthPage();
+            // تحديث واجهة التسجيل
+            updateRegistrationUI();
             
             // إظهار رسالة ترحيب
             showNotification(`🎉 مرحباً ${userDataFromFirebase.fullName}! تم تفعيل حسابك بنجاح`, 'success');
@@ -1316,60 +1320,186 @@ function startActivationPolling(userUID) {
 }
 
 /**
- * إخفاء صفحة التسجيل
+ * معالجة إرسال نموذج التسجيل (من صفحة الإعدادات)
  */
-function hideAuthPage() {
-    const authPage = document.getElementById('authPage');
-    authPage.style.opacity = '0';
-    authPage.style.pointerEvents = 'none';
+async function handleSettingsRegisterSubmit(event) {
+    event.preventDefault();
+    console.log('📝 معالجة طلب التسجيل من الإعدادات...');
     
-    setTimeout(() => {
-        authPage.style.display = 'none';
-    }, 300);
+    try {
+        // الحصول على البيانات
+        const fullName = document.getElementById('settingsRegisterFullName').value.trim();
+        const phone = document.getElementById('settingsRegisterPhone').value.trim();
+        
+        // التحقق من البيانات
+        if (!fullName || !phone) {
+            showNotification('❌ يرجى ملء جميع الحقول', 'error');
+            return;
+        }
+        
+        if (phone.length !== 11) {
+            showNotification('❌ رقم الهاتف يجب أن يكون 11 رقم', 'error');
+            return;
+        }
+        
+        // تعطيل زر الإرسال
+        const registerBtn = document.getElementById('settingsRegisterBtn');
+        const originalBtnText = registerBtn.innerHTML;
+        registerBtn.disabled = true;
+        registerBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الإرسال...';
+        
+        // توليد البيانات
+        const activationCode = generateActivationCode();
+        const userUID = generateUserUID();
+        const registeredAt = new Date().toISOString();
+        
+        const userData = {
+            fullName,
+            phone,
+            activationCode,
+            uid: userUID,
+            registeredAt,
+            status: 'pending'
+        };
+        
+        console.log('📊 بيانات المستخدم:', userData);
+        
+        // حفظ في Firebase
+        const savedToFirebase = await saveUserToFirebase(userData);
+        
+        if (!savedToFirebase) {
+            throw new Error('فشل حفظ البيانات في Firebase');
+        }
+        
+        // حفظ في localStorage
+        localStorage.setItem('currentUser', JSON.stringify(userData));
+        localStorage.setItem('userStatus', 'pending');
+        
+        // إرسال رسالة واتساب
+        sendWhatsAppToCompany(fullName, phone, activationCode, userUID);
+        
+        // إخفاء النموذج وإظهار حالة الانتظار
+        document.getElementById('registrationFormSection').style.display = 'none';
+        document.getElementById('settingsWaitingActivation').style.display = 'block';
+        document.getElementById('settingsUserActivationCode').textContent = activationCode;
+        
+        showNotification('✅ تم إرسال طلب الاشتراك بنجاح!', 'success');
+        console.log('✅ تم التسجيل بنجاح!');
+        
+        // بدء فحص التفعيل التلقائي كل 30 ثانية
+        startActivationPolling(userUID);
+        
+    } catch (error) {
+        console.error('❌ خطأ في التسجيل:', error);
+        showNotification(`❌ حدث خطأ: ${error.message}`, 'error');
+        
+        // إعادة تفعيل الزر
+        const registerBtn = document.getElementById('settingsRegisterBtn');
+        if (registerBtn) {
+            registerBtn.disabled = false;
+            registerBtn.innerHTML = originalBtnText;
+        }
+    }
 }
 
 /**
- * إظهار صفحة التسجيل
+ * تحديث واجهة التسجيل في صفحة الإعدادات
  */
-function showAuthPage() {
-    const authPage = document.getElementById('authPage');
-    authPage.style.display = 'flex';
-    authPage.style.opacity = '0';
-    authPage.style.pointerEvents = 'all';
-    
-    setTimeout(() => {
-        authPage.style.opacity = '1';
-    }, 10);
+function updateRegistrationUI() {
+    try {
+        const currentUser = localStorage.getItem('currentUser');
+        const userStatus = localStorage.getItem('userStatus');
+        
+        const registrationStatusDisplay = document.getElementById('registrationStatusDisplay');
+        const registrationFormSection = document.getElementById('registrationFormSection');
+        const settingsWaitingActivation = document.getElementById('settingsWaitingActivation');
+        const settingsRegisteredUserInfo = document.getElementById('settingsRegisteredUserInfo');
+        
+        if (!currentUser || !userStatus) {
+            // غير مسجل - إظهار رسالة + نموذج التسجيل
+            if (registrationStatusDisplay) {
+                registrationStatusDisplay.innerHTML = `
+                    <div style="background: rgba(251, 191, 36, 0.1); border-right: 4px solid #fbbf24; padding: 1.5rem; border-radius: 12px;">
+                        <h4 style="color: #fbbf24; margin-bottom: 0.5rem;">
+                            <i class="fas fa-exclamation-circle"></i> غير مُسجل
+                        </h4>
+                        <p style="color: var(--theme-text-secondary); line-height: 1.6; margin: 0;">
+                            للاستفادة من ميزة النسخ الاحتياطي السحابي، يجب عليك التسجيل أولاً.
+                        </p>
+                    </div>
+                `;
+            }
+            if (registrationFormSection) registrationFormSection.style.display = 'block';
+            if (settingsWaitingActivation) settingsWaitingActivation.style.display = 'none';
+            if (settingsRegisteredUserInfo) settingsRegisteredUserInfo.style.display = 'none';
+            return;
+        }
+        
+        const userData = JSON.parse(currentUser);
+        
+        if (userStatus === 'pending') {
+            // في انتظار التفعيل
+            if (registrationStatusDisplay) registrationStatusDisplay.innerHTML = '';
+            if (registrationFormSection) registrationFormSection.style.display = 'none';
+            if (settingsWaitingActivation) {
+                settingsWaitingActivation.style.display = 'block';
+                const codeElem = document.getElementById('settingsUserActivationCode');
+                if (codeElem) codeElem.textContent = userData.activationCode;
+            }
+            if (settingsRegisteredUserInfo) settingsRegisteredUserInfo.style.display = 'none';
+            
+        } else if (userStatus === 'active') {
+            // مُفعّل
+            if (registrationStatusDisplay) registrationStatusDisplay.innerHTML = '';
+            if (registrationFormSection) registrationFormSection.style.display = 'none';
+            if (settingsWaitingActivation) settingsWaitingActivation.style.display = 'none';
+            if (settingsRegisteredUserInfo) {
+                settingsRegisteredUserInfo.style.display = 'block';
+                
+                // تحديث المعلومات
+                const nameElem = document.getElementById('settingsUserNameDisplay');
+                const phoneElem = document.getElementById('settingsUserPhoneDisplay');
+                const codeElem = document.getElementById('settingsUserCodeDisplay');
+                
+                if (nameElem) nameElem.textContent = userData.fullName || '---';
+                if (phoneElem) phoneElem.textContent = userData.phone || '---';
+                if (codeElem) codeElem.textContent = userData.activationCode || '---';
+            }
+        }
+        
+        console.log('✅ تم تحديث واجهة التسجيل');
+    } catch (error) {
+        console.error('❌ خطأ في تحديث واجهة التسجيل:', error);
+    }
 }
 
+// تصدير الدوال إلى window object
+window.handleSettingsRegisterSubmit = handleSettingsRegisterSubmit;
+window.updateRegistrationUI = updateRegistrationUI;
+
 /**
- * فحص حالة المستخدم عند تحميل التطبيق
+ * فحص حالة المستخدم عند تحميل التطبيق (اختياري)
  */
 async function checkUserStatus() {
-    console.log('🔐 فحص حالة المستخدم...');
+    console.log('🔐 فحص حالة المستخدم (اختياري)...');
     
     try {
         const userStatus = localStorage.getItem('userStatus');
         const currentUser = localStorage.getItem('currentUser');
         
         if (!userStatus || !currentUser) {
-            // لا يوجد مستخدم - إظهار صفحة التسجيل
-            console.log('ℹ️ لا يوجد مستخدم مسجل');
-            showAuthPage();
+            // لا يوجد مستخدم - لكن هذا اختياري، لا نُظهر صفحة تسجيل
+            console.log('ℹ️ لا يوجد مستخدم مسجل (اختياري)');
             return false;
         }
         
         const userData = JSON.parse(currentUser);
         
         if (userStatus === 'pending') {
-            // في انتظار التفعيل - إظهار صفحة الانتظار
+            // في انتظار التفعيل - بدء الفحص التلقائي
             console.log('⏳ المستخدم في انتظار التفعيل');
-            showAuthPage();
-            document.getElementById('registerForm').style.display = 'none';
-            document.getElementById('waitingActivation').style.display = 'block';
-            document.getElementById('userActivationCode').textContent = userData.activationCode;
             
-            // فحص التفعيل
+            // فحص التفعيل مرة واحدة
             await checkActivationStatus();
             
             // بدء الفحص التلقائي
@@ -1377,9 +1507,8 @@ async function checkUserStatus() {
             
             return false;
         } else if (userStatus === 'active') {
-            // مفعّل - إخفاء صفحة التسجيل
+            // مفعّل
             console.log('✅ المستخدم مفعّل:', userData.fullName);
-            hideAuthPage();
             
             // تحديث وقت آخر تسجيل دخول
             if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
@@ -1399,7 +1528,6 @@ async function checkUserStatus() {
         return false;
     } catch (error) {
         console.error('❌ خطأ في فحص حالة المستخدم:', error);
-        showAuthPage();
         return false;
     }
 }
@@ -1408,8 +1536,8 @@ async function checkUserStatus() {
 window.handleRegisterSubmit = handleRegisterSubmit;
 window.checkActivationStatus = checkActivationStatus;
 window.checkUserStatus = checkUserStatus;
-window.showAuthPage = showAuthPage;
-window.hideAuthPage = hideAuthPage;
+window.handleSettingsRegisterSubmit = handleSettingsRegisterSubmit;
+window.updateRegistrationUI = updateRegistrationUI;
 
 /**
  * تحديث معلومات المستخدم في صفحة الحساب
@@ -1524,6 +1652,13 @@ if (typeof originalShowPage === 'function') {
         if (pageId === 'settings-account') {
             setTimeout(() => {
                 updateUserDisplayInfo();
+            }, 100);
+        }
+        
+        // إذا كانت صفحة النسخ الاحتياطي، حدّث واجهة التسجيل
+        if (pageId === 'settings-backup') {
+            setTimeout(() => {
+                updateRegistrationUI();
             }, 100);
         }
     };
@@ -8597,206 +8732,6 @@ console.log(`
     }
   </style>
   
-  <!-- ═══════════════════════════════════════════════════════════════════════════════ -->
-  <!-- 🔐 صفحة تسجيل الدخول / التسجيل -->
-  <!-- ═══════════════════════════════════════════════════════════════════════════════ -->
-  <div id="authPage" style="
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 100000;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.3s ease;
-  ">
-    <div style="
-      background: var(--theme-bg-card);
-      border-radius: 24px;
-      padding: 3rem;
-      max-width: 500px;
-      width: 90%;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-      animation: slideUp 0.5s ease;
-    ">
-      <!-- الشعار والعنوان -->
-      <div style="text-align: center; margin-bottom: 2rem;">
-        <div style="font-size: 4rem; margin-bottom: 1rem;">🔐</div>
-        <h1 style="color: var(--theme-text-primary); font-size: 2rem; margin-bottom: 0.5rem;">
-          مرحباً بك في نظام يعقوب
-        </h1>
-        <p style="color: var(--theme-text-secondary); font-size: 1rem;">
-          نظام نقاط البيع المتقدم
-        </p>
-      </div>
-
-      <!-- رسالة المعلومات -->
-      <div style="background: rgba(59, 130, 246, 0.1); border-right: 4px solid #3b82f6; padding: 1rem; border-radius: 12px; margin-bottom: 2rem;">
-        <p style="color: var(--theme-text-primary); line-height: 1.6; margin: 0;">
-          <strong>📱 للبدء:</strong> سجل بياناتك وسيتم إرسال رسالة إلى الشركة للتفعيل.
-        </p>
-      </div>
-
-      <!-- نموذج التسجيل -->
-      <form id="registerForm" onsubmit="handleRegisterSubmit(event); return false;">
-        <!-- الاسم الرباعي -->
-        <div style="margin-bottom: 1.5rem;">
-          <label style="display: block; color: var(--theme-text-primary); font-weight: 600; margin-bottom: 0.5rem;">
-            <i class="fas fa-user"></i> الاسم الرباعي
-          </label>
-          <input 
-            type="text" 
-            id="registerFullName" 
-            required
-            placeholder="مثال: أحمد محمد علي حسن"
-            style="
-              width: 100%;
-              padding: 1rem;
-              border-radius: 12px;
-              border: 2px solid rgba(102, 126, 234, 0.3);
-              background: var(--theme-bg-secondary);
-              color: var(--theme-text-primary);
-              font-size: 1rem;
-              transition: border 0.3s ease;
-            "
-            onfocus="this.style.borderColor='#667eea'"
-            onblur="this.style.borderColor='rgba(102, 126, 234, 0.3)'"
-          >
-        </div>
-
-        <!-- رقم الهاتف -->
-        <div style="margin-bottom: 1.5rem;">
-          <label style="display: block; color: var(--theme-text-primary); font-weight: 600; margin-bottom: 0.5rem;">
-            <i class="fas fa-phone"></i> رقم الهاتف
-          </label>
-          <input 
-            type="tel" 
-            id="registerPhone" 
-            required
-            placeholder="مثال: 07701234567"
-            pattern="[0-9]{11}"
-            style="
-              width: 100%;
-              padding: 1rem;
-              border-radius: 12px;
-              border: 2px solid rgba(102, 126, 234, 0.3);
-              background: var(--theme-bg-secondary);
-              color: var(--theme-text-primary);
-              font-size: 1rem;
-              direction: ltr;
-              text-align: right;
-              transition: border 0.3s ease;
-            "
-            onfocus="this.style.borderColor='#667eea'"
-            onblur="this.style.borderColor='rgba(102, 126, 234, 0.3)'"
-          >
-          <small style="color: var(--theme-text-secondary); font-size: 0.85rem; margin-top: 0.5rem; display: block;">
-            أدخل رقم الهاتف مكون من 11 رقم (07XX XXX XXXX)
-          </small>
-        </div>
-
-        <!-- زر التسجيل -->
-        <button 
-          type="submit"
-          id="registerBtn"
-          style="
-            width: 100%;
-            padding: 1.25rem;
-            border-radius: 12px;
-            border: none;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            font-size: 1.1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-          "
-          onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(102, 126, 234, 0.4)'"
-          onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(102, 126, 234, 0.3)'"
-        >
-          <i class="fas fa-paper-plane"></i> إرسال طلب التفعيل
-        </button>
-      </form>
-
-      <!-- حالة الانتظار (تظهر بعد الإرسال) -->
-      <div id="waitingActivation" style="display: none;">
-        <div style="text-align: center; padding: 2rem 0;">
-          <div style="font-size: 4rem; margin-bottom: 1rem;">⏳</div>
-          <h2 style="color: var(--theme-text-primary); margin-bottom: 1rem;">
-            في انتظار التفعيل
-          </h2>
-          <p style="color: var(--theme-text-secondary); line-height: 1.6; margin-bottom: 1.5rem;">
-            تم إرسال طلبك إلى الشركة. سيتم تفعيل حسابك خلال 24 ساعة.
-          </p>
-          <div style="background: var(--theme-bg-secondary); padding: 1.5rem; border-radius: 12px; margin-bottom: 1rem;">
-            <p style="color: var(--theme-text-primary); margin-bottom: 0.5rem;">
-              <strong>رمز الاشتراك الخاص بك:</strong>
-            </p>
-            <p id="userActivationCode" style="font-size: 2rem; font-weight: 700; color: #667eea; letter-spacing: 3px; font-family: 'Courier New', monospace;">
-              ----
-            </p>
-          </div>
-          <p style="color: var(--theme-text-secondary); font-size: 0.9rem;">
-            احفظ هذا الرمز للرجوع إليه لاحقاً
-          </p>
-        </div>
-
-        <!-- زر إعادة المحاولة -->
-        <button 
-          onclick="checkActivationStatus()"
-          style="
-            width: 100%;
-            padding: 1rem;
-            border-radius: 12px;
-            border: 2px solid #667eea;
-            background: transparent;
-            color: #667eea;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            margin-top: 1rem;
-          "
-          onmouseover="this.style.background='rgba(102, 126, 234, 0.1)'"
-          onmouseout="this.style.background='transparent'"
-        >
-          <i class="fas fa-sync-alt"></i> فحص حالة التفعيل
-        </button>
-      </div>
-
-      <!-- رابط الشركة -->
-      <div style="text-align: center; margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.1);">
-        <p style="color: var(--theme-text-secondary); font-size: 0.9rem;">
-          <i class="fas fa-building"></i> شركة الإبداع الرقمي
-        </p>
-        <p style="color: var(--theme-text-secondary); font-size: 0.85rem; margin-top: 0.5rem;">
-          للدعم الفني: <a href="https://wa.me/9647735553637" target="_blank" style="color: #667eea; text-decoration: none;">
-            07735553637 <i class="fab fa-whatsapp"></i>
-          </a>
-        </p>
-      </div>
-    </div>
-  </div>
-
-  <style>
-    @keyframes slideUp {
-      from {
-        opacity: 0;
-        transform: translateY(30px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-  </style>
-  
   <div class="animated-bg"></div>
   <div class="app-container"><!-- الشريط الجانبي -->
    <nav class="sidebar" id="sidebar"><button class="sidebar-toggle" id="sidebarToggle"> <i class="fas fa-angle-double-right"></i> </button>
@@ -11436,6 +11371,154 @@ console.log(`
             <button class="btn btn-primary" onclick="saveBackupSettings()">
               <i class="fas fa-save"></i> حفظ إعدادات النسخ الاحتياطي
             </button>
+          </div>
+
+          <!-- ═══════════════════════════════════════════════════════════════ -->
+          <!-- 🔐 تسجيل الاشتراك السحابي (اختياري) -->
+          <!-- ═══════════════════════════════════════════════════════════════ -->
+          <div class="settings-section" id="cloudRegistrationSection">
+            <h3 style="margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 2px solid rgba(255,255,255,0.1);">
+              <i class="fas fa-user-plus"></i> تسجيل الاشتراك السحابي
+            </h3>
+
+            <!-- رسالة توضيحية -->
+            <div style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%); border-right: 4px solid #667eea; padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem;">
+              <h4 style="color: #667eea; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;">
+                <i class="fas fa-info-circle"></i> ميزة اختيارية
+              </h4>
+              <p style="color: var(--theme-text-secondary); line-height: 1.8; margin: 0;">
+                يمكنك استخدام التطبيق بشكل طبيعي بدون تسجيل. لكن إذا أردت استخدام <strong style="color: var(--theme-text-primary);">النسخ الاحتياطي السحابي إلى Firebase</strong>، يجب عليك التسجيل أولاً للحصول على حساب مُفعّل.
+              </p>
+            </div>
+
+            <!-- حالة التسجيل -->
+            <div id="registrationStatusDisplay" style="margin-bottom: 2rem;">
+              <!-- سيتم ملؤها ديناميكياً -->
+            </div>
+
+            <!-- نموذج التسجيل (يظهر فقط إذا لم يكن مسجل) -->
+            <div id="registrationFormSection" style="display: none;">
+              <form id="settingsRegisterForm" onsubmit="handleSettingsRegisterSubmit(event); return false;">
+                
+                <!-- الاسم الرباعي -->
+                <div class="form-group">
+                  <label class="form-label">
+                    <i class="fas fa-user"></i> الاسم الرباعي
+                  </label>
+                  <input 
+                    type="text" 
+                    class="form-input"
+                    id="settingsRegisterFullName" 
+                    required
+                    placeholder="مثال: أحمد محمد علي حسن"
+                  >
+                </div>
+
+                <!-- رقم الهاتف -->
+                <div class="form-group">
+                  <label class="form-label">
+                    <i class="fas fa-phone"></i> رقم الهاتف
+                  </label>
+                  <input 
+                    type="tel" 
+                    class="form-input"
+                    id="settingsRegisterPhone" 
+                    required
+                    placeholder="مثال: 07701234567"
+                    pattern="[0-9]{11}"
+                    style="direction: ltr; text-align: right;"
+                  >
+                  <small style="color: var(--theme-text-secondary); font-size: 0.85rem; margin-top: 0.5rem; display: block;">
+                    أدخل رقم الهاتف مكون من 11 رقم (07XX XXX XXXX)
+                  </small>
+                </div>
+
+                <!-- زر التسجيل -->
+                <button 
+                  type="submit"
+                  id="settingsRegisterBtn"
+                  class="btn btn-primary"
+                  style="width: 100%; padding: 1.25rem; font-size: 1.1rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none;"
+                >
+                  <i class="fas fa-paper-plane"></i> إرسال طلب الاشتراك
+                </button>
+              </form>
+            </div>
+
+            <!-- حالة الانتظار (تظهر بعد الإرسال) -->
+            <div id="settingsWaitingActivation" style="display: none;">
+              <div style="text-align: center; padding: 2rem; background: var(--theme-bg-secondary); border-radius: 12px; border: 2px solid rgba(102, 126, 234, 0.3);">
+                <div style="font-size: 4rem; margin-bottom: 1rem;">⏳</div>
+                <h3 style="color: var(--theme-text-primary); margin-bottom: 1rem; font-size: 1.5rem;">
+                  في انتظار التفعيل
+                </h3>
+                <p style="color: var(--theme-text-secondary); line-height: 1.6; margin-bottom: 1.5rem;">
+                  تم إرسال طلبك إلى الشركة. سيتم تفعيل حسابك خلال 24 ساعة.
+                </p>
+                <div style="background: var(--theme-bg-tertiary); padding: 1.5rem; border-radius: 12px; margin-bottom: 1rem;">
+                  <p style="color: var(--theme-text-primary); margin-bottom: 0.5rem;">
+                    <strong>رمز الاشتراك الخاص بك:</strong>
+                  </p>
+                  <p id="settingsUserActivationCode" style="font-size: 2rem; font-weight: 700; color: #667eea; letter-spacing: 3px; font-family: 'Courier New', monospace; margin: 0;">
+                    ----
+                  </p>
+                </div>
+                <p style="color: var(--theme-text-secondary); font-size: 0.9rem; margin-bottom: 1.5rem;">
+                  احفظ هذا الرمز للرجوع إليه لاحقاً
+                </p>
+                
+                <button 
+                  onclick="checkActivationStatus()"
+                  class="btn"
+                  style="width: 100%; padding: 1rem; border: 2px solid #667eea; background: transparent; color: #667eea;"
+                >
+                  <i class="fas fa-sync-alt"></i> فحص حالة التفعيل
+                </button>
+              </div>
+            </div>
+
+            <!-- معلومات المستخدم المسجل (تظهر بعد التفعيل) -->
+            <div id="settingsRegisteredUserInfo" style="display: none;">
+              <div style="background: linear-gradient(135deg, var(--theme-bg-secondary) 0%, var(--theme-bg-hover) 100%); border-radius: 12px; padding: 2rem; border: 2px solid rgba(34, 197, 94, 0.3);">
+                
+                <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
+                  <div style="background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-check" style="font-size: 2rem; color: white;"></i>
+                  </div>
+                  <div>
+                    <h4 style="color: var(--theme-text-primary); margin: 0 0 0.25rem 0; font-size: 1.25rem;">
+                      حساب مُفعّل
+                    </h4>
+                    <p style="color: var(--theme-text-secondary); margin: 0;">
+                      يمكنك الآن استخدام النسخ الاحتياطي السحابي
+                    </p>
+                  </div>
+                </div>
+
+                <div style="display: grid; gap: 1rem;">
+                  <div style="display: flex; justify-content: space-between; padding: 0.75rem; background: var(--theme-bg-tertiary); border-radius: 8px;">
+                    <span style="color: var(--theme-text-secondary);">
+                      <i class="fas fa-user"></i> الاسم:
+                    </span>
+                    <strong id="settingsUserNameDisplay" style="color: var(--theme-text-primary);">---</strong>
+                  </div>
+                  
+                  <div style="display: flex; justify-content: space-between; padding: 0.75rem; background: var(--theme-bg-tertiary); border-radius: 8px;">
+                    <span style="color: var(--theme-text-secondary);">
+                      <i class="fas fa-phone"></i> رقم الهاتف:
+                    </span>
+                    <strong id="settingsUserPhoneDisplay" style="color: var(--theme-text-primary); direction: ltr;">---</strong>
+                  </div>
+                  
+                  <div style="display: flex; justify-content: space-between; padding: 0.75rem; background: var(--theme-bg-tertiary); border-radius: 8px;">
+                    <span style="color: var(--theme-text-secondary);">
+                      <i class="fas fa-key"></i> رمز الاشتراك:
+                    </span>
+                    <strong id="settingsUserCodeDisplay" style="color: #667eea; font-family: 'Courier New', monospace; letter-spacing: 2px;">---</strong>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
           <!-- النسخ الاحتياطي إلى Firebase -->

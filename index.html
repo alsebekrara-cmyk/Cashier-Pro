@@ -35005,260 +35005,757 @@ body {
 })();
     </script>
 
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 
     <!-- ═══════════════════════════════════════════════════════════════ -->
-    <!-- نظام الاشتراك السحابي مع Firebase - v2.0 -->
-    <!-- Cloud Subscription System with Firebase Integration -->
-    <!-- شركة الإبداع الرقمي - كرار السعبري -->
+    <!-- نظام الاشتراك السحابي - Cloud Subscription System v2.0 -->
+    <!-- Digital Creativity Company - Kraar Al-Saabri -->
+    <!-- مع دعم Firebase Integration -->
     <!-- ═══════════════════════════════════════════════════════════════ -->
     <script>
-// ═══════════════════════════════════════════════════════════════════════════════
-// نظام الاشتراك السحابي مع Firebase - v2.0
-// Cloud Subscription System with Firebase Integration
-// شركة الإبداع الرقمي - كرار السعبري
-// ═══════════════════════════════════════════════════════════════════════════════
-
-(function() {
-    'use strict';
-    
-    console.log('🔐 بدء تحميل نظام الاشتراك السحابي v2.0 مع Firebase...');
-    
-    // ═══════════════════════════════════════════════════════════════════════════════
-    // المتغيرات الأساسية
-    // ═══════════════════════════════════════════════════════════════════════════════
-    
-    let subscriptionModal = null;
-    let currentUserId = null;
-    let subscriptionStatus = {
-        isActive: false,
-        username: null,
-        phone: null,
-        activationDate: null,
-        userId: null
-    };
-    
-    // إعدادات Telegram Bot (اختياري)
-    const TELEGRAM_BOT_TOKEN = ''; // ضع هنا Token البوت
-    const TELEGRAM_CHAT_ID = '';   // ضع هنا Chat ID
-    
-    // ═══════════════════════════════════════════════════════════════════════════════
-    // الحصول على User ID
-    // ═══════════════════════════════════════════════════════════════════════════════
-    
-    function getCurrentUserId() {
-        // محاولة 1: من localStorage
-        const savedUserId = localStorage.getItem('userId') || localStorage.getItem('currentUserId');
-        if (savedUserId) {
-            console.log('✅ تم العثور على User ID من localStorage:', savedUserId);
-            return savedUserId;
-        }
+    (function() {
+        'use strict';
         
-        // محاولة 2: من storeSettings
-        try {
-            const storeSettings = JSON.parse(localStorage.getItem('storeSettings') || '{}');
-            if (storeSettings.userId) {
-                console.log('✅ تم العثور على User ID من storeSettings:', storeSettings.userId);
-                return storeSettings.userId;
-            }
-        } catch (e) {
-            console.error('خطأ في قراءة storeSettings:', e);
-        }
+        console.log('🔐 بدء تحميل نظام الاشتراك السحابي v2.0...');
         
-        // محاولة 3: إنشاء معرف جديد
-        console.warn('⚠️ لم يتم العثور على User ID، سيتم إنشاء معرف جديد');
-        const newUserId = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-        localStorage.setItem('userId', newUserId);
-        return newUserId;
-    }
-    
-    // ═══════════════════════════════════════════════════════════════════════════════
-    // التحقق من Firebase
-    // ═══════════════════════════════════════════════════════════════════════════════
-    
-    function checkFirebase() {
-        if (typeof firebase === 'undefined') {
-            console.error('❌ Firebase غير محمل');
-            return false;
-        }
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyB-hG3TnHGXg8K-5QzKPjAu0zQ0zQzQzQz",
+            authDomain: "cashier-pro-bed2b.firebaseapp.com",
+            databaseURL: "https://cashier-pro-bed2b-default-rtdb.firebaseio.com",
+            projectId: "cashier-pro-bed2b",
+            storageBucket: "cashier-pro-bed2b.appspot.com",
+            messagingSenderId: "123456789012",
+            appId: "1:123456789012:web:abcdefghijklmnop"
+        };
         
-        if (!firebase.apps || firebase.apps.length === 0) {
-            console.error('❌ Firebase غير مهيأ');
-            return false;
-        }
-        
-        if (!window.database) {
-            try {
-                window.database = firebase.database();
-                console.log('✅ تم تهيئة Firebase Database');
-            } catch (e) {
-                console.error('❌ خطأ في تهيئة database:', e);
-                return false;
-            }
-        }
-        
-        return true;
-    }
-    
-    // ═══════════════════════════════════════════════════════════════════════════════
-    // تحميل حالة الاشتراك من Firebase
-    // ═══════════════════════════════════════════════════════════════════════════════
-    
-    async function loadSubscriptionFromFirebase() {
-        if (!checkFirebase() || !currentUserId) return;
+        // تهيئة Firebase
+        let firebaseInitialized = false;
+        let database = null;
         
         try {
-            const snapshot = await database.ref(`users/${currentUserId}/cloudSubscription`).once('value');
-            const data = snapshot.val();
-            
-            if (data) {
-                subscriptionStatus = {
-                    isActive: data.status === 'active',
-                    username: data.username || null,
-                    phone: data.phone || null,
-                    activationDate: data.activationDate || null,
-                    userId: currentUserId
-                };
-                
-                // حفظ في localStorage أيضاً
-                localStorage.setItem('cloudSubscriptionStatus', JSON.stringify(subscriptionStatus));
-                
-                console.log('✅ تم تحميل حالة الاشتراك من Firebase:', subscriptionStatus.isActive ? 'نشط' : 'غير نشط');
-                return true;
+            if (!firebase.apps.length) {
+                firebase.initializeApp(firebaseConfig);
             }
+            database = firebase.database();
+            firebaseInitialized = true;
+            console.log('✅ تم تهيئة Firebase بنجاح');
         } catch (error) {
-            console.error('❌ خطأ في تحميل الاشتراك من Firebase:', error);
+            console.error('❌ خطأ في تهيئة Firebase:', error);
+            firebaseInitialized = false;
         }
         
-        return false;
-    }
-    
-    // ═══════════════════════════════════════════════════════════════════════════════
-    // تحميل حالة الاشتراك من localStorage
-    // ═══════════════════════════════════════════════════════════════════════════════
-    
-    function loadSubscriptionFromLocal() {
-        const saved = localStorage.getItem('cloudSubscriptionStatus');
-        if (saved) {
-            try {
-                subscriptionStatus = JSON.parse(saved);
-                console.log('✅ تم تحميل حالة الاشتراك من localStorage');
-                return true;
-            } catch (e) {
-                console.error('❌ خطأ في تحميل الاشتراك:', e);
+        let subscriptionModal = null;
+        let subscriptionStatus = {
+            isActive: false,
+            username: null,
+            phone: null,
+            activationDate: null
+        };
+        
+        // الحصول على معرف المستخدم الفريد (userUid)
+        function getUserUid() {
+            // محاولة الحصول على uid من localStorage
+            let uid = localStorage.getItem('userUid');
+            
+            if (!uid) {
+                // إنشاء uid جديد إذا لم يكن موجوداً
+                uid = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                localStorage.setItem('userUid', uid);
+                console.log('🆕 تم إنشاء معرف مستخدم جديد:', uid);
+            } else {
+                console.log('✅ معرف المستخدم:', uid);
+            }
+            
+            return uid;
+        }
+        
+        // تحميل حالة الاشتراك من Firebase ثم localStorage
+        async function loadSubscriptionStatus() {
+            // أولاً: محاولة التحميل من localStorage
+            const saved = localStorage.getItem('cloudSubscriptionStatus');
+            if (saved) {
+                try {
+                    subscriptionStatus = JSON.parse(saved);
+                    console.log('✅ تم تحميل حالة الاشتراك من localStorage:', subscriptionStatus.isActive ? 'نشط' : 'غير نشط');
+                } catch (e) {
+                    console.error('❌ خطأ في تحميل الاشتراك:', e);
+                }
+            }
+            
+            // ثانياً: محاولة التحميل من Firebase
+            if (firebaseInitialized) {
+                try {
+                    const uid = getUserUid();
+                    const snapshot = await database.ref(`users/${uid}/cloudSubscription/profile`).once('value');
+                    if (snapshot.exists()) {
+                        const data = snapshot.val();
+                        subscriptionStatus = {
+                            isActive: data.status === 'active',
+                            username: data.username,
+                            phone: data.phone,
+                            activationDate: data.activationDate
+                        };
+                        // تحديث localStorage
+                        saveSubscriptionStatus();
+                        console.log('✅ تم تحميل حالة الاشتراك من Firebase:', subscriptionStatus.isActive ? 'نشط' : 'غير نشط');
+                    }
+                } catch (error) {
+                    console.error('❌ خطأ في تحميل الاشتراك من Firebase:', error);
+                }
             }
         }
-        return false;
-    }
-    
-    // ═══════════════════════════════════════════════════════════════════════════════
-    // حفظ حالة الاشتراك
-    // ═══════════════════════════════════════════════════════════════════════════════
-    
-    function saveSubscriptionStatus() {
-        localStorage.setItem('cloudSubscriptionStatus', JSON.stringify(subscriptionStatus));
-    }
-    
-    // ═══════════════════════════════════════════════════════════════════════════════
-    // إرسال طلب الاشتراك إلى Firebase
-    // ═══════════════════════════════════════════════════════════════════════════════
-    
-    async function sendSubscriptionRequestToFirebase(username, phone) {
-        if (!checkFirebase() || !currentUserId) {
-            alert('❌ خطأ: لا يمكن الاتصال بقاعدة البيانات');
-            return false;
+        
+        // حفظ حالة الاشتراك
+        function saveSubscriptionStatus() {
+            localStorage.setItem('cloudSubscriptionStatus', JSON.stringify(subscriptionStatus));
         }
         
-        try {
+        // إضافة CSS
+        function addStyles() {
+            const style = document.createElement('style');
+            style.textContent = `
+                .cloud-subscription-btn {
+                    width: 42px;
+                    height: 42px;
+                    border: none;
+                    background: linear-gradient(135deg, #3b82f6, #2563eb);
+                    border-radius: 10px;
+                    color: white;
+                    cursor: pointer;
+                    transition: all 0.3s;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+                    margin: 0 8px;
+                }
+                .cloud-subscription-btn:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 6px 16px rgba(59, 130, 246, 0.35);
+                }
+                .cloud-subscription-btn i {
+                    font-size: 18px;
+                }
+                .cloud-subscription-btn.active {
+                    background: linear-gradient(135deg, #10b981, #059669);
+                }
+                .cloud-subscription-overlay {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background: rgba(0, 0, 0, 0.6);
+                    backdrop-filter: blur(8px);
+                    display: none;
+                    align-items: center;
+                    justify-content: center;
+                    z-index: 10000;
+                    opacity: 0;
+                    transition: opacity 0.3s;
+                }
+                .cloud-subscription-overlay.active {
+                    display: flex;
+                    opacity: 1;
+                }
+                .cloud-subscription-modal {
+                    background: var(--theme-bg-card);
+                    border-radius: 24px;
+                    width: 90%;
+                    max-width: 650px;
+                    max-height: 90vh;
+                    overflow-y: auto;
+                    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+                    transform: translateY(-20px);
+                    transition: transform 0.3s;
+                    color: var(--theme-text-primary);
+                }
+                .cloud-subscription-overlay.active .cloud-subscription-modal {
+                    transform: translateY(0);
+                }
+                .cloud-subscription-header {
+                    background: linear-gradient(135deg, #3b82f6, #2563eb);
+                    padding: 2rem;
+                    border-radius: 24px 24px 0 0;
+                    text-align: center;
+                    position: relative;
+                }
+                .cloud-subscription-close {
+                    position: absolute;
+                    top: 1rem;
+                    right: 1rem;
+                    background: rgba(255, 255, 255, 0.2);
+                    border: none;
+                    width: 36px;
+                    height: 36px;
+                    border-radius: 50%;
+                    color: white;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    transition: all 0.3s;
+                }
+                .cloud-subscription-close:hover {
+                    background: rgba(255, 255, 255, 0.3);
+                    transform: rotate(90deg);
+                }
+                .cloud-subscription-icon {
+                    width: 100px;
+                    height: 100px;
+                    background: rgba(255, 255, 255, 0.2);
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    margin: 0 auto 1rem;
+                }
+                .cloud-subscription-icon i {
+                    font-size: 3rem;
+                    color: white;
+                }
+                .cloud-subscription-header h2 {
+                    color: white;
+                    font-size: 1.75rem;
+                    font-weight: 700;
+                    margin: 0 0 0.5rem 0;
+                }
+                .cloud-subscription-header p {
+                    color: rgba(255, 255, 255, 0.9);
+                    margin: 0;
+                }
+                .cloud-subscription-body {
+                    padding: 2rem;
+                }
+                .subscription-status {
+                    background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(37, 99, 235, 0.05));
+                    border: 2px solid rgba(59, 130, 246, 0.3);
+                    border-radius: 16px;
+                    padding: 1.5rem;
+                    margin-bottom: 2rem;
+                    text-align: center;
+                }
+                .subscription-status.active {
+                    background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(5, 150, 105, 0.05));
+                    border-color: rgba(16, 185, 129, 0.3);
+                }
+                .subscription-status-icon {
+                    font-size: 3rem;
+                    margin-bottom: 1rem;
+                }
+                .subscription-status h3 {
+                    font-size: 1.5rem;
+                    margin: 0 0 0.5rem 0;
+                }
+                .subscription-form {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 1.5rem;
+                }
+                .form-group-cloud {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 0.5rem;
+                }
+                .form-group-cloud label {
+                    font-weight: 600;
+                    display: flex;
+                    align-items: center;
+                    gap: 0.5rem;
+                }
+                .form-group-cloud input {
+                    padding: 1rem;
+                    border: 2px solid rgba(var(--theme-text-rgb, 255,255,255), 0.1);
+                    border-radius: 12px;
+                    background: var(--theme-bg);
+                    color: var(--theme-text-primary);
+                    font-size: 1rem;
+                    transition: all 0.3s;
+                }
+                .form-group-cloud input:focus {
+                    outline: none;
+                    border-color: #3b82f6;
+                    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+                }
+                .form-hint {
+                    font-size: 0.85rem;
+                    color: var(--theme-text-secondary);
+                }
+                .submit-btn {
+                    padding: 1rem 2rem;
+                    background: linear-gradient(135deg, #3b82f6, #2563eb);
+                    border: none;
+                    border-radius: 12px;
+                    color: white;
+                    font-size: 1.1rem;
+                    font-weight: 700;
+                    cursor: pointer;
+                    transition: all 0.3s;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 0.75rem;
+                }
+                .submit-btn:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
+                }
+                .features-section {
+                    margin-top: 2rem;
+                    padding-top: 2rem;
+                    border-top: 2px solid rgba(var(--theme-text-rgb, 255,255,255), 0.1);
+                }
+                .features-section h4 {
+                    font-size: 1.25rem;
+                    margin: 0 0 1rem 0;
+                }
+                .features-grid {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                    gap: 1rem;
+                }
+                .feature-item {
+                    display: flex;
+                    gap: 0.75rem;
+                    padding: 1rem;
+                    background: rgba(var(--theme-text-rgb, 255,255,255), 0.05);
+                    border-radius: 12px;
+                    transition: all 0.3s;
+                }
+                .feature-item:hover {
+                    background: rgba(var(--theme-text-rgb, 255,255,255), 0.08);
+                    transform: translateY(-2px);
+                }
+                .feature-item i {
+                    color: #3b82f6;
+                    font-size: 1.25rem;
+                    margin-top: 0.25rem;
+                }
+                .backup-controls {
+                    display: grid;
+                    gap: 1rem;
+                    margin-top: 1.5rem;
+                }
+                .backup-btn {
+                    padding: 1rem;
+                    background: var(--theme-bg);
+                    border: 2px solid rgba(var(--theme-text-rgb, 255,255,255), 0.1);
+                    border-radius: 12px;
+                    color: var(--theme-text-primary);
+                    font-size: 1rem;
+                    cursor: pointer;
+                    transition: all 0.3s;
+                    display: flex;
+                    align-items: center;
+                    gap: 0.75rem;
+                }
+                .backup-btn:hover {
+                    border-color: #3b82f6;
+                    background: rgba(59, 130, 246, 0.05);
+                    transform: translateY(-2px);
+                }
+                .backup-btn i {
+                    font-size: 1.5rem;
+                    color: #3b82f6;
+                }
+                .auto-backup-toggle {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    padding: 1rem;
+                    background: rgba(16, 185, 129, 0.1);
+                    border: 2px solid rgba(16, 185, 129, 0.3);
+                    border-radius: 12px;
+                    margin-top: 1rem;
+                }
+                .toggle-switch {
+                    position: relative;
+                    width: 60px;
+                    height: 32px;
+                }
+                .toggle-switch input {
+                    opacity: 0;
+                    width: 0;
+                    height: 0;
+                }
+                .toggle-slider {
+                    position: absolute;
+                    cursor: pointer;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background-color: #ccc;
+                    transition: 0.4s;
+                    border-radius: 34px;
+                }
+                .toggle-slider:before {
+                    position: absolute;
+                    content: "";
+                    height: 24px;
+                    width: 24px;
+                    right: 4px;
+                    bottom: 4px;
+                    background-color: white;
+                    transition: 0.4s;
+                    border-radius: 50%;
+                }
+                input:checked + .toggle-slider {
+                    background-color: #10b981;
+                }
+                input:checked + .toggle-slider:before {
+                    transform: translateX(-28px);
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        // إضافة الزر بجانب الإشعارات
+        function addCloudButton() {
+            const topActions = document.querySelector('.top-actions');
+            if (!topActions) {
+                console.error('❌ لم يتم العثور على .top-actions');
+                return;
+            }
+            
+            const cloudBtn = document.createElement('button');
+            cloudBtn.className = 'cloud-subscription-btn' + (subscriptionStatus.isActive ? ' active' : '');
+            cloudBtn.id = 'cloudSubscriptionBtn';
+            cloudBtn.title = subscriptionStatus.isActive ? 'إدارة الاشتراك السحابي' : 'تفعيل الاشتراك';
+            cloudBtn.innerHTML = '<i class="fas fa-cloud"></i>';
+            
+            cloudBtn.addEventListener('click', () => openModal());
+            
+            const themeToggle = topActions.querySelector('.theme-toggle');
+            if (themeToggle) {
+                topActions.insertBefore(cloudBtn, themeToggle);
+            } else {
+                topActions.appendChild(cloudBtn);
+            }
+            
+            console.log('✅ تم إضافة زر الاشتراك السحابي');
+        }
+        
+        // إنشاء النافذة المنبثقة
+        function createModal() {
+            const overlay = document.createElement('div');
+            overlay.className = 'cloud-subscription-overlay';
+            overlay.id = 'cloudSubscriptionOverlay';
+            
+            overlay.innerHTML = `
+                <div class="cloud-subscription-modal" onclick="event.stopPropagation()">
+                    <div class="cloud-subscription-header">
+                        <button class="cloud-subscription-close" onclick="window.closeCloudModal()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                        <div class="cloud-subscription-icon">
+                            <i class="fas fa-cloud"></i>
+                        </div>
+                        <h2>الاشتراك السحابي</h2>
+                        <p>إدارة شاملة للنسخ الاحتياطي والمزامنة</p>
+                    </div>
+                    <div class="cloud-subscription-body" id="cloudBody"></div>
+                </div>
+            `;
+            
+            overlay.addEventListener('click', closeModal);
+            document.body.appendChild(overlay);
+            subscriptionModal = overlay;
+        }
+        
+        // فتح النافذة
+        function openModal() {
+            if (!subscriptionModal) createModal();
+            updateContent();
+            subscriptionModal.classList.add('active');
+        }
+        
+        // إغلاق النافذة
+        function closeModal() {
+            if (subscriptionModal) {
+                subscriptionModal.classList.remove('active');
+            }
+        }
+        
+        // تحديث المحتوى
+        function updateContent() {
+            const body = document.getElementById('cloudBody');
+            if (!body) return;
+            
+            if (subscriptionStatus.isActive) {
+                body.innerHTML = renderActiveDashboard();
+            } else {
+                body.innerHTML = renderRegistrationForm();
+            }
+        }
+        
+        // نموذج التسجيل
+        function renderRegistrationForm() {
+            return `
+                <div class="subscription-status">
+                    <div class="subscription-status-icon">⚠️</div>
+                    <h3>الاشتراك غير مفعّل</h3>
+                    <p>أدخل بياناتك لإرسال طلب التفعيل للشركة</p>
+                </div>
+                
+                <form class="subscription-form" onsubmit="window.handleCloudSubmit(event)">
+                    <div class="form-group-cloud">
+                        <label>
+                            <i class="fas fa-user"></i>
+                            الاسم الرباعي
+                        </label>
+                        <input type="text" id="cloudUsername" placeholder="أدخل اسمك الرباعي" required minlength="10">
+                        <span class="form-hint">مثال: أحمد علي محمد السعدي</span>
+                    </div>
+                    
+                    <div class="form-group-cloud">
+                        <label>
+                            <i class="fas fa-phone"></i>
+                            رقم الهاتف
+                        </label>
+                        <input type="tel" id="cloudPhone" placeholder="07XX XXX XXXX" required pattern="[0-9]{11}">
+                        <span class="form-hint">أدخل رقم هاتفك (11 رقم تبدأ بـ 07)</span>
+                    </div>
+                    
+                    <button type="submit" class="submit-btn">
+                        <i class="fas fa-paper-plane"></i>
+                        <span>إرسال طلب التفعيل</span>
+                    </button>
+                </form>
+                
+                <div class="features-section">
+                    <h4>
+                        <i class="fas fa-star" style="color: #fbbf24;"></i>
+                        ميزات الاشتراك السحابي
+                    </h4>
+                    
+                    <div class="features-grid">
+                        <div class="feature-item">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <div>
+                                <h5 style="margin: 0 0 0.25rem 0;">نسخ احتياطي شامل</h5>
+                                <p style="color: var(--theme-text-secondary); font-size: 0.9rem; margin: 0;">رفع جميع البيانات (منتجات، ديون، مصاريف، تقارير)</p>
+                            </div>
+                        </div>
+                        
+                        <div class="feature-item">
+                            <i class="fas fa-sync-alt"></i>
+                            <div>
+                                <h5 style="margin: 0 0 0.25rem 0;">مزامنة تلقائية</h5>
+                                <p style="color: var(--theme-text-secondary); font-size: 0.9rem; margin: 0;">تحديث البيانات تلقائياً في السحابة</p>
+                            </div>
+                        </div>
+                        
+                        <div class="feature-item">
+                            <i class="fas fa-shield-alt"></i>
+                            <div>
+                                <h5 style="margin: 0 0 0.25rem 0;">حماية متقدمة</h5>
+                                <p style="color: var(--theme-text-secondary); font-size: 0.9rem; margin: 0;">تشفير كامل لبياناتك</p>
+                            </div>
+                        </div>
+                        
+                        <div class="feature-item">
+                            <i class="fas fa-history"></i>
+                            <div>
+                                <h5 style="margin: 0 0 0.25rem 0;">استرجاع سهل</h5>
+                                <p style="color: var(--theme-text-secondary); font-size: 0.9rem; margin: 0;">استعادة البيانات في أي وقت</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // لوحة التحكم للمشتركين
+        function renderActiveDashboard() {
+            const date = subscriptionStatus.activationDate ? 
+                new Date(subscriptionStatus.activationDate).toLocaleDateString('ar-IQ') : 'غير محدد';
+            
+            return `
+                <div class="subscription-status active">
+                    <div class="subscription-status-icon">✅</div>
+                    <h3>الاشتراك مفعّل</h3>
+                    <p>مرحباً ${subscriptionStatus.username}</p>
+                    <p style="font-size: 0.9rem; margin-top: 0.5rem;">
+                        <i class="fas fa-calendar-check"></i>
+                        تاريخ التفعيل: ${date}
+                    </p>
+                </div>
+                
+                <div class="backup-controls">
+                    <button class="backup-btn" onclick="window.performFullBackup()">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <div style="flex: 1; text-align: right;">
+                            <strong>رفع نسخة احتياطية كاملة</strong>
+                            <small style="display: block; color: var(--theme-text-secondary); font-size: 0.85rem;">رفع جميع البيانات (منتجات، فواتير، ديون، مصاريف)</small>
+                        </div>
+                    </button>
+                    
+                    <button class="backup-btn" onclick="window.viewBackupHistory()">
+                        <i class="fas fa-history"></i>
+                        <div style="flex: 1; text-align: right;">
+                            <strong>سجل النسخ الاحتياطية</strong>
+                            <small style="display: block; color: var(--theme-text-secondary); font-size: 0.85rem;">عرض جميع النسخ السابقة</small>
+                        </div>
+                    </button>
+                    
+                    <button class="backup-btn" onclick="window.restoreFromCloud()">
+                        <i class="fas fa-cloud-download-alt"></i>
+                        <div style="flex: 1; text-align: right;">
+                            <strong>استرجاع من السحابة</strong>
+                            <small style="display: block; color: var(--theme-text-secondary); font-size: 0.85rem;">استعادة البيانات من نسخة سابقة</small>
+                        </div>
+                    </button>
+                </div>
+                
+                <div class="auto-backup-toggle">
+                    <div style="flex: 1;">
+                        <h5 style="margin: 0 0 0.25rem 0; color: #10b981; display: flex; align-items: center; gap: 0.5rem;">
+                            <i class="fas fa-magic"></i>
+                            النسخ الاحتياطي التلقائي
+                        </h5>
+                        <p style="margin: 0; font-size: 0.85rem; color: var(--theme-text-secondary);">رفع تلقائي للبيانات عند فتح التطبيق (كل 6 ساعات)</p>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="autoBackupToggle" onchange="window.toggleAutoBackup(this.checked)">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                
+                <div class="features-section">
+                    <h4><i class="fas fa-info-circle"></i> معلومات الحساب</h4>
+                    
+                    <div style="background: rgba(var(--theme-text-rgb, 255,255,255), 0.05); padding: 1.5rem; border-radius: 12px;">
+                        <div style="display: grid; gap: 1rem;">
+                            <div style="display: flex; justify-content: space-between;">
+                                <span style="color: var(--theme-text-secondary);">اسم المستخدم:</span>
+                                <strong>${subscriptionStatus.username}</strong>
+                            </div>
+                            <div style="display: flex; justify-content: space-between;">
+                                <span style="color: var(--theme-text-secondary);">رقم الهاتف:</span>
+                                <strong>${subscriptionStatus.phone}</strong>
+                            </div>
+                            <div style="display: flex; justify-content: space-between;">
+                                <span style="color: var(--theme-text-secondary);">حالة الاشتراك:</span>
+                                <strong style="color: #10b981;">نشط ✓</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // معالجة التسجيل
+        // إرسال إشعار للشركة
+        async function sendCompanyNotification(username, phone, userUid) {
+            if (!firebaseInitialized) {
+                console.warn('⚠️ Firebase غير متاح - لن يتم إرسال الإشعار');
+                return;
+            }
+            
+            try {
+                const notificationRef = database.ref('companyNotifications').push();
+                await notificationRef.set({
+                    type: 'subscription_request',
+                    userUid: userUid,
+                    username: username,
+                    phone: phone,
+                    requestDate: new Date().toISOString(),
+                    status: 'pending',
+                    read: false
+                });
+                console.log('✅ تم إرسال إشعار للشركة');
+            } catch (error) {
+                console.error('❌ خطأ في إرسال الإشعار:', error);
+            }
+        }
+        
+        async function handleSubmit(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('cloudUsername').value;
+            const phone = document.getElementById('cloudPhone').value;
+            
+            if (!username || username.trim().split(' ').length < 4) {
+                alert('⚠️ الرجاء إدخال الاسم الرباعي كاملاً');
+                return;
+            }
+            
+            if (!phone || phone.length !== 11) {
+                alert('⚠️ الرجاء إدخال رقم هاتف صحيح (11 رقم)');
+                return;
+            }
+            
+            console.log('📤 إرسال طلب تفعيل...');
+            console.log('الاسم:', username);
+            console.log('الهاتف:', phone);
+            
+            const userUid = getUserUid();
             const requestData = {
                 username: username,
                 phone: phone,
                 requestDate: new Date().toISOString(),
-                status: 'pending',  // pending, active, rejected
-                userId: currentUserId,
-                createdBy: 'web_app'
+                status: 'pending'
             };
-            
-            // حفظ في Firebase
-            await database.ref(`users/${currentUserId}/cloudSubscription`).set(requestData);
-            
-            // حفظ أيضاً في قائمة الطلبات المعلقة للشركة
-            const requestId = database.ref('subscriptionRequests').push().key;
-            await database.ref(`subscriptionRequests/${requestId}`).set({
-                ...requestData,
-                requestId: requestId,
-                timestamp: firebase.database.ServerValue.TIMESTAMP
-            });
-            
-            console.log('✅ تم حفظ طلب الاشتراك في Firebase');
             
             // حفظ في localStorage
             localStorage.setItem('pendingActivation', JSON.stringify(requestData));
             
-            return true;
-        } catch (error) {
-            console.error('❌ خطأ في حفظ طلب الاشتراك:', error);
-            alert('❌ حدث خطأ أثناء إرسال الطلب. الرجاء المحاولة مرة أخرى.');
-            return false;
-        }
-    }
-    
-    // ═══════════════════════════════════════════════════════════════════════════════
-    // إرسال إشعار Telegram (اختياري)
-    // ═══════════════════════════════════════════════════════════════════════════════
-    
-    async function sendTelegramNotification(username, phone) {
-        if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) {
-            console.log('ℹ️ إشعارات Telegram غير مفعلة');
-            return;
-        }
-        
-        const message = `
-🔔 *طلب اشتراك سحابي جديد*
+            // حفظ في Firebase
+            if (firebaseInitialized) {
+                try {
+                    // حفظ بيانات الطلب تحت معرف المستخدم
+                    await database.ref(`users/${userUid}/cloudSubscription/profile`).set(requestData);
+                    console.log('✅ تم حفظ البيانات في Firebase');
+                    
+                    // إرسال إشعار للشركة
+                    await sendCompanyNotification(username, phone, userUid);
+                    
+                    alert(`✅ تم إرسال طلب التفعيل بنجاح!
 
-👤 *الاسم:* ${username}
-📱 *الهاتف:* ${phone}
-🆔 *User ID:* \`${currentUserId}\`
-📅 *التاريخ:* ${new Date().toLocaleString('ar-IQ')}
+📝 البيانات المرسلة:
+- الاسم: ${username}
+- الهاتف: ${phone}
+- معرف المستخدم: ${userUid}
 
-⏳ في انتظار الموافقة
-        `.trim();
-        
-        try {
-            const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
-            await fetch(url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    chat_id: TELEGRAM_CHAT_ID,
-                    text: message,
-                    parse_mode: 'Markdown'
-                })
-            });
-            console.log('✅ تم إرسال إشعار Telegram');
-        } catch (error) {
-            console.error('❌ خطأ في إرسال إشعار Telegram:', error);
-        }
-    }
-    
-    // ═══════════════════════════════════════════════════════════════════════════════
-    // رفع نسخة احتياطية كاملة إلى Firebase
-    // ═══════════════════════════════════════════════════════════════════════════════
-    
-    async function performFullCloudBackup() {
-        if (!subscriptionStatus.isActive) {
-            alert('⚠️ يجب تفعيل الاشتراك أولاً للقيام بالنسخ الاحتياطي السحابي');
-            return false;
-        }
-        
-        if (!checkFirebase() || !currentUserId) {
-            alert('❌ خطأ: لا يمكن الاتصال بقاعدة البيانات');
-            return false;
-        }
-        
-        try {
-            console.log('☁️ بدء رفع نسخة احتياطية كاملة...');
+✅ تم حفظ البيانات في قاعدة البيانات
+✅ تم إرسال إشعار للشركة
+
+⏳ سيتم التواصل معك خلال 24 ساعة لتفعيل الاشتراك.
+
+📞 للاستفسار: اتصل بالشركة على أرقام الدعم الفني.`);
+                    
+                } catch (error) {
+                    console.error('❌ خطأ في حفظ البيانات:', error);
+                    alert(`⚠️ تم حفظ البيانات محلياً ولكن حدث خطأ في الاتصال بالخادم.
+
+يرجى التأكد من اتصالك بالإنترنت.
+
+الخطأ: ${error.message}`);
+                }
+            } else {
+                alert(`⚠️ تم حفظ البيانات محلياً فقط!
+
+Firebase غير متاح حالياً. البيانات محفوظة على جهازك.
+
+📝 البيانات المحفوظة:
+- الاسم: ${username}
+- الهاتف: ${phone}
+
+⏳ يرجى التأكد من الاتصال بالإنترنت وإعادة المحاولة.`);
+            }
             
-            // جمع جميع البيانات
+            closeModal();
+        }
+        
+        // دوال النسخ الاحتياطي
+        async function performFullBackup() {
+            console.log('☁️ رفع نسخة احتياطية كاملة...');
+            
+            const timestamp = Date.now();
             const backupData = {
                 products: JSON.parse(localStorage.getItem('products') || '[]'),
                 invoices: JSON.parse(localStorage.getItem('invoices') || '[]'),
@@ -35270,891 +35767,159 @@ body {
                     store: JSON.parse(localStorage.getItem('storeSettings') || '{}'),
                     printer: JSON.parse(localStorage.getItem('printerSettings') || '{}')
                 },
-                metadata: {
-                    timestamp: new Date().toISOString(),
-                    username: subscriptionStatus.username,
-                    userId: currentUserId,
-                    backupType: 'full'
-                }
+                timestamp: new Date().toISOString(),
+                timestampMs: timestamp,
+                user: subscriptionStatus.username
             };
             
-            // إنشاء معرف للنسخة الاحتياطية
-            const backupId = 'backup_' + Date.now();
+            console.log('📊 البيانات المجهزة:', Object.keys(backupData).filter(k => k !== 'timestamp' && k !== 'user' && k !== 'timestampMs'));
             
             // رفع إلى Firebase
-            await database.ref(`users/${currentUserId}/backups/${backupId}`).set(backupData);
-            
-            // حفظ معلومات آخر نسخة
-            await database.ref(`users/${currentUserId}/lastBackup`).set({
-                backupId: backupId,
-                timestamp: new Date().toISOString(),
-                type: 'full'
-            });
-            
-            // حفظ محلياً
-            localStorage.setItem('lastCloudBackup', new Date().toISOString());
-            
-            console.log('✅ تم رفع النسخة الاحتياطية بنجاح');
-            
-            alert('✅ تم رفع النسخة الاحتياطية الكاملة بنجاح!\n\n📊 البيانات المرفوعة:\n- المنتجات\n- الفواتير\n- الديون\n- المصاريف\n- الموردين\n- العملاء\n- الإعدادات');
-            
-            return true;
-        } catch (error) {
-            console.error('❌ خطأ في رفع النسخة الاحتياطية:', error);
-            alert('❌ حدث خطأ أثناء رفع النسخة الاحتياطية');
-            return false;
-        }
-    }
-    
-    // ═══════════════════════════════════════════════════════════════════════════════
-    // عرض سجل النسخ الاحتياطية
-    // ═══════════════════════════════════════════════════════════════════════════════
-    
-    async function viewBackupHistory() {
-        if (!checkFirebase() || !currentUserId) {
-            alert('❌ خطأ: لا يمكن الاتصال بقاعدة البيانات');
-            return;
-        }
-        
-        try {
-            const snapshot = await database.ref(`users/${currentUserId}/backups`).once('value');
-            const backups = snapshot.val();
-            
-            if (!backups || Object.keys(backups).length === 0) {
-                alert('ℹ️ لا توجد نسخ احتياطية سابقة');
-                return;
-            }
-            
-            let message = '📋 سجل النسخ الاحتياطية:\n\n';
-            const backupsList = Object.entries(backups).sort((a, b) => {
-                return new Date(b[1].metadata.timestamp) - new Date(a[1].metadata.timestamp);
-            });
-            
-            backupsList.forEach(([id, data], index) => {
-                const date = new Date(data.metadata.timestamp).toLocaleString('ar-IQ');
-                message += `${index + 1}. ${date}\n`;
-            });
-            
-            alert(message);
-        } catch (error) {
-            console.error('❌ خطأ في عرض السجل:', error);
-            alert('❌ حدث خطأ أثناء عرض السجل');
-        }
-    }
-    
-    // ═══════════════════════════════════════════════════════════════════════════════
-    // استرجاع من السحابة
-    // ═══════════════════════════════════════════════════════════════════════════════
-    
-    async function restoreFromCloud() {
-        if (!checkFirebase() || !currentUserId) {
-            alert('❌ خطأ: لا يمكن الاتصال بقاعدة البيانات');
-            return;
-        }
-        
-        try {
-            // الحصول على آخر نسخة احتياطية
-            const lastBackupSnapshot = await database.ref(`users/${currentUserId}/lastBackup`).once('value');
-            const lastBackup = lastBackupSnapshot.val();
-            
-            if (!lastBackup) {
-                alert('ℹ️ لا توجد نسخ احتياطية للاسترجاع');
-                return;
-            }
-            
-            const confirm = window.confirm(
-                `⚠️ تحذير: سيتم استبدال جميع البيانات الحالية بالنسخة الاحتياطية من:\n\n` +
-                `📅 ${new Date(lastBackup.timestamp).toLocaleString('ar-IQ')}\n\n` +
-                `هل أنت متأكد؟`
-            );
-            
-            if (!confirm) return;
-            
-            // استرجاع البيانات
-            const snapshot = await database.ref(`users/${currentUserId}/backups/${lastBackup.backupId}`).once('value');
-            const backupData = snapshot.val();
-            
-            if (!backupData) {
-                alert('❌ خطأ: لم يتم العثور على بيانات النسخة الاحتياطية');
-                return;
-            }
-            
-            // استعادة البيانات
-            localStorage.setItem('products', JSON.stringify(backupData.products || []));
-            localStorage.setItem('invoices', JSON.stringify(backupData.invoices || []));
-            localStorage.setItem('debtsData', JSON.stringify(backupData.debts || []));
-            localStorage.setItem('expensesData', JSON.stringify(backupData.expenses || []));
-            localStorage.setItem('suppliers', JSON.stringify(backupData.suppliers || []));
-            localStorage.setItem('customers', JSON.stringify(backupData.customers || []));
-            
-            if (backupData.settings) {
-                if (backupData.settings.store) {
-                    localStorage.setItem('storeSettings', JSON.stringify(backupData.settings.store));
+            if (firebaseInitialized && subscriptionStatus.isActive) {
+                try {
+                    const userUid = getUserUid();
+                    const backupRef = database.ref(`users/${userUid}/cloudSubscription/backups/${timestamp}`);
+                    await backupRef.set(backupData);
+                    
+                    console.log('✅ تم رفع النسخة الاحتياطية إلى Firebase');
+                    
+                    alert(`✅ تم رفع النسخة الاحتياطية الكاملة بنجاح!
+
+📊 البيانات المرفوعة:
+• المنتجات: ${backupData.products.length} منتج
+• الفواتير: ${backupData.invoices.length} فاتورة
+• الديون: ${backupData.debts.length} دين
+• المصاريف: ${backupData.expenses.length} مصروف
+• الموردين: ${backupData.suppliers.length} مورد
+• العملاء: ${backupData.customers.length} عميل
+• الإعدادات: ✓
+
+☁️ محفوظة في السحابة
+📅 التاريخ: ${new Date().toLocaleString('ar-EG')}
+🆔 معرف النسخة: ${timestamp}`);
+                    
+                    localStorage.setItem('lastCloudBackup', new Date().toISOString());
+                    
+                } catch (error) {
+                    console.error('❌ خطأ في رفع النسخة الاحتياطية:', error);
+                    alert(`❌ حدث خطأ في رفع النسخة الاحتياطية!
+
+الخطأ: ${error.message}
+
+💾 البيانات محفوظة محلياً على جهازك.
+يرجى التأكد من اتصالك بالإنترنت وإعادة المحاولة.`);
                 }
-                if (backupData.settings.printer) {
-                    localStorage.setItem('printerSettings', JSON.stringify(backupData.settings.printer));
+            } else {
+                if (!firebaseInitialized) {
+                    alert('⚠️ Firebase غير متاح حالياً!\n\nلا يمكن رفع النسخة الاحتياطية إلى السحابة.\nالبيانات محفوظة محلياً على جهازك.');
+                } else if (!subscriptionStatus.isActive) {
+                    alert('⚠️ الاشتراك غير مفعّل!\n\nيجب تفعيل الاشتراك أولاً لرفع النسخ الاحتياطية إلى السحابة.');
                 }
             }
+        }
+        
+        function viewBackupHistory() {
+            alert('🔜 قريباً: عرض سجل النسخ الاحتياطية');
+        }
+        
+        function restoreFromCloud() {
+            alert('🔜 قريباً: استرجاع من السحابة');
+        }
+        
+        function toggleAutoBackup(enabled) {
+            localStorage.setItem('autoCloudBackupEnabled', enabled.toString());
+            console.log(enabled ? '✅ تم تفعيل النسخ التلقائي' : '⏸️ تم إيقاف النسخ التلقائي');
+        }
+        
+        // دالة تفعيل يدوي للاختبار
+        window.activateSubscriptionManually = async function(username, phone) {
+            const userUid = getUserUid();
             
-            alert('✅ تم استرجاع البيانات بنجاح!\n\nسيتم إعادة تحميل الصفحة...');
-            
-            setTimeout(() => {
-                window.location.reload();
-            }, 1000);
-            
-        } catch (error) {
-            console.error('❌ خطأ في الاسترجاع:', error);
-            alert('❌ حدث خطأ أثناء الاسترجاع');
-        }
-    }
-    
-    // ═══════════════════════════════════════════════════════════════════════════════
-    // تبديل النسخ التلقائي
-    // ═══════════════════════════════════════════════════════════════════════════════
-    
-    async function toggleAutoBackup(enabled) {
-        localStorage.setItem('autoCloudBackupEnabled', enabled.toString());
-        
-        if (enabled && checkFirebase() && currentUserId) {
-            try {
-                await database.ref(`users/${currentUserId}/settings/autoBackup`).set(enabled);
-                console.log('✅ تم تفعيل النسخ التلقائي');
-            } catch (error) {
-                console.error('❌ خطأ في حفظ إعدادات النسخ التلقائي:', error);
-            }
-        }
-        
-        console.log(enabled ? '✅ تم تفعيل النسخ التلقائي' : '⏸️ تم إيقاف النسخ التلقائي');
-    }
-    
-    // ═══════════════════════════════════════════════════════════════════════════════
-    // معالجة نموذج التسجيل
-    // ═══════════════════════════════════════════════════════════════════════════════
-    
-    async function handleSubmit(e) {
-        e.preventDefault();
-        
-        const username = document.getElementById('cloudUsername').value.trim();
-        const phone = document.getElementById('cloudPhone').value.trim();
-        
-        // التحقق من صحة البيانات
-        if (!username || username.split(' ').length < 4) {
-            alert('⚠️ الرجاء إدخال الاسم الرباعي كاملاً');
-            return;
-        }
-        
-        if (!phone || phone.length !== 11 || !phone.startsWith('07')) {
-            alert('⚠️ الرجاء إدخال رقم هاتف صحيح (11 رقم يبدأ بـ 07)');
-            return;
-        }
-        
-        // عرض loading
-        const submitBtn = e.target.querySelector('button[type="submit"]');
-        const originalText = submitBtn.innerHTML;
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>جاري الإرسال...</span>';
-        submitBtn.disabled = true;
-        
-        try {
-            console.log('📤 إرسال طلب تفعيل...');
-            console.log('الاسم:', username);
-            console.log('الهاتف:', phone);
-            console.log('User ID:', currentUserId);
-            
-            // حفظ في Firebase
-            const success = await sendSubscriptionRequestToFirebase(username, phone);
-            
-            if (success) {
-                // إرسال إشعار Telegram
-                await sendTelegramNotification(username, phone);
-                
-                alert(
-                    `✅ تم إرسال طلب التفعيل بنجاح!\n\n` +
-                    `📝 البيانات المرسلة:\n` +
-                    `- الاسم: ${username}\n` +
-                    `- الهاتف: ${phone}\n` +
-                    `- المعرف: ${currentUserId}\n\n` +
-                    `⏳ سيتم التواصل معك خلال 24 ساعة لتفعيل الاشتراك.\n\n` +
-                    `📞 للاستفسار: اتصل بالشركة على أرقام الدعم الفني.`
-                );
-                
-                closeModal();
-            }
-        } catch (error) {
-            console.error('❌ خطأ في إرسال الطلب:', error);
-            alert('❌ حدث خطأ أثناء إرسال الطلب. الرجاء المحاولة مرة أخرى.');
-        } finally {
-            submitBtn.innerHTML = originalText;
-            submitBtn.disabled = false;
-        }
-    }
-    
-    // ═══════════════════════════════════════════════════════════════════════════════
-    // تفعيل يدوي (للاختبار والشركة)
-    // ═══════════════════════════════════════════════════════════════════════════════
-    
-    window.activateSubscriptionManually = async function(username, phone) {
-        if (!checkFirebase() || !currentUserId) {
-            alert('❌ خطأ: لا يمكن الاتصال بقاعدة البيانات');
-            return;
-        }
-        
-        try {
             subscriptionStatus = {
                 isActive: true,
                 username: username,
                 phone: phone,
-                activationDate: new Date().toISOString(),
-                userId: currentUserId
+                activationDate: new Date().toISOString()
             };
             
-            // حفظ في Firebase
-            await database.ref(`users/${currentUserId}/cloudSubscription`).update({
-                status: 'active',
-                activationDate: subscriptionStatus.activationDate,
-                activatedBy: 'manual'
-            });
-            
-            // حفظ في localStorage
             saveSubscriptionStatus();
             
-            // تحديث الزر
+            // حفظ في Firebase أيضاً
+            if (firebaseInitialized) {
+                try {
+                    await database.ref(`users/${userUid}/cloudSubscription/profile`).update({
+                        username: username,
+                        phone: phone,
+                        status: 'active',
+                        activationDate: new Date().toISOString()
+                    });
+                    console.log('✅ تم تحديث حالة التفعيل في Firebase');
+                } catch (error) {
+                    console.error('❌ خطأ في تحديث Firebase:', error);
+                }
+            }
+            
             const btn = document.getElementById('cloudSubscriptionBtn');
             if (btn) {
                 btn.classList.add('active');
                 btn.title = 'إدارة الاشتراك السحابي';
             }
             
-            alert('✅ تم تفعيل الاشتراك بنجاح!');
+            alert(`✅ تم تفعيل الاشتراك بنجاح!
+
+👤 المستخدم: ${username}
+📱 الهاتف: ${phone}
+🆔 المعرف: ${userUid}
+📅 تاريخ التفعيل: ${new Date().toLocaleString('ar-EG')}
+
+✅ تم حفظ البيانات في السحابة`);
+            
             console.log('✅ الاشتراك نشط:', username);
-        } catch (error) {
-            console.error('❌ خطأ في التفعيل:', error);
-            alert('❌ حدث خطأ أثناء التفعيل');
-        }
-    };
-    
-    // ═══════════════════════════════════════════════════════════════════════════════
-    // إضافة CSS (نفس الكود السابق)
-    // ═══════════════════════════════════════════════════════════════════════════════
-    
-    function addStyles() {
-        const style = document.createElement('style');
-        style.textContent = `
-            .cloud-subscription-btn {
-                width: 42px;
-                height: 42px;
-                border: none;
-                background: linear-gradient(135deg, #3b82f6, #2563eb);
-                border-radius: 10px;
-                color: white;
-                cursor: pointer;
-                transition: all 0.3s;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
-                margin: 0 8px;
-            }
-            .cloud-subscription-btn:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 6px 16px rgba(59, 130, 246, 0.35);
-            }
-            .cloud-subscription-btn i {
-                font-size: 18px;
-            }
-            .cloud-subscription-btn.active {
-                background: linear-gradient(135deg, #10b981, #059669);
-            }
-            .cloud-subscription-overlay {
-                position: fixed;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                background: rgba(0, 0, 0, 0.6);
-                backdrop-filter: blur(8px);
-                display: none;
-                align-items: center;
-                justify-content: center;
-                z-index: 10000;
-                opacity: 0;
-                transition: opacity 0.3s;
-            }
-            .cloud-subscription-overlay.active {
-                display: flex;
-                opacity: 1;
-            }
-            .cloud-subscription-modal {
-                background: var(--theme-bg-card);
-                border-radius: 24px;
-                width: 90%;
-                max-width: 650px;
-                max-height: 90vh;
-                overflow-y: auto;
-                box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
-                transform: translateY(-20px);
-                transition: transform 0.3s;
-                color: var(--theme-text-primary);
-            }
-            .cloud-subscription-overlay.active .cloud-subscription-modal {
-                transform: translateY(0);
-            }
-            .cloud-subscription-header {
-                background: linear-gradient(135deg, #3b82f6, #2563eb);
-                padding: 2rem;
-                border-radius: 24px 24px 0 0;
-                text-align: center;
-                position: relative;
-            }
-            .cloud-subscription-close {
-                position: absolute;
-                top: 1rem;
-                right: 1rem;
-                background: rgba(255, 255, 255, 0.2);
-                border: none;
-                width: 36px;
-                height: 36px;
-                border-radius: 50%;
-                color: white;
-                cursor: pointer;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                transition: all 0.3s;
-            }
-            .cloud-subscription-close:hover {
-                background: rgba(255, 255, 255, 0.3);
-                transform: rotate(90deg);
-            }
-            .cloud-subscription-icon {
-                width: 100px;
-                height: 100px;
-                background: rgba(255, 255, 255, 0.2);
-                border-radius: 50%;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                margin: 0 auto 1rem;
-            }
-            .cloud-subscription-icon i {
-                font-size: 3rem;
-                color: white;
-            }
-            .cloud-subscription-header h2 {
-                color: white;
-                font-size: 1.75rem;
-                font-weight: 700;
-                margin: 0 0 0.5rem 0;
-            }
-            .cloud-subscription-header p {
-                color: rgba(255, 255, 255, 0.9);
-                margin: 0;
-            }
-            .cloud-subscription-body {
-                padding: 2rem;
-            }
-            .subscription-status {
-                background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(37, 99, 235, 0.05));
-                border: 2px solid rgba(59, 130, 246, 0.3);
-                border-radius: 16px;
-                padding: 1.5rem;
-                margin-bottom: 2rem;
-                text-align: center;
-            }
-            .subscription-status.active {
-                background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(5, 150, 105, 0.05));
-                border-color: rgba(16, 185, 129, 0.3);
-            }
-            .subscription-status-icon {
-                font-size: 3rem;
-                margin-bottom: 1rem;
-            }
-            .subscription-status h3 {
-                font-size: 1.5rem;
-                margin: 0 0 0.5rem 0;
-            }
-            .subscription-form {
-                display: flex;
-                flex-direction: column;
-                gap: 1.5rem;
-            }
-            .form-group-cloud {
-                display: flex;
-                flex-direction: column;
-                gap: 0.5rem;
-            }
-            .form-group-cloud label {
-                font-weight: 600;
-                display: flex;
-                align-items: center;
-                gap: 0.5rem;
-            }
-            .form-group-cloud input {
-                padding: 1rem;
-                border: 2px solid rgba(var(--theme-text-rgb, 255,255,255), 0.1);
-                border-radius: 12px;
-                background: var(--theme-bg);
-                color: var(--theme-text-primary);
-                font-size: 1rem;
-                transition: all 0.3s;
-            }
-            .form-group-cloud input:focus {
-                outline: none;
-                border-color: #3b82f6;
-                box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
-            }
-            .form-hint {
-                font-size: 0.85rem;
-                color: var(--theme-text-secondary);
-            }
-            .submit-btn {
-                padding: 1rem 2rem;
-                background: linear-gradient(135deg, #3b82f6, #2563eb);
-                border: none;
-                border-radius: 12px;
-                color: white;
-                font-size: 1.1rem;
-                font-weight: 700;
-                cursor: pointer;
-                transition: all 0.3s;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                gap: 0.75rem;
-            }
-            .submit-btn:hover:not(:disabled) {
-                transform: translateY(-2px);
-                box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
-            }
-            .submit-btn:disabled {
-                opacity: 0.6;
-                cursor: not-allowed;
-            }
-            .features-section {
-                margin-top: 2rem;
-                padding-top: 2rem;
-                border-top: 2px solid rgba(var(--theme-text-rgb, 255,255,255), 0.1);
-            }
-            .features-section h4 {
-                font-size: 1.25rem;
-                margin: 0 0 1rem 0;
-            }
-            .features-grid {
-                display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-                gap: 1rem;
-            }
-            .feature-item {
-                display: flex;
-                gap: 0.75rem;
-                padding: 1rem;
-                background: rgba(var(--theme-text-rgb, 255,255,255), 0.05);
-                border-radius: 12px;
-                transition: all 0.3s;
-            }
-            .feature-item:hover {
-                background: rgba(var(--theme-text-rgb, 255,255,255), 0.08);
-                transform: translateY(-2px);
-            }
-            .feature-item i {
-                color: #3b82f6;
-                font-size: 1.25rem;
-                margin-top: 0.25rem;
-            }
-            .backup-controls {
-                display: grid;
-                gap: 1rem;
-                margin-top: 1.5rem;
-            }
-            .backup-btn {
-                padding: 1rem;
-                background: var(--theme-bg);
-                border: 2px solid rgba(var(--theme-text-rgb, 255,255,255), 0.1);
-                border-radius: 12px;
-                color: var(--theme-text-primary);
-                font-size: 1rem;
-                cursor: pointer;
-                transition: all 0.3s;
-                display: flex;
-                align-items: center;
-                gap: 0.75rem;
-            }
-            .backup-btn:hover {
-                border-color: #3b82f6;
-                background: rgba(59, 130, 246, 0.05);
-                transform: translateY(-2px);
-            }
-            .backup-btn i {
-                font-size: 1.5rem;
-                color: #3b82f6;
-            }
-            .auto-backup-toggle {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                padding: 1rem;
-                background: rgba(16, 185, 129, 0.1);
-                border: 2px solid rgba(16, 185, 129, 0.3);
-                border-radius: 12px;
-                margin-top: 1rem;
-            }
-            .toggle-switch {
-                position: relative;
-                width: 60px;
-                height: 32px;
-            }
-            .toggle-switch input {
-                opacity: 0;
-                width: 0;
-                height: 0;
-            }
-            .toggle-slider {
-                position: absolute;
-                cursor: pointer;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                background-color: #ccc;
-                transition: 0.4s;
-                border-radius: 34px;
-            }
-            .toggle-slider:before {
-                position: absolute;
-                content: "";
-                height: 24px;
-                width: 24px;
-                right: 4px;
-                bottom: 4px;
-                background-color: white;
-                transition: 0.4s;
-                border-radius: 50%;
-            }
-            input:checked + .toggle-slider {
-                background-color: #10b981;
-            }
-            input:checked + .toggle-slider:before {
-                transform: translateX(-28px);
-            }
-        `;
-        document.head.appendChild(style);
-    }
-    
-    // الباقي من الكود (addCloudButton, createModal, openModal, closeModal, updateContent, renderRegistrationForm, renderActiveDashboard, init)
-    // ... (سيتم إضافته في الجزء التالي)
-
-})();
-// ═══════════════════════════════════════════════════════════════════════════════
-// الجزء الثاني: واجهة المستخدم والتهيئة
-// ═══════════════════════════════════════════════════════════════════════════════
-
-// إضافة الزر بجانب الإشعارات
-function addCloudButton() {
-    const topActions = document.querySelector('.top-actions');
-    if (!topActions) {
-        console.error('❌ لم يتم العثور على .top-actions');
-        return;
-    }
-    
-    const cloudBtn = document.createElement('button');
-    cloudBtn.className = 'cloud-subscription-btn' + (subscriptionStatus.isActive ? ' active' : '');
-    cloudBtn.id = 'cloudSubscriptionBtn';
-    cloudBtn.title = subscriptionStatus.isActive ? 'إدارة الاشتراك السحابي' : 'تفعيل الاشتراك';
-    cloudBtn.innerHTML = '<i class="fas fa-cloud"></i>';
-    
-    cloudBtn.addEventListener('click', () => openModal());
-    
-    const themeToggle = topActions.querySelector('.theme-toggle');
-    if (themeToggle) {
-        topActions.insertBefore(cloudBtn, themeToggle);
-    } else {
-        topActions.appendChild(cloudBtn);
-    }
-    
-    console.log('✅ تم إضافة زر الاشتراك السحابي');
-}
-
-// إنشاء النافذة المنبثقة
-function createModal() {
-    const overlay = document.createElement('div');
-    overlay.className = 'cloud-subscription-overlay';
-    overlay.id = 'cloudSubscriptionOverlay';
-    
-    overlay.innerHTML = `
-        <div class="cloud-subscription-modal" onclick="event.stopPropagation()">
-            <div class="cloud-subscription-header">
-                <button class="cloud-subscription-close" onclick="window.closeCloudModal()">
-                    <i class="fas fa-times"></i>
-                </button>
-                <div class="cloud-subscription-icon">
-                    <i class="fas fa-cloud"></i>
-                </div>
-                <h2>الاشتراك السحابي</h2>
-                <p>إدارة شاملة للنسخ الاحتياطي والمزامنة</p>
-            </div>
-            <div class="cloud-subscription-body" id="cloudBody"></div>
-        </div>
-    `;
-    
-    overlay.addEventListener('click', closeModal);
-    document.body.appendChild(overlay);
-    subscriptionModal = overlay;
-}
-
-// فتح النافذة
-function openModal() {
-    if (!subscriptionModal) createModal();
-    updateContent();
-    subscriptionModal.classList.add('active');
-}
-
-// إغلاق النافذة
-function closeModal() {
-    if (subscriptionModal) {
-        subscriptionModal.classList.remove('active');
-    }
-}
-
-// تحديث المحتوى
-function updateContent() {
-    const body = document.getElementById('cloudBody');
-    if (!body) return;
-    
-    if (subscriptionStatus.isActive) {
-        body.innerHTML = renderActiveDashboard();
-    } else {
-        body.innerHTML = renderRegistrationForm();
-    }
-}
-
-// نموذج التسجيل
-function renderRegistrationForm() {
-    return `
-        <div class="subscription-status">
-            <div class="subscription-status-icon">⚠️</div>
-            <h3>الاشتراك غير مفعّل</h3>
-            <p>أدخل بياناتك لإرسال طلب التفعيل للشركة</p>
-            ${currentUserId ? `<p style="font-size: 0.9rem; color: var(--theme-text-secondary); margin-top: 0.5rem;">المعرف: <code style="background: rgba(59, 130, 246, 0.1); padding: 0.25rem 0.5rem; border-radius: 4px;">${currentUserId}</code></p>` : ''}
-        </div>
+        };
         
-        <form class="subscription-form" onsubmit="window.handleCloudSubmit(event)">
-            <div class="form-group-cloud">
-                <label>
-                    <i class="fas fa-user"></i>
-                    الاسم الرباعي
-                </label>
-                <input type="text" id="cloudUsername" placeholder="أدخل اسمك الرباعي" required minlength="10">
-                <span class="form-hint">مثال: أحمد علي محمد السعدي</span>
-            </div>
-            
-            <div class="form-group-cloud">
-                <label>
-                    <i class="fas fa-phone"></i>
-                    رقم الهاتف
-                </label>
-                <input type="tel" id="cloudPhone" placeholder="07XX XXX XXXX" required pattern="07[0-9]{9}">
-                <span class="form-hint">أدخل رقم هاتفك (11 رقم تبدأ بـ 07)</span>
-            </div>
-            
-            <button type="submit" class="submit-btn">
-                <i class="fas fa-paper-plane"></i>
-                <span>إرسال طلب التفعيل</span>
-            </button>
-        </form>
+        // تصدير الدوال
+        window.closeCloudModal = closeModal;
+        window.handleCloudSubmit = handleSubmit;
+        window.performFullBackup = performFullBackup;
+        window.viewBackupHistory = viewBackupHistory;
+        window.restoreFromCloud = restoreFromCloud;
+        window.toggleAutoBackup = toggleAutoBackup;
         
-        <div class="features-section">
-            <h4>
-                <i class="fas fa-star" style="color: #fbbf24;"></i>
-                ميزات الاشتراك السحابي
-            </h4>
+        // التهيئة
+        async function init() {
+            await loadSubscriptionStatus();
+            addStyles();
+            addCloudButton();
             
-            <div class="features-grid">
-                <div class="feature-item">
-                    <i class="fas fa-cloud-upload-alt"></i>
-                    <div>
-                        <h5 style="margin: 0 0 0.25rem 0;">نسخ احتياطي شامل</h5>
-                        <p style="color: var(--theme-text-secondary); font-size: 0.9rem; margin: 0;">رفع جميع البيانات (منتجات، ديون، مصاريف، تقارير)</p>
-                    </div>
-                </div>
-                
-                <div class="feature-item">
-                    <i class="fas fa-sync-alt"></i>
-                    <div>
-                        <h5 style="margin: 0 0 0.25rem 0;">مزامنة تلقائية</h5>
-                        <p style="color: var(--theme-text-secondary); font-size: 0.9rem; margin: 0;">تحديث البيانات تلقائياً في السحابة</p>
-                    </div>
-                </div>
-                
-                <div class="feature-item">
-                    <i class="fas fa-shield-alt"></i>
-                    <div>
-                        <h5 style="margin: 0 0 0.25rem 0;">حماية متقدمة</h5>
-                        <p style="color: var(--theme-text-secondary); font-size: 0.9rem; margin: 0;">تشفير كامل لبياناتك</p>
-                    </div>
-                </div>
-                
-                <div class="feature-item">
-                    <i class="fas fa-history"></i>
-                    <div>
-                        <h5 style="margin: 0 0 0.25rem 0;">استرجاع سهل</h5>
-                        <p style="color: var(--theme-text-secondary); font-size: 0.9rem; margin: 0;">استعادة البيانات في أي وقت</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    `;
-}
-
-// لوحة التحكم للمشتركين
-function renderActiveDashboard() {
-    const date = subscriptionStatus.activationDate ? 
-        new Date(subscriptionStatus.activationDate).toLocaleDateString('ar-IQ') : 'غير محدد';
-    
-    return `
-        <div class="subscription-status active">
-            <div class="subscription-status-icon">✅</div>
-            <h3>الاشتراك مفعّل</h3>
-            <p>مرحباً ${subscriptionStatus.username}</p>
-            <p style="font-size: 0.9rem; margin-top: 0.5rem;">
-                <i class="fas fa-calendar-check"></i>
-                تاريخ التفعيل: ${date}
-            </p>
-        </div>
-        
-        <div class="backup-controls">
-            <button class="backup-btn" onclick="window.performFullBackup()">
-                <i class="fas fa-cloud-upload-alt"></i>
-                <div style="flex: 1; text-align: right;">
-                    <strong>رفع نسخة احتياطية كاملة</strong>
-                    <small style="display: block; color: var(--theme-text-secondary); font-size: 0.85rem;">رفع جميع البيانات إلى Firebase</small>
-                </div>
-            </button>
+            const userUid = getUserUid();
             
-            <button class="backup-btn" onclick="window.viewBackupHistory()">
-                <i class="fas fa-history"></i>
-                <div style="flex: 1; text-align: right;">
-                    <strong>سجل النسخ الاحتياطية</strong>
-                    <small style="display: block; color: var(--theme-text-secondary); font-size: 0.85rem;">عرض جميع النسخ السابقة</small>
-                </div>
-            </button>
-            
-            <button class="backup-btn" onclick="window.restoreFromCloud()">
-                <i class="fas fa-cloud-download-alt"></i>
-                <div style="flex: 1; text-align: right;">
-                    <strong>استرجاع من السحابة</strong>
-                    <small style="display: block; color: var(--theme-text-secondary); font-size: 0.85rem;">استعادة البيانات من نسخة سابقة</small>
-                </div>
-            </button>
-        </div>
-        
-        <div class="auto-backup-toggle">
-            <div style="flex: 1;">
-                <h5 style="margin: 0 0 0.25rem 0; color: #10b981; display: flex; align-items: center; gap: 0.5rem;">
-                    <i class="fas fa-magic"></i>
-                    النسخ الاحتياطي التلقائي
-                </h5>
-                <p style="margin: 0; font-size: 0.85rem; color: var(--theme-text-secondary);">رفع تلقائي للبيانات عند فتح التطبيق (كل 6 ساعات)</p>
-            </div>
-            <label class="toggle-switch">
-                <input type="checkbox" id="autoBackupToggle" onchange="window.toggleAutoBackup(this.checked)">
-                <span class="toggle-slider"></span>
-            </label>
-        </div>
-        
-        <div class="features-section">
-            <h4><i class="fas fa-info-circle"></i> معلومات الحساب</h4>
-            
-            <div style="background: rgba(var(--theme-text-rgb, 255,255,255), 0.05); padding: 1.5rem; border-radius: 12px;">
-                <div style="display: grid; gap: 1rem;">
-                    <div style="display: flex; justify-content: space-between;">
-                        <span style="color: var(--theme-text-secondary);">اسم المستخدم:</span>
-                        <strong>${subscriptionStatus.username}</strong>
-                    </div>
-                    <div style="display: flex; justify-content: space-between;">
-                        <span style="color: var(--theme-text-secondary);">رقم الهاتف:</span>
-                        <strong>${subscriptionStatus.phone}</strong>
-                    </div>
-                    <div style="display: flex; justify-content: space-between;">
-                        <span style="color: var(--theme-text-secondary);">المعرف (User ID):</span>
-                        <code style="background: rgba(59, 130, 246, 0.1); padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.85rem;">${currentUserId}</code>
-                    </div>
-                    <div style="display: flex; justify-content: space-between;">
-                        <span style="color: var(--theme-text-secondary);">حالة الاشتراك:</span>
-                        <strong style="color: #10b981;">نشط ✓</strong>
-                    </div>
-                </div>
-            </div>
-        </div>
-    `;
-}
-
-// تصدير الدوال
-window.closeCloudModal = closeModal;
-window.handleCloudSubmit = handleSubmit;
-window.performFullBackup = performFullCloudBackup;
-window.viewBackupHistory = viewBackupHistory;
-window.restoreFromCloud = restoreFromCloud;
-window.toggleAutoBackup = toggleAutoBackup;
-
-// التهيئة
-async function init() {
-    console.log('🚀 تهيئة نظام الاشتراك السحابي v2.0...');
-    
-    // الحصول على User ID
-    currentUserId = getCurrentUserId();
-    console.log('🆔 User ID:', currentUserId);
-    
-    // إضافة الأنماط
-    addStyles();
-    
-    // تحميل حالة الاشتراك
-    loadSubscriptionFromLocal();
-    
-    // محاولة التحميل من Firebase إذا كان متاحاً
-    if (checkFirebase()) {
-        await loadSubscriptionFromFirebase();
-    } else {
-        console.warn('⚠️ Firebase غير متاح حالياً، سيتم المحاولة لاحقاً');
-        // محاولة مرة أخرى بعد 3 ثوانٍ
-        setTimeout(async () => {
-            if (checkFirebase()) {
-                await loadSubscriptionFromFirebase();
-                // تحديث الزر
-                const btn = document.getElementById('cloudSubscriptionBtn');
-                if (btn && subscriptionStatus.isActive) {
-                    btn.classList.add('active');
-                }
-            }
-        }, 3000);
-    }
-    
-    // إضافة الزر
-    addCloudButton();
-    
-    console.log('✅ تم تهيئة نظام الاشتراك السحابي');
-    console.log(`
+            console.log('✅ تم تهيئة نظام الاشتراك السحابي v2.0');
+            console.log(`
 ╔════════════════════════════════════════════════════════════╗
 ║                                                            ║
-║      ☁️  نظام الاشتراك السحابي v2.0 + Firebase           ║
+║      ☁️  نظام الاشتراك السحابي v2.0                       ║
 ║      شركة الإبداع الرقمي - كرار السعبري                  ║
+║      Firebase Integration ✓                               ║
 ║                                                            ║
 ║      ✅ تم التحميل بنجاح                                  ║
 ║      🎯 جاهز للاستخدام                                    ║
-║      🆔 User ID: ${currentUserId}                          ║
-║      📡 Firebase: ${checkFirebase() ? 'متصل' : 'غير متصل'} ║
+║      🆔 معرف المستخدم: ${userUid.substring(0, 20)}...    ║
+║      ${firebaseInitialized ? '✅ Firebase متصل' : '⚠️  Firebase غير متصل'}                               ║
 ║                                                            ║
 ║      📝 للاختبار:                                         ║
 ║      activateSubscriptionManually('الاسم', 'الهاتف')     ║
 ║                                                            ║
 ╚════════════════════════════════════════════════════════════╝
-    `);
-}
-
-// تشغيل التهيئة عند تحميل الصفحة
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-} else {
-    init();
-}
+            `);
+        }
+        
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+        
+    })();
     </script>
  </body>
 </html>

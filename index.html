@@ -325,6 +325,69 @@ body {
     font-size: 0.75rem;
     margin-top: 8px;
 }
+
+/* ═══════════════════════════════════════════════════════════════ */
+/* تنسيقات صفحة إدارة السحابة */
+/* ═══════════════════════════════════════════════════════════════ */
+
+.cloud-tab-btn {
+    background: transparent;
+    border: none;
+    padding: 1rem 1.5rem;
+    color: var(--theme-text-secondary);
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    white-space: nowrap;
+}
+
+.cloud-tab-btn:hover {
+    color: var(--theme-text-primary);
+    background: rgba(59, 130, 246, 0.1);
+}
+
+.cloud-tab-btn.active {
+    color: #3b82f6;
+    border-bottom-color: #3b82f6;
+    background: rgba(59, 130, 246, 0.1);
+}
+
+.cloud-tab-panel {
+    display: none;
+    animation: fadeIn 0.3s ease;
+}
+
+.cloud-tab-panel.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.8;
+        transform: scale(1.05);
+    }
+}
+
 @media print {
     body { margin: 0; }
     .a4-sheet { margin: 0; box-shadow: none; border-radius: 0; }
@@ -651,6 +714,135 @@ async function systemExportBackup(type = 'full') {
 /**
  * جمع جميع البيانات من localStorage و IndexedDB
  */
+/**
+ * عرض إشعار للمستخدم
+ */
+function showNotification(message, type = 'info') {
+    console.log(`📢 ${type.toUpperCase()}: ${message}`);
+    
+    // إنشاء عنصر الإشعار
+    const notification = document.createElement('div');
+    notification.textContent = message;
+    
+    // تنسيق الإشعار
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 15px 20px;
+        border-radius: 8px;
+        color: white;
+        font-weight: 600;
+        z-index: 9999999;
+        max-width: 400px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        animation: slideInRight 0.3s ease;
+        font-size: 14px;
+        line-height: 1.5;
+    `;
+    
+    // ألوان حسب النوع
+    const colors = {
+        success: '#10b981',
+        error: '#ef4444',
+        warning: '#f59e0b',
+        info: '#3b82f6'
+    };
+    
+    notification.style.background = colors[type] || colors.info;
+    
+    // إضافة للصفحة
+    document.body.appendChild(notification);
+    
+    // إزالة بعد 4 ثوان
+    setTimeout(() => {
+        notification.style.animation = 'slideOutRight 0.3s ease';
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+        }, 300);
+    }, 4000);
+}
+
+// إضافة الرسوم المتحركة
+if (!document.getElementById('notificationStyles')) {
+    const style = document.createElement('style');
+    style.id = 'notificationStyles';
+    style.textContent = `
+        @keyframes slideInRight {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        @keyframes slideOutRight {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+        }
+    `;
+    document.head.appendChild(style);
+}
+
+/**
+ * تنظيف المفاتيح والبيانات لتكون صالحة لـ Firebase
+ * Firebase لا يقبل المفاتيح التي تحتوي على: . # $ / [ ]
+ */
+function sanitizeForFirebase(obj) {
+    if (obj === null || obj === undefined) {
+        return obj;
+    }
+    
+    // إذا كان نصاً
+    if (typeof obj === 'string') {
+        return obj;
+    }
+    
+    // إذا كان رقماً أو boolean
+    if (typeof obj !== 'object') {
+        return obj;
+    }
+    
+    // إذا كان مصفوفة
+    if (Array.isArray(obj)) {
+        return obj.map(item => sanitizeForFirebase(item));
+    }
+    
+    // إذا كان object
+    const sanitized = {};
+    for (const key in obj) {
+        if (obj.hasOwnProperty(key)) {
+            // تنظيف المفتاح - استبدال الأحرف غير الصالحة بـ _
+            let cleanKey = key.replace(/[.#$\/\[\]]/g, '_');
+            
+            // إذا كان المفتاح يبدأ برقم، أضف بادئة
+            if (/^\d/.test(cleanKey)) {
+                cleanKey = 'key_' + cleanKey;
+            }
+            
+            // إذا كان المفتاح فارغاً بعد التنظيف
+            if (!cleanKey || cleanKey.trim() === '') {
+                cleanKey = 'empty_key';
+            }
+            
+            // تنظيف القيمة أيضاً
+            sanitized[cleanKey] = sanitizeForFirebase(obj[key]);
+        }
+    }
+    
+    return sanitized;
+}
+
 async function collectAllAppData() {
     const data = {
         timestamp: new Date().toISOString(),
@@ -722,20 +914,18 @@ async function uploadBackupToFirebase(isAutomatic = false) {
         const currentUser = localStorage.getItem('currentUser');
         
         if (!userStatus || !currentUser) {
-            const msg = '⚠️ يجب التسجيل أولاً للنسخ الاحتياطي إلى Firebase. اذهب إلى: الإعدادات → النسخ الاحتياطية';
+            // المستخدم غير مُسجل - فتح نافذة التسجيل السريع
+            console.log('⚠️ المستخدم غير مُسجل - فتح نافذة التسجيل');
+            
             if (!isAutomatic) {
-                if (typeof showNotification === 'function') {
-                    showNotification(msg, 'error');
-                } else {
-                    alert(msg);
-                }
+                openQuickRegistrationModal();
             }
-            console.warn('⚠️ المستخدم غير مُسجل - تم تخطي النسخ الاحتياطي');
+            
             return false;
         }
         
         if (userStatus !== 'active') {
-            const msg = '⚠️ حسابك في انتظار التفعيل. يرجى انتظار تفعيل الحساب من الشركة.';
+            const msg = '⏳ حسابك في انتظار التفعيل. يرجى انتظار تفعيل الحساب من الشركة (خلال 24 ساعة).';
             if (!isAutomatic) {
                 if (typeof showNotification === 'function') {
                     showNotification(msg, 'warning');
@@ -759,8 +949,11 @@ async function uploadBackupToFirebase(isAutomatic = false) {
         // جمع جميع البيانات
         const backupData = await collectAllAppData();
         
+        // تنظيف البيانات لتكون صالحة لـ Firebase
+        const sanitizedData = sanitizeForFirebase(backupData);
+        
         // حساب حجم البيانات
-        const dataSize = new Blob([JSON.stringify(backupData)]).size;
+        const dataSize = new Blob([JSON.stringify(sanitizedData)]).size;
         const dataSizeKB = (dataSize / 1024).toFixed(2);
         const dataSizeMB = (dataSize / (1024 * 1024)).toFixed(2);
         const sizeText = dataSize > 1024 * 1024 ? `${dataSizeMB} MB` : `${dataSizeKB} KB`;
@@ -771,7 +964,7 @@ async function uploadBackupToFirebase(isAutomatic = false) {
         const backupRef = database.ref(`users/${userData.uid}/backups/${timestamp}`);
         
         await backupRef.set({
-            data: backupData,
+            data: sanitizedData,
             metadata: {
                 timestamp: new Date().toISOString(),
                 size: dataSize,
@@ -1083,7 +1276,7 @@ function generateUserUID() {
 function sendWhatsAppToCompany(fullName, phone, activationCode, userUID) {
     try {
         // رقم الواتساب الخاص بالشركة (الإبداع الرقمي)
-        const companyWhatsApp = '9647735553637'; // رقم الشركة مع كود الدولة
+        const companyWhatsApp = '9647813798636'; // رقم الشركة مع كود الدولة
         
         // إنشاء الرسالة
         const message = `
@@ -1278,6 +1471,9 @@ async function checkActivationStatus() {
             // تحديث واجهة التسجيل
             updateRegistrationUI();
             
+            // تحديث واجهة الاشتراك السحابي
+            updateCloudSubscriptionUI();
+            
             // إظهار رسالة ترحيب
             showNotification(`🎉 مرحباً ${userDataFromFirebase.fullName}! تم تفعيل حسابك بنجاح`, 'success');
             
@@ -1292,7 +1488,8 @@ async function checkActivationStatus() {
         
     } catch (error) {
         console.error('❌ خطأ في فحص حالة التفعيل:', error);
-        alert(`❌ خطأ: ${error.message}`);
+        const errorMessage = error?.message || error?.toString() || 'خطأ غير معروف';
+        alert(`❌ خطأ: ${errorMessage}`);
         return false;
     }
 }
@@ -1381,9 +1578,9 @@ async function handleSettingsRegisterSubmit(event) {
         // إخفاء النموذج وإظهار حالة الانتظار
         document.getElementById('registrationFormSection').style.display = 'none';
         document.getElementById('settingsWaitingActivation').style.display = 'block';
-        document.getElementById('settingsUserActivationCode').textContent = activationCode;
         
-        showNotification('✅ تم إرسال طلب الاشتراك بنجاح!', 'success');
+        // عرض رسالة نجاح (بدون عرض رمز الاشتراك)
+        showNotification('✅ تم إرسال طلبك بنجاح! ستتلقى رمز الاشتراك من الشركة خلال 24 ساعة', 'success');
         console.log('✅ تم التسجيل بنجاح!');
         
         // بدء فحص التفعيل التلقائي كل 30 ثانية
@@ -1441,11 +1638,7 @@ function updateRegistrationUI() {
             // في انتظار التفعيل
             if (registrationStatusDisplay) registrationStatusDisplay.innerHTML = '';
             if (registrationFormSection) registrationFormSection.style.display = 'none';
-            if (settingsWaitingActivation) {
-                settingsWaitingActivation.style.display = 'block';
-                const codeElem = document.getElementById('settingsUserActivationCode');
-                if (codeElem) codeElem.textContent = userData.activationCode;
-            }
+            if (settingsWaitingActivation) settingsWaitingActivation.style.display = 'block';
             if (settingsRegisteredUserInfo) settingsRegisteredUserInfo.style.display = 'none';
             
         } else if (userStatus === 'active') {
@@ -1459,11 +1652,9 @@ function updateRegistrationUI() {
                 // تحديث المعلومات
                 const nameElem = document.getElementById('settingsUserNameDisplay');
                 const phoneElem = document.getElementById('settingsUserPhoneDisplay');
-                const codeElem = document.getElementById('settingsUserCodeDisplay');
                 
                 if (nameElem) nameElem.textContent = userData.fullName || '---';
                 if (phoneElem) phoneElem.textContent = userData.phone || '---';
-                if (codeElem) codeElem.textContent = userData.activationCode || '---';
             }
         }
         
@@ -1538,6 +1729,1441 @@ window.checkActivationStatus = checkActivationStatus;
 window.checkUserStatus = checkUserStatus;
 window.handleSettingsRegisterSubmit = handleSettingsRegisterSubmit;
 window.updateRegistrationUI = updateRegistrationUI;
+
+/**
+ * فتح نافذة التسجيل السريع
+ */
+function openQuickRegistrationModal() {
+    const modal = document.getElementById('quickRegistrationModal');
+    if (modal) {
+        modal.style.display = 'flex';
+        
+        // تفريغ الحقول
+        const nameInput = document.getElementById('quickRegisterFullName');
+        const phoneInput = document.getElementById('quickRegisterPhone');
+        if (nameInput) nameInput.value = '';
+        if (phoneInput) phoneInput.value = '';
+        
+        // التركيز على حقل الاسم
+        setTimeout(() => {
+            if (nameInput) nameInput.focus();
+        }, 100);
+    }
+}
+
+/**
+ * إغلاق نافذة التسجيل السريع
+ */
+function closeQuickRegistrationModal() {
+    const modal = document.getElementById('quickRegistrationModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+/**
+ * معالجة إرسال نموذج التسجيل السريع
+ */
+async function handleQuickRegisterSubmit(event) {
+    event.preventDefault();
+    console.log('📝 معالجة التسجيل السريع...');
+    
+    try {
+        // الحصول على البيانات
+        const fullName = document.getElementById('quickRegisterFullName').value.trim();
+        const phone = document.getElementById('quickRegisterPhone').value.trim();
+        
+        // التحقق من البيانات
+        if (!fullName || !phone) {
+            showNotification('❌ يرجى ملء جميع الحقول', 'error');
+            return;
+        }
+        
+        if (phone.length !== 11) {
+            showNotification('❌ رقم الهاتف يجب أن يكون 11 رقم', 'error');
+            return;
+        }
+        
+        // تعطيل زر الإرسال
+        const registerBtn = document.getElementById('quickRegisterBtn');
+        const originalBtnText = registerBtn.innerHTML;
+        registerBtn.disabled = true;
+        registerBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الإرسال...';
+        
+        // توليد البيانات
+        const activationCode = generateActivationCode();
+        const userUID = generateUserUID();
+        const registeredAt = new Date().toISOString();
+        
+        const userData = {
+            fullName,
+            phone,
+            activationCode,
+            uid: userUID,
+            registeredAt,
+            status: 'pending',
+            activatedAt: null,
+            lastLogin: null,
+            metadata: {
+                userAgent: navigator.userAgent,
+                platform: navigator.platform,
+                language: navigator.language
+            }
+        };
+        
+        console.log('📊 بيانات المستخدم:', userData);
+        
+        // حفظ في Firebase
+        const savedToFirebase = await saveUserToFirebase(userData);
+        
+        if (!savedToFirebase) {
+            throw new Error('فشل حفظ البيانات في Firebase');
+        }
+        
+        // حفظ في localStorage
+        localStorage.setItem('currentUser', JSON.stringify(userData));
+        localStorage.setItem('userStatus', 'pending');
+        
+        // إرسال رسالة واتساب (بدون عرض الرمز للمستخدم)
+        sendWhatsAppToCompany(fullName, phone, activationCode, userUID);
+        
+        // إغلاق النافذة
+        closeQuickRegistrationModal();
+        
+        // إظهار رسالة نجاح
+        showNotification(`✅ تم إرسال طلبك بنجاح! ستتلقى رمز الاشتراك من الشركة خلال 24 ساعة`, 'success');
+        
+        console.log('✅ تم التسجيل السريع بنجاح!');
+        
+        // تحديث واجهة الإعدادات إذا كانت مفتوحة
+        updateRegistrationUI();
+        
+        // بدء فحص التفعيل التلقائي
+        startActivationPolling(userUID);
+        
+    } catch (error) {
+        console.error('❌ خطأ في التسجيل السريع:', error);
+        showNotification(`❌ حدث خطأ: ${error.message}`, 'error');
+        
+        // إعادة تفعيل الزر
+        const registerBtn = document.getElementById('quickRegisterBtn');
+        if (registerBtn) {
+            registerBtn.disabled = false;
+            registerBtn.innerHTML = originalBtnText;
+        }
+    }
+}
+
+// تصدير الدوال الجديدة
+window.openQuickRegistrationModal = openQuickRegistrationModal;
+window.closeQuickRegistrationModal = closeQuickRegistrationModal;
+window.handleQuickRegisterSubmit = handleQuickRegisterSubmit;
+window.showNotification = showNotification;
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// دوال إدارة السحابة (Cloud Management)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/**
+ * التبديل بين تبويبات إدارة السحابة
+ */
+function switchCloudTab(tabName) {
+    console.log('🔄 switchCloudTab:', tabName);
+    
+    // إخفاء جميع التبويبات
+    document.querySelectorAll('.cloud-tab-panel').forEach(panel => {
+        panel.classList.remove('active');
+    });
+    
+    // إزالة active من جميع الأزرار
+    document.querySelectorAll('.cloud-tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    
+    // تفعيل التبويبة المطلوبة
+    const targetPanel = document.getElementById(`cloudTab-${tabName}`);
+    const targetBtn = document.querySelector(`.cloud-tab-btn[data-tab="${tabName}"]`);
+    
+    if (targetPanel) {
+        targetPanel.classList.add('active');
+    }
+    
+    if (targetBtn) {
+        targetBtn.classList.add('active');
+    }
+    
+    // تحديث محتوى التبويبة حسب حالة تسجيل الدخول
+    updateCloudTabContent(tabName);
+}
+
+/**
+ * تحديث محتوى التبويبات حسب حالة المستخدم
+ */
+function updateCloudTabContent(tabName) {
+    const userStatus = localStorage.getItem('userStatus');
+    const isLoggedIn = userStatus === 'active';
+    const isPending = userStatus === 'pending';
+    
+    console.log('📊 updateCloudTabContent:', { tabName, userStatus, isLoggedIn, isPending });
+    
+    if (tabName === 'login') {
+        // تحديث تبويبة تسجيل الدخول
+        const loginForm = document.getElementById('cloudLoginForm');
+        const loggedInPanel = document.getElementById('cloudLoggedInPanel');
+        const waitingPanel = document.getElementById('cloudWaitingActivation');
+        
+        if (isLoggedIn) {
+            // مسجل ومفعّل
+            if (loginForm) loginForm.style.display = 'none';
+            if (waitingPanel) waitingPanel.style.display = 'none';
+            if (loggedInPanel) {
+                loggedInPanel.style.display = 'block';
+                updateCloudUserInfo();
+            }
+        } else if (isPending) {
+            // في انتظار التفعيل
+            if (loginForm) loginForm.style.display = 'none';
+            if (loggedInPanel) loggedInPanel.style.display = 'none';
+            if (waitingPanel) waitingPanel.style.display = 'block';
+        } else {
+            // غير مسجل
+            if (loggedInPanel) loggedInPanel.style.display = 'none';
+            if (waitingPanel) waitingPanel.style.display = 'none';
+            if (loginForm) loginForm.style.display = 'block';
+        }
+    } else if (tabName === 'backup') {
+        // تحديث تبويبة رفع النسخ
+        const loginRequired = document.getElementById('cloudBackupLoginRequired');
+        const backupPanel = document.getElementById('cloudBackupPanel');
+        
+        if (isLoggedIn) {
+            if (loginRequired) loginRequired.style.display = 'none';
+            if (backupPanel) {
+                backupPanel.style.display = 'block';
+                refreshCloudBackupInfo();
+            }
+        } else {
+            if (backupPanel) backupPanel.style.display = 'none';
+            if (loginRequired) loginRequired.style.display = 'block';
+        }
+    } else if (tabName === 'restore') {
+        // تحديث تبويبة الاسترجاع
+        const loginRequired = document.getElementById('cloudRestoreLoginRequired');
+        const restorePanel = document.getElementById('cloudRestorePanel');
+        
+        if (isLoggedIn) {
+            if (loginRequired) loginRequired.style.display = 'none';
+            if (restorePanel) restorePanel.style.display = 'block';
+        } else {
+            if (restorePanel) restorePanel.style.display = 'none';
+            if (loginRequired) loginRequired.style.display = 'block';
+        }
+    } else if (tabName === 'history') {
+        // تحميل السجل
+        loadCloudBackupHistory();
+    }
+}
+
+/**
+ * تحديث معلومات المستخدم في تبويبة تسجيل الدخول
+ */
+function updateCloudUserInfo() {
+    const userData = JSON.parse(localStorage.getItem('currentUser') || '{}');
+    
+    console.log('👤 updateCloudUserInfo:', userData);
+    
+    // اسم المستخدم
+    const displayNameEl = document.getElementById('cloudUserDisplayName');
+    if (displayNameEl) {
+        displayNameEl.textContent = `مرحباً ${userData.fullName || '---'}`;
+    }
+    
+    // الاسم
+    const nameEl = document.getElementById('cloudUserName');
+    if (nameEl) {
+        nameEl.textContent = userData.fullName || '---';
+    }
+    
+    // الهاتف
+    const phoneEl = document.getElementById('cloudUserPhone');
+    if (phoneEl) {
+        phoneEl.textContent = userData.phone || '---';
+    }
+    
+    // المعرّف
+    const uidEl = document.getElementById('cloudUserUID');
+    if (uidEl) {
+        uidEl.textContent = userData.uid || '---';
+    }
+    
+    // تاريخ التسجيل
+    const registeredAtEl = document.getElementById('cloudUserRegisteredAt');
+    if (registeredAtEl && userData.registeredAt) {
+        const date = new Date(userData.registeredAt);
+        registeredAtEl.textContent = date.toLocaleDateString('ar-EG', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+    }
+}
+
+/**
+ * عرض نموذج التسجيل الجديد
+ */
+function showCloudRegisterForm() {
+    document.getElementById('cloudRegisterFormPanel').style.display = 'block';
+    document.getElementById('cloudLoginFormPanel').style.display = 'none';
+}
+
+/**
+ * إخفاء نموذج التسجيل
+ */
+function hideCloudRegisterForm() {
+    document.getElementById('cloudRegisterFormPanel').style.display = 'none';
+}
+
+/**
+ * عرض نموذج تسجيل الدخول
+ */
+function showCloudLoginForm() {
+    document.getElementById('cloudLoginFormPanel').style.display = 'block';
+    document.getElementById('cloudRegisterFormPanel').style.display = 'none';
+}
+
+/**
+ * إخفاء نموذج تسجيل الدخول
+ */
+function hideCloudLoginForm() {
+    document.getElementById('cloudLoginFormPanel').style.display = 'none';
+}
+
+/**
+ * معالجة طلب التسجيل الجديد من صفحة إدارة السحابة
+ */
+async function handleCloudRegisterSubmit(event) {
+    event.preventDefault();
+    console.log('📝 handleCloudRegisterSubmit...');
+    
+    try {
+        const fullName = document.getElementById('cloudRegFullName').value.trim();
+        const phone = document.getElementById('cloudRegPhone').value.trim();
+        
+        if (!fullName || !phone) {
+            showNotification('❌ يرجى ملء جميع الحقول', 'error');
+            return;
+        }
+        
+        if (phone.length !== 11) {
+            showNotification('❌ رقم الهاتف يجب أن يكون 11 رقم', 'error');
+            return;
+        }
+        
+        // توليد البيانات
+        const activationCode = generateActivationCode();
+        const userUID = generateUserUID();
+        const registeredAt = new Date().toISOString();
+        
+        const userData = {
+            fullName,
+            phone,
+            activationCode,
+            uid: userUID,
+            registeredAt,
+            status: 'pending'
+        };
+        
+        console.log('📊 بيانات المستخدم:', userData);
+        
+        // حفظ في Firebase
+        const savedToFirebase = await saveUserToFirebase(userData);
+        
+        if (!savedToFirebase) {
+            throw new Error('فشل حفظ البيانات في Firebase');
+        }
+        
+        // حفظ في localStorage
+        localStorage.setItem('currentUser', JSON.stringify(userData));
+        localStorage.setItem('userStatus', 'pending');
+        
+        // إرسال رسالة واتساب
+        sendWhatsAppToCompany(fullName, phone, activationCode, userUID);
+        
+        // إظهار رسالة نجاح
+        showNotification('✅ تم إرسال طلبك بنجاح! ستتلقى رمز الاشتراك من الشركة خلال 24 ساعة', 'success');
+        
+        // تحديث واجهة تسجيل الدخول
+        hideCloudRegisterForm();
+        updateCloudTabContent('login');
+        updateCloudManagementSummary();
+        
+        // بدء فحص التفعيل التلقائي
+        startActivationPolling();
+        
+    } catch (error) {
+        console.error('❌ خطأ في التسجيل:', error);
+        showNotification(`❌ حدث خطأ: ${error.message}`, 'error');
+    }
+}
+
+/**
+ * معالجة تسجيل الدخول
+ */
+async function handleCloudLoginSubmit(event) {
+    event.preventDefault();
+    console.log('🔐 handleCloudLoginSubmit...');
+    
+    try {
+        const fullName = document.getElementById('cloudLoginFullName').value.trim();
+        const phone = document.getElementById('cloudLoginPhone').value.trim();
+        const activationCode = document.getElementById('cloudLoginActivationCode').value.trim();
+        
+        if (!fullName || !phone || !activationCode) {
+            showNotification('❌ يرجى ملء جميع الحقول', 'error');
+            return;
+        }
+        
+        if (phone.length !== 11) {
+            showNotification('❌ رقم الهاتف يجب أن يكون 11 رقم', 'error');
+            return;
+        }
+        
+        if (activationCode.length !== 6) {
+            showNotification('❌ رمز التفعيل يجب أن يكون 6 أرقام', 'error');
+            return;
+        }
+        
+        // التحقق من Firebase
+        if (typeof firebase === 'undefined' || !firebase.apps || firebase.apps.length === 0) {
+            throw new Error('Firebase غير متصل');
+        }
+        
+        const database = firebase.database();
+        
+        // البحث عن المستخدم باستخدام رقم الهاتف ورمز التفعيل
+        const usersRef = database.ref('users');
+        const snapshot = await usersRef.orderByChild('phone').equalTo(phone).once('value');
+        
+        if (!snapshot.exists()) {
+            throw new Error('رقم الهاتف غير مسجل');
+        }
+        
+        let foundUser = null;
+        snapshot.forEach(childSnapshot => {
+            const user = childSnapshot.val();
+            if (user.activationCode === activationCode && user.fullName === fullName) {
+                foundUser = user;
+            }
+        });
+        
+        if (!foundUser) {
+            throw new Error('بيانات تسجيل الدخول غير صحيحة');
+        }
+        
+        if (foundUser.status !== 'active') {
+            throw new Error('حسابك غير مفعّل بعد. يرجى الانتظار حتى تتم الموافقة على طلبك.');
+        }
+        
+        // تسجيل الدخول ناجح
+        localStorage.setItem('currentUser', JSON.stringify(foundUser));
+        localStorage.setItem('userStatus', 'active');
+        
+        // تحديث آخر تسجيل دخول
+        await database.ref(`users/${foundUser.uid}`).update({
+            lastLogin: new Date().toISOString()
+        });
+        
+        showNotification(`🎉 مرحباً ${foundUser.fullName}! تم تسجيل الدخول بنجاح`, 'success');
+        
+        // تحديث الواجهة
+        hideCloudLoginForm();
+        updateCloudTabContent('login');
+        updateCloudManagementSummary();
+        
+    } catch (error) {
+        console.error('❌ خطأ في تسجيل الدخول:', error);
+        const errorMessage = error?.message || error?.toString() || 'خطأ غير معروف';
+        showNotification(`❌ خطأ: ${errorMessage}`, 'error');
+    }
+}
+
+/**
+ * تسجيل الخروج
+ */
+function handleCloudLogout() {
+    if (confirm('هل أنت متأكد من تسجيل الخروج؟')) {
+        localStorage.removeItem('currentUser');
+        localStorage.removeItem('userStatus');
+        
+        showNotification('✅ تم تسجيل الخروج بنجاح', 'success');
+        
+        // تحديث الواجهة
+        updateCloudTabContent('login');
+        updateCloudManagementSummary();
+    }
+}
+
+/**
+ * فحص حالة التفعيل من صفحة إدارة السحابة
+ */
+async function checkCloudActivationStatus() {
+    await checkActivationStatus();
+    updateCloudTabContent('login');
+    updateCloudManagementSummary();
+}
+
+/**
+ * إلغاء طلب التسجيل
+ */
+function cancelCloudRegistration() {
+    if (confirm('هل أنت متأكد من إلغاء طلب التسجيل؟')) {
+        localStorage.removeItem('currentUser');
+        localStorage.removeItem('userStatus');
+        
+        showNotification('✅ تم إلغاء الطلب', 'success');
+        
+        // تحديث الواجهة
+        updateCloudTabContent('login');
+        updateCloudManagementSummary();
+    }
+}
+
+/**
+ * تحديث معلومات النسخ الاحتياطي
+ */
+function refreshCloudBackupInfo() {
+    const lastBackup = JSON.parse(localStorage.getItem('lastFirebaseBackup') || '{}');
+    
+    // آخر نسخة
+    const lastDateEl = document.getElementById('cloudBackupLastDate');
+    if (lastDateEl) {
+        if (lastBackup.date) {
+            const date = new Date(lastBackup.date);
+            lastDateEl.textContent = date.toLocaleString('ar-EG');
+        } else {
+            lastDateEl.textContent = 'لا توجد';
+        }
+    }
+    
+    // حجم آخر نسخة
+    const lastSizeEl = document.getElementById('cloudBackupLastSize');
+    if (lastSizeEl) {
+        lastSizeEl.textContent = lastBackup.size || '0 KB';
+    }
+}
+
+/**
+ * عرض سجل النسخ الاحتياطية
+ */
+async function showCloudBackupHistory() {
+    switchCloudTab('history');
+    await loadCloudBackupHistory();
+}
+
+/**
+ * تحميل سجل النسخ الاحتياطية
+ */
+async function loadCloudBackupHistory() {
+    const listEl = document.getElementById('cloudBackupHistoryList');
+    if (!listEl) return;
+    
+    try {
+        const userData = JSON.parse(localStorage.getItem('currentUser') || '{}');
+        if (!userData.uid) {
+            listEl.innerHTML = '<p style="text-align: center; color: var(--theme-text-secondary); padding: 2rem;"><i class="fas fa-lock"></i> يجب تسجيل الدخول أولاً</p>';
+            return;
+        }
+        
+        listEl.innerHTML = '<p style="text-align: center; color: var(--theme-text-secondary); padding: 2rem;"><i class="fas fa-spinner fa-spin"></i> جاري التحميل...</p>';
+        
+        const database = firebase.database();
+        const backupsRef = database.ref(`users/${userData.uid}/backups`);
+        const snapshot = await backupsRef.orderByKey().limitToLast(20).once('value');
+        
+        if (!snapshot.exists()) {
+            listEl.innerHTML = '<p style="text-align: center; color: var(--theme-text-secondary); padding: 2rem;"><i class="fas fa-info-circle"></i> لا توجد نسخ احتياطية سحابية بعد</p>';
+            return;
+        }
+        
+        const backups = [];
+        snapshot.forEach(childSnapshot => {
+            backups.push({
+                key: childSnapshot.key,
+                ...childSnapshot.val()
+            });
+        });
+        
+        // عكس الترتيب (الأحدث أولاً)
+        backups.reverse();
+        
+        // إنشاء الجدول
+        let html = '<div style="overflow-x: auto;"><table style="width: 100%; border-collapse: collapse;">';
+        html += '<thead><tr style="background: var(--theme-bg-secondary); border-bottom: 2px solid rgba(255,255,255,0.1);">';
+        html += '<th style="padding: 1rem; text-align: right;">التاريخ</th>';
+        html += '<th style="padding: 1rem; text-align: right;">الحجم</th>';
+        html += '<th style="padding: 1rem; text-align: right;">تلقائي</th>';
+        html += '<th style="padding: 1rem; text-align: right;">الإجراءات</th>';
+        html += '</tr></thead><tbody>';
+        
+        backups.forEach((backup, index) => {
+            const date = new Date(backup.metadata?.timestamp || parseInt(backup.key));
+            const size = backup.metadata?.sizeText || '---';
+            const isAuto = backup.metadata?.automatic ? 'نعم' : 'لا';
+            
+            html += `<tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">`;
+            html += `<td style="padding: 1rem;">${date.toLocaleString('ar-EG')}</td>`;
+            html += `<td style="padding: 1rem;">${size}</td>`;
+            html += `<td style="padding: 1rem;">${isAuto}</td>`;
+            html += `<td style="padding: 1rem;">`;
+            html += `<button class="btn btn-sm btn-secondary" onclick="restoreSpecificBackup('${backup.key}')">`;
+            html += `<i class="fas fa-download"></i> استرجاع`;
+            html += `</button>`;
+            html += `</td>`;
+            html += `</tr>`;
+        });
+        
+        html += '</tbody></table></div>';
+        listEl.innerHTML = html;
+        
+    } catch (error) {
+        console.error('❌ خطأ في تحميل السجل:', error);
+        listEl.innerHTML = `<p style="text-align: center; color: #ef4444; padding: 2rem;"><i class="fas fa-exclamation-triangle"></i> خطأ: ${error.message}</p>`;
+    }
+}
+
+/**
+ * استرجاع نسخة احتياطية محددة
+ */
+async function restoreSpecificBackup(backupKey) {
+    if (!confirm('هل أنت متأكد من استرجاع هذه النسخة؟ سيتم استبدال جميع البيانات الحالية!')) {
+        return;
+    }
+    
+    try {
+        const userData = JSON.parse(localStorage.getItem('currentUser') || '{}');
+        if (!userData.uid) {
+            throw new Error('يجب تسجيل الدخول أولاً');
+        }
+        
+        showNotification('⏳ جاري استرجاع النسخة الاحتياطية...', 'info');
+        
+        const database = firebase.database();
+        const backupRef = database.ref(`users/${userData.uid}/backups/${backupKey}`);
+        const snapshot = await backupRef.once('value');
+        
+        if (!snapshot.exists()) {
+            throw new Error('النسخة الاحتياطية غير موجودة');
+        }
+        
+        const backupData = snapshot.val().data;
+        
+        // استعادة localStorage
+        if (backupData.localStorage) {
+            for (const [key, value] of Object.entries(backupData.localStorage)) {
+                localStorage.setItem(key, value);
+            }
+        }
+        
+        showNotification('✅ تم استرجاع النسخة الاحتياطية بنجاح', 'success');
+        
+        // إعادة تحميل الصفحة
+        setTimeout(() => {
+            location.reload();
+        }, 1500);
+        
+    } catch (error) {
+        console.error('❌ خطأ في الاسترجاع:', error);
+        showNotification(`❌ فشل الاسترجاع: ${error.message}`, 'error');
+    }
+}
+
+/**
+ * حفظ إعدادات السحابة
+ */
+function saveCloudSettings() {
+    const autoBackupEnabled = document.getElementById('cloudAutoBackupEnabled')?.checked || false;
+    const autoBackupFrequency = document.getElementById('cloudAutoBackupFrequency')?.value || 'startup';
+    
+    localStorage.setItem('autoFirebaseBackupEnabled', autoBackupEnabled);
+    localStorage.setItem('cloudAutoBackupFrequency', autoBackupFrequency);
+    
+    showNotification('✅ تم حفظ الإعدادات بنجاح', 'success');
+}
+
+/**
+ * ═══════════════════════════════════════════════════════════════
+ * دوال رفع البيانات الكاملة إلى السحابة
+ * ═══════════════════════════════════════════════════════════════
+ */
+
+/**
+ * حفظ إعدادات رفع البيانات
+ */
+function saveDataUploadSettings() {
+    const autoUploadEnabled = document.getElementById('autoUploadAllData')?.checked || false;
+    const uploadFrequency = document.getElementById('autoUploadFrequency')?.value || '5min';
+    
+    localStorage.setItem('autoUploadAllDataEnabled', autoUploadEnabled);
+    localStorage.setItem('autoUploadFrequency', uploadFrequency);
+    
+    // إذا تم تفعيل الرفع التلقائي، قم بجدولة الرفع
+    if (autoUploadEnabled) {
+        scheduleAutoDataUpload();
+        showNotification('✅ تم تفعيل الرفع التلقائي للبيانات', 'success');
+    } else {
+        // إلغاء الجدولة
+        if (window.dataUploadInterval) {
+            clearInterval(window.dataUploadInterval);
+            window.dataUploadInterval = null;
+        }
+        showNotification('✅ تم حفظ الإعدادات', 'success');
+    }
+}
+
+/**
+ * رفع جميع البيانات يدوياً
+ */
+async function manualUploadAllData() {
+    try {
+        // التحقق من تسجيل الدخول
+        const currentUserId = localStorage.getItem('currentUserId');
+        if (!currentUserId) {
+            showNotification('❌ يجب تسجيل الدخول أولاً', 'error');
+            return;
+        }
+
+        showNotification('🔄 جاري رفع جميع البيانات...', 'info');
+
+        // رفع البيانات
+        await uploadAllDataToFirebase();
+
+        // تحديث وقت آخر رفع
+        const lastUploadTime = new Date().toISOString();
+        localStorage.setItem('lastDataUploadTime', lastUploadTime);
+        updateLastDataUploadDisplay();
+
+        showNotification('✅ تم رفع جميع البيانات بنجاح', 'success');
+
+    } catch (error) {
+        console.error('❌ خطأ في رفع البيانات:', error);
+        const errorMessage = error?.message || error?.toString() || 'خطأ غير معروف';
+        showNotification(`❌ فشل رفع البيانات: ${errorMessage}`, 'error');
+    }
+}
+
+/**
+ * جدولة الرفع التلقائي للبيانات
+ */
+function scheduleAutoDataUpload() {
+    const frequency = localStorage.getItem('autoUploadFrequency') || '5min';
+    
+    // إلغاء أي جدولة سابقة
+    if (window.dataUploadInterval) {
+        clearInterval(window.dataUploadInterval);
+    }
+
+    let intervalTime = 5 * 60 * 1000; // 5 دقائق افتراضياً
+
+    switch(frequency) {
+        case 'immediate':
+            // لا نستخدم interval للرفع الفوري، بل نرفع عند كل تغيير
+            return;
+        case '5min':
+            intervalTime = 5 * 60 * 1000;
+            break;
+        case '15min':
+            intervalTime = 15 * 60 * 1000;
+            break;
+        case '30min':
+            intervalTime = 30 * 60 * 1000;
+            break;
+        case 'hourly':
+            intervalTime = 60 * 60 * 1000;
+            break;
+        case 'daily':
+            intervalTime = 24 * 60 * 60 * 1000;
+            break;
+    }
+
+    // جدولة الرفع التلقائي
+    window.dataUploadInterval = setInterval(async () => {
+        const autoUploadEnabled = localStorage.getItem('autoUploadAllDataEnabled') === 'true';
+        const currentUserId = localStorage.getItem('currentUserId');
+        
+        if (autoUploadEnabled && currentUserId) {
+            console.log('🔄 رفع تلقائي للبيانات...');
+            try {
+                await uploadAllDataToFirebase();
+                const lastUploadTime = new Date().toISOString();
+                localStorage.setItem('lastDataUploadTime', lastUploadTime);
+                updateLastDataUploadDisplay();
+                console.log('✅ تم الرفع التلقائي بنجاح');
+            } catch (error) {
+                console.error('❌ خطأ في الرفع التلقائي:', error);
+            }
+        }
+    }, intervalTime);
+
+    console.log(`📅 تم جدولة الرفع التلقائي كل ${frequency}`);
+}
+
+/**
+ * رفع جميع البيانات إلى Firebase
+ */
+async function uploadAllDataToFirebase() {
+    const currentUserId = localStorage.getItem('currentUserId');
+    if (!currentUserId) {
+        throw new Error('يجب تسجيل الدخول أولاً');
+    }
+
+    // جمع جميع البيانات
+    const allData = {
+        products: JSON.parse(localStorage.getItem('products') || '[]'),
+        categories: JSON.parse(localStorage.getItem('categories') || '[]'),
+        invoices: JSON.parse(localStorage.getItem('invoices') || '[]'),
+        debts: JSON.parse(localStorage.getItem('debts') || '[]'),
+        installments: JSON.parse(localStorage.getItem('installments') || '[]'),
+        revenues: JSON.parse(localStorage.getItem('revenues') || '[]'),
+        expenses: JSON.parse(localStorage.getItem('expenses') || '[]'),
+        customers: JSON.parse(localStorage.getItem('customers') || '[]'),
+        suppliers: JSON.parse(localStorage.getItem('suppliers') || '[]'),
+        storeSettings: JSON.parse(localStorage.getItem('storeSettings') || '{}'),
+        systemSettings: JSON.parse(localStorage.getItem('systemSettings') || '{}'),
+        timestamp: new Date().toISOString()
+    };
+
+    // تطهير المفاتيح لـ Firebase
+    const sanitizedData = sanitizeForFirebase(allData);
+
+    // رفع إلى Firebase
+    const dataRef = firebase.database().ref(`users/${currentUserId}/fullData`);
+    await dataRef.set({
+        data: sanitizedData,
+        uploadedAt: firebase.database.ServerValue.TIMESTAMP,
+        version: '1.0'
+    });
+
+    return sanitizedData;
+}
+
+/**
+ * تحديث عرض آخر وقت رفع للبيانات
+ */
+function updateLastDataUploadDisplay() {
+    const lastUploadTime = localStorage.getItem('lastDataUploadTime');
+    const displayEl = document.getElementById('lastDataUploadTime');
+    
+    if (displayEl) {
+        if (lastUploadTime) {
+            const date = new Date(lastUploadTime);
+            const now = new Date();
+            const diffMinutes = Math.floor((now - date) / (1000 * 60));
+            
+            if (diffMinutes < 1) {
+                displayEl.textContent = 'الآن';
+            } else if (diffMinutes < 60) {
+                displayEl.textContent = `قبل ${diffMinutes} دقيقة`;
+            } else {
+                const diffHours = Math.floor(diffMinutes / 60);
+                if (diffHours < 24) {
+                    displayEl.textContent = `قبل ${diffHours} ساعة`;
+                } else {
+                    const diffDays = Math.floor(diffHours / 24);
+                    displayEl.textContent = `قبل ${diffDays} يوم`;
+                }
+            }
+        } else {
+            displayEl.textContent = 'لم يتم الرفع بعد';
+        }
+    }
+}
+
+/**
+ * تهيئة رفع البيانات عند تحميل الصفحة
+ */
+function initDataUpload() {
+    // تحديث العرض
+    updateLastDataUploadDisplay();
+    
+    // إظهار/إخفاء لوحة التكرار بناءً على حالة التفعيل
+    const autoUploadCheckbox = document.getElementById('autoUploadAllData');
+    const frequencyPanel = document.getElementById('autoUploadFrequencyPanel');
+    
+    if (autoUploadCheckbox && frequencyPanel) {
+        autoUploadCheckbox.addEventListener('change', function() {
+            frequencyPanel.style.display = this.checked ? 'block' : 'none';
+        });
+        
+        // تهيئة العرض الأولي
+        const autoUploadEnabled = localStorage.getItem('autoUploadAllDataEnabled') === 'true';
+        autoUploadCheckbox.checked = autoUploadEnabled;
+        frequencyPanel.style.display = autoUploadEnabled ? 'block' : 'none';
+        
+        // تهيئة تكرار الرفع
+        const savedFrequency = localStorage.getItem('autoUploadFrequency');
+        const frequencySelect = document.getElementById('autoUploadFrequency');
+        if (savedFrequency && frequencySelect) {
+            frequencySelect.value = savedFrequency;
+        }
+        
+        // جدولة الرفع التلقائي إذا كان مفعلاً
+        if (autoUploadEnabled) {
+            scheduleAutoDataUpload();
+        }
+    }
+}
+
+/**
+ * تحميل الدوال عند فتح صفحة إدارة السحابة
+ */
+document.addEventListener('DOMContentLoaded', function() {
+    // تهيئة رفع البيانات
+    setTimeout(initDataUpload, 1000);
+});
+
+/**
+ * تحديث معلومات الملخص في أعلى الصفحة
+ */
+function updateCloudManagementSummary() {
+    // آخر نسخة سحابية
+    const lastBackup = JSON.parse(localStorage.getItem('lastFirebaseBackup') || '{}');
+    const lastDateEl = document.getElementById('cloudLastBackupDate');
+    if (lastDateEl) {
+        if (lastBackup.date) {
+            const date = new Date(lastBackup.date);
+            const now = new Date();
+            const diffHours = Math.floor((now - date) / (1000 * 60 * 60));
+            
+            if (diffHours < 1) {
+                lastDateEl.textContent = 'قبل أقل من ساعة';
+            } else if (diffHours < 24) {
+                lastDateEl.textContent = `قبل ${diffHours} ساعة`;
+            } else {
+                const diffDays = Math.floor(diffHours / 24);
+                lastDateEl.textContent = `قبل ${diffDays} يوم`;
+            }
+        } else {
+            lastDateEl.textContent = 'لا توجد';
+        }
+    }
+    
+    // حجم البيانات
+    const sizeEl = document.getElementById('cloudBackupSize');
+    if (sizeEl) {
+        sizeEl.textContent = lastBackup.size || '0 KB';
+    }
+    
+    // حالة الحساب
+    const userStatus = localStorage.getItem('userStatus');
+    const statusEl = document.getElementById('cloudAccountStatus');
+    if (statusEl) {
+        if (userStatus === 'active') {
+            statusEl.textContent = '✓ مُفعّل';
+            statusEl.style.color = '#10b981';
+        } else if (userStatus === 'pending') {
+            statusEl.textContent = '⏳ قيد الانتظار';
+            statusEl.style.color = '#f59e0b';
+        } else {
+            statusEl.textContent = 'غير مسجل';
+            statusEl.style.color = '#ef4444';
+        }
+    }
+    
+    // عدد النسخ (سيتم تحديثه لاحقاً من Firebase)
+    const countEl = document.getElementById('cloudBackupCount');
+    if (countEl) {
+        countEl.textContent = '---';
+    }
+}
+
+// تصدير الدوال الجديدة
+window.switchCloudTab = switchCloudTab;
+window.showCloudRegisterForm = showCloudRegisterForm;
+window.hideCloudRegisterForm = hideCloudRegisterForm;
+window.showCloudLoginForm = showCloudLoginForm;
+window.hideCloudLoginForm = hideCloudLoginForm;
+window.handleCloudRegisterSubmit = handleCloudRegisterSubmit;
+window.handleCloudLoginSubmit = handleCloudLoginSubmit;
+window.handleCloudLogout = handleCloudLogout;
+window.checkCloudActivationStatus = checkCloudActivationStatus;
+window.cancelCloudRegistration = cancelCloudRegistration;
+window.refreshCloudBackupInfo = refreshCloudBackupInfo;
+window.showCloudBackupHistory = showCloudBackupHistory;
+window.loadCloudBackupHistory = loadCloudBackupHistory;
+window.restoreSpecificBackup = restoreSpecificBackup;
+window.saveCloudSettings = saveCloudSettings;
+window.updateCloudManagementSummary = updateCloudManagementSummary;
+
+/**
+ * تحديث واجهة الاشتراك السحابي في صفحة الحساب
+ */
+function updateCloudSubscriptionUI() {
+    const container = document.getElementById('cloudSubscriptionContent');
+    if (!container) return;
+    
+    const userStatus = localStorage.getItem('userStatus');
+    const currentUser = localStorage.getItem('currentUser');
+    
+    // الحالة 1: غير مسجل - عرض نموذج التسجيل
+    if (!userStatus || !currentUser) {
+        container.innerHTML = `
+            <div style="background: linear-gradient(135deg, var(--theme-bg-secondary) 0%, var(--theme-bg-hover) 100%); border-radius: 20px; padding: 2.5rem; border: 2px solid rgba(102, 126, 234, 0.2); box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);">
+              
+              <!-- أيقونة -->
+              <div style="text-align: center; margin-bottom: 2rem;">
+                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); width: 100px; height: 100px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);">
+                  <i class="fas fa-cloud-upload-alt" style="font-size: 3rem; color: white;"></i>
+                </div>
+                <h3 style="font-size: 1.75rem; font-weight: 700; color: var(--theme-text-primary); margin: 0 0 0.5rem 0;">
+                  اشترك في النسخ السحابي
+                </h3>
+                <p style="font-size: 1.1rem; color: var(--theme-text-secondary); margin: 0;">
+                  احفظ بياناتك بشكل آمن في السحابة
+                </p>
+              </div>
+
+              <!-- الميزات -->
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+                
+                <div style="background: var(--theme-bg-tertiary); border-radius: 12px; padding: 1.5rem; border: 1px solid rgba(102, 126, 234, 0.1);">
+                  <div style="display: flex; align-items: start; gap: 1rem;">
+                    <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                      <i class="fas fa-shield-alt" style="font-size: 1.25rem; color: white;"></i>
+                    </div>
+                    <div>
+                      <h4 style="color: var(--theme-text-primary); margin: 0 0 0.5rem 0; font-size: 1.1rem;">نسخ احتياطي آمن</h4>
+                      <p style="color: var(--theme-text-secondary); margin: 0; font-size: 0.95rem; line-height: 1.5;">
+                        حماية كاملة لجميع بياناتك في السحابة
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div style="background: var(--theme-bg-tertiary); border-radius: 12px; padding: 1.5rem; border: 1px solid rgba(102, 126, 234, 0.1);">
+                  <div style="display: flex; align-items: start; gap: 1rem;">
+                    <div style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                      <i class="fas fa-sync-alt" style="font-size: 1.25rem; color: white;"></i>
+                    </div>
+                    <div>
+                      <h4 style="color: var(--theme-text-primary); margin: 0 0 0.5rem 0; font-size: 1.1rem;">نسخ تلقائي</h4>
+                      <p style="color: var(--theme-text-secondary); margin: 0; font-size: 0.95rem; line-height: 1.5;">
+                        نسخ احتياطي تلقائي لبياناتك يومياً
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div style="background: var(--theme-bg-tertiary); border-radius: 12px; padding: 1.5rem; border: 1px solid rgba(102, 126, 234, 0.1);">
+                  <div style="display: flex; align-items: start; gap: 1rem;">
+                    <div style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                      <i class="fas fa-laptop" style="font-size: 1.25rem; color: white;"></i>
+                    </div>
+                    <div>
+                      <h4 style="color: var(--theme-text-primary); margin: 0 0 0.5rem 0; font-size: 1.1rem;">استرجاع سهل</h4>
+                      <p style="color: var(--theme-text-secondary); margin: 0; font-size: 0.95rem; line-height: 1.5;">
+                        استرجع بياناتك على أي جهاز في أي وقت
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+
+              <!-- نموذج التسجيل -->
+              <form id="cloudRegisterForm" onsubmit="handleCloudRegisterSubmit(event); return false;" style="max-width: 600px; margin: 0 auto;">
+                
+                <!-- الاسم الرباعي -->
+                <div style="margin-bottom: 1.5rem;">
+                  <label style="display: block; color: var(--theme-text-primary); font-weight: 600; margin-bottom: 0.5rem; font-size: 0.95rem;">
+                    <i class="fas fa-user"></i> الاسم الرباعي
+                  </label>
+                  <input 
+                    type="text" 
+                    id="cloudRegisterFullName" 
+                    required
+                    placeholder="مثال: أحمد محمد علي حسن"
+                    style="
+                      width: 100%;
+                      padding: 1rem;
+                      border-radius: 12px;
+                      border: 2px solid rgba(102, 126, 234, 0.3);
+                      background: var(--theme-bg-tertiary);
+                      color: var(--theme-text-primary);
+                      font-size: 1rem;
+                      transition: border 0.3s ease;
+                    "
+                    onfocus="this.style.borderColor='#667eea'"
+                    onblur="this.style.borderColor='rgba(102, 126, 234, 0.3)'"
+                  >
+                </div>
+
+                <!-- رقم الهاتف -->
+                <div style="margin-bottom: 2rem;">
+                  <label style="display: block; color: var(--theme-text-primary); font-weight: 600; margin-bottom: 0.5rem; font-size: 0.95rem;">
+                    <i class="fas fa-phone"></i> رقم الهاتف
+                  </label>
+                  <input 
+                    type="tel" 
+                    id="cloudRegisterPhone" 
+                    required
+                    placeholder="مثال: 07701234567"
+                    pattern="[0-9]{11}"
+                    style="
+                      width: 100%;
+                      padding: 1rem;
+                      border-radius: 12px;
+                      border: 2px solid rgba(102, 126, 234, 0.3);
+                      background: var(--theme-bg-tertiary);
+                      color: var(--theme-text-primary);
+                      font-size: 1rem;
+                      direction: ltr;
+                      text-align: right;
+                      transition: border 0.3s ease;
+                    "
+                    onfocus="this.style.borderColor='#667eea'"
+                    onblur="this.style.borderColor='rgba(102, 126, 234, 0.3)'"
+                  >
+                  <small style="color: var(--theme-text-secondary); font-size: 0.85rem; margin-top: 0.5rem; display: block;">
+                    أدخل رقم الهاتف مكون من 11 رقم (07XX XXX XXXX)
+                  </small>
+                </div>
+
+                <!-- زر التسجيل -->
+                <button 
+                  type="submit"
+                  id="cloudRegisterBtn"
+                  class="btn btn-primary"
+                  style="
+                    width: 100%;
+                    padding: 1.25rem;
+                    font-size: 1.1rem;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 0.75rem;
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    border: none;
+                  "
+                >
+                  <i class="fas fa-paper-plane"></i>
+                  <span>إرسال طلب التسجيل</span>
+                </button>
+
+                <!-- ملاحظة -->
+                <div style="margin-top: 1.5rem; padding: 1rem; background: rgba(59, 130, 246, 0.1); border-right: 4px solid #3b82f6; border-radius: 8px;">
+                  <p style="color: var(--theme-text-primary); margin: 0; font-size: 0.9rem; line-height: 1.6;">
+                    <strong>📱 ملاحظة:</strong> سيتم إرسال طلبك إلى الشركة عبر واتساب. ستتلقى رمز الاشتراك من الشركة خلال 24 ساعة.
+                  </p>
+                </div>
+
+              </form>
+
+            </div>
+        `;
+        return;
+    }
+    
+    const userData = JSON.parse(currentUser);
+    
+    // الحالة 2: في انتظار التفعيل
+    if (userStatus === 'pending') {
+        container.innerHTML = `
+            <div style="background: linear-gradient(135deg, var(--theme-bg-secondary) 0%, var(--theme-bg-hover) 100%); border-radius: 20px; padding: 2.5rem; border: 2px solid rgba(102, 126, 234, 0.2); box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);">
+              
+              <div style="text-align: center; margin-bottom: 2rem;">
+                <div style="font-size: 5rem; margin-bottom: 1rem;">⏳</div>
+                <h3 style="font-size: 1.75rem; font-weight: 700; color: var(--theme-text-primary); margin: 0 0 0.5rem 0;">
+                  في انتظار التفعيل
+                </h3>
+                <p style="font-size: 1.1rem; color: var(--theme-text-secondary); margin: 0;">
+                  تم إرسال طلبك إلى الشركة
+                </p>
+              </div>
+
+              <!-- معلومات الطلب -->
+              <div style="background: var(--theme-bg-tertiary); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem;">
+                <div style="display: grid; gap: 1rem;">
+                  <div style="display: flex; justify-content: space-between;">
+                    <span style="color: var(--theme-text-secondary);"><i class="fas fa-user"></i> الاسم:</span>
+                    <strong style="color: var(--theme-text-primary);">${userData.fullName}</strong>
+                  </div>
+                  <div style="display: flex; justify-content: space-between;">
+                    <span style="color: var(--theme-text-secondary);"><i class="fas fa-phone"></i> الهاتف:</span>
+                    <strong style="color: var(--theme-text-primary); direction: ltr;">${userData.phone}</strong>
+                  </div>
+                  <div style="display: flex; justify-content: space-between;">
+                    <span style="color: var(--theme-text-secondary);"><i class="fas fa-calendar"></i> تاريخ الطلب:</span>
+                    <strong style="color: var(--theme-text-primary);">${new Date(userData.registeredAt).toLocaleDateString('ar-EG')}</strong>
+                  </div>
+                </div>
+              </div>
+
+              <!-- تنبيه -->
+              <div style="background: rgba(59, 130, 246, 0.1); border-right: 4px solid #3b82f6; padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem;">
+                <p style="color: var(--theme-text-primary); line-height: 1.8; margin: 0; font-size: 0.95rem;">
+                  <strong>📱 ملاحظة:</strong> ستتلقى رمز الاشتراك من الشركة عبر الواتساب. يرجى الاحتفاظ بالرمز عند وصوله. سيتم التفعيل خلال 24 ساعة.
+                </p>
+              </div>
+
+              <!-- زر فحص التفعيل -->
+              <button 
+                onclick="checkActivationStatus()"
+                class="btn btn-primary"
+                style="width: 100%; padding: 1.25rem; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; gap: 0.75rem;"
+              >
+                <i class="fas fa-sync-alt"></i>
+                <span>فحص حالة التفعيل</span>
+              </button>
+
+              <!-- زر تسجيل الخروج -->
+              <button 
+                onclick="handleCloudLogout()"
+                style="
+                  width: 100%;
+                  padding: 1rem;
+                  border-radius: 12px;
+                  border: 2px solid #ef4444;
+                  background: transparent;
+                  color: #ef4444;
+                  font-size: 1rem;
+                  font-weight: 600;
+                  cursor: pointer;
+                  margin-top: 1rem;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  gap: 0.5rem;
+                "
+                onmouseover="this.style.background='rgba(239, 68, 68, 0.1)'"
+                onmouseout="this.style.background='transparent'"
+              >
+                <i class="fas fa-sign-out-alt"></i>
+                <span>إلغاء وتسجيل الخروج</span>
+              </button>
+
+            </div>
+        `;
+        return;
+    }
+    
+    // الحالة 3: مُفعّل - عرض جميع المعلومات
+    if (userStatus === 'active') {
+        container.innerHTML = `
+            <div style="background: linear-gradient(135deg, var(--theme-bg-secondary) 0%, var(--theme-bg-hover) 100%); border-radius: 20px; padding: 2.5rem; border: 2px solid rgba(34, 197, 94, 0.3); box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);">
+              
+              <!-- العنوان -->
+              <div style="text-align: center; margin-bottom: 2rem;">
+                <div style="background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); width: 100px; height: 100px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; box-shadow: 0 8px 24px rgba(34, 197, 94, 0.4);">
+                  <i class="fas fa-check" style="font-size: 3.5rem; color: white;"></i>
+                </div>
+                <h3 style="font-size: 1.75rem; font-weight: 700; color: var(--theme-text-primary); margin: 0 0 0.5rem 0;">
+                  اشتراكك مُفعّل بنجاح
+                </h3>
+                <p style="font-size: 1.1rem; color: var(--theme-text-secondary); margin: 0;">
+                  يمكنك الآن استخدام النسخ الاحتياطي السحابي
+                </p>
+              </div>
+
+              <!-- معلومات المستخدم -->
+              <div style="display: grid; gap: 1rem; margin-bottom: 2rem;">
+                
+                <div style="background: var(--theme-bg-tertiary); border-radius: 12px; padding: 1.5rem;">
+                  <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="color: var(--theme-text-secondary);"><i class="fas fa-user"></i> الاسم الكامل:</span>
+                    <strong style="color: var(--theme-text-primary);">${userData.fullName}</strong>
+                  </div>
+                </div>
+
+                <div style="background: var(--theme-bg-tertiary); border-radius: 12px; padding: 1.5rem;">
+                  <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="color: var(--theme-text-secondary);"><i class="fas fa-phone"></i> رقم الهاتف:</span>
+                    <strong style="color: var(--theme-text-primary); direction: ltr;">${userData.phone}</strong>
+                  </div>
+                </div>
+
+                <div style="background: var(--theme-bg-tertiary); border-radius: 12px; padding: 1.5rem;">
+                  <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="color: var(--theme-text-secondary);"><i class="fas fa-fingerprint"></i> معرف المستخدم:</span>
+                    <strong style="color: var(--theme-text-primary); font-family: 'Courier New', monospace; font-size: 0.9rem;">${userData.uid || '---'}</strong>
+                  </div>
+                </div>
+
+                <div style="background: var(--theme-bg-tertiary); border-radius: 12px; padding: 1.5rem;">
+                  <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="color: var(--theme-text-secondary);"><i class="fas fa-calendar"></i> تاريخ التسجيل:</span>
+                    <strong style="color: var(--theme-text-primary);">${new Date(userData.registeredAt).toLocaleDateString('ar-EG')}</strong>
+                  </div>
+                </div>
+
+                <div style="background: var(--theme-bg-tertiary); border-radius: 12px; padding: 1.5rem;">
+                  <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="color: var(--theme-text-secondary);"><i class="fas fa-check-circle"></i> حالة الاشتراك:</span>
+                    <strong style="color: #22c55e;">
+                      <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #22c55e; margin-left: 5px;"></span>
+                      مُفعّل ونشط
+                    </strong>
+                  </div>
+                </div>
+
+              </div>
+
+              <!-- أزرار الإجراءات -->
+              <div style="display: grid; gap: 1rem;">
+                
+                <!-- زر رفع نسخة احتياطية -->
+                <button 
+                  onclick="uploadBackupToFirebase(false)"
+                  class="btn btn-primary"
+                  style="
+                    width: 100%;
+                    padding: 1.25rem;
+                    font-size: 1.1rem;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 0.75rem;
+                    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+                    border: none;
+                  "
+                >
+                  <i class="fas fa-cloud-upload-alt"></i>
+                  <span>رفع نسخة احتياطية الآن</span>
+                </button>
+
+                <!-- زر تسجيل الخروج -->
+                <button 
+                  onclick="handleCloudLogout()"
+                  style="
+                    width: 100%;
+                    padding: 1rem;
+                    border-radius: 12px;
+                    border: 2px solid #ef4444;
+                    background: transparent;
+                    color: #ef4444;
+                    font-size: 1rem;
+                    font-weight: 600;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 0.5rem;
+                  "
+                  onmouseover="this.style.background='rgba(239, 68, 68, 0.1)'"
+                  onmouseout="this.style.background='transparent'"
+                >
+                  <i class="fas fa-sign-out-alt"></i>
+                  <span>تسجيل الخروج</span>
+                </button>
+
+              </div>
+
+            </div>
+        `;
+        return;
+    }
+}
+
+/**
+ * معالجة تسجيل الاشتراك السحابي
+ */
+async function handleCloudRegisterSubmit(event) {
+    event.preventDefault();
+    console.log('📝 معالجة تسجيل الاشتراك السحابي...');
+    
+    try {
+        const fullName = document.getElementById('cloudRegisterFullName').value.trim();
+        const phone = document.getElementById('cloudRegisterPhone').value.trim();
+        
+        if (!fullName || !phone) {
+            showNotification('❌ يرجى ملء جميع الحقول', 'error');
+            return;
+        }
+        
+        if (phone.length !== 11) {
+            showNotification('❌ رقم الهاتف يجب أن يكون 11 رقم', 'error');
+            return;
+        }
+        
+        const registerBtn = document.getElementById('cloudRegisterBtn');
+        const originalBtnText = registerBtn.innerHTML;
+        registerBtn.disabled = true;
+        registerBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الإرسال...';
+        
+        const activationCode = generateActivationCode();
+        const userUID = generateUserUID();
+        const registeredAt = new Date().toISOString();
+        
+        const userData = {
+            fullName,
+            phone,
+            activationCode,
+            uid: userUID,
+            registeredAt,
+            status: 'pending',
+            activatedAt: null,
+            lastLogin: null,
+            metadata: {
+                userAgent: navigator.userAgent,
+                platform: navigator.platform,
+                language: navigator.language
+            }
+        };
+        
+        const savedToFirebase = await saveUserToFirebase(userData);
+        
+        if (!savedToFirebase) {
+            throw new Error('فشل حفظ البيانات في Firebase');
+        }
+        
+        localStorage.setItem('currentUser', JSON.stringify(userData));
+        localStorage.setItem('userStatus', 'pending');
+        
+        sendWhatsAppToCompany(fullName, phone, activationCode, userUID);
+        
+        showNotification('✅ تم إرسال طلبك بنجاح! ستتلقى رمز الاشتراك من الشركة خلال 24 ساعة', 'success');
+        
+        updateCloudSubscriptionUI();
+        
+        startActivationPolling(userUID);
+        
+    } catch (error) {
+        console.error('❌ خطأ في التسجيل:', error);
+        showNotification(`❌ حدث خطأ: ${error.message}`, 'error');
+        
+        const registerBtn = document.getElementById('cloudRegisterBtn');
+        if (registerBtn) {
+            registerBtn.disabled = false;
+            registerBtn.innerHTML = originalBtnText;
+        }
+    }
+}
+
+/**
+ * معالجة تسجيل الخروج من الاشتراك السحابي
+ */
+function handleCloudLogout() {
+    if (!confirm('هل أنت متأكد من تسجيل الخروج من الاشتراك السحابي؟\n\nسيتم حذف جميع البيانات المحلية للحساب.')) {
+        return;
+    }
+    
+    localStorage.removeItem('currentUser');
+    localStorage.removeItem('userStatus');
+    
+    // إيقاف فحص التفعيل التلقائي
+    if (window.activationPollingInterval) {
+        clearInterval(window.activationPollingInterval);
+        window.activationPollingInterval = null;
+    }
+    
+    showNotification('✅ تم تسجيل الخروج بنجاح', 'success');
+    
+    updateCloudSubscriptionUI();
+}
+
+// تصدير الدوال
+window.updateCloudSubscriptionUI = updateCloudSubscriptionUI;
+window.handleCloudRegisterSubmit = handleCloudRegisterSubmit;
+window.handleCloudLogout = handleCloudLogout;
 
 /**
  * تحديث معلومات المستخدم في صفحة الحساب
@@ -1659,6 +3285,15 @@ if (typeof originalShowPage === 'function') {
         if (pageId === 'settings-backup') {
             setTimeout(() => {
                 updateRegistrationUI();
+            }, 100);
+        }
+        
+        // إذا كانت صفحة إدارة السحابة، حدّث المعلومات
+        if (pageId === 'cloudManagement') {
+            setTimeout(() => {
+                updateCloudManagementSummary();
+                updateCloudTabContent('login');
+                switchCloudTab('login');
             }, 100);
         }
     };
@@ -8732,6 +10367,192 @@ console.log(`
     }
   </style>
   
+  
+  <!-- ═══════════════════════════════════════════════════════════════════════════════ -->
+  <!-- 🔐 نافذة التسجيل السريع للنسخ السحابي -->
+  <!-- ═══════════════════════════════════════════════════════════════════════════════ -->
+  <div id="quickRegistrationModal" style="
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 999999;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(5px);
+  ">
+    <div style="
+      background: var(--theme-bg-card);
+      border-radius: 24px;
+      padding: 2.5rem;
+      max-width: 500px;
+      width: 90%;
+      box-shadow: 0 25px 80px rgba(0,0,0,0.5);
+      animation: modalSlideIn 0.3s ease;
+      position: relative;
+    ">
+      <!-- زر الإغلاق -->
+      <button onclick="closeQuickRegistrationModal()" style="
+        position: absolute;
+        top: 1rem;
+        left: 1rem;
+        background: transparent;
+        border: none;
+        color: var(--theme-text-secondary);
+        font-size: 1.5rem;
+        cursor: pointer;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+      " onmouseover="this.style.background='var(--theme-bg-hover)'" onmouseout="this.style.background='transparent'">
+        <i class="fas fa-times"></i>
+      </button>
+
+      <!-- العنوان -->
+      <div style="text-align: center; margin-bottom: 2rem;">
+        <div style="font-size: 3rem; margin-bottom: 1rem;">🔐</div>
+        <h2 style="color: var(--theme-text-primary); font-size: 1.75rem; margin-bottom: 0.5rem;">
+          تسجيل للنسخ السحابي
+        </h2>
+        <p style="color: var(--theme-text-secondary); font-size: 0.95rem; line-height: 1.6;">
+          للاستفادة من النسخ الاحتياطي السحابي، يجب التسجيل أولاً
+        </p>
+      </div>
+
+      <!-- رسالة معلومات -->
+      <div style="background: rgba(59, 130, 246, 0.1); border-right: 4px solid #3b82f6; padding: 1rem; border-radius: 12px; margin-bottom: 2rem;">
+        <p style="color: var(--theme-text-primary); line-height: 1.6; margin: 0; font-size: 0.9rem;">
+          <strong>📱 ملاحظة:</strong> سيتم إرسال طلبك إلى الشركة عبر واتساب. ستتلقى رمز الاشتراك من الشركة خلال 24 ساعة.
+        </p>
+      </div>
+
+      <!-- النموذج -->
+      <form id="quickRegisterForm" onsubmit="handleQuickRegisterSubmit(event); return false;">
+        <!-- الاسم الرباعي -->
+        <div style="margin-bottom: 1.5rem;">
+          <label style="display: block; color: var(--theme-text-primary); font-weight: 600; margin-bottom: 0.5rem; font-size: 0.95rem;">
+            <i class="fas fa-user"></i> الاسم الرباعي
+          </label>
+          <input 
+            type="text" 
+            id="quickRegisterFullName" 
+            required
+            placeholder="مثال: أحمد محمد علي حسن"
+            style="
+              width: 100%;
+              padding: 1rem;
+              border-radius: 12px;
+              border: 2px solid rgba(102, 126, 234, 0.3);
+              background: var(--theme-bg-secondary);
+              color: var(--theme-text-primary);
+              font-size: 1rem;
+              transition: border 0.3s ease;
+            "
+            onfocus="this.style.borderColor='#667eea'"
+            onblur="this.style.borderColor='rgba(102, 126, 234, 0.3)'"
+          >
+        </div>
+
+        <!-- رقم الهاتف -->
+        <div style="margin-bottom: 2rem;">
+          <label style="display: block; color: var(--theme-text-primary); font-weight: 600; margin-bottom: 0.5rem; font-size: 0.95rem;">
+            <i class="fas fa-phone"></i> رقم الهاتف
+          </label>
+          <input 
+            type="tel" 
+            id="quickRegisterPhone" 
+            required
+            placeholder="مثال: 07701234567"
+            pattern="[0-9]{11}"
+            style="
+              width: 100%;
+              padding: 1rem;
+              border-radius: 12px;
+              border: 2px solid rgba(102, 126, 234, 0.3);
+              background: var(--theme-bg-secondary);
+              color: var(--theme-text-primary);
+              font-size: 1rem;
+              direction: ltr;
+              text-align: right;
+              transition: border 0.3s ease;
+            "
+            onfocus="this.style.borderColor='#667eea'"
+            onblur="this.style.borderColor='rgba(102, 126, 234, 0.3)'"
+          >
+          <small style="color: var(--theme-text-secondary); font-size: 0.85rem; margin-top: 0.5rem; display: block;">
+            أدخل رقم الهاتف مكون من 11 رقم (07XX XXX XXXX)
+          </small>
+        </div>
+
+        <!-- الأزرار -->
+        <div style="display: flex; gap: 1rem;">
+          <button 
+            type="button"
+            onclick="closeQuickRegistrationModal()"
+            style="
+              flex: 1;
+              padding: 1rem;
+              border-radius: 12px;
+              border: 2px solid var(--theme-border);
+              background: transparent;
+              color: var(--theme-text-primary);
+              font-size: 1rem;
+              font-weight: 600;
+              cursor: pointer;
+              transition: all 0.2s ease;
+            "
+            onmouseover="this.style.background='var(--theme-bg-hover)'"
+            onmouseout="this.style.background='transparent'"
+          >
+            <i class="fas fa-times"></i> إلغاء
+          </button>
+
+          <button 
+            type="submit"
+            id="quickRegisterBtn"
+            style="
+              flex: 2;
+              padding: 1rem;
+              border-radius: 12px;
+              border: none;
+              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+              color: white;
+              font-size: 1rem;
+              font-weight: 600;
+              cursor: pointer;
+              transition: transform 0.2s ease, box-shadow 0.2s ease;
+              box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            "
+            onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(102, 126, 234, 0.4)'"
+            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(102, 126, 234, 0.3)'"
+          >
+            <i class="fas fa-paper-plane"></i> إرسال طلب التسجيل
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <style>
+    @keyframes modalSlideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-30px) scale(0.95);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+  </style>
+
   <div class="animated-bg"></div>
   <div class="app-container"><!-- الشريط الجانبي -->
    <nav class="sidebar" id="sidebar"><button class="sidebar-toggle" id="sidebarToggle"> <i class="fas fa-angle-double-right"></i> </button>
@@ -8765,6 +10586,7 @@ console.log(`
     <div class="nav-section-title">النظام</div>
     <div class="nav-item" id="printerNavItem"><a class="nav-link" onclick="showPage('printer')"> <i class="fas fa-print nav-icon"></i> <span class="nav-text">إدارة الطابعة</span> </a></div>
     <div class="nav-item" id="settingsNavItem"><a class="nav-link" onclick="showPage('settings')"> <i class="fas fa-cog nav-icon"></i> <span class="nav-text">الإعدادات العامة</span> </a></div>
+    <div class="nav-item" id="cloudManagementNavItem"><a class="nav-link" onclick="showPage('cloudManagement')"> <i class="fas fa-cloud nav-icon" style="color: #3b82f6;"></i> <span class="nav-text">إدارة السحابة</span> </a></div>
     <!-- <div class="nav-item" id="systemManagementNavItem">
         <a class="nav-link" onclick="openSystemManagement()" style="cursor: pointer;">
             <i class="fas fa-tools nav-icon" style="color:#f59e0b"></i>
@@ -10644,6 +12466,20 @@ console.log(`
             </div>
           </div>
 
+          <!-- بطاقة إدارة السحابة والبيانات -->
+          <div class="settings-card" onclick="showSettingsPage('cloud-data')">
+            <div class="settings-card-icon" style="background: linear-gradient(135deg, #3b82f6, #1d4ed8);">
+              <i class="fas fa-cloud-upload-alt"></i>
+            </div>
+            <div class="settings-card-content">
+              <h3>إدارة السحابة والبيانات</h3>
+              <p>رفع البيانات، الاشتراك، التسجيل والمزامنة السحابية</p>
+            </div>
+            <div class="settings-card-arrow">
+              <i class="fas fa-chevron-left"></i>
+            </div>
+          </div>
+
         </div>
       </div>
 
@@ -11374,207 +13210,39 @@ console.log(`
           </div>
 
           <!-- ═══════════════════════════════════════════════════════════════ -->
-          <!-- 🔐 تسجيل الاشتراك السحابي (اختياري) -->
-          <!-- ═══════════════════════════════════════════════════════════════ -->
-          <div class="settings-section" id="cloudRegistrationSection">
-            <h3 style="margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 2px solid rgba(255,255,255,0.1);">
-              <i class="fas fa-user-plus"></i> تسجيل الاشتراك السحابي
-            </h3>
-
-            <!-- رسالة توضيحية -->
-            <div style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%); border-right: 4px solid #667eea; padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem;">
-              <h4 style="color: #667eea; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;">
-                <i class="fas fa-info-circle"></i> ميزة اختيارية
-              </h4>
-              <p style="color: var(--theme-text-secondary); line-height: 1.8; margin: 0;">
-                يمكنك استخدام التطبيق بشكل طبيعي بدون تسجيل. لكن إذا أردت استخدام <strong style="color: var(--theme-text-primary);">النسخ الاحتياطي السحابي إلى Firebase</strong>، يجب عليك التسجيل أولاً للحصول على حساب مُفعّل.
-              </p>
-            </div>
-
-            <!-- حالة التسجيل -->
-            <div id="registrationStatusDisplay" style="margin-bottom: 2rem;">
-              <!-- سيتم ملؤها ديناميكياً -->
-            </div>
-
-            <!-- نموذج التسجيل (يظهر فقط إذا لم يكن مسجل) -->
-            <div id="registrationFormSection" style="display: none;">
-              <form id="settingsRegisterForm" onsubmit="handleSettingsRegisterSubmit(event); return false;">
-                
-                <!-- الاسم الرباعي -->
-                <div class="form-group">
-                  <label class="form-label">
-                    <i class="fas fa-user"></i> الاسم الرباعي
-                  </label>
-                  <input 
-                    type="text" 
-                    class="form-input"
-                    id="settingsRegisterFullName" 
-                    required
-                    placeholder="مثال: أحمد محمد علي حسن"
-                  >
-                </div>
-
-                <!-- رقم الهاتف -->
-                <div class="form-group">
-                  <label class="form-label">
-                    <i class="fas fa-phone"></i> رقم الهاتف
-                  </label>
-                  <input 
-                    type="tel" 
-                    class="form-input"
-                    id="settingsRegisterPhone" 
-                    required
-                    placeholder="مثال: 07701234567"
-                    pattern="[0-9]{11}"
-                    style="direction: ltr; text-align: right;"
-                  >
-                  <small style="color: var(--theme-text-secondary); font-size: 0.85rem; margin-top: 0.5rem; display: block;">
-                    أدخل رقم الهاتف مكون من 11 رقم (07XX XXX XXXX)
-                  </small>
-                </div>
-
-                <!-- زر التسجيل -->
-                <button 
-                  type="submit"
-                  id="settingsRegisterBtn"
-                  class="btn btn-primary"
-                  style="width: 100%; padding: 1.25rem; font-size: 1.1rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none;"
-                >
-                  <i class="fas fa-paper-plane"></i> إرسال طلب الاشتراك
-                </button>
-              </form>
-            </div>
-
-            <!-- حالة الانتظار (تظهر بعد الإرسال) -->
-            <div id="settingsWaitingActivation" style="display: none;">
-              <div style="text-align: center; padding: 2rem; background: var(--theme-bg-secondary); border-radius: 12px; border: 2px solid rgba(102, 126, 234, 0.3);">
-                <div style="font-size: 4rem; margin-bottom: 1rem;">⏳</div>
-                <h3 style="color: var(--theme-text-primary); margin-bottom: 1rem; font-size: 1.5rem;">
-                  في انتظار التفعيل
-                </h3>
-                <p style="color: var(--theme-text-secondary); line-height: 1.6; margin-bottom: 1.5rem;">
-                  تم إرسال طلبك إلى الشركة. سيتم تفعيل حسابك خلال 24 ساعة.
-                </p>
-                <div style="background: var(--theme-bg-tertiary); padding: 1.5rem; border-radius: 12px; margin-bottom: 1rem;">
-                  <p style="color: var(--theme-text-primary); margin-bottom: 0.5rem;">
-                    <strong>رمز الاشتراك الخاص بك:</strong>
-                  </p>
-                  <p id="settingsUserActivationCode" style="font-size: 2rem; font-weight: 700; color: #667eea; letter-spacing: 3px; font-family: 'Courier New', monospace; margin: 0;">
-                    ----
-                  </p>
-                </div>
-                <p style="color: var(--theme-text-secondary); font-size: 0.9rem; margin-bottom: 1.5rem;">
-                  احفظ هذا الرمز للرجوع إليه لاحقاً
-                </p>
-                
-                <button 
-                  onclick="checkActivationStatus()"
-                  class="btn"
-                  style="width: 100%; padding: 1rem; border: 2px solid #667eea; background: transparent; color: #667eea;"
-                >
-                  <i class="fas fa-sync-alt"></i> فحص حالة التفعيل
-                </button>
-              </div>
-            </div>
-
-            <!-- معلومات المستخدم المسجل (تظهر بعد التفعيل) -->
-            <div id="settingsRegisteredUserInfo" style="display: none;">
-              <div style="background: linear-gradient(135deg, var(--theme-bg-secondary) 0%, var(--theme-bg-hover) 100%); border-radius: 12px; padding: 2rem; border: 2px solid rgba(34, 197, 94, 0.3);">
-                
-                <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
-                  <div style="background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-                    <i class="fas fa-check" style="font-size: 2rem; color: white;"></i>
-                  </div>
-                  <div>
-                    <h4 style="color: var(--theme-text-primary); margin: 0 0 0.25rem 0; font-size: 1.25rem;">
-                      حساب مُفعّل
-                    </h4>
-                    <p style="color: var(--theme-text-secondary); margin: 0;">
-                      يمكنك الآن استخدام النسخ الاحتياطي السحابي
-                    </p>
-                  </div>
-                </div>
-
-                <div style="display: grid; gap: 1rem;">
-                  <div style="display: flex; justify-content: space-between; padding: 0.75rem; background: var(--theme-bg-tertiary); border-radius: 8px;">
-                    <span style="color: var(--theme-text-secondary);">
-                      <i class="fas fa-user"></i> الاسم:
-                    </span>
-                    <strong id="settingsUserNameDisplay" style="color: var(--theme-text-primary);">---</strong>
-                  </div>
-                  
-                  <div style="display: flex; justify-content: space-between; padding: 0.75rem; background: var(--theme-bg-tertiary); border-radius: 8px;">
-                    <span style="color: var(--theme-text-secondary);">
-                      <i class="fas fa-phone"></i> رقم الهاتف:
-                    </span>
-                    <strong id="settingsUserPhoneDisplay" style="color: var(--theme-text-primary); direction: ltr;">---</strong>
-                  </div>
-                  
-                  <div style="display: flex; justify-content: space-between; padding: 0.75rem; background: var(--theme-bg-tertiary); border-radius: 8px;">
-                    <span style="color: var(--theme-text-secondary);">
-                      <i class="fas fa-key"></i> رمز الاشتراك:
-                    </span>
-                    <strong id="settingsUserCodeDisplay" style="color: #667eea; font-family: 'Courier New', monospace; letter-spacing: 2px;">---</strong>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- النسخ الاحتياطي إلى Firebase -->
+          <!-- تنبيه: النسخ السحابي انتقل إلى صفحة مخصصة -->
           <div class="settings-section">
-            <h3 style="margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 2px solid rgba(255,255,255,0.1);">
-              <i class="fas fa-cloud-upload-alt"></i> النسخ الاحتياطي إلى Firebase
-            </h3>
-
-            <div style="background: rgba(59, 130, 246, 0.1); border-right: 4px solid #3b82f6; padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem;">
-              <h4 style="color: #3b82f6; margin-bottom: 0.5rem;">
-                <i class="fas fa-cloud"></i> نسخ احتياطي سحابي آمن
-              </h4>
-              <p style="color: var(--theme-text-secondary); line-height: 1.6; margin-bottom: 0.5rem;">
-                يتم حفظ بياناتك بشكل آمن في السحابة مع تشفير كامل. كل مستخدم له قاعدة بيانات منفصلة تماماً.
+            <div style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(37, 99, 235, 0.05)); border: 2px solid rgba(59, 130, 246, 0.3); border-radius: 16px; padding: 2.5rem; text-align: center; box-shadow: 0 4px 16px rgba(59, 130, 246, 0.15);">
+              <div style="background: linear-gradient(135deg, #3b82f6, #2563eb); width: 100px; height: 100px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; box-shadow: 0 8px 24px rgba(59, 130, 246, 0.4);">
+                <i class="fas fa-cloud-upload-alt" style="font-size: 3rem; color: white;"></i>
+              </div>
+              
+              <h3 style="font-size: 1.75rem; font-weight: 700; color: var(--theme-text-primary); margin-bottom: 1rem;">
+                <i class="fas fa-info-circle" style="color: #3b82f6;"></i> النسخ السحابي انتقل إلى صفحة مخصصة
+              </h3>
+              
+              <p style="font-size: 1.1rem; color: var(--theme-text-secondary); line-height: 1.8; margin-bottom: 2rem; max-width: 600px; margin-left: auto; margin-right: auto;">
+                جميع ميزات النسخ الاحتياطي السحابي، رفع البيانات، التسجيل والمزامنة أصبحت الآن في صفحة مخصصة لسهولة الاستخدام وتوفير ميزات إضافية.
               </p>
-              <p style="color: #3b82f6; font-size: 0.9rem; margin-top: 1rem;">
-                <strong>✨ النسخ الاحتياطي التلقائي:</strong> يتم إنشاء نسخة احتياطية تلقائياً عند كل تشغيل للتطبيق
-              </p>
-            </div>
 
-            <!-- معلومات آخر نسخة احتياطية -->
-            <div style="background: var(--theme-bg-secondary); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; border: 1px solid rgba(255,255,255,0.05);">
-              <div style="display: grid; gap: 1rem;">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                  <span style="color: var(--theme-text-secondary);">
-                    <i class="fas fa-clock"></i> آخر نسخة احتياطية:
-                  </span>
-                  <strong id="lastFirebaseBackupDate" style="color: var(--theme-text-primary);">لا توجد</strong>
-                </div>
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                  <span style="color: var(--theme-text-secondary);">
-                    <i class="fas fa-database"></i> حجم البيانات:
-                  </span>
-                  <strong id="firebaseBackupSize" style="color: var(--theme-text-primary);">--</strong>
-                </div>
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                  <span style="color: var(--theme-text-secondary);">
-                    <i class="fas fa-check-circle"></i> حالة الاتصال:
-                  </span>
-                  <strong id="firebaseConnectionStatus" style="color: #10b981;">متصل</strong>
+              <div style="display: flex; flex-direction: column; gap: 1rem; max-width: 400px; margin: 0 auto;">
+                <button class="btn btn-primary" onclick="showSettingsPage('cloud-data')" style="padding: 1.5rem; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; gap: 0.75rem;">
+                  <i class="fas fa-cloud"></i>
+                  <span>الذهاب إلى إدارة السحابة والبيانات</span>
+                </button>
+
+                <div style="background: rgba(59, 130, 246, 0.1); border-radius: 10px; padding: 1rem; text-align: right;">
+                  <p style="color: var(--theme-text-secondary); font-size: 0.95rem; margin: 0; line-height: 1.6;">
+                    <strong style="color: #3b82f6;">✨ ميزات جديدة:</strong>
+                  </p>
+                  <ul style="color: var(--theme-text-secondary); font-size: 0.9rem; margin: 0.5rem 0 0 0; padding-right: 1.5rem; line-height: 1.8;">
+                    <li>رفع تلقائي لجميع البيانات</li>
+                    <li>تحكم كامل في المزامنة</li>
+                    <li>سجل مفصل للعمليات</li>
+                    <li>إدارة الحساب والاشتراك</li>
+                  </ul>
                 </div>
               </div>
-            </div>
-
-            <div style="display: grid; gap: 1rem;">
-              <button class="btn" style="background: linear-gradient(135deg, #3b82f6, #1d4ed8); padding: 1.5rem; font-size: 1.1rem;" onclick="uploadBackupToFirebase()">
-                <i class="fas fa-cloud-upload-alt"></i> رفع نسخة احتياطية إلى Firebase الآن
-              </button>
-
-              <button class="btn btn-secondary" onclick="downloadBackupFromFirebase()" style="padding: 1rem;">
-                <i class="fas fa-cloud-download-alt"></i> تحميل آخر نسخة احتياطية من Firebase
-              </button>
-
-              <button class="btn" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed); padding: 1rem;" onclick="viewFirebaseBackupHistory()">
-                <i class="fas fa-history"></i> عرض سجل النسخ الاحتياطية
-              </button>
             </div>
           </div>
 
@@ -11976,6 +13644,36 @@ console.log(`
           </div>
         </div>
 
+        <!-- تنبيه: الاشتراك السحابي انتقل إلى صفحة مخصصة -->
+        <div class="settings-section">
+          <div style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(37, 99, 235, 0.05)); border: 2px solid rgba(59, 130, 246, 0.3); border-radius: 16px; padding: 2.5rem; text-align: center; box-shadow: 0 4px 16px rgba(59, 130, 246, 0.15);">
+            <div style="background: linear-gradient(135deg, #3b82f6, #2563eb); width: 100px; height: 100px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; box-shadow: 0 8px 24px rgba(59, 130, 246, 0.4);">
+              <i class="fas fa-cloud" style="font-size: 3rem; color: white;"></i>
+            </div>
+            
+            <h3 style="font-size: 1.75rem; font-weight: 700; color: var(--theme-text-primary); margin-bottom: 1rem;">
+              <i class="fas fa-arrow-circle-left" style="color: #3b82f6;"></i> الاشتراك السحابي انتقل إلى صفحة مخصصة
+            </h3>
+            
+            <p style="font-size: 1.1rem; color: var(--theme-text-secondary); line-height: 1.8; margin-bottom: 2rem; max-width: 600px; margin-left: auto; margin-right: auto;">
+              لتسهيل الوصول وتوفير ميزات إضافية، تم نقل جميع ميزات الاشتراك السحابي، التسجيل، رفع البيانات والمزامنة إلى صفحة متخصصة.
+            </p>
+
+            <div style="max-width: 400px; margin: 0 auto;">
+              <button class="btn btn-primary" onclick="showSettingsPage('cloud-data')" style="width: 100%; padding: 1.5rem; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; gap: 0.75rem; margin-bottom: 1rem;">
+                <i class="fas fa-cloud-upload-alt"></i>
+                <span>الذهاب إلى إدارة السحابة والبيانات</span>
+              </button>
+
+              <div style="background: rgba(59, 130, 246, 0.1); border-radius: 10px; padding: 1rem; text-align: right;">
+                <p style="color: var(--theme-text-secondary); font-size: 0.9rem; margin: 0; line-height: 1.6;">
+                  <i class="fas fa-info-circle" style="color: #3b82f6;"></i> ستجد هناك: التسجيل، تسجيل الدخول، رفع النسخ، استرجاع النسخ، الإعدادات والسجل الكامل
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
       </div>
      </div>
 
@@ -12227,6 +13925,1140 @@ console.log(`
 
         </div>
       </div>
+     </div>
+     <div id="settings-cloud-data" class="page" style="display: none;">
+      <div class="section-header" style="margin-bottom: 2rem;">
+       <button class="btn btn-secondary" onclick="showPage('settings')" style="margin-left: 1rem;">
+         <i class="fas fa-arrow-right"></i> رجوع
+       </button>
+       <div class="section-title">
+         <i class="fas fa-cloud" style="color: #3b82f6;"></i> إدارة السحابة والبيانات
+       </div>
+       <div class="section-subtitle">إدارة كاملة للنسخ الاحتياطي السحابي، رفع البيانات، التسجيل والمزامنة</div>
+      </div>
+
+      <div class="settings-full-width">
+        <div class="settings-content-wrapper">
+
+          <!-- معلومات سريعة -->
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+        <div class="info-mini-card">
+          <div class="info-mini-icon" style="background: linear-gradient(135deg, #3b82f6, #2563eb);">
+            <i class="fas fa-cloud-upload-alt"></i>
+          </div>
+          <div class="info-mini-content">
+            <div class="info-mini-label">آخر نسخة سحابية</div>
+            <div class="info-mini-value" id="cloudLastBackupDate">لا توجد</div>
+          </div>
+        </div>
+        
+        <div class="info-mini-card">
+          <div class="info-mini-icon" style="background: linear-gradient(135deg, #10b981, #059669);">
+            <i class="fas fa-database"></i>
+          </div>
+          <div class="info-mini-content">
+            <div class="info-mini-label">حجم البيانات</div>
+            <div class="info-mini-value" id="cloudBackupSize">0 KB</div>
+          </div>
+        </div>
+        
+        <div class="info-mini-card">
+          <div class="info-mini-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+            <i class="fas fa-user-circle"></i>
+          </div>
+          <div class="info-mini-content">
+            <div class="info-mini-label">حالة الحساب</div>
+            <div class="info-mini-value" id="cloudAccountStatus">غير مسجل</div>
+          </div>
+        </div>
+        
+        <div class="info-mini-card">
+          <div class="info-mini-icon" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);">
+            <i class="fas fa-history"></i>
+          </div>
+          <div class="info-mini-content">
+            <div class="info-mini-label">عدد النسخ</div>
+            <div class="info-mini-value" id="cloudBackupCount">0</div>
+          </div>
+        </div>
+      </div>
+
+          <!-- التبويبات -->
+          <div style="background: var(--theme-bg-secondary); border-radius: 16px; padding: 2rem; margin-bottom: 2rem; border: 1px solid rgba(255,255,255,0.05);">
+        
+        <!-- أزرار التبويبات -->
+        <div style="display: flex; gap: 0.5rem; border-bottom: 2px solid rgba(255,255,255,0.1); margin-bottom: 2rem; flex-wrap: wrap;">
+          <button class="cloud-tab-btn active" onclick="switchCloudTab('login')" data-tab="login">
+            <i class="fas fa-user-lock"></i> تسجيل الدخول
+          </button>
+          <button class="cloud-tab-btn" onclick="switchCloudTab('backup')" data-tab="backup">
+            <i class="fas fa-cloud-upload-alt"></i> رفع النسخ
+          </button>
+          <button class="cloud-tab-btn" onclick="switchCloudTab('restore')" data-tab="restore">
+            <i class="fas fa-cloud-download-alt"></i> استرجاع النسخ
+          </button>
+          <button class="cloud-tab-btn" onclick="switchCloudTab('settings')" data-tab="settings">
+            <i class="fas fa-cog"></i> الإعدادات
+          </button>
+          <button class="cloud-tab-btn" onclick="switchCloudTab('history')" data-tab="history">
+            <i class="fas fa-history"></i> السجل
+          </button>
+        </div>
+
+        <!-- محتوى التبويبات -->
+        <div id="cloudTabContent">
+          
+          <!-- ═══════════════════════════════════════ -->
+          <!-- تبويبة تسجيل الدخول -->
+          <!-- ═══════════════════════════════════════ -->
+          <div id="cloudTab-login" class="cloud-tab-panel active">
+            
+            <!-- حالة: غير مسجل -->
+            <div id="cloudLoginForm" style="display: block;">
+              <div style="text-align: center; margin-bottom: 2rem;">
+                <div style="background: linear-gradient(135deg, #3b82f6, #2563eb); width: 120px; height: 120px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; box-shadow: 0 8px 32px rgba(59, 130, 246, 0.4);">
+                  <i class="fas fa-cloud" style="font-size: 4rem; color: white;"></i>
+                </div>
+                <h2 style="font-size: 2rem; font-weight: 700; color: var(--theme-text-primary); margin: 0 0 0.5rem 0;">
+                  تسجيل الدخول للسحابة
+                </h2>
+                <p style="font-size: 1.1rem; color: var(--theme-text-secondary); margin: 0;">
+                  قم بتسجيل الدخول للوصول إلى نسخك الاحتياطية السحابية
+                </p>
+              </div>
+
+              <div style="max-width: 500px; margin: 0 auto;">
+                
+                <!-- خيارات التسجيل -->
+                <div style="display: flex; gap: 1rem; margin-bottom: 2rem;">
+                  <button class="btn" style="flex: 1; padding: 1rem; background: linear-gradient(135deg, #3b82f6, #2563eb);" onclick="showCloudRegisterForm()">
+                    <i class="fas fa-user-plus"></i> حساب جديد
+                  </button>
+                  <button class="btn btn-secondary" style="flex: 1; padding: 1rem;" onclick="showCloudLoginForm()">
+                    <i class="fas fa-sign-in-alt"></i> لدي حساب
+                  </button>
+                </div>
+
+                <!-- نموذج التسجيل الجديد -->
+                <div id="cloudRegisterFormPanel" style="display: none;">
+                  <h3 style="margin-bottom: 1.5rem; color: var(--theme-text-primary);">
+                    <i class="fas fa-user-plus"></i> إنشاء حساب جديد
+                  </h3>
+                  
+                  <div style="background: rgba(59, 130, 246, 0.1); border-right: 4px solid #3b82f6; padding: 1.5rem; border-radius: 8px; margin-bottom: 1.5rem;">
+                    <p style="color: var(--theme-text-secondary); line-height: 1.6; margin: 0;">
+                      بعد التسجيل، ستتلقى رمز التفعيل من الشركة عبر الواتساب خلال 24 ساعة.
+                    </p>
+                  </div>
+
+                  <form id="cloudRegisterForm" onsubmit="handleCloudRegisterSubmit(event); return false;">
+                    <div class="form-group">
+                      <label class="form-label">الاسم الكامل</label>
+                      <input type="text" class="form-input" id="cloudRegFullName" required>
+                    </div>
+
+                    <div class="form-group">
+                      <label class="form-label">رقم الهاتف (11 رقم)</label>
+                      <input type="tel" class="form-input" id="cloudRegPhone" pattern="[0-9]{11}" required placeholder="07XXXXXXXXX">
+                    </div>
+
+                    <div style="display: flex; gap: 1rem;">
+                      <button type="submit" class="btn btn-primary" style="flex: 1;">
+                        <i class="fas fa-paper-plane"></i> إرسال الطلب
+                      </button>
+                      <button type="button" class="btn btn-secondary" onclick="hideCloudRegisterForm()">
+                        <i class="fas fa-times"></i> إلغاء
+                      </button>
+                    </div>
+                  </form>
+                </div>
+
+                <!-- نموذج تسجيل الدخول -->
+                <div id="cloudLoginFormPanel" style="display: none;">
+                  <h3 style="margin-bottom: 1.5rem; color: var(--theme-text-primary);">
+                    <i class="fas fa-sign-in-alt"></i> تسجيل الدخول
+                  </h3>
+
+                  <div style="background: rgba(251, 191, 36, 0.1); border-right: 4px solid #fbbf24; padding: 1.5rem; border-radius: 8px; margin-bottom: 1.5rem;">
+                    <p style="color: var(--theme-text-secondary); line-height: 1.6; margin: 0;">
+                      أدخل معلومات حسابك الذي تم تفعيله من قبل الشركة.
+                    </p>
+                  </div>
+
+                  <form id="cloudLoginFormSubmit" onsubmit="handleCloudLoginSubmit(event); return false;">
+                    <div class="form-group">
+                      <label class="form-label">الاسم الكامل</label>
+                      <input type="text" class="form-input" id="cloudLoginFullName" required>
+                    </div>
+
+                    <div class="form-group">
+                      <label class="form-label">رقم الهاتف (11 رقم)</label>
+                      <input type="tel" class="form-input" id="cloudLoginPhone" pattern="[0-9]{11}" required placeholder="07XXXXXXXXX">
+                    </div>
+
+                    <div class="form-group">
+                      <label class="form-label">رمز التفعيل (6 أرقام)</label>
+                      <input type="text" class="form-input" id="cloudLoginActivationCode" pattern="[0-9]{6}" required placeholder="XXXXXX">
+                    </div>
+
+                    <div style="display: flex; gap: 1rem;">
+                      <button type="submit" class="btn btn-primary" style="flex: 1;">
+                        <i class="fas fa-sign-in-alt"></i> تسجيل الدخول
+                      </button>
+                      <button type="button" class="btn btn-secondary" onclick="hideCloudLoginForm()">
+                        <i class="fas fa-times"></i> إلغاء
+                      </button>
+                    </div>
+                  </form>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- حالة: مسجل ومفعّل -->
+            <div id="cloudLoggedInPanel" style="display: none;">
+              <div style="text-align: center; margin-bottom: 2rem;">
+                <div style="background: linear-gradient(135deg, #10b981, #059669); width: 120px; height: 120px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; box-shadow: 0 8px 32px rgba(16, 185, 129, 0.4);">
+                  <i class="fas fa-user-check" style="font-size: 4rem; color: white;"></i>
+                </div>
+                <h2 id="cloudUserDisplayName" style="font-size: 2rem; font-weight: 700; color: var(--theme-text-primary); margin: 0 0 0.5rem 0;">
+                  مرحباً
+                </h2>
+                <p style="font-size: 1.1rem; color: #10b981; margin: 0;">
+                  <i class="fas fa-check-circle"></i> حسابك مُفعّل ومتصل بالسحابة
+                </p>
+              </div>
+
+              <!-- معلومات الحساب -->
+              <div style="max-width: 600px; margin: 0 auto;">
+                <div style="background: var(--theme-bg-tertiary); border-radius: 12px; padding: 2rem; margin-bottom: 2rem; border: 1px solid rgba(255,255,255,0.05);">
+                  
+                  <div style="display: grid; gap: 1rem;">
+                    <div style="display: flex; justify-content: space-between; padding: 1rem; background: var(--theme-bg-secondary); border-radius: 8px;">
+                      <span style="color: var(--theme-text-secondary);">
+                        <i class="fas fa-user"></i> الاسم:
+                      </span>
+                      <strong id="cloudUserName" style="color: var(--theme-text-primary);">---</strong>
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; padding: 1rem; background: var(--theme-bg-secondary); border-radius: 8px;">
+                      <span style="color: var(--theme-text-secondary);">
+                        <i class="fas fa-phone"></i> الهاتف:
+                      </span>
+                      <strong id="cloudUserPhone" style="color: var(--theme-text-primary); direction: ltr;">---</strong>
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; padding: 1rem; background: var(--theme-bg-secondary); border-radius: 8px;">
+                      <span style="color: var(--theme-text-secondary);">
+                        <i class="fas fa-fingerprint"></i> المعرّف:
+                      </span>
+                      <strong id="cloudUserUID" style="color: var(--theme-text-secondary); font-size: 0.85rem; font-family: monospace;">---</strong>
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; padding: 1rem; background: var(--theme-bg-secondary); border-radius: 8px;">
+                      <span style="color: var(--theme-text-secondary);">
+                        <i class="fas fa-calendar"></i> مسجل منذ:
+                      </span>
+                      <strong id="cloudUserRegisteredAt" style="color: var(--theme-text-primary);">---</strong>
+                    </div>
+                  </div>
+
+                </div>
+
+                <!-- أزرار الإجراءات -->
+                <div style="display: grid; gap: 1rem;">
+                  <button class="btn btn-warning" onclick="handleCloudLogout()">
+                    <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
+                  </button>
+                  
+                  <button class="btn btn-secondary" onclick="switchCloudTab('backup')">
+                    <i class="fas fa-cloud-upload-alt"></i> انتقل إلى رفع النسخ الاحتياطية
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- حالة: في انتظار التفعيل -->
+            <div id="cloudWaitingActivation" style="display: none;">
+              <div style="text-align: center; margin-bottom: 2rem;">
+                <div style="background: linear-gradient(135deg, #f59e0b, #d97706); width: 120px; height: 120px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; box-shadow: 0 8px 32px rgba(245, 158, 11, 0.4); animation: pulse 2s infinite;">
+                  <i class="fas fa-clock" style="font-size: 4rem; color: white;"></i>
+                </div>
+                <h2 style="font-size: 2rem; font-weight: 700; color: var(--theme-text-primary); margin: 0 0 0.5rem 0;">
+                  ⏳ في انتظار التفعيل
+                </h2>
+                <p style="font-size: 1.1rem; color: var(--theme-text-secondary); margin: 0;">
+                  طلبك قيد المعالجة من قبل الشركة
+                </p>
+              </div>
+
+              <div style="max-width: 500px; margin: 0 auto;">
+                
+                <div style="background: rgba(245, 158, 11, 0.1); border-right: 4px solid #f59e0b; padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem;">
+                  <h4 style="color: #f59e0b; margin-bottom: 0.75rem;">
+                    <i class="fas fa-info-circle"></i> معلومات مهمة
+                  </h4>
+                  <ul style="color: var(--theme-text-secondary); line-height: 1.8; margin: 0; padding-right: 1.5rem;">
+                    <li>ستتلقى رمز التفعيل من الشركة عبر الواتساب</li>
+                    <li>عادةً يتم التفعيل خلال 24 ساعة</li>
+                    <li>يمكنك فحص حالة التفعيل من الزر أدناه</li>
+                  </ul>
+                </div>
+
+                <div style="display: grid; gap: 1rem;">
+                  <button class="btn btn-primary" onclick="checkCloudActivationStatus()">
+                    <i class="fas fa-sync-alt"></i> فحص حالة التفعيل
+                  </button>
+                  
+                  <button class="btn btn-secondary" onclick="cancelCloudRegistration()">
+                    <i class="fas fa-times"></i> إلغاء الطلب
+                  </button>
+                </div>
+
+              </div>
+            </div>
+
+          </div>
+
+          <!-- ═══════════════════════════════════════ -->
+          <!-- تبويبة رفع النسخ الاحتياطية -->
+          <!-- ═══════════════════════════════════════ -->
+          <div id="cloudTab-backup" class="cloud-tab-panel">
+            
+            <!-- تحقق من تسجيل الدخول -->
+            <div id="cloudBackupLoginRequired" style="display: none;">
+              <div style="text-align: center; padding: 3rem;">
+                <div style="background: rgba(239, 68, 68, 0.1); width: 100px; height: 100px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
+                  <i class="fas fa-lock" style="font-size: 3rem; color: #ef4444;"></i>
+                </div>
+                <h3 style="font-size: 1.5rem; color: var(--theme-text-primary); margin-bottom: 1rem;">
+                  يجب تسجيل الدخول أولاً
+                </h3>
+                <p style="color: var(--theme-text-secondary); margin-bottom: 2rem;">
+                  للوصول إلى ميزة رفع النسخ الاحتياطية، يجب عليك تسجيل الدخول
+                </p>
+                <button class="btn btn-primary" onclick="switchCloudTab('login')">
+                  <i class="fas fa-sign-in-alt"></i> الذهاب إلى تسجيل الدخول
+                </button>
+              </div>
+            </div>
+
+            <!-- واجهة رفع النسخ -->
+            <div id="cloudBackupPanel" style="display: none;">
+              
+              <h3 style="font-size: 1.5rem; margin-bottom: 1.5rem; color: var(--theme-text-primary);">
+                <i class="fas fa-cloud-upload-alt"></i> رفع نسخة احتياطية إلى السحابة
+              </h3>
+
+              <!-- معلومات آخر نسخة -->
+              <div style="background: var(--theme-bg-tertiary); border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem; border: 1px solid rgba(255,255,255,0.05);">
+                <div style="display: grid; gap: 1rem;">
+                  <div style="display: flex; justify-content: space-between;">
+                    <span style="color: var(--theme-text-secondary);">
+                      <i class="fas fa-clock"></i> آخر نسخة احتياطية:
+                    </span>
+                    <strong id="cloudBackupLastDate" style="color: var(--theme-text-primary);">لا توجد</strong>
+                  </div>
+                  <div style="display: flex; justify-content: space-between;">
+                    <span style="color: var(--theme-text-secondary);">
+                      <i class="fas fa-database"></i> حجم آخر نسخة:
+                    </span>
+                    <strong id="cloudBackupLastSize" style="color: var(--theme-text-primary);">0 KB</strong>
+                  </div>
+                </div>
+              </div>
+
+              <!-- نصيحة -->
+              <div style="background: rgba(59, 130, 246, 0.1); border-right: 4px solid #3b82f6; padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem;">
+                <h4 style="color: #3b82f6; margin-bottom: 0.5rem;">
+                  <i class="fas fa-lightbulb"></i> نصيحة
+                </h4>
+                <p style="color: var(--theme-text-secondary); line-height: 1.6; margin: 0;">
+                  قم برفع نسخة احتياطية بشكل دوري للحفاظ على بياناتك آمنة في السحابة. يمكنك تفعيل النسخ التلقائي من تبويبة "الإعدادات".
+                </p>
+              </div>
+
+              <!-- أزرار الرفع -->
+              <div style="display: grid; gap: 1rem;">
+                <button class="btn btn-success" style="padding: 1.5rem; font-size: 1.1rem;" onclick="uploadBackupToFirebase(false)">
+                  <i class="fas fa-cloud-upload-alt"></i> رفع نسخة احتياطية الآن
+                </button>
+
+                <button class="btn btn-secondary" onclick="refreshCloudBackupInfo()">
+                  <i class="fas fa-sync-alt"></i> تحديث المعلومات
+                </button>
+              </div>
+
+            </div>
+
+          </div>
+
+          <!-- ═══════════════════════════════════════ -->
+          <!-- تبويبة استرجاع النسخ -->
+          <!-- ═══════════════════════════════════════ -->
+          <div id="cloudTab-restore" class="cloud-tab-panel">
+            
+            <!-- تحقق من تسجيل الدخول -->
+            <div id="cloudRestoreLoginRequired" style="display: none;">
+              <div style="text-align: center; padding: 3rem;">
+                <div style="background: rgba(239, 68, 68, 0.1); width: 100px; height: 100px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
+                  <i class="fas fa-lock" style="font-size: 3rem; color: #ef4444;"></i>
+                </div>
+                <h3 style="font-size: 1.5rem; color: var(--theme-text-primary); margin-bottom: 1rem;">
+                  يجب تسجيل الدخول أولاً
+                </h3>
+                <p style="color: var(--theme-text-secondary); margin-bottom: 2rem;">
+                  للوصول إلى ميزة استرجاع النسخ الاحتياطية، يجب عليك تسجيل الدخول
+                </p>
+                <button class="btn btn-primary" onclick="switchCloudTab('login')">
+                  <i class="fas fa-sign-in-alt"></i> الذهاب إلى تسجيل الدخول
+                </button>
+              </div>
+            </div>
+
+            <!-- واجهة الاسترجاع -->
+            <div id="cloudRestorePanel" style="display: none;">
+              
+              <h3 style="font-size: 1.5rem; margin-bottom: 1.5rem; color: var(--theme-text-primary);">
+                <i class="fas fa-cloud-download-alt"></i> استرجاع نسخة احتياطية من السحابة
+              </h3>
+
+              <!-- تحذير -->
+              <div style="background: rgba(239, 68, 68, 0.1); border-right: 4px solid #ef4444; padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem;">
+                <h4 style="color: #ef4444; margin-bottom: 0.5rem;">
+                  <i class="fas fa-exclamation-triangle"></i> تحذير مهم
+                </h4>
+                <p style="color: var(--theme-text-secondary); line-height: 1.6; margin: 0;">
+                  استرجاع نسخة احتياطية سيؤدي إلى استبدال <strong>جميع البيانات الحالية</strong>. تأكد من إنشاء نسخة احتياطية للبيانات الحالية قبل الاسترجاع.
+                </p>
+              </div>
+
+              <!-- أزرار الاسترجاع -->
+              <div style="display: grid; gap: 1rem;">
+                <button class="btn btn-primary" style="padding: 1.5rem; font-size: 1.1rem;" onclick="downloadBackupFromFirebase()">
+                  <i class="fas fa-cloud-download-alt"></i> استرجاع آخر نسخة احتياطية
+                </button>
+
+                <button class="btn btn-secondary" onclick="showCloudBackupHistory()">
+                  <i class="fas fa-history"></i> عرض سجل النسخ الاحتياطية
+                </button>
+              </div>
+
+            </div>
+
+          </div>
+
+          <!-- ═══════════════════════════════════════ -->
+          <!-- تبويبة الإعدادات -->
+          <!-- ═══════════════════════════════════════ -->
+          <div id="cloudTab-settings" class="cloud-tab-panel">
+            
+            <h3 style="font-size: 1.5rem; margin-bottom: 1.5rem; color: var(--theme-text-primary);">
+              <i class="fas fa-cog"></i> إعدادات النسخ الاحتياطي السحابي
+            </h3>
+
+            <!-- النسخ التلقائي -->
+            <div style="background: var(--theme-bg-tertiary); border-radius: 12px; padding: 2rem; margin-bottom: 2rem; border: 1px solid rgba(255,255,255,0.05);">
+              
+              <h4 style="font-size: 1.25rem; margin-bottom: 1.5rem; color: var(--theme-text-primary);">
+                <i class="fas fa-robot"></i> النسخ الاحتياطي التلقائي
+              </h4>
+
+              <div class="form-group">
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                  <input type="checkbox" id="cloudAutoBackupEnabled" style="width: auto;" checked>
+                  <span style="display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fas fa-cloud" style="color: #3b82f6;"></i>
+                    <strong>تفعيل النسخ التلقائي عند فتح التطبيق</strong>
+                  </span>
+                </label>
+                <p style="color: var(--theme-text-secondary); font-size: 0.85rem; margin: 0.5rem 0 0 2rem; line-height: 1.5;">
+                  يتم إنشاء نسخة احتياطية تلقائياً إلى السحابة في كل مرة تفتح فيها التطبيق (مع حد أدنى 6 ساعات بين النسخ)
+                </p>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">تكرار النسخ التلقائي</label>
+                <select class="form-select" id="cloudAutoBackupFrequency">
+                  <option value="startup">عند فتح التطبيق (مع حد أدنى 6 ساعات)</option>
+                  <option value="hourly">كل ساعة</option>
+                  <option value="daily">يومياً</option>
+                  <option value="weekly">أسبوعياً</option>
+                </select>
+              </div>
+
+              <button class="btn btn-primary" onclick="saveCloudSettings()">
+                <i class="fas fa-save"></i> حفظ الإعدادات
+              </button>
+
+            </div>
+
+            <!-- ═══════════════════════════════════════ -->
+            <!-- رفع البيانات الكاملة -->
+            <!-- ═══════════════════════════════════════ -->
+            <div style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.05), rgba(37, 99, 235, 0.05)); border: 2px solid rgba(59, 130, 246, 0.2); border-radius: 12px; padding: 2rem; margin-bottom: 2rem; box-shadow: 0 4px 16px rgba(59, 130, 246, 0.1);">
+              
+              <h4 style="font-size: 1.25rem; margin-bottom: 1.5rem; color: var(--theme-text-primary);">
+                <i class="fas fa-database"></i> رفع البيانات الكاملة إلى السحابة
+              </h4>
+
+              <!-- شرح -->
+              <div style="background: rgba(59, 130, 246, 0.1); border-right: 4px solid #3b82f6; padding: 1.25rem; border-radius: 8px; margin-bottom: 1.5rem;">
+                <h5 style="color: #3b82f6; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                  <i class="fas fa-info-circle"></i> ما الذي سيتم رفعه؟
+                </h5>
+                <ul style="color: var(--theme-text-secondary); line-height: 1.8; margin: 0.5rem 0 0 0; padding-right: 1.5rem; font-size: 0.95rem;">
+                  <li>المنتجات والتصنيفات</li>
+                  <li>الفواتير وسجلات المبيعات</li>
+                  <li>الديون والأقساط والتسديدات</li>
+                  <li>الإيرادات والمصروفات</li>
+                  <li>العملاء والموردين</li>
+                  <li>جميع البيانات المخزنة في التطبيق</li>
+                </ul>
+              </div>
+
+              <!-- خيار الرفع التلقائي -->
+              <div class="form-group" style="background: var(--theme-bg-tertiary); padding: 1.5rem; border-radius: 10px; border: 1px solid rgba(255,255,255,0.05); margin-bottom: 1.5rem;">
+                <label style="display: flex; align-items: flex-start; gap: 0.75rem; cursor: pointer;">
+                  <input type="checkbox" id="autoUploadAllData" style="width: auto; margin-top: 0.25rem;">
+                  <div style="flex: 1;">
+                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                      <i class="fas fa-sync-alt" style="color: #3b82f6;"></i>
+                      <strong style="font-size: 1.05rem;">رفع تلقائي لجميع البيانات</strong>
+                    </div>
+                    <p style="color: var(--theme-text-secondary); font-size: 0.9rem; margin: 0; line-height: 1.6;">
+                      عند التفعيل، سيتم رفع جميع بياناتك تلقائياً إلى السحابة عند كل تغيير (إضافة منتج، فاتورة، تسديد، إلخ)
+                    </p>
+                  </div>
+                </label>
+              </div>
+
+              <!-- تكرار الرفع التلقائي -->
+              <div id="autoUploadFrequencyPanel" style="display: none; background: var(--theme-bg-tertiary); padding: 1.5rem; border-radius: 10px; border: 1px solid rgba(255,255,255,0.05); margin-bottom: 1.5rem;">
+                <label class="form-label">
+                  <i class="fas fa-clock"></i> تكرار الرفع التلقائي
+                </label>
+                <select class="form-select" id="autoUploadFrequency">
+                  <option value="immediate">فوري (بعد كل عملية مباشرة)</option>
+                  <option value="5min" selected>كل 5 دقائق</option>
+                  <option value="15min">كل 15 دقيقة</option>
+                  <option value="30min">كل 30 دقيقة</option>
+                  <option value="hourly">كل ساعة</option>
+                  <option value="daily">يومياً</option>
+                </select>
+                <p style="color: var(--theme-text-secondary); font-size: 0.85rem; margin: 0.5rem 0 0 0;">
+                  <i class="fas fa-lightbulb"></i> نوصي بـ "كل 5 دقائق" لتوازن بين الأمان والأداء
+                </p>
+              </div>
+
+              <!-- زر الرفع اليدوي -->
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <button class="btn" style="background: linear-gradient(135deg, #10b981, #059669); padding: 1.25rem; font-size: 1rem;" onclick="manualUploadAllData()">
+                  <i class="fas fa-cloud-upload-alt"></i> رفع يدوي الآن
+                </button>
+                <button class="btn btn-secondary" style="padding: 1.25rem;" onclick="saveDataUploadSettings()">
+                  <i class="fas fa-save"></i> حفظ الإعدادات
+                </button>
+              </div>
+
+              <!-- آخر رفع -->
+              <div id="lastDataUploadInfo" style="margin-top: 1.5rem; padding: 1rem; background: var(--theme-bg-secondary); border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
+                <span style="color: var(--theme-text-secondary); font-size: 0.9rem;">
+                  <i class="fas fa-clock"></i> آخر رفع للبيانات:
+                </span>
+                <strong id="lastDataUploadTime" style="color: var(--theme-text-primary); font-size: 0.95rem;">لم يتم الرفع بعد</strong>
+              </div>
+
+            </div>
+
+            <!-- معلومات Firebase -->
+            <div style="background: var(--theme-bg-tertiary); border-radius: 12px; padding: 2rem; border: 1px solid rgba(255,255,255,0.05);">
+              
+              <h4 style="font-size: 1.25rem; margin-bottom: 1.5rem; color: var(--theme-text-primary);">
+                <i class="fas fa-info-circle"></i> معلومات الاتصال بالسحابة
+              </h4>
+
+              <div style="display: grid; gap: 1rem;">
+                <div style="display: flex; justify-content: space-between; padding: 1rem; background: var(--theme-bg-secondary); border-radius: 8px;">
+                  <span style="color: var(--theme-text-secondary);">
+                    <i class="fas fa-database"></i> قاعدة البيانات:
+                  </span>
+                  <strong id="firebaseDbName" style="color: var(--theme-text-primary); font-size: 0.85rem;">Firebase Realtime Database</strong>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; padding: 1rem; background: var(--theme-bg-secondary); border-radius: 8px;">
+                  <span style="color: var(--theme-text-secondary);">
+                    <i class="fas fa-link"></i> حالة الاتصال:
+                  </span>
+                  <strong id="firebaseConnectionStatus" style="color: #10b981;">
+                    <i class="fas fa-check-circle"></i> متصل
+                  </strong>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+
+          <!-- ═══════════════════════════════════════ -->
+          <!-- تبويبة السجل -->
+          <!-- ═══════════════════════════════════════ -->
+          <div id="cloudTab-history" class="cloud-tab-panel">
+            
+            <h3 style="font-size: 1.5rem; margin-bottom: 1.5rem; color: var(--theme-text-primary);">
+              <i class="fas fa-history"></i> سجل النسخ الاحتياطية السحابية
+            </h3>
+
+            <div style="margin-bottom: 1.5rem;">
+              <button class="btn btn-secondary" onclick="loadCloudBackupHistory()">
+                <i class="fas fa-sync-alt"></i> تحديث السجل
+              </button>
+            </div>
+
+            <!-- جدول السجل -->
+            <div id="cloudBackupHistoryList" style="background: var(--theme-bg-tertiary); border-radius: 12px; padding: 1.5rem; border: 1px solid rgba(255,255,255,0.05);">
+              <p style="text-align: center; color: var(--theme-text-secondary); padding: 2rem;">
+                <i class="fas fa-info-circle"></i> لا توجد نسخ احتياطية سحابية بعد
+              </p>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+      </div>
+     </div>
+     </div>
+     <!-- نهاية صفحة إدارة السحابة والبيانات -->
+
+     <!-- ═══════════════════════════════════════════════════════════════════════════════ -->
+     <!-- صفحة إدارة السحابة  -->
+     <!-- ═══════════════════════════════════════════════════════════════════════════════ -->
+     <div id="cloudManagement" class="page" style="display: none;">
+      <div class="section-header" style="margin-bottom: 2rem;">
+       <div class="section-title">
+         <i class="fas fa-cloud" style="color: #3b82f6;"></i> إدارة السحابة
+       </div>
+       <div class="section-subtitle">إدارة كاملة للنسخ الاحتياطي السحابي وحساب المستخدم</div>
+      </div>
+
+      <div class="settings-full-width">
+        <div class="settings-content-wrapper">
+
+      <!-- معلومات سريعة -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+        <div class="info-mini-card">
+          <div class="info-mini-icon" style="background: linear-gradient(135deg, #3b82f6, #2563eb);">
+            <i class="fas fa-cloud-upload-alt"></i>
+          </div>
+          <div class="info-mini-content">
+            <div class="info-mini-label">آخر نسخة سحابية</div>
+            <div class="info-mini-value" id="cloudLastBackupDate">لا توجد</div>
+          </div>
+        </div>
+        
+        <div class="info-mini-card">
+          <div class="info-mini-icon" style="background: linear-gradient(135deg, #10b981, #059669);">
+            <i class="fas fa-database"></i>
+          </div>
+          <div class="info-mini-content">
+            <div class="info-mini-label">حجم البيانات</div>
+            <div class="info-mini-value" id="cloudBackupSize">0 KB</div>
+          </div>
+        </div>
+        
+        <div class="info-mini-card">
+          <div class="info-mini-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+            <i class="fas fa-user-circle"></i>
+          </div>
+          <div class="info-mini-content">
+            <div class="info-mini-label">حالة الحساب</div>
+            <div class="info-mini-value" id="cloudAccountStatus">غير مسجل</div>
+          </div>
+        </div>
+        
+        <div class="info-mini-card">
+          <div class="info-mini-icon" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);">
+            <i class="fas fa-history"></i>
+          </div>
+          <div class="info-mini-content">
+            <div class="info-mini-label">عدد النسخ</div>
+            <div class="info-mini-value" id="cloudBackupCount">0</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- التبويبات -->
+      <div style="background: var(--theme-bg-secondary); border-radius: 16px; padding: 2rem; margin-bottom: 2rem; border: 1px solid rgba(255,255,255,0.05);">
+        
+        <!-- أزرار التبويبات -->
+        <div style="display: flex; gap: 0.5rem; border-bottom: 2px solid rgba(255,255,255,0.1); margin-bottom: 2rem; flex-wrap: wrap;">
+          <button class="cloud-tab-btn active" onclick="switchCloudTab('login')" data-tab="login">
+            <i class="fas fa-user-lock"></i> تسجيل الدخول
+          </button>
+          <button class="cloud-tab-btn" onclick="switchCloudTab('backup')" data-tab="backup">
+            <i class="fas fa-cloud-upload-alt"></i> رفع النسخ
+          </button>
+          <button class="cloud-tab-btn" onclick="switchCloudTab('restore')" data-tab="restore">
+            <i class="fas fa-cloud-download-alt"></i> استرجاع النسخ
+          </button>
+          <button class="cloud-tab-btn" onclick="switchCloudTab('settings')" data-tab="settings">
+            <i class="fas fa-cog"></i> الإعدادات
+          </button>
+          <button class="cloud-tab-btn" onclick="switchCloudTab('history')" data-tab="history">
+            <i class="fas fa-history"></i> السجل
+          </button>
+        </div>
+
+        <!-- محتوى التبويبات -->
+        <div id="cloudTabContent">
+          
+          <!-- ═══════════════════════════════════════ -->
+          <!-- تبويبة تسجيل الدخول -->
+          <!-- ═══════════════════════════════════════ -->
+          <div id="cloudTab-login" class="cloud-tab-panel active">
+            
+            <!-- حالة: غير مسجل -->
+            <div id="cloudLoginForm" style="display: block;">
+              <div style="text-align: center; margin-bottom: 2rem;">
+                <div style="background: linear-gradient(135deg, #3b82f6, #2563eb); width: 120px; height: 120px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; box-shadow: 0 8px 32px rgba(59, 130, 246, 0.4);">
+                  <i class="fas fa-cloud" style="font-size: 4rem; color: white;"></i>
+                </div>
+                <h2 style="font-size: 2rem; font-weight: 700; color: var(--theme-text-primary); margin: 0 0 0.5rem 0;">
+                  تسجيل الدخول للسحابة
+                </h2>
+                <p style="font-size: 1.1rem; color: var(--theme-text-secondary); margin: 0;">
+                  قم بتسجيل الدخول للوصول إلى نسخك الاحتياطية السحابية
+                </p>
+              </div>
+
+              <div style="max-width: 500px; margin: 0 auto;">
+                
+                <!-- خيارات التسجيل -->
+                <div style="display: flex; gap: 1rem; margin-bottom: 2rem;">
+                  <button class="btn" style="flex: 1; padding: 1rem; background: linear-gradient(135deg, #3b82f6, #2563eb);" onclick="showCloudRegisterForm()">
+                    <i class="fas fa-user-plus"></i> حساب جديد
+                  </button>
+                  <button class="btn btn-secondary" style="flex: 1; padding: 1rem;" onclick="showCloudLoginForm()">
+                    <i class="fas fa-sign-in-alt"></i> لدي حساب
+                  </button>
+                </div>
+
+                <!-- نموذج التسجيل الجديد -->
+                <div id="cloudRegisterFormPanel" style="display: none;">
+                  <h3 style="margin-bottom: 1.5rem; color: var(--theme-text-primary);">
+                    <i class="fas fa-user-plus"></i> إنشاء حساب جديد
+                  </h3>
+                  
+                  <div style="background: rgba(59, 130, 246, 0.1); border-right: 4px solid #3b82f6; padding: 1.5rem; border-radius: 8px; margin-bottom: 1.5rem;">
+                    <p style="color: var(--theme-text-secondary); line-height: 1.6; margin: 0;">
+                      بعد التسجيل، ستتلقى رمز التفعيل من الشركة عبر الواتساب خلال 24 ساعة.
+                    </p>
+                  </div>
+
+                  <form id="cloudRegisterForm" onsubmit="handleCloudRegisterSubmit(event); return false;">
+                    <div class="form-group">
+                      <label class="form-label">الاسم الكامل</label>
+                      <input type="text" class="form-input" id="cloudRegFullName" required>
+                    </div>
+
+                    <div class="form-group">
+                      <label class="form-label">رقم الهاتف (11 رقم)</label>
+                      <input type="tel" class="form-input" id="cloudRegPhone" pattern="[0-9]{11}" required placeholder="07XXXXXXXXX">
+                    </div>
+
+                    <div style="display: flex; gap: 1rem;">
+                      <button type="submit" class="btn btn-primary" style="flex: 1;">
+                        <i class="fas fa-paper-plane"></i> إرسال الطلب
+                      </button>
+                      <button type="button" class="btn btn-secondary" onclick="hideCloudRegisterForm()">
+                        <i class="fas fa-times"></i> إلغاء
+                      </button>
+                    </div>
+                  </form>
+                </div>
+
+                <!-- نموذج تسجيل الدخول -->
+                <div id="cloudLoginFormPanel" style="display: none;">
+                  <h3 style="margin-bottom: 1.5rem; color: var(--theme-text-primary);">
+                    <i class="fas fa-sign-in-alt"></i> تسجيل الدخول
+                  </h3>
+
+                  <div style="background: rgba(251, 191, 36, 0.1); border-right: 4px solid #fbbf24; padding: 1.5rem; border-radius: 8px; margin-bottom: 1.5rem;">
+                    <p style="color: var(--theme-text-secondary); line-height: 1.6; margin: 0;">
+                      أدخل معلومات حسابك الذي تم تفعيله من قبل الشركة.
+                    </p>
+                  </div>
+
+                  <form id="cloudLoginFormSubmit" onsubmit="handleCloudLoginSubmit(event); return false;">
+                    <div class="form-group">
+                      <label class="form-label">الاسم الكامل</label>
+                      <input type="text" class="form-input" id="cloudLoginFullName" required>
+                    </div>
+
+                    <div class="form-group">
+                      <label class="form-label">رقم الهاتف (11 رقم)</label>
+                      <input type="tel" class="form-input" id="cloudLoginPhone" pattern="[0-9]{11}" required placeholder="07XXXXXXXXX">
+                    </div>
+
+                    <div class="form-group">
+                      <label class="form-label">رمز التفعيل (6 أرقام)</label>
+                      <input type="text" class="form-input" id="cloudLoginActivationCode" pattern="[0-9]{6}" required placeholder="XXXXXX">
+                    </div>
+
+                    <div style="display: flex; gap: 1rem;">
+                      <button type="submit" class="btn btn-primary" style="flex: 1;">
+                        <i class="fas fa-sign-in-alt"></i> تسجيل الدخول
+                      </button>
+                      <button type="button" class="btn btn-secondary" onclick="hideCloudLoginForm()">
+                        <i class="fas fa-times"></i> إلغاء
+                      </button>
+                    </div>
+                  </form>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- حالة: مسجل ومفعّل -->
+            <div id="cloudLoggedInPanel" style="display: none;">
+              <div style="text-align: center; margin-bottom: 2rem;">
+                <div style="background: linear-gradient(135deg, #10b981, #059669); width: 120px; height: 120px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; box-shadow: 0 8px 32px rgba(16, 185, 129, 0.4);">
+                  <i class="fas fa-user-check" style="font-size: 4rem; color: white;"></i>
+                </div>
+                <h2 id="cloudUserDisplayName" style="font-size: 2rem; font-weight: 700; color: var(--theme-text-primary); margin: 0 0 0.5rem 0;">
+                  مرحباً
+                </h2>
+                <p style="font-size: 1.1rem; color: #10b981; margin: 0;">
+                  <i class="fas fa-check-circle"></i> حسابك مُفعّل ومتصل بالسحابة
+                </p>
+              </div>
+
+              <!-- معلومات الحساب -->
+              <div style="max-width: 600px; margin: 0 auto;">
+                <div style="background: var(--theme-bg-tertiary); border-radius: 12px; padding: 2rem; margin-bottom: 2rem; border: 1px solid rgba(255,255,255,0.05);">
+                  
+                  <div style="display: grid; gap: 1rem;">
+                    <div style="display: flex; justify-content: space-between; padding: 1rem; background: var(--theme-bg-secondary); border-radius: 8px;">
+                      <span style="color: var(--theme-text-secondary);">
+                        <i class="fas fa-user"></i> الاسم:
+                      </span>
+                      <strong id="cloudUserName" style="color: var(--theme-text-primary);">---</strong>
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; padding: 1rem; background: var(--theme-bg-secondary); border-radius: 8px;">
+                      <span style="color: var(--theme-text-secondary);">
+                        <i class="fas fa-phone"></i> الهاتف:
+                      </span>
+                      <strong id="cloudUserPhone" style="color: var(--theme-text-primary); direction: ltr;">---</strong>
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; padding: 1rem; background: var(--theme-bg-secondary); border-radius: 8px;">
+                      <span style="color: var(--theme-text-secondary);">
+                        <i class="fas fa-fingerprint"></i> المعرّف:
+                      </span>
+                      <strong id="cloudUserUID" style="color: var(--theme-text-secondary); font-size: 0.85rem; font-family: monospace;">---</strong>
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; padding: 1rem; background: var(--theme-bg-secondary); border-radius: 8px;">
+                      <span style="color: var(--theme-text-secondary);">
+                        <i class="fas fa-calendar"></i> مسجل منذ:
+                      </span>
+                      <strong id="cloudUserRegisteredAt" style="color: var(--theme-text-primary);">---</strong>
+                    </div>
+                  </div>
+
+                </div>
+
+                <!-- أزرار الإجراءات -->
+                <div style="display: grid; gap: 1rem;">
+                  <button class="btn btn-warning" onclick="handleCloudLogout()">
+                    <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
+                  </button>
+                  
+                  <button class="btn btn-secondary" onclick="switchCloudTab('backup')">
+                    <i class="fas fa-cloud-upload-alt"></i> انتقل إلى رفع النسخ الاحتياطية
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- حالة: في انتظار التفعيل -->
+            <div id="cloudWaitingActivation" style="display: none;">
+              <div style="text-align: center; margin-bottom: 2rem;">
+                <div style="background: linear-gradient(135deg, #f59e0b, #d97706); width: 120px; height: 120px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; box-shadow: 0 8px 32px rgba(245, 158, 11, 0.4); animation: pulse 2s infinite;">
+                  <i class="fas fa-clock" style="font-size: 4rem; color: white;"></i>
+                </div>
+                <h2 style="font-size: 2rem; font-weight: 700; color: var(--theme-text-primary); margin: 0 0 0.5rem 0;">
+                  ⏳ في انتظار التفعيل
+                </h2>
+                <p style="font-size: 1.1rem; color: var(--theme-text-secondary); margin: 0;">
+                  طلبك قيد المعالجة من قبل الشركة
+                </p>
+              </div>
+
+              <div style="max-width: 500px; margin: 0 auto;">
+                
+                <div style="background: rgba(245, 158, 11, 0.1); border-right: 4px solid #f59e0b; padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem;">
+                  <h4 style="color: #f59e0b; margin-bottom: 0.75rem;">
+                    <i class="fas fa-info-circle"></i> معلومات مهمة
+                  </h4>
+                  <ul style="color: var(--theme-text-secondary); line-height: 1.8; margin: 0; padding-right: 1.5rem;">
+                    <li>ستتلقى رمز التفعيل من الشركة عبر الواتساب</li>
+                    <li>عادةً يتم التفعيل خلال 24 ساعة</li>
+                    <li>يمكنك فحص حالة التفعيل من الزر أدناه</li>
+                  </ul>
+                </div>
+
+                <div style="display: grid; gap: 1rem;">
+                  <button class="btn btn-primary" onclick="checkCloudActivationStatus()">
+                    <i class="fas fa-sync-alt"></i> فحص حالة التفعيل
+                  </button>
+                  
+                  <button class="btn btn-secondary" onclick="cancelCloudRegistration()">
+                    <i class="fas fa-times"></i> إلغاء الطلب
+                  </button>
+                </div>
+
+              </div>
+            </div>
+
+          </div>
+
+          <!-- ═══════════════════════════════════════ -->
+          <!-- تبويبة رفع النسخ الاحتياطية -->
+          <!-- ═══════════════════════════════════════ -->
+          <div id="cloudTab-backup" class="cloud-tab-panel">
+            
+            <!-- تحقق من تسجيل الدخول -->
+            <div id="cloudBackupLoginRequired" style="display: none;">
+              <div style="text-align: center; padding: 3rem;">
+                <div style="background: rgba(239, 68, 68, 0.1); width: 100px; height: 100px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
+                  <i class="fas fa-lock" style="font-size: 3rem; color: #ef4444;"></i>
+                </div>
+                <h3 style="font-size: 1.5rem; color: var(--theme-text-primary); margin-bottom: 1rem;">
+                  يجب تسجيل الدخول أولاً
+                </h3>
+                <p style="color: var(--theme-text-secondary); margin-bottom: 2rem;">
+                  للوصول إلى ميزة رفع النسخ الاحتياطية، يجب عليك تسجيل الدخول
+                </p>
+                <button class="btn btn-primary" onclick="switchCloudTab('login')">
+                  <i class="fas fa-sign-in-alt"></i> الذهاب إلى تسجيل الدخول
+                </button>
+              </div>
+            </div>
+
+            <!-- واجهة رفع النسخ -->
+            <div id="cloudBackupPanel" style="display: none;">
+              
+              <h3 style="font-size: 1.5rem; margin-bottom: 1.5rem; color: var(--theme-text-primary);">
+                <i class="fas fa-cloud-upload-alt"></i> رفع نسخة احتياطية إلى السحابة
+              </h3>
+
+              <!-- معلومات آخر نسخة -->
+              <div style="background: var(--theme-bg-tertiary); border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem; border: 1px solid rgba(255,255,255,0.05);">
+                <div style="display: grid; gap: 1rem;">
+                  <div style="display: flex; justify-content: space-between;">
+                    <span style="color: var(--theme-text-secondary);">
+                      <i class="fas fa-clock"></i> آخر نسخة احتياطية:
+                    </span>
+                    <strong id="cloudBackupLastDate" style="color: var(--theme-text-primary);">لا توجد</strong>
+                  </div>
+                  <div style="display: flex; justify-content: space-between;">
+                    <span style="color: var(--theme-text-secondary);">
+                      <i class="fas fa-database"></i> حجم آخر نسخة:
+                    </span>
+                    <strong id="cloudBackupLastSize" style="color: var(--theme-text-primary);">0 KB</strong>
+                  </div>
+                </div>
+              </div>
+
+              <!-- نصيحة -->
+              <div style="background: rgba(59, 130, 246, 0.1); border-right: 4px solid #3b82f6; padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem;">
+                <h4 style="color: #3b82f6; margin-bottom: 0.5rem;">
+                  <i class="fas fa-lightbulb"></i> نصيحة
+                </h4>
+                <p style="color: var(--theme-text-secondary); line-height: 1.6; margin: 0;">
+                  قم برفع نسخة احتياطية بشكل دوري للحفاظ على بياناتك آمنة في السحابة. يمكنك تفعيل النسخ التلقائي من تبويبة "الإعدادات".
+                </p>
+              </div>
+
+              <!-- أزرار الرفع -->
+              <div style="display: grid; gap: 1rem;">
+                <button class="btn btn-success" style="padding: 1.5rem; font-size: 1.1rem;" onclick="uploadBackupToFirebase(false)">
+                  <i class="fas fa-cloud-upload-alt"></i> رفع نسخة احتياطية الآن
+                </button>
+
+                <button class="btn btn-secondary" onclick="refreshCloudBackupInfo()">
+                  <i class="fas fa-sync-alt"></i> تحديث المعلومات
+                </button>
+              </div>
+
+            </div>
+
+          </div>
+
+          <!-- ═══════════════════════════════════════ -->
+          <!-- تبويبة استرجاع النسخ -->
+          <!-- ═══════════════════════════════════════ -->
+          <div id="cloudTab-restore" class="cloud-tab-panel">
+            
+            <!-- تحقق من تسجيل الدخول -->
+            <div id="cloudRestoreLoginRequired" style="display: none;">
+              <div style="text-align: center; padding: 3rem;">
+                <div style="background: rgba(239, 68, 68, 0.1); width: 100px; height: 100px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
+                  <i class="fas fa-lock" style="font-size: 3rem; color: #ef4444;"></i>
+                </div>
+                <h3 style="font-size: 1.5rem; color: var(--theme-text-primary); margin-bottom: 1rem;">
+                  يجب تسجيل الدخول أولاً
+                </h3>
+                <p style="color: var(--theme-text-secondary); margin-bottom: 2rem;">
+                  للوصول إلى ميزة استرجاع النسخ الاحتياطية، يجب عليك تسجيل الدخول
+                </p>
+                <button class="btn btn-primary" onclick="switchCloudTab('login')">
+                  <i class="fas fa-sign-in-alt"></i> الذهاب إلى تسجيل الدخول
+                </button>
+              </div>
+            </div>
+
+            <!-- واجهة الاسترجاع -->
+            <div id="cloudRestorePanel" style="display: none;">
+              
+              <h3 style="font-size: 1.5rem; margin-bottom: 1.5rem; color: var(--theme-text-primary);">
+                <i class="fas fa-cloud-download-alt"></i> استرجاع نسخة احتياطية من السحابة
+              </h3>
+
+              <!-- تحذير -->
+              <div style="background: rgba(239, 68, 68, 0.1); border-right: 4px solid #ef4444; padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem;">
+                <h4 style="color: #ef4444; margin-bottom: 0.5rem;">
+                  <i class="fas fa-exclamation-triangle"></i> تحذير مهم
+                </h4>
+                <p style="color: var(--theme-text-secondary); line-height: 1.6; margin: 0;">
+                  استرجاع نسخة احتياطية سيؤدي إلى استبدال <strong>جميع البيانات الحالية</strong>. تأكد من إنشاء نسخة احتياطية للبيانات الحالية قبل الاسترجاع.
+                </p>
+              </div>
+
+              <!-- أزرار الاسترجاع -->
+              <div style="display: grid; gap: 1rem;">
+                <button class="btn btn-primary" style="padding: 1.5rem; font-size: 1.1rem;" onclick="downloadBackupFromFirebase()">
+                  <i class="fas fa-cloud-download-alt"></i> استرجاع آخر نسخة احتياطية
+                </button>
+
+                <button class="btn btn-secondary" onclick="showCloudBackupHistory()">
+                  <i class="fas fa-history"></i> عرض سجل النسخ الاحتياطية
+                </button>
+              </div>
+
+            </div>
+
+          </div>
+
+          <!-- ═══════════════════════════════════════ -->
+          <!-- تبويبة الإعدادات -->
+          <!-- ═══════════════════════════════════════ -->
+          <div id="cloudTab-settings" class="cloud-tab-panel">
+            
+            <h3 style="font-size: 1.5rem; margin-bottom: 1.5rem; color: var(--theme-text-primary);">
+              <i class="fas fa-cog"></i> إعدادات النسخ الاحتياطي السحابي
+            </h3>
+
+            <!-- النسخ التلقائي -->
+            <div style="background: var(--theme-bg-tertiary); border-radius: 12px; padding: 2rem; margin-bottom: 2rem; border: 1px solid rgba(255,255,255,0.05);">
+              
+              <h4 style="font-size: 1.25rem; margin-bottom: 1.5rem; color: var(--theme-text-primary);">
+                <i class="fas fa-robot"></i> النسخ الاحتياطي التلقائي
+              </h4>
+
+              <div class="form-group">
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                  <input type="checkbox" id="cloudAutoBackupEnabled" style="width: auto;" checked>
+                  <span style="display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fas fa-cloud" style="color: #3b82f6;"></i>
+                    <strong>تفعيل النسخ التلقائي عند فتح التطبيق</strong>
+                  </span>
+                </label>
+                <p style="color: var(--theme-text-secondary); font-size: 0.85rem; margin: 0.5rem 0 0 2rem; line-height: 1.5;">
+                  يتم إنشاء نسخة احتياطية تلقائياً إلى السحابة في كل مرة تفتح فيها التطبيق (مع حد أدنى 6 ساعات بين النسخ)
+                </p>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">تكرار النسخ التلقائي</label>
+                <select class="form-select" id="cloudAutoBackupFrequency">
+                  <option value="startup">عند فتح التطبيق (مع حد أدنى 6 ساعات)</option>
+                  <option value="hourly">كل ساعة</option>
+                  <option value="daily">يومياً</option>
+                  <option value="weekly">أسبوعياً</option>
+                </select>
+              </div>
+
+              <button class="btn btn-primary" onclick="saveCloudSettings()">
+                <i class="fas fa-save"></i> حفظ الإعدادات
+              </button>
+
+            </div>
+
+            <!-- معلومات Firebase -->
+            <div style="background: var(--theme-bg-tertiary); border-radius: 12px; padding: 2rem; border: 1px solid rgba(255,255,255,0.05);">
+              
+              <h4 style="font-size: 1.25rem; margin-bottom: 1.5rem; color: var(--theme-text-primary);">
+                <i class="fas fa-info-circle"></i> معلومات الاتصال بالسحابة
+              </h4>
+
+              <div style="display: grid; gap: 1rem;">
+                <div style="display: flex; justify-content: space-between; padding: 1rem; background: var(--theme-bg-secondary); border-radius: 8px;">
+                  <span style="color: var(--theme-text-secondary);">
+                    <i class="fas fa-database"></i> قاعدة البيانات:
+                  </span>
+                  <strong id="firebaseDbName" style="color: var(--theme-text-primary); font-size: 0.85rem;">Firebase Realtime Database</strong>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; padding: 1rem; background: var(--theme-bg-secondary); border-radius: 8px;">
+                  <span style="color: var(--theme-text-secondary);">
+                    <i class="fas fa-link"></i> حالة الاتصال:
+                  </span>
+                  <strong id="firebaseConnectionStatus" style="color: #10b981;">
+                    <i class="fas fa-check-circle"></i> متصل
+                  </strong>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+
+          <!-- ═══════════════════════════════════════ -->
+          <!-- تبويبة السجل -->
+          <!-- ═══════════════════════════════════════ -->
+          <div id="cloudTab-history" class="cloud-tab-panel">
+            
+            <h3 style="font-size: 1.5rem; margin-bottom: 1.5rem; color: var(--theme-text-primary);">
+              <i class="fas fa-history"></i> سجل النسخ الاحتياطية السحابية
+            </h3>
+
+            <div style="margin-bottom: 1.5rem;">
+              <button class="btn btn-secondary" onclick="loadCloudBackupHistory()">
+                <i class="fas fa-sync-alt"></i> تحديث السجل
+              </button>
+            </div>
+
+            <!-- جدول السجل -->
+            <div id="cloudBackupHistoryList" style="background: var(--theme-bg-tertiary); border-radius: 12px; padding: 1.5rem; border: 1px solid rgba(255,255,255,0.05);">
+              <p style="text-align: center; color: var(--theme-text-secondary); padding: 2rem;">
+                <i class="fas fa-info-circle"></i> لا توجد نسخ احتياطية سحابية بعد
+              </p>
+            </div>
+
+          </div>
+
+        </div>
+
+        </div>
+      </div>
+
+      </div>
+
      </div>
 
     </div>
@@ -17217,13 +20049,13 @@ console.log(`
             // إخفاء جميع الصفحات (الرئيسية والفرعية)
             document.querySelectorAll('.page').forEach(page => {
                 page.classList.remove('active');
-                page.style.display = ''; // إزالة inline style
+                page.style.display = 'none';
             });
             
             // إظهار الصفحة المحددة
             const targetPage = document.getElementById(pageId);
             if (targetPage) {
-                targetPage.style.display = ''; // إزالة inline style
+                targetPage.style.display = 'block';
                 targetPage.classList.add('active');
                 console.log('✅ Page shown:', pageId);
             } else {
@@ -17278,6 +20110,20 @@ console.log(`
             if (pageId === 'settings') {
                 setTimeout(() => {
                     updateSettingsStats();
+                }, 100);
+            }
+            
+            // تحديث واجهة الاشتراك السحابي عند فتح صفحة الحساب
+            if (pageId === 'settings-account') {
+                setTimeout(() => {
+                    updateCloudSubscriptionUI();
+                }, 100);
+            }
+            
+            // تحديث واجهة التسجيل عند فتح صفحة النسخ الاحتياطية
+            if (pageId === 'settings-backup') {
+                setTimeout(() => {
+                    updateRegistrationUI();
                 }, 100);
             }
         }
@@ -23938,13 +26784,13 @@ body {
             // إخفاء جميع الصفحات الرئيسية
             document.querySelectorAll('.page').forEach(page => {
                 page.classList.remove('active');
-                page.style.display = ''; // إزالة inline style
+                page.style.display = 'none';
             });
             
             // إظهار الصفحة المطلوبة
             const targetPage = document.getElementById(`settings-${pageName}`);
             if (targetPage) {
-                targetPage.style.display = ''; // إزالة inline style
+                targetPage.style.display = 'block';
                 targetPage.classList.add('active');
                 setTimeout(() => {
                     targetPage.classList.add('animate__animated', 'animate__fadeIn');
@@ -29707,8 +32553,6 @@ body {
     </script>
     
 
-    <script src="./reports-system.js"></script>
-    <script src="./expenses-system.js"></script>
     
     <!-- قوالب الطباعة المحدثة -->
     <script>
@@ -31896,8 +34740,333 @@ body {
     
     console.log('✅ تم تهيئة نظام النسخ الاحتياطي بنجاح');
 })();
+
+// ============================================================================
+// تهيئة نظام رفع البيانات التلقائي
+// ============================================================================
+(function() {
+    console.log('🔥 تهيئة نظام رفع البيانات التلقائي...');
+    
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initDataUpload);
+    } else {
+        initDataUpload();
+    }
+    
+    console.log('✅ تم تهيئة نظام رفع البيانات التلقائي بنجاح');
+})();
 // ============================================================================
 
+    </script>
+    <script>
+// ═══════════════════════════════════════════════════════════════════════════════
+// ملف تصحيح شامل لإصلاح مشاكل عرض الصفحات
+// Comprehensive Fix for Page Display Issues
+// ═══════════════════════════════════════════════════════════════════════════════
+
+(function() {
+    'use strict';
+    
+    console.log('🔧 تحميل ملف التصحيحات الشاملة...');
+    
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // 1. إصلاح عرض الصفحات
+    // ═══════════════════════════════════════════════════════════════════════════════
+    
+    function fixPageDisplay() {
+        console.log('📄 إصلاح عرض الصفحات...');
+        
+        // إضافة styles مباشرة لضمان العرض الصحيح
+        const style = document.createElement('style');
+        style.textContent = `
+            /* إصلاح عرض الصفحات */
+            .page {
+                min-height: 100vh;
+                position: relative;
+            }
+            
+            .page.active {
+                display: block !important;
+                opacity: 1 !important;
+                visibility: visible !important;
+            }
+            
+            .settings-full-width {
+                display: block !important;
+                width: 100% !important;
+                min-height: 50vh;
+            }
+            
+            .settings-content-wrapper {
+                display: block !important;
+                min-height: 300px;
+                opacity: 1 !important;
+                visibility: visible !important;
+            }
+            
+            /* إصلاح البطاقات الصغيرة */
+            .info-mini-card {
+                display: flex !important;
+                opacity: 1 !important;
+            }
+            
+            /* إصلاح التبويبات */
+            .cloud-tab-panel {
+                min-height: 200px;
+            }
+            
+            .cloud-tab-panel.active {
+                display: block !important;
+                opacity: 1 !important;
+            }
+            
+            /* إصلاح أزرار التبويبات */
+            .cloud-tab-btn {
+                display: flex !important;
+            }
+        `;
+        document.head.appendChild(style);
+        console.log('✅ تم إضافة CSS إصلاحي');
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // 2. إصلاح دوال عرض الصفحات
+    // ═══════════════════════════════════════════════════════════════════════════════
+    
+    function patchShowPageFunctions() {
+        console.log('🔧 إصلاح دوال عرض الصفحات...');
+        
+        // حفظ الدالة الأصلية
+        const originalShowPage = window.showPage;
+        const originalShowSettingsPage = window.showSettingsPage;
+        
+        // دالة showPage محسنة
+        window.showPage = function(pageId) {
+            console.log('📄 عرض الصفحة:', pageId);
+            
+            try {
+                // إخفاء جميع الصفحات
+                document.querySelectorAll('.page').forEach(page => {
+                    page.classList.remove('active');
+                    page.style.display = 'none';
+                    page.style.opacity = '0';
+                });
+                
+                // إظهار الصفحة المطلوبة
+                const targetPage = document.getElementById(pageId);
+                if (targetPage) {
+                    targetPage.style.display = 'block';
+                    targetPage.style.opacity = '1';
+                    targetPage.style.visibility = 'visible';
+                    targetPage.classList.add('active');
+                    
+                    // التمرير للأعلى
+                    setTimeout(() => {
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }, 100);
+                    
+                    console.log('✅ تم عرض الصفحة:', pageId);
+                } else {
+                    console.error('❌ الصفحة غير موجودة:', pageId);
+                }
+                
+                // استدعاء الدالة الأصلية إذا كانت موجودة
+                if (originalShowPage && typeof originalShowPage === 'function') {
+                    try {
+                        originalShowPage(pageId);
+                    } catch (e) {
+                        console.warn('تحذير من الدالة الأصلية:', e);
+                    }
+                }
+            } catch (error) {
+                console.error('❌ خطأ في showPage:', error);
+            }
+        };
+        
+        // دالة showSettingsPage محسنة
+        window.showSettingsPage = function(pageName) {
+            console.log('⚙️ عرض صفحة الإعدادات:', pageName);
+            
+            try {
+                const fullPageId = `settings-${pageName}`;
+                
+                // إخفاء جميع الصفحات
+                document.querySelectorAll('.page').forEach(page => {
+                    page.classList.remove('active');
+                    page.style.display = 'none';
+                    page.style.opacity = '0';
+                });
+                
+                // إظهار الصفحة المطلوبة
+                const targetPage = document.getElementById(fullPageId);
+                if (targetPage) {
+                    targetPage.style.display = 'block';
+                    targetPage.style.opacity = '1';
+                    targetPage.style.visibility = 'visible';
+                    targetPage.classList.add('active');
+                    
+                    // التأكد من ظهور المحتوى الداخلي
+                    const wrapper = targetPage.querySelector('.settings-full-width');
+                    if (wrapper) {
+                        wrapper.style.display = 'block';
+                        wrapper.style.opacity = '1';
+                    }
+                    
+                    const contentWrapper = targetPage.querySelector('.settings-content-wrapper');
+                    if (contentWrapper) {
+                        contentWrapper.style.display = 'block';
+                        contentWrapper.style.opacity = '1';
+                    }
+                    
+                    // التمرير للأعلى
+                    setTimeout(() => {
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }, 100);
+                    
+                    console.log('✅ تم عرض صفحة الإعدادات:', fullPageId);
+                } else {
+                    console.error('❌ صفحة الإعدادات غير موجودة:', fullPageId);
+                }
+                
+                // استدعاء الدالة الأصلية إذا كانت موجودة
+                if (originalShowSettingsPage && typeof originalShowSettingsPage === 'function') {
+                    try {
+                        originalShowSettingsPage(pageName);
+                    } catch (e) {
+                        console.warn('تحذير من الدالة الأصلية:', e);
+                    }
+                }
+            } catch (error) {
+                console.error('❌ خطأ في showSettingsPage:', error);
+            }
+        };
+        
+        console.log('✅ تم إصلاح دوال عرض الصفحات');
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // 3. إصلاح دالة switchCloudTab
+    // ═══════════════════════════════════════════════════════════════════════════════
+    
+    function patchCloudTabFunction() {
+        console.log('☁️ إصلاح دالة التبويبات السحابية...');
+        
+        window.switchCloudTab = function(tabName) {
+            console.log('🔄 تبديل التبويبة:', tabName);
+            
+            try {
+                // إخفاء جميع التبويبات
+                document.querySelectorAll('.cloud-tab-panel').forEach(panel => {
+                    panel.classList.remove('active');
+                    panel.style.display = 'none';
+                });
+                
+                // إزالة active من جميع الأزرار
+                document.querySelectorAll('.cloud-tab-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                
+                // تفعيل التبويبة المطلوبة
+                const targetPanel = document.getElementById(`cloudTab-${tabName}`);
+                const targetBtn = document.querySelector(`.cloud-tab-btn[data-tab="${tabName}"]`);
+                
+                if (targetPanel) {
+                    targetPanel.style.display = 'block';
+                    targetPanel.style.opacity = '1';
+                    targetPanel.classList.add('active');
+                    console.log('✅ تم تفعيل التبويبة:', tabName);
+                }
+                
+                if (targetBtn) {
+                    targetBtn.classList.add('active');
+                }
+            } catch (error) {
+                console.error('❌ خطأ في switchCloudTab:', error);
+            }
+        };
+        
+        console.log('✅ تم إصلاح دالة التبويبات السحابية');
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // 4. فحص وتصحيح جميع الصفحات
+    // ═══════════════════════════════════════════════════════════════════════════════
+    
+    function verifyAndFixAllPages() {
+        console.log('🔍 فحص جميع الصفحات...');
+        
+        const pagesToCheck = [
+            'settings',
+            'settings-cloud-data',
+            'cloudManagement',
+            'settings-security',
+            'settings-backup',
+            'settings-account',
+            'printer'
+        ];
+        
+        pagesToCheck.forEach(pageId => {
+            const page = document.getElementById(pageId);
+            if (page) {
+                console.log(`✅ الصفحة موجودة: ${pageId}`);
+                
+                // التأكد من أن الصفحة لديها min-height
+                if (!page.style.minHeight) {
+                    page.style.minHeight = '50vh';
+                }
+                
+                // التحقق من wrapper
+                const wrapper = page.querySelector('.settings-full-width');
+                if (wrapper) {
+                    console.log(`  ✅ wrapper موجود في ${pageId}`);
+                    wrapper.style.display = 'block';
+                } else {
+                    console.warn(`  ⚠️ wrapper غير موجود في ${pageId}`);
+                }
+            } else {
+                console.warn(`❌ الصفحة غير موجودة: ${pageId}`);
+            }
+        });
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // 5. تهيئة التصحيحات
+    // ═══════════════════════════════════════════════════════════════════════════════
+    
+    function initializeFixes() {
+        console.log('🚀 بدء تطبيق التصحيحات...');
+        
+        // 1. إصلاح CSS
+        fixPageDisplay();
+        
+        // 2. إصلاح الدوال
+        patchShowPageFunctions();
+        
+        // 3. إصلاح التبويبات
+        patchCloudTabFunction();
+        
+        // 4. فحص الصفحات
+        verifyAndFixAllPages();
+        
+        console.log('✅ تم تطبيق جميع التصحيحات بنجاح!');
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // تطبيق التصحيحات عند تحميل الصفحة
+    // ═══════════════════════════════════════════════════════════════════════════════
+    
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initializeFixes);
+    } else {
+        initializeFixes();
+    }
+    
+    // تطبيق إضافي بعد ثانيتين للتأكد
+    setTimeout(initializeFixes, 2000);
+    
+    console.log('✅ تم تحميل ملف التصحيحات الشاملة');
+    
+})();
     </script>
  </body>
 </html>

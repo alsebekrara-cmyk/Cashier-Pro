@@ -8085,6 +8085,10 @@ console.log(`
         }
         
         .payment-option-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
             background: var(--theme-bg-secondary);
             border: 2px solid rgba(255,255,255,0.1);
             border-radius: var(--border-radius-lg);
@@ -8094,6 +8098,8 @@ console.log(`
             text-align: center;
             position: relative;
             overflow: hidden;
+            min-height: 200px;
+            width: 100%;
         }
         
         .payment-option-card::before {
@@ -34918,6 +34924,26 @@ body {
                 }
             } catch (error) {
                 console.error('❌ خطأ في switchCloudTab:', error);
+            }
+        };
+    }
+
+    // تفعيل التصحيحات عند تحميل الصفحة
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() {
+            fixPageDisplay();
+            patchShowPageFunctions();
+            patchCloudTabFunction();
+        });
+    } else {
+        fixPageDisplay();
+        patchShowPageFunctions();
+        patchCloudTabFunction();
+	}
+
+})();
+</script>
+
 <!-- ══════════════════════════════════════════════════════════════════════════════ -->
 <!-- 🔥 نظام الاشتراك السحابي v2.1 المحسّن - مع dataSdk وواجهات السجلات -->
 <!-- Cloud Subscription System v2.1 Enhanced - With dataSdk & History UI -->
@@ -35112,8 +35138,13 @@ body {
     let backupHistory = [];
     
     function getCurrentUserId() {
-        const userId = localStorage.getItem('currentUserId');
-        if (!userId) {console.error('❌ لم يتم العثور على معرف المستخدم'); return null;}
+        let userId = localStorage.getItem('currentUserId');
+        if (!userId) {
+            // إنشاء معرف مستخدم جديد تلقائياً
+            userId = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('currentUserId', userId);
+            console.log('🆕 تم إنشاء معرف مستخدم جديد:', userId);
+        }
         return userId;
     }
     
@@ -35123,9 +35154,48 @@ body {
         else {console.error('❌ Firebase غير متاح'); callback(false);}
     }
     
+    // دالة لإزالة جميع قيم undefined من الكائن بشكل عميق
+    function removeUndefined(obj) {
+        if (obj === null || obj === undefined) {
+            return null;
+        }
+        
+        if (Array.isArray(obj)) {
+            return obj.map(item => removeUndefined(item)).filter(item => item !== null && item !== undefined);
+        }
+        
+        if (typeof obj === 'object') {
+            const cleaned = {};
+            for (const key in obj) {
+                if (obj.hasOwnProperty(key)) {
+                    const value = obj[key];
+                    if (value !== undefined && value !== null) {
+                        if (typeof value === 'object') {
+                            const cleanedValue = removeUndefined(value);
+                            if (cleanedValue !== null && cleanedValue !== undefined) {
+                                if (Array.isArray(cleanedValue)) {
+                                    if (cleanedValue.length > 0) {
+                                        cleaned[key] = cleanedValue;
+                                    }
+                                } else if (Object.keys(cleanedValue).length > 0) {
+                                    cleaned[key] = cleanedValue;
+                                }
+                            }
+                        } else {
+                            cleaned[key] = value;
+                        }
+                    }
+                }
+            }
+            return cleaned;
+        }
+        
+        return obj;
+    }
+    
     async function collectAllData() {
         console.log('📦 جمع جميع البيانات...');
-        const data = {localStorage: {}, dataSdk: {}, metadata: {collectedAt: new Date().toISOString(), userId: getCurrentUserId(), version: '2.1'}};
+        const data = {localStorage: {}, dataSdk: {}, metadata: {collectedAt: new Date().toISOString(), userId: getCurrentUserId(), version: '2.2'}};
         
         try {
             const keys = {invoices:'invoices',debtsData:'debts',payments:'payments',expensesData:'expenses',suppliers:'suppliers',customers:'customers',storeSettings:'storeSettings',printerSettings:'printerSettings',users:'users'};
@@ -35147,7 +35217,7 @@ body {
                         data.dataSdk.products = allData.filter(i => i.type === 'product') || [];
                         data.dataSdk.categories = allData.filter(i => i.type === 'category') || [];
                         data.dataSdk.sales = allData.filter(i => i.type === 'sale') || [];
-                        console.log(`✅ dataSdk: ${data.dataSdk.products.length} منتج, ${data.dataSdk.categories.length} تصنيف`);
+                        console.log(`✅ dataSdk: ${data.dataSdk.products.length} منتج, ${data.dataSdk.categories.length} تصنيف, ${data.dataSdk.sales.length} مبيعة`);
                     }
                 }
                 if (typeof window.dataSdk.query === 'function') {
@@ -35169,38 +35239,97 @@ body {
             } else {console.warn('⚠️ dataSdk غير متوفر');}
         } catch (e) {console.error('❌ خطأ dataSdk:', e);}
         
-        return data;
+        // تنظيف جميع قيم undefined قبل الإرجاع
+        console.log('🧹 تنظيف قيم undefined...');
+        const cleanedData = removeUndefined(data);
+        console.log('✅ تم تنظيف البيانات بنجاح');
+        
+        return cleanedData;
     }
     
     function loadSubscriptionFromFirebase() {
-        const userId = getCurrentUserId();
-        if (!userId) return;
+        const userId = getCurrentUserId(); // هذه ستنشئ معرف جديد إذا لم يكن موجوداً
+        if (!userId) {
+            console.warn('⚠️ لا يمكن تحميل حالة الاشتراك بدون معرف مستخدم');
+            return;
+        }
+        
         ensureFirebaseReady((ready) => {
-            if (!ready) return;
+            if (!ready) {
+                console.warn('⚠️ Firebase غير جاهز لتحميل حالة الاشتراك');
+                return;
+            }
+            
             window.database.ref(`users/${userId}/cloudSubscription`).once('value', (snap) => {
                 const d = snap.val();
                 if (d && d.status === 'active') {
-                    subscriptionStatus = {isActive: true, username: d.username, phone: d.phone, activationDate: d.activationDate, userId};
+                    subscriptionStatus = {
+                        isActive: true, 
+                        username: d.username, 
+                        phone: d.phone, 
+                        activationDate: d.activationDate, 
+                        userId
+                    };
                     localStorage.setItem('cloudSubscriptionStatus', JSON.stringify(subscriptionStatus));
                     updateButtonAppearance(true);
-                } else {updateButtonAppearance(false);}
+                    console.log('✅ الاشتراك مفعّل:', d.username);
+                } else if (d && d.status === 'pending') {
+                    console.log('⏳ طلب الاشتراك في انتظار التفعيل');
+                    updateButtonAppearance(false);
+                } else {
+                    console.log('ℹ️ لا يوجد اشتراك مسجل');
+                    updateButtonAppearance(false);
+                }
+            }).catch((error) => {
+                console.error('❌ خطأ في تحميل حالة الاشتراك:', error);
             });
         });
     }
     
     function submitSubscriptionRequest(username, phone) {
         return new Promise((resolve, reject) => {
-            const userId = getCurrentUserId();
-            if (!userId) {reject('يجب تسجيل الدخول'); return;}
+            const userId = getCurrentUserId(); // هذه الدالة ستنشئ معرف جديد إذا لم يكن موجوداً
+            if (!userId) {reject('حدث خطأ في إنشاء معرف المستخدم'); return;}
+            
+            console.log('📤 إرسال طلب اشتراك للمستخدم:', userId);
+            
             ensureFirebaseReady((ready) => {
-                if (!ready) {reject('قاعدة البيانات غير متاحة'); return;}
+                if (!ready) {reject('قاعدة البيانات غير متاحة حالياً. يرجى التحقق من الاتصال بالإنترنت.'); return;}
                 const timestamp = new Date().toISOString();
                 const requestId = `req_${Date.now()}_${userId.replace(/[^a-zA-Z0-9]/g, '')}`;
-                const data = {userId, username, phone, requestDate: timestamp, status: 'pending', source: 'desktop_app'};
+                const data = {
+                    userId, 
+                    username, 
+                    phone, 
+                    requestDate: timestamp, 
+                    status: 'pending', 
+                    source: 'desktop_app',
+                    createdBy: 'new_user_registration'
+                };
+                
+                // حفظ البيانات في مسارين: تحت المستخدم وفي قائمة الطلبات
                 window.database.ref(`users/${userId}/cloudSubscription`).set({...data, type: 'subscription_request'})
-                    .then(() => window.database.ref(`subscriptionRequests/${requestId}`).set(data))
-                    .then(() => resolve({success: true, requestId}))
-                    .catch((e) => reject(e.message));
+                    .then(() => {
+                        console.log('✅ تم حفظ البيانات تحت المستخدم');
+                        return window.database.ref(`subscriptionRequests/${requestId}`).set(data);
+                    })
+                    .then(() => {
+                        console.log('✅ تم إرسال الإشعار للشركة');
+                        // حفظ حالة الطلب في localStorage أيضاً
+                        localStorage.setItem('pendingSubscription', JSON.stringify({
+                            userId,
+                            username,
+                            phone,
+                            requestId,
+                            requestDate: timestamp,
+                            status: 'pending'
+                        }));
+                        resolve({success: true, requestId, userId});
+                    })
+                    .catch((e) => {
+                        console.error('❌ خطأ في إرسال الطلب:', e);
+                        reject('فشل إرسال الطلب: ' + e.message);
+                    });
             });
         });
     }
@@ -35208,9 +35337,18 @@ body {
     function performFullBackupToFirebase() {
         return new Promise(async (resolve, reject) => {
             const userId = getCurrentUserId();
-            if (!userId || !subscriptionStatus.isActive) {reject('تأكد من تسجيل الدخول والاشتراك'); return;}
+            if (!userId) {
+                reject('حدث خطأ في الحصول على معرف المستخدم');
+                return;
+            }
+            
+            if (!subscriptionStatus.isActive) {
+                reject('⚠️ الاشتراك السحابي غير مفعّل!\n\nيرجى إرسال طلب الاشتراك أولاً وانتظار التفعيل من الشركة.');
+                return;
+            }
+            
             ensureFirebaseReady(async (ready) => {
-                if (!ready) {reject('قاعدة البيانات غير متاحة'); return;}
+                if (!ready) {reject('قاعدة البيانات السحابية غير متاحة حالياً. يرجى التحقق من الاتصال بالإنترنت.'); return;}
                 try {
                     const allData = await collectAllData();
                     const backupId = `backup_${Date.now()}`;
@@ -35227,9 +35365,9 @@ body {
     function viewBackupHistoryFromFirebase() {
         return new Promise((resolve, reject) => {
             const userId = getCurrentUserId();
-            if (!userId) {reject('يجب تسجيل الدخول'); return;}
+            if (!userId) {reject('حدث خطأ في الحصول على معرف المستخدم'); return;}
             ensureFirebaseReady((ready) => {
-                if (!ready) {reject('قاعدة البيانات غير متاحة'); return;}
+                if (!ready) {reject('قاعدة البيانات السحابية غير متاحة حالياً'); return;}
                 window.database.ref(`users/${userId}/cloudBackups`).once('value', (snap) => {
                     const backups = [];
                     snap.forEach((child) => {
@@ -35368,14 +35506,52 @@ body {
         const username = document.getElementById('subscriptionUsername').value.trim();
         const phone = document.getElementById('subscriptionPhone').value.trim();
         const btn = document.getElementById('submitSubscriptionBtn');
-        if (!username || username.split(' ').length < 4) {alert('⚠️ أدخل الاسم الرباعي'); return;}
-        if (!phone || phone.length !== 11) {alert('⚠️ رقم هاتف غير صحيح'); return;}
+        
+        if (!username || username.split(' ').length < 4) {
+            alert('⚠️ الرجاء إدخال الاسم الرباعي كاملاً');
+            return;
+        }
+        
+        if (!phone || phone.length !== 11) {
+            alert('⚠️ رقم الهاتف يجب أن يكون 11 رقماً');
+            return;
+        }
+        
         btn.disabled = true;
         btn.innerHTML = '<span class="loading-spinner"></span><span>جاري الإرسال...</span>';
+        
         submitSubscriptionRequest(username, phone)
-            .then(() => {alert('✅ تم إرسال الطلب'); closeModal();})
-            .catch((e) => alert('❌ فشل: ' + e))
-            .finally(() => {btn.disabled = false; btn.innerHTML = '<i class="fas fa-paper-plane"></i><span>إرسال</span>';});
+            .then((result) => {
+                alert(`✅ تم إرسال طلب الاشتراك بنجاح!
+
+📝 البيانات المرسلة:
+• الاسم: ${username}
+• الهاتف: ${phone}
+• معرف المستخدم: ${result.userId}
+• رقم الطلب: ${result.requestId}
+
+✅ تم حفظ البيانات في قاعدة البيانات
+✅ تم إرسال إشعار للشركة
+
+⏳ سيتم التواصل معك خلال 24 ساعة لتفعيل الاشتراك السحابي.
+
+📞 للاستفسار: اتصل بالشركة على أرقام الدعم الفني.`);
+                closeModal();
+            })
+            .catch((e) => {
+                alert(`❌ فشل إرسال الطلب!
+
+الخطأ: ${e}
+
+يرجى التحقق من:
+• الاتصال بالإنترنت
+• إعدادات Firebase
+• ثم المحاولة مرة أخرى`);
+            })
+            .finally(() => {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-paper-plane"></i><span>إرسال طلب التفعيل</span>';
+            });
     };
     
     function renderActiveDashboard() {

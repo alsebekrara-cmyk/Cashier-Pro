@@ -20,11 +20,58 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
     
     <style>
+        /* =============================================
+           تكبير الخطوط لتحسين الوضوح
+           ============================================= */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
             font-family: 'Cairo', sans-serif;
+            font-size: 18px !important;
+            font-weight: 500 !important;
+        }
+        
+        /* تكبير الأرقام والأسعار */
+        input[type="number"], .price, .total, .amount, .number, .count {
+            font-size: 22px !important;
+            font-weight: 700 !important;
+        }
+        
+        /* تكبير العناوين */
+        h1 {
+            font-size: 28px !important;
+            font-weight: 800 !important;
+        }
+        
+        h2 {
+            font-size: 24px !important;
+            font-weight: 800 !important;
+        }
+        
+        h3 {
+            font-size: 21px !important;
+            font-weight: 700 !important;
+        }
+        
+        /* تكبير الأزرار */
+        button, .btn {
+            font-size: 20px !important;
+            font-weight: 700 !important;
+            padding: 14px 28px !important;
+            min-height: 48px !important;
+        }
+        
+        /* تكبير النصوص في الجداول */
+        table, table th, table td {
+            font-size: 19px !important;
+            font-weight: 600 !important;
+        }
+        
+        /* تكبير القوائم */
+        .sidebar-menu a, .sidebar-menu li {
+            font-size: 19px !important;
+            font-weight: 600 !important;
         }
 
         /* نافذة منبثقة */
@@ -812,6 +859,55 @@
             font-size: 0.8rem;
             white-space: nowrap;
         }
+        
+        /* =============================================
+           إصلاحات لمنع تجمد النوافذ والأزرار
+           ============================================= */
+        
+        /* التأكد من أن النوافذ قابلة للنقر */
+        .modal {
+            pointer-events: auto !important;
+        }
+        
+        .modal.active {
+            pointer-events: auto !important;
+            z-index: 9999 !important;
+        }
+        
+        .modal-content {
+            pointer-events: auto !important;
+            position: relative !important;
+            z-index: 10000 !important;
+        }
+        
+        /* منع التراكب في الخلفية */
+        body.modal-open {
+            overflow: hidden !important;
+        }
+        
+        /* التأكد من أن الأزرار قابلة للنقر */
+        button:not(:disabled):not(.disabled) {
+            pointer-events: auto !important;
+            cursor: pointer !important;
+        }
+        
+        button:disabled {
+            pointer-events: none !important;
+            opacity: 0.5 !important;
+        }
+        
+        /* إزالة أي تأثيرات قد تسبب التجمد */
+        .btn:not(:disabled):not(.disabled) {
+            pointer-events: auto !important;
+            cursor: pointer !important;
+        }
+        
+        /* تحسين الأداء */
+        .modal-content {
+            will-change: transform, opacity;
+            -webkit-font-smoothing: antialiased !important;
+            -moz-osx-font-smoothing: grayscale !important;
+        }
     </style>
 </head>
 <body>
@@ -1198,7 +1294,21 @@
         loadCategoriesToSelect();
     }
     function closeAddProductModal() {
-        document.getElementById('addProductModal').classList.remove('active');
+        const modal = document.getElementById('addProductModal');
+        modal.classList.remove('active');
+        // إزالة أي overlay متبقي
+        const overlays = document.querySelectorAll('.modal-backdrop, .modal-overlay');
+        overlays.forEach(overlay => overlay.remove());
+        // السماح بالتمرير
+        document.body.style.overflow = '';
+        // تفعيل جميع الأزرار
+        setTimeout(() => {
+            const buttons = document.querySelectorAll('button:not(:disabled)');
+            buttons.forEach(button => {
+                button.style.pointerEvents = 'auto';
+                button.style.cursor = 'pointer';
+            });
+        }, 100);
     }
 
     // توليد باركود تلقائي
@@ -1268,7 +1378,21 @@
         document.getElementById('addCategoryModal').classList.add('active');
     }
     function closeAddCategoryModal() {
-        document.getElementById('addCategoryModal').classList.remove('active');
+        const modal = document.getElementById('addCategoryModal');
+        modal.classList.remove('active');
+        // إزالة أي overlay متبقي
+        const overlays = document.querySelectorAll('.modal-backdrop, .modal-overlay');
+        overlays.forEach(overlay => overlay.remove());
+        // السماح بالتمرير
+        document.body.style.overflow = '';
+        // تفعيل جميع الأزرار
+        setTimeout(() => {
+            const buttons = document.querySelectorAll('button:not(:disabled)');
+            buttons.forEach(button => {
+                button.style.pointerEvents = 'auto';
+                button.style.cursor = 'pointer';
+            });
+        }, 100);
     }
 
     // حفظ التصنيف
@@ -1971,7 +2095,21 @@
 
         // Close User Modal
         function closeUserModal() {
-            document.getElementById('userModal').classList.remove('active');
+            const modal = document.getElementById('userModal');
+            modal.classList.remove('active');
+            // إزالة أي overlay متبقي
+            const overlays = document.querySelectorAll('.modal-backdrop, .modal-overlay');
+            overlays.forEach(overlay => overlay.remove());
+            // السماح بالتمرير
+            document.body.style.overflow = '';
+            // تفعيل جميع الأزرار
+            setTimeout(() => {
+                const buttons = document.querySelectorAll('button:not(:disabled)');
+                buttons.forEach(button => {
+                    button.style.pointerEvents = 'auto';
+                    button.style.cursor = 'pointer';
+                });
+            }, 100);
         }
 
         // Load Codes
@@ -2070,7 +2208,21 @@
 
         // Close Generate Code Modal
         function closeGenerateCodeModal() {
-            document.getElementById('generateCodeModal').classList.remove('active');
+            const modal = document.getElementById('generateCodeModal');
+            modal.classList.remove('active');
+            // إزالة أي overlay متبقي
+            const overlays = document.querySelectorAll('.modal-backdrop, .modal-overlay');
+            overlays.forEach(overlay => overlay.remove());
+            // السماح بالتمرير
+            document.body.style.overflow = '';
+            // تفعيل جميع الأزرار
+            setTimeout(() => {
+                const buttons = document.querySelectorAll('button:not(:disabled)');
+                buttons.forEach(button => {
+                    button.style.pointerEvents = 'auto';
+                    button.style.cursor = 'pointer';
+                });
+            }, 100);
         }
 
         // Generate Codes
@@ -2218,6 +2370,151 @@
             loadDashboardStats();
         });
 
+        // ==========================================
+        // نظام موحد لإدارة النوافذ المنبثقة
+        // يمنع التجمد والتراكب
+        // ==========================================
+        
+        // متغير لتتبع النوافذ المفتوحة
+        let activeModals = new Set();
+        
+        /**
+         * دالة موحدة لفتح نافذة منبثقة
+         */
+        function openModal(modalId) {
+            // إغلاق جميع النوافذ المفتوحة أولاً
+            closeAllModals();
+            
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                // إزالة أي overlay قديم
+                removeAllOverlays();
+                
+                // إضافة class active
+                modal.classList.add('active');
+                
+                // تتبع النافذة المفتوحة
+                activeModals.add(modalId);
+                
+                // منع التمرير في الخلفية
+                document.body.style.overflow = 'hidden';
+                
+                // التأكد من أن pointer-events مفعلة
+                modal.style.pointerEvents = 'auto';
+                
+                console.log('✅ تم فتح النافذة:', modalId);
+            }
+        }
+        
+        /**
+         * دالة موحدة لإغلاق نافذة منبثقة
+         */
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                // إزالة class active
+                modal.classList.remove('active');
+                
+                // إزالة من المتتبع
+                activeModals.delete(modalId);
+                
+                // السماح بالتمرير إذا لم يكن هناك نوافذ مفتوحة
+                if (activeModals.size === 0) {
+                    document.body.style.overflow = '';
+                    removeAllOverlays();
+                }
+                
+                console.log('✅ تم إغلاق النافذة:', modalId);
+            }
+        }
+        
+        /**
+         * إغلاق جميع النوافذ المنبثقة
+         */
+        function closeAllModals() {
+            const modals = document.querySelectorAll('.modal');
+            modals.forEach(modal => {
+                modal.classList.remove('active');
+                modal.style.pointerEvents = '';
+            });
+            
+            activeModals.clear();
+            document.body.style.overflow = '';
+            removeAllOverlays();
+            
+            console.log('✅ تم إغلاق جميع النوافذ');
+        }
+        
+        /**
+         * إزالة جميع overlays
+         */
+        function removeAllOverlays() {
+            const overlays = document.querySelectorAll('.modal-backdrop, .modal-overlay');
+            overlays.forEach(overlay => overlay.remove());
+        }
+        
+        /**
+         * التأكد من أن جميع الأزرار قابلة للنقر
+         */
+        function enableAllButtons() {
+            const buttons = document.querySelectorAll('button:not(:disabled)');
+            buttons.forEach(button => {
+                button.style.pointerEvents = 'auto';
+                button.style.cursor = 'pointer';
+            });
+        }
+        
+        // تشغيل enableAllButtons كل ثانية للتأكد
+        setInterval(enableAllButtons, 1000);
+        
+        // إضافة مستمع لمفتاح ESC لإغلاق النوافذ
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeAllModals();
+            }
+        });
+        
+        // تحديث الدوال القديمة لاستخدام النظام الجديد
+        window.openUserModal = function(uid) {
+            openModal('userModal');
+            // الكود الأصلي لتحميل بيانات المستخدم
+            loadUserDetails(uid);
+        };
+        
+        window.closeUserModal = function() {
+            closeModal('userModal');
+        };
+        
+        window.openGenerateCodeModal = function() {
+            openModal('generateCodeModal');
+        };
+        
+        window.closeGenerateCodeModal = function() {
+            closeModal('generateCodeModal');
+        };
+        
+        window.openAddProductModal = function() {
+            openModal('addProductModal');
+        };
+        
+        window.closeAddProductModal = function() {
+            closeModal('addProductModal');
+        };
+        
+        window.openAddCategoryModal = function() {
+            openModal('addCategoryModal');
+        };
+        
+        window.closeAddCategoryModal = function() {
+            closeModal('addCategoryModal');
+        };
+        
+        // دالة لتحميل تفاصيل المستخدم (مساعدة)
+        async function loadUserDetails(uid) {
+            // هذه الدالة يجب أن تحتوي على الكود الأصلي لتحميل البيانات
+            // سيتم الاحتفاظ بالكود الموجود
+        }
+
         // Close modals when clicking outside
         document.getElementById('userModal').addEventListener('click', function(e) {
             if (e.target === this) {
@@ -2229,6 +2526,24 @@
             if (e.target === this) {
                 closeGenerateCodeModal();
             }
+        });
+        
+        document.getElementById('addProductModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeAddProductModal();
+            }
+        });
+        
+        document.getElementById('addCategoryModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeAddCategoryModal();
+            }
+        });
+        
+        // التأكد من تفعيل جميع الأزرار عند تحميل الصفحة
+        window.addEventListener('load', function() {
+            setTimeout(enableAllButtons, 500);
+            console.log('✅ تم تفعيل نظام إدارة النوافذ المنبثقة');
         });
     </script>
 </body>

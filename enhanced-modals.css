@@ -305,3 +305,80 @@ input[type="number"]:hover {
         display: none !important;
     }
 }
+
+/* نافذة الإشعارات الموسعة */
+.notifications-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0,0,0,0.25);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.notifications-modal-content {
+  background: var(--theme-bg);
+  color: var(--theme-text-primary);
+  border-radius: 24px;
+  box-shadow: 0 12px 48px rgba(0,0,0,0.22);
+  padding: 2.5rem 2.5rem 2rem 2.5rem;
+  min-width: 520px;
+  max-width: 700px;
+  width: 100%;
+  max-height: 85vh;
+  overflow-y: auto;
+  position: relative;
+  text-align: right;
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+
+.close-modal-btn {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  background: none;
+  border: none;
+  color: var(--theme-text-primary);
+  font-size: 2rem;
+  cursor: pointer;
+  z-index: 10;
+  transition: color 0.2s;
+}
+.close-modal-btn:hover {
+  color: var(--danger-color, #ef4444);
+}
+
+/* أزرار إجراءات الإشعار */
+.notification-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+.notification-read-btn,
+.notification-delete-btn {
+  background: none;
+  border: none;
+  color: var(--theme-text-secondary);
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0.3rem 0.6rem;
+  border-radius: 6px;
+  transition: background 0.2s, color 0.2s;
+}
+.notification-read-btn:hover {
+  background: #e0f7fa;
+  color: var(--primary-color);
+}
+.notification-delete-btn:hover {
+  background: #ffe4e6;
+  color: var(--danger-color, #ef4444);
+}
+/* تمييز الإشعار المقروء */
+.notification-item.read {
+  opacity: 0.6;
+  background: #f3f3f3;
+}

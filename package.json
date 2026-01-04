@@ -1,66 +1,138 @@
 {
-  "name": "legal-management-app",
-  "productName": "تطبيق الإدارة القانونية",
-  "version": "1.1.0",
-  "description": "تطبيق إدارة قانونية متكامل مع مزامنة سحابية",
+  "name": "pos-system-pro",
+  "version": "2.0.3",
+  "description": "نظام نقاط البيع المتقدم المحسن - شركة الإبداع الرقمي",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "build": "npm run build-win",
-    "build-win": "electron-builder --win",
+    "dev": "cross-env NODE_ENV=development electron .",
+    "build": "electron-builder",
     "build-win-portable": "electron-builder --win portable",
-    "build-mac": "electron-builder --mac",
-    "build-linux": "electron-builder --linux"
+    "build-all": "electron-builder -mwl",
+    "postinstall": "electron-builder install-app-deps",
+    "rebuild": "electron-rebuild -f -w better-sqlite3",
+    "clean": "rimraf dist"
   },
-  "author": "الإبداع الرقمي",
+  "keywords": [
+    "pos",
+    "point-of-sale",
+    "invoice",
+    "printing",
+    "electron",
+    "sqlite",
+    "thermal-printer",
+    "installments",
+    "أقساط",
+    "نقاط البيع"
+  ],
+  "author": {
+    "name": "شركة الإبداع الرقمي",
+    "email": "info@digital-creativity.iq",
+    "url": "https://digital-creativity.iq"
+  },
   "license": "MIT",
-  "dependencies": {
-  },
   "devDependencies": {
-    "electron": "^27.0.0",
-    "electron-builder": "^24.6.4"
+    "@electron/rebuild": "^4.0.1",
+    "cross-env": "^7.0.3",
+    "electron": "^28.0.0",
+    "electron-builder": "^24.9.1"
+  },
+  "dependencies": {
+    "better-sqlite3": "^12.2.0",
+    "electron-store": "^8.1.0",
+    "node-json-db": "^2.3.0"
   },
   "build": {
-    "appId": "com.digital-creativity.legal-management",
-    "productName": "تطبيق الإدارة القانونية",
-    "copyright": "Copyright © 2025 الإبداع الرقمي",
+    "appId": "com.digitalcreativity.pos.pro",
+    "productName": "نظام نقاط البيع المتقدم",
+    "copyright": "Copyright © 2025 شركة الإبداع الرقمي - إدارة كرار السعبري",
+    "asar": true,
+    "asarUnpack": [
+      "**/*.node"
+    ],
     "directories": {
-      "output": "dist"
-      },
+      "output": "dist",
+      "buildResources": "build"
+    },
     "files": [
-      "**/*",
-      "!**/*.md",
-      "!**/node_modules/**",
-      "!dist/**"
+      "main.js",
+      "preload.js",
+      "splash.html",
+      "index.html",
+      "yaqoub_logo.png",
+      "firebase-config.js",
+      "enhanced-modals.css",
+      "reports-system.js",
+      "expenses-system.js",
+      "installment-invoice-templates.js",
+      "products-fixes.js",
+      "_sdk/**/*",
+      "database/**/*",
+      "node_modules/**/*",
+      "!**/node_modules/*/{CHANGELOG.md,README.md,README,readme.md,readme}",
+      "!**/node_modules/.bin",
+      "!**/node_modules/*/build",
+      "!**/node_modules/*/test",
+      "!firebase/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "database",
+        "to": "database",
+        "filter": [
+          "**/*"
+        ]
+      }
     ],
     "win": {
-      "target": ["nsis"],
-      "icon": "icon.ico"
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64",
+            "ia32"
+          ]
+        }
+      ],
+      "icon": "build/Gemini_Generated_Image_w319kww319kww319.png",
+      "requestedExecutionLevel": "asInvoker"
     },
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
+      "installerIcon": "build/Gemini_Generated_Image_w319kww319kww319.png",
+      "uninstallerIcon": "build/Gemini_Generated_Image_w319kww319kww319.png",
+      "installerHeaderIcon": "build/Gemini_Generated_Image_w319kww319kww319.png",
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "تطبيق الإدارة القانونية",
-
+      "shortcutName": "نظام نقاط البيع المتقدم",
+      "artifactName": "POS-System-Pro-Setup-${version}.${ext}",
       "deleteAppDataOnUninstall": false,
-      "runAfterFinish": true,
-      "license": "LICENSE.txt",
       "language": "1025",
-      "perMachine": true,
+      "installerLanguages": [
+        "ar_SA",
+        "en_US"
+      ],
+      "license": "LICENSE.txt",
+      "warningsAsErrors": false,
       "allowElevation": true,
-      "menuCategory": true
+      "perMachine": false
     },
-    "mac": {
-      "target": ["dmg"],
-      "icon": "icon.png",
-      "category": "public.app-category.business"
+    "portable": {
+      "artifactName": "POS-System-Pro-Portable-${version}.${ext}"
     },
     "linux": {
-      "target": ["AppImage", "deb"],
-      "icon": "icon.png",
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "icon": "build/icon.png",
       "category": "Office"
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "build/icon.icns",
+      "category": "public.app-category.business"
     }
   }
 }

@@ -265,7 +265,7 @@
             if (product.stock_quantity === 0) {
                 stockStatus = 'نفد المخزون';
                 stockClass = 'text-danger';
-            } else if (product.stock_quantity <= (product.min_stock || 0)) {
+            } else if ((product.min_stock || 0) > 0 && product.stock_quantity <= product.min_stock) {
                 stockStatus = 'مخزون قليل';
                 stockClass = 'text-warning';
             }
@@ -561,8 +561,9 @@
             // بناء HTML للمنتجات
             const productsHTML = filteredProducts.map(product => {
                 const category = allCategories.find(c => c.category_id === product.product_category || c.id === product.product_category);
+                const minStock = product.min_stock || 0;
                 const stockClass = product.stock_quantity === 0 ? 'out-of-stock' : 
-                                  product.stock_quantity <= (product.min_stock || 0) ? 'low-stock' : '';
+                                  (minStock > 0 && product.stock_quantity <= minStock) ? 'low-stock' : '';
                 
                 // استخدام product_id أو id
                 const productIdentifier = product.product_id || product.id;

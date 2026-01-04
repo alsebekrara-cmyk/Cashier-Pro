@@ -1,3 +1,5 @@
+// تعريف مصفوفة المصاريف العامة
+let expensesData = [];
 /**
  * 💰 نظام إدارة المصاريف والمشتريات الشامل
  * شركة الإبداع الرقمي - كرار السعبري
@@ -176,9 +178,10 @@ async function deleteExpense(expenseId) {
             localStorage.setItem('expenses', JSON.stringify(filtered));
         }
         
-        expensesData = expensesData.filter(e => e.id !== expenseId);
-        loadExpenses();
-        updateExpensesStats();
+        expensesData = expensesData.filter(e => e && e.id !== expenseId);
+        await loadExpenses();
+        await updateExpensesStats();
+        if (typeof updateExpensesReports === 'function') await updateExpensesReports();
         showNotification('تم حذف المصروف بنجاح', 'success');
     } catch (error) {
         console.error('خطأ في حذف المصروف:', error);
@@ -447,7 +450,18 @@ async function addPurchaseItemsToProducts(items, supplierName, purchaseDate) {
             const existingProduct = existingProducts.find(p => 
                 p.name && p.name.trim().toLowerCase() === item.name.trim().toLowerCase()
             );
-            
+            // تحقق من الحقول المطلوبة قبل إضافة منتج جديد
+            const requiredFields = ['name', 'price', 'quantity'];
+            let missingFields = [];
+            for (const field of requiredFields) {
+                if (typeof item[field] === 'undefined' || item[field] === null || item[field] === '') {
+                    missingFields.push(field);
+                }
+            }
+            if (missingFields.length > 0) {
+                console.error('❌ لا يمكن إضافة المنتج بسبب نقص البيانات في الحقول التالية:', missingFields.join(', '));
+                continue; // تجاهل هذا المنتج ولا يتم حفظه
+            }
             if (existingProduct) {
                 // تحديث الكمية والسعر للمنتج الموجود
                 existingProduct.stock = (parseFloat(existingProduct.stock) || 0) + item.quantity;
@@ -499,7 +513,6 @@ async function addPurchaseItemsToProducts(items, supplierName, purchaseDate) {
                     existingProducts.push(newProduct);
                     localStorage.setItem('products', JSON.stringify(existingProducts));
                 }
-                
                 console.log('✅ تم إضافة منتج جديد:', newProduct.name);
             }
             

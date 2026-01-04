@@ -33,16 +33,12 @@
         if (!logoSrc.startsWith('data:') && !logoSrc.startsWith('http') && !logoSrc.startsWith('./') && !logoSrc.startsWith('/')) {
             logoSrc = './' + logoSrc;
         }
-
-        // قالب A4 دائمًا
         let receiptWidth = '210mm';
-
-        // إصلاح التاريخ والوقت
         let saleDate = sale.date ? new Date(sale.date) : (sale.timestamp ? new Date(sale.timestamp) : new Date());
         if (typeof saleDate === 'string') saleDate = new Date(saleDate);
-        const dateStr = saleDate.toLocaleDateString('en-GB', { year: 'numeric', month: 'long', day: 'numeric' });
-        const timeStr = saleDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-
+        // التاريخ والوقت بالعربية مع الأرقام بالإنجليزية
+        const dateStr = saleDate.toLocaleDateString('ar-IQ', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' }).replace(/[0-9٠-٩]/g, d => toEnglishDigits(d));
+        const timeStr = saleDate.toLocaleTimeString('ar-IQ', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true }).replace(/[0-9٠-٩]/g, d => toEnglishDigits(d));
         let html = `
         <div style="
             width: ${receiptWidth};
@@ -60,7 +56,6 @@
             text-align: right;
         ">
         `;
-
         // رأس الفاتورة
         html += `
         <div style="text-align: center; margin-bottom: 24px; direction: rtl;">
@@ -73,17 +68,15 @@
         </div>
         <div style="border-top: 2px solid #6366f1; margin: 24px 0 16px 0;"></div>
         `;
-
         // معلومات الفاتورة
         html += `
-        <div style="display: flex; justify-content: flex-start; gap: 48px; margin-bottom: 18px; font-size: 1.1rem; direction: ltr;">
-            <div><b>Invoice No.:</b> ${toEnglishDigits(sale.invoice_id)}</div>
-            <div><b>Date:</b> ${toEnglishDigits(dateStr)}</div>
-            <div><b>Time:</b> ${toEnglishDigits(timeStr)}</div>
+        <div style="display: flex; justify-content: flex-start; gap: 48px; margin-bottom: 18px; font-size: 1.1rem; direction: rtl;">
+            <div><b>رقم الفاتورة:</b> <span dir="ltr">${toEnglishDigits(sale.invoice_id)}</span></div>
+            <div><b>التاريخ:</b> <span dir="rtl">${dateStr}</span></div>
+            <div><b>الوقت:</b> <span dir="rtl">${timeStr}</span></div>
         </div>
         <div style="border-top: 1px dashed #bbb; margin: 18px 0 18px 0;"></div>
         `;
-
         // جدول المنتجات
         let items = sale.items;
         if (typeof items === 'string') {
@@ -95,14 +88,14 @@
         }
         if (items && items.length > 0) {
             html += `
-            <table style="width: 100%; border-collapse: collapse; font-size: 1.1rem; margin: 18px 0; background: #f9fafb; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.03); direction: ltr;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 1.1rem; margin: 18px 0; background: #f9fafb; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.03); direction: rtl;">
             <thead>
                 <tr style="background: #6366f1; color: #fff;">
                 <th style="padding: 12px 0;">#</th>
-                <th style="padding: 12px 0;">Product Name</th>
-                <th style="padding: 12px 0;">Qty</th>
-                <th style="padding: 12px 0;">Unit Price</th>
-                <th style="padding: 12px 0;">Total</th>
+                <th style="padding: 12px 0;">اسم المنتج</th>
+                <th style="padding: 12px 0;">الكمية</th>
+                <th style="padding: 12px 0;">سعر الوحدة</th>
+                <th style="padding: 12px 0;">الإجمالي</th>
                 </tr>
             </thead>
             <tbody>
@@ -111,43 +104,39 @@
                 const name = item.product_name || item.name || '—';
                 const price = item.product_price || item.price || 0;
                 html += `
-            <tr style="background: ${index % 2 === 0 ? '#fff' : '#f3f4f6'}; text-align: center; direction: ltr;">
-                <td style="padding: 10px 0;">${toEnglishDigits(index + 1)}</td>
-                <td style="padding: 10px 0; text-align: left;">${name}</td>
-                <td style="padding: 10px 0;">${toEnglishDigits(item.quantity)}</td>
-                <td style="padding: 10px 0;">${toEnglishDigits(price.toLocaleString('en'))}</td>
-                <td style="padding: 10px 0; font-weight: bold; color: #10b981;">${toEnglishDigits((price * item.quantity).toLocaleString('en'))}</td>
+            <tr style="background: ${index % 2 === 0 ? '#fff' : '#f3f4f6'}; text-align: center; direction: rtl;">
+                <td style="padding: 10px 0;" dir="ltr">${toEnglishDigits(index + 1)}</td>
+                <td style="padding: 10px 0; text-align: right;">${name}</td>
+                <td style="padding: 10px 0;" dir="ltr">${toEnglishDigits(item.quantity)}</td>
+                <td style="padding: 10px 0;" dir="ltr">${toEnglishDigits(price.toLocaleString('en'))}</td>
+                <td style="padding: 10px 0; font-weight: bold; color: #10b981;" dir="ltr">${toEnglishDigits((price * item.quantity).toLocaleString('en'))}</td>
             </tr>
             `;
             });
             html += `</tbody></table>`;
         }
-
         html += `<div style="border-top: 2px solid #6366f1; margin: 24px 0 16px 0;"></div>`;
-
         // الإجمالي بالعربية مع الخصم الإضافي
         const additionalDiscount = sale.additional_discount || 0;
         const totalDiscount = (sale.discount || 0) + additionalDiscount;
-        
         html += `
         <div style="font-size: 1.3rem; font-weight: bold; margin: 32px 0 12px 0; text-align: right; direction: rtl;">
             <div style="display: flex; justify-content: flex-start; gap: 48px; margin-bottom: 10px;">
-            <div><span style="color:#374151;">المجموع الجزئي:</span> <span>${toEnglishDigits((sale.total_amount || 0).toLocaleString('en'))}</span></div>
-            ${sale.discount ? `<div><span style="color:#374151;">الخصم:</span> <span style="color: #10b981;">- ${toEnglishDigits(sale.discount.toLocaleString('en'))}</span></div>` : ''}
-            ${additionalDiscount > 0 ? `<div><span style="color:#374151;">خصم إضافي:</span> <span style="color: #10b981;">- ${toEnglishDigits(additionalDiscount.toLocaleString('en'))}</span></div>` : ''}
+            <div><span style="color:#374151;">المجموع الجزئي:</span> <span dir="ltr">${toEnglishDigits((sale.total_amount || 0).toLocaleString('en'))}</span></div>
+            ${sale.discount ? `<div><span style="color:#374151;">الخصم:</span> <span style="color: #10b981;" dir="ltr">- ${toEnglishDigits(sale.discount.toLocaleString('en'))}</span></div>` : ''}
+            ${additionalDiscount > 0 ? `<div><span style="color:#374151;">خصم إضافي:</span> <span style="color: #10b981;" dir="ltr">- ${toEnglishDigits(additionalDiscount.toLocaleString('en'))}</span></div>` : ''}
             </div>
             ${totalDiscount > 0 ? `<div style="display: flex; justify-content: flex-start; gap: 48px; margin-bottom: 10px; padding: 8px; background: #f0fdf4; border-radius: 6px;">
-                <div><span style="color:#15803d;">إجمالي الخصم:</span> <span style="color: #15803d; font-weight: bold;">- ${toEnglishDigits(totalDiscount.toLocaleString('en'))}</span></div>
+                <div><span style="color:#15803d;">إجمالي الخصم:</span> <span style="color: #15803d; font-weight: bold;" dir="ltr">- ${toEnglishDigits(totalDiscount.toLocaleString('en'))}</span></div>
             </div>` : ''}
             <div style="display: flex; justify-content: flex-start; gap: 48px; border-top: 2px solid #6366f1; padding-top: 12px; margin-top: 8px;">
-            <div><span style="color:#2d3748;">الإجمالي النهائي:</span> <span style="color:#e11d48; font-size:1.5rem;">${toEnglishDigits((sale.final_total || sale.total_amount || 0).toLocaleString('en'))}</span></div>
+            <div><span style="color:#2d3748;">الإجمالي النهائي:</span> <span style="color:#e11d48; font-size:1.5rem;" dir="ltr">${toEnglishDigits((sale.final_total || sale.total_amount || 0).toLocaleString('en'))}</span></div>
             </div>
         </div>
         `;
-
         // الملاحظات
         const notes = [
-            'المبلغ الموجود في الإجمالي النهائي<br>هو وصل أمانة عليكم.',
+            'المبلغ الموجود في الإجمالي النهائي هو وصل أمانة عليكم.',
             'السعر محمي لمدة 24 ساعة من وقت الشراء.',
             'المباع لا يرجع ولا يبدل.',
             'الخطأ والسهو مرجوع للطرفين.',
@@ -159,11 +148,10 @@
         <div style="margin-top:28px; padding:16px 12px; background:#fffbe7; border-radius:8px; border:1px solid #ffe082;">
             <div style="font-size:1.05rem; font-weight:bold; color:#c62828; margin-bottom:6px; text-align:right; direction:rtl;">ملاحظات هامة:</div>
             <ol style="font-size:1rem; padding-right:22px; margin:0; text-align:right; direction:rtl;">
-            ${notes.map(n => `<li>${toEnglishDigits(n)}</li>`).join('')}
+            ${notes.map(n => `<li>${n}</li>`).join('')}
             </ol>
         </div>
         `;
-
         // التذييل بالعربية
         html += `<div style="text-align: center; margin-top: 40px; font-size: 1.1rem; color: #666; direction: rtl;">
         <p style="margin: 4px 0;">شكراً لتعاملكم مع معرض يعقوب للأجهزة الكهربائية</p>

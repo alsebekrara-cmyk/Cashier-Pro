@@ -29954,7 +29954,7 @@ body {
         const customerName = document.getElementById('manualDebtCustomerName').value.trim();
         const customerPhone = document.getElementById('manualDebtCustomerPhone').value.trim();
         const customerAddress = document.getElementById('manualDebtCustomerAddress').value.trim();
-        const totalAmount = parseFloat(document.getElementById('manualDebtTotalAmount').value) || 0;
+        const originalSubtotal = parseFloat(document.getElementById('manualDebtTotalAmount').value) || 0;
         const downPayment = parseFloat(document.getElementById('manualDebtDownPayment').value) || 0;
         const months = parseInt(document.getElementById('manualDebtMonths').value) || 1;
         const additionalAmount = parseFloat(document.getElementById('manualDebtAdditionalAmount').value) || 0;
@@ -29973,7 +29973,7 @@ body {
             return;
         }
         
-        if (totalAmount <= 0) {
+        if (originalSubtotal <= 0) {
             alert('⚠️ يرجى إدخال مبلغ الدين');
             return;
         }
@@ -29983,9 +29983,11 @@ body {
             return;
         }
         
-        // حساب الأقساط
-        const remaining = totalAmount - downPayment + additionalAmount;
-        const monthly = remaining / months;
+        // حساب الأقساط بالطريقة الصحيحة (مطابقة لنظام الأقساط)
+        const totalAmount = originalSubtotal + additionalAmount;  // المبلغ الإجمالي الكلي
+        const remainingAmount = totalAmount - downPayment;        // المبلغ المتبقي بعد الدفعة المقدمة
+        const monthlyAmount = remainingAmount / months;           // القسط الشهري
+        
         const installments = [];
         const startDateObj = startDate ? new Date(startDate) : new Date();
         
@@ -29995,7 +29997,7 @@ body {
             
             installments.push({
                 month: i + 1,
-                amount: monthly,
+                amount: monthlyAmount,
                 due_date: dueDate.toISOString(),
                 status: 'pending',
                 paid_date: null,
@@ -30005,29 +30007,54 @@ body {
         
         const currentDate = new Date().toISOString();
         const debtId = 'debt_' + Date.now();
+        const invoiceId = 'INV-' + Date.now();
         
-        // إنشاء الدين الجديد
+        // إنشاء الدين الجديد (مطابق لنظام الأقساط)
         const newDebt = {
             type: 'debt',
             id: debtId,
             debt_id: debtId,
-            invoice_id: 'INV-' + Date.now(),
+            invoice_id: invoiceId,
             customer_name: customerName,
             customer_phone: customerPhone,
             customer_address: customerAddress,
             date: document.getElementById('manualDebtDate').value || new Date().toISOString().split('T')[0],
+            
+            // المبالغ بالطريقة الصحيحة
+            subtotal: originalSubtotal,          // المبلغ الأصلي
+            final_total: remainingAmount,        // المبلغ النهائي المتبقي
+            
+            // تفاصيل الأقساط
+            installment_details: {
+                original_subtotal: originalSubtotal,
+                additional_amount: additionalAmount,
+                total_amount: totalAmount,
+                down_payment: downPayment,
+                remaining_amount: remainingAmount,
+                installment_months: months,
+                monthly_amount: monthlyAmount,
+                start_date: startDate || new Date().toISOString().split('T')[0]
+            },
+            
+            // للتوافق مع الأنظمة القديمة
             total_amount: totalAmount,
             down_payment: downPayment,
             additional_amount: additionalAmount,
-            remaining_amount: remaining,
+            remaining_amount: remainingAmount,
             paid_amount: downPayment,
             installment_months: months,
-            monthly_amount: monthly,
+            monthly_amount: monthlyAmount,
             start_date: startDate || new Date().toISOString().split('T')[0],
+            
             notes: notes,
-            products: productsToSave,
+            items: JSON.stringify(productsToSave),  // حفظ كـ JSON للتوافق
+            products: productsToSave,               // حفظ كـ array
             installments: installments,
+            
+            payment_type: 'أقساط',
+            payment_method: 'أقساط',
             status: 'نشط',
+            
             created_at: currentDate,
             updated_at: currentDate,
             timestamp: currentDate
@@ -30087,7 +30114,14 @@ body {
             closeAddManualDebtModal();
             renderDebtsTable();
             
-            alert('✅ تم حفظ الدين بنجاح');
+            // عرض رسالة نجاح مع خيار طباعة الفاتورة
+            const printInvoice = confirm('✅ تم حفظ الدين بنجاح!\n\nهل تريد طباعة الفاتورة الآن؟');
+            
+            if (printInvoice) {
+                // طباعة الفاتورة
+                showManualDebtInvoice(newDebt);
+            }
+            
             console.log('✅ تمت عملية الحفظ بنجاح');
             
         } catch (error) {
@@ -30216,13 +30250,94 @@ body {
         const months = parseInt(document.getElementById('manualDebtMonths').value) || 1;
         const additionalAmount = parseFloat(document.getElementById('manualDebtAdditionalAmount').value) || 0;
         
-        const remaining = totalAmount - downPayment + additionalAmount;
-        const monthly = remaining / months;
-        const finalTotal = totalAmount + additionalAmount;
+        // حساب بالطريقة الصحيحة (مطابقة للإصلاحات)
+        const totalAmountWithAddition = totalAmount + additionalAmount;  // المبلغ الإجمالي الكلي
+        const remaining = totalAmountWithAddition - downPayment;         // المبلغ المتبقي
+        const monthly = remaining / months;                              // القسط الشهري
         
         document.getElementById('manualDebtRemainingAmount').textContent = remaining.toLocaleString() + ' دينار';
         document.getElementById('manualDebtMonthlyAmount').textContent = monthly.toLocaleString() + ' دينار';
-        document.getElementById('manualDebtFinalTotal').textContent = finalTotal.toLocaleString() + ' دينار';
+        document.getElementById('manualDebtFinalTotal').textContent = totalAmountWithAddition.toLocaleString() + ' دينار';
+    }
+    
+    // دالة عرض وطباعة فاتورة الدين اليدوي
+    function showManualDebtInvoice(debtData) {
+        const settings = loadSettings();
+        
+        // تحويل المنتجات إلى الصيغة المطلوبة
+        let items = [];
+        try {
+            if (debtData.items) {
+                items = typeof debtData.items === 'string' ? JSON.parse(debtData.items) : debtData.items;
+            } else if (debtData.products) {
+                items = debtData.products;
+            }
+            
+            // تحويل إلى الصيغة المطلوبة للفاتورة
+            items = items.map(item => ({
+                product_name: item.name || item.product_name,
+                product_price: item.price || item.product_price,
+                quantity: item.qty || item.quantity || 1
+            }));
+        } catch (e) {
+            console.error('خطأ في تحليل المنتجات:', e);
+            items = [];
+        }
+        
+        // إعداد بيانات الفاتورة
+        const invoiceData = {
+            ...debtData,
+            items: items,
+            payment_type: 'أقساط',
+            payment_method: 'أقساط'
+        };
+        
+        // إنشاء HTML للفاتورة
+        const invoiceHTML = generateInstallmentInvoiceReceipt(invoiceData, settings);
+        
+        // فتح نافذة الطباعة
+        const printWindow = window.open('', '_blank');
+        if (printWindow) {
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html dir="rtl" lang="ar">
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>فاتورة دين - ${debtData.invoice_id}</title>
+                    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+                    <style>
+                        * { margin: 0; padding: 0; box-sizing: border-box; }
+                        body { font-family: 'Cairo', sans-serif; background: #fff; direction: rtl; }
+                        @media print {
+                            body { margin: 0; }
+                            .no-print { display: none !important; }
+                            @page { size: A4; margin: 0; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    ${invoiceHTML}
+                    <div class="no-print" style="text-align: center; padding: 20px; background: #f5f5f5;">
+                        <button onclick="window.print()" style="padding: 12px 30px; background: #6366f1; color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; font-family: 'Cairo', sans-serif; margin: 0 10px;">
+                            <i class="fas fa-print"></i> طباعة الفاتورة
+                        </button>
+                        <button onclick="window.close()" style="padding: 12px 30px; background: #dc2626; color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; font-family: 'Cairo', sans-serif; margin: 0 10px;">
+                            <i class="fas fa-times"></i> إغلاق
+                        </button>
+                    </div>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+            
+            // طباعة تلقائية بعد ثانية
+            setTimeout(() => {
+                printWindow.print();
+            }, 500);
+        } else {
+            alert('⚠️ تعذر فتح نافذة الطباعة. يرجى التأكد من تفعيل النوافذ المنبثقة.');
+        }
     }
     
     // دوال مماثلة لنافذة التعديل

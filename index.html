@@ -20092,14 +20092,6 @@ console.log(`
                 }, 100);
             }
             
-            // تحديث إحصائيات صفحة الديون
-            if (pageId === 'debts') {
-                setTimeout(() => {
-                    renderDebtsTable();
-                    updateDebtsStatistics();
-                }, 100);
-            }
-            
             // تحديث واجهة الاشتراك السحابي عند فتح صفحة الحساب
             if (pageId === 'settings-account') {
                 setTimeout(() => {
@@ -20878,32 +20870,34 @@ console.log(`
             }).join('');
             
             // تحديث الإحصائيات
-            updateDebtsStatistics(filteredDebts);
+            updateDebtsStats();
         }
         
-        // دالة تحديث إحصائيات الديون
-        function updateDebtsStatistics(debts = null) {
-            const debtsToCount = debts || debtsData;
+        // 🔥 تحديث إحصائيات الديون
+        function updateDebtsStats() {
+            console.log('🔄 تحديث إحصائيات الديون...');
             
-            // حساب إجمالي الديون
+            // حساب الإحصائيات
             let totalDebtsAmount = 0;
-            const uniqueCustomers = new Set();
-            let activeDebts = 0;
-            let overdueDebts = 0;
-            let paidDebts = 0;
+            let uniqueCustomers = new Set();
+            let overdueCount = 0;
+            let paidCount = 0;
+            let activeCount = 0;
             
-            debtsToCount.forEach(debt => {
-                // إضافة العميل إلى القائمة
+            debtsData.forEach(debt => {
+                // حساب الإجمالي
+                const debtTotal = debt.total_amount || debt.final_total || 0;
+                totalDebtsAmount += debtTotal;
+                
+                // إضافة العميل إلى المجموعة الفريدة (حسب الهاتف)
                 if (debt.customer_phone) {
                     uniqueCustomers.add(debt.customer_phone);
-                } else if (debt.customer_name) {
-                    uniqueCustomers.add(debt.customer_name);
                 }
                 
-                // حساب المبلغ المتبقي
+                // حساب حالة الدين
                 let paidAmount = 0;
-                let paidMonths = 0;
                 let totalMonths = 0;
+                let paidMonths = 0;
                 
                 if (debt.installments && Array.isArray(debt.installments) && debt.installments.length > 0) {
                     totalMonths = debt.installments.length;
@@ -20913,77 +20907,58 @@ console.log(`
                             paidMonths++;
                         }
                     });
-                } else {
+                } else if (debt.paid_amount !== undefined && debt.paid_amount !== null) {
                     paidAmount = parseFloat(debt.paid_amount) || 0;
                     totalMonths = debt.installment_months || 0;
                 }
                 
-                const totalAmount = debt.total_amount || debt.final_total || 0;
-                const remainingAmount = Math.max(0, totalAmount - paidAmount);
                 const isPaid = paidMonths === totalMonths && totalMonths > 0;
                 
-                // إضافة إلى الإجمالي فقط إذا لم يكن مسدداً بالكامل
-                if (!isPaid) {
-                    totalDebtsAmount += remainingAmount;
+                // حساب التأخير
+                let isOverdue = false;
+                if (debt.installments && Array.isArray(debt.installments) && debt.installments.length > 0) {
+                    const unpaidOverdue = debt.installments.filter(inst => {
+                        if (inst.status === 'paid') return false;
+                        const dueDate = new Date(inst.due_date);
+                        return dueDate < new Date();
+                    });
+                    isOverdue = unpaidOverdue.length > 0;
+                } else {
+                    const checkDate = debt.due_date || debt.start_date || debt.date;
+                    if (checkDate) {
+                        const dueDate = new Date(checkDate);
+                        const remainingAmount = debtTotal - paidAmount;
+                        isOverdue = dueDate < new Date() && remainingAmount > 0 && !isPaid;
+                    }
                 }
                 
-                // تحديد الحالة
+                // تحديث العدادات
                 if (isPaid) {
-                    paidDebts++;
+                    paidCount++;
+                } else if (isOverdue) {
+                    overdueCount++;
                 } else {
-                    // حساب التأخير
-                    let isOverdue = false;
-                    if (debt.installments && Array.isArray(debt.installments) && debt.installments.length > 0) {
-                        const unpaidOverdue = debt.installments.filter(inst => {
-                            if (inst.status === 'paid') return false;
-                            const dueDate = new Date(inst.due_date);
-                            return dueDate < new Date();
-                        });
-                        isOverdue = unpaidOverdue.length > 0;
-                    } else {
-                        const checkDate = debt.due_date || debt.start_date || debt.date;
-                        if (checkDate) {
-                            const dueDate = new Date(checkDate);
-                            isOverdue = dueDate < new Date() && remainingAmount > 0;
-                        }
-                    }
-                    
-                    if (isOverdue) {
-                        overdueDebts++;
-                    } else {
-                        activeDebts++;
-                    }
+                    activeCount++;
                 }
             });
             
-            // تحديث العناصر في الصفحة
+            // تحديث العناصر في الواجهة
             const totalDebtsEl = document.getElementById('totalDebts');
             const debtCustomersEl = document.getElementById('debtCustomers');
             const overdueDebtsEl = document.getElementById('overdueDebts');
             const paidDebtsEl = document.getElementById('paidDebts');
             
-            if (totalDebtsEl) {
-                totalDebtsEl.textContent = formatCurrency(totalDebtsAmount);
-            }
+            if (totalDebtsEl) totalDebtsEl.textContent = toEnglishDigits(formatCurrency(totalDebtsAmount));
+            if (debtCustomersEl) debtCustomersEl.textContent = toEnglishDigits(uniqueCustomers.size);
+            if (overdueDebtsEl) overdueDebtsEl.textContent = toEnglishDigits(overdueCount);
+            if (paidDebtsEl) paidDebtsEl.textContent = toEnglishDigits(paidCount);
             
-            if (debtCustomersEl) {
-                debtCustomersEl.textContent = uniqueCustomers.size.toLocaleString();
-            }
-            
-            if (overdueDebtsEl) {
-                overdueDebtsEl.textContent = overdueDebts.toLocaleString();
-            }
-            
-            if (paidDebtsEl) {
-                paidDebtsEl.textContent = paidDebts.toLocaleString();
-            }
-            
-            console.log('📊 إحصائيات الديون:', {
-                totalAmount: totalDebtsAmount,
+            console.log('✅ الإحصائيات:', {
+                total: totalDebtsAmount,
                 customers: uniqueCustomers.size,
-                active: activeDebts,
-                overdue: overdueDebts,
-                paid: paidDebts
+                overdue: overdueCount,
+                paid: paidCount,
+                active: activeCount
             });
         }
         
@@ -21006,6 +20981,7 @@ console.log(`
             }
             
             renderDebtsTable();
+            updateDebtsStats();
             
             // إظهار رسالة توضيحية
             const filterMessages = {
@@ -25799,180 +25775,111 @@ if (typeof window !== 'undefined') {
             
             const debt = window.currentDebt;
             
-            console.log('📋 عرض تفاصيل الفاتورة للدين:', debt);
+            // جمع جميع الفواتير المرتبطة
+            const invoiceIds = debt.linked_invoices || [debt.invoice_id];
+            console.log('📋 الفواتير المرتبطة:', invoiceIds);
             
-            // التحقق من وجود منتجات مباشرة في الدين (للديون اليدوية)
-            let items = [];
+            // البحث عن جميع الفواتير
+            const allInvoices = invoiceIds.map(invoiceId => {
+                const sale = salesData.find(s => s.invoice_id === invoiceId);
+                return sale;
+            }).filter(sale => sale); // إزالة القيم الفارغة
             
-            // المحاولة 1: منتجات مباشرة في الدين
-            if (debt.products && Array.isArray(debt.products)) {
-                items = debt.products.map(p => ({
-                    product_name: p.name || p.product_name,
-                    product_price: p.price || p.product_price,
-                    quantity: p.qty || p.quantity || 1
-                }));
-                console.log('✅ وجدت منتجات مباشرة في الدين:', items);
-            }
-            // المحاولة 2: items كـ JSON string
-            else if (debt.items && typeof debt.items === 'string') {
-                try {
-                    const parsed = JSON.parse(debt.items);
-                    items = parsed.map(p => ({
-                        product_name: p.name || p.product_name,
-                        product_price: p.price || p.product_price,
-                        quantity: p.qty || p.quantity || 1
-                    }));
-                    console.log('✅ وجدت منتجات من items (JSON):', items);
-                } catch (e) {
-                    console.error('❌ خطأ في تحليل items:', e);
+            console.log('✅ الفواتير التي تم العثور عليها:', allInvoices.length);
+            
+            // 🔥 إصلاح جديد: إذا لم توجد فواتير، عرض المنتجات من كائن الدين نفسه
+            if (allInvoices.length === 0) {
+                console.log('⚠️ لا توجد فواتير مرتبطة، سيتم عرض المنتجات من الدين مباشرة');
+                
+                // محاولة الحصول على المنتجات من الدين
+                let debtProducts = [];
+                if (debt.products && Array.isArray(debt.products)) {
+                    debtProducts = debt.products;
+                } else if (debt.items) {
+                    try {
+                        debtProducts = typeof debt.items === 'string' ? JSON.parse(debt.items) : debt.items;
+                    } catch (e) {
+                        console.error('فشل تحليل المنتجات:', e);
+                    }
                 }
-            }
-            // المحاولة 3: items كـ array
-            else if (debt.items && Array.isArray(debt.items)) {
-                items = debt.items.map(p => ({
-                    product_name: p.name || p.product_name,
-                    product_price: p.price || p.product_price,
-                    quantity: p.qty || p.quantity || 1
-                }));
-                console.log('✅ وجدت منتجات من items (array):', items);
-            }
-            // المحاولة 4: البحث في الفواتير المرتبطة
-            else {
-                const invoiceIds = debt.linked_invoices || (debt.invoice_id ? [debt.invoice_id] : []);
-                console.log('📋 الفواتير المرتبطة:', invoiceIds);
                 
-                const allInvoices = invoiceIds.map(invoiceId => {
-                    const sale = salesData.find(s => s.invoice_id === invoiceId);
-                    return sale;
-                }).filter(sale => sale);
+                console.log('📦 المنتجات من الدين:', debtProducts);
                 
-                if (allInvoices.length > 0 && relatedSale) {
-                    // استخدام الكود القديم للفواتير المرتبطة
-                    renderLegacyInvoiceDetails(container, allInvoices);
+                if (debtProducts.length === 0) {
+                    container.innerHTML = '<p style="text-align: center; color: var(--theme-text-secondary); padding: 20px;">لا توجد فواتير أو منتجات مرتبطة</p>';
                     return;
                 }
-            }
-            
-            // إذا لم نجد منتجات
-            if (items.length === 0) {
+                
+                // إنشاء HTML لعرض المنتجات
+                const itemsHTML = debtProducts.map(item => {
+                    const price = item.product_price || item.price || 0;
+                    const quantity = item.quantity || 1;
+                    const total = quantity * price;
+                    return `
+                    <tr>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <i class="fas fa-box"></i>
+                                ${item.product_name || item.name || 'منتج'}
+                            </div>
+                        </td>
+                        <td style="text-align: center;">${quantity}</td>
+                        <td>${formatCurrency(price)}</td>
+                        <td style="font-weight: bold; color: var(--primary-color);">${formatCurrency(total)}</td>
+                    </tr>
+                    `;
+                }).join('');
+                
+                // عرض بطاقة الدين اليدوي
                 container.innerHTML = `
-                    <div style="text-align: center; padding: 40px; color: var(--theme-text-secondary);">
-                        <i class="fas fa-inbox" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.3;"></i>
-                        <p>لا توجد منتجات مرتبطة بهذا الدين</p>
-                    </div>
-                `;
-                return;
-            }
-            
-            // عرض الفاتورة للدين اليدوي
-            const installmentDetails = debt.installment_details || {};
-            const originalSubtotal = installmentDetails.original_subtotal || debt.subtotal || 0;
-            const additionalAmount = installmentDetails.additional_amount || debt.additional_amount || 0;
-            const totalAmount = installmentDetails.total_amount || (originalSubtotal + additionalAmount);
-            const downPayment = installmentDetails.down_payment || debt.down_payment || 0;
-            const remainingAmount = installmentDetails.remaining_amount || debt.remaining_amount || (totalAmount - downPayment);
-            const monthlyAmount = installmentDetails.monthly_amount || debt.monthly_amount || 0;
-            const installmentMonths = installmentDetails.installment_months || debt.installment_months || 12;
-            const startDate = installmentDetails.start_date || debt.start_date || debt.date;
-            
-            // حساب المجموع الفرعي من المنتجات
-            const subtotalFromItems = items.reduce((sum, item) => {
-                const price = parseFloat(item.product_price) || 0;
-                const qty = parseFloat(item.quantity) || 1;
-                return sum + (price * qty);
-            }, 0);
-            
-            console.log('💰 الحسابات:', {
-                subtotalFromItems,
-                originalSubtotal,
-                additionalAmount,
-                totalAmount,
-                downPayment,
-                remainingAmount,
-                monthlyAmount
-            });
-            
-            // بناء HTML للفاتورة
-            const itemsHTML = items.map(item => {
-                const price = parseFloat(item.product_price) || 0;
-                const quantity = parseFloat(item.quantity) || 1;
-                const total = price * quantity;
-                
-                return `
-                <tr>
-                    <td>
-                        <div style="display: flex; align-items: center; gap: 0.5rem;">
-                            <i class="fas fa-box" style="color: var(--primary-color);"></i>
-                            <span style="font-weight: 500;">${item.product_name || 'منتج'}</span>
+                    <div class="invoice-card" style="background: var(--theme-bg-secondary); padding: 20px; border-radius: 12px; border: 2px solid var(--primary-color);">
+                        <!-- شارة دين يدوي -->
+                        <div style="display: inline-block; background: var(--primary-color); color: white; padding: 0.4rem 1rem; border-radius: 20px; font-size: 0.85rem; font-weight: 600; margin-bottom: 15px;">
+                            <i class="fas fa-hand-holding-usd"></i>
+                            دين يدوي
                         </div>
-                    </td>
-                    <td style="text-align: center;">${quantity}</td>
-                    <td style="text-align: right;">${formatCurrency(price)}</td>
-                    <td style="text-align: right; font-weight: bold; color: var(--primary-color);">${formatCurrency(total)}</td>
-                </tr>
-                `;
-            }).join('');
-            
-            container.innerHTML = `
-                <!-- رأس الفاتورة -->
-                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 12px 12px 0 0; margin-bottom: 0;">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <div>
-                            <h3 style="margin: 0 0 0.5rem 0; font-size: 1.3rem;">
-                                <i class="fas fa-file-invoice"></i>
-                                فاتورة دين - ${debt.invoice_id || 'غير محدد'}
-                            </h3>
-                            <p style="margin: 0; opacity: 0.9; font-size: 0.9rem;">
-                                التاريخ: ${debt.date ? new Date(debt.date).toLocaleDateString('ar-IQ') : 'غير محدد'}
-                            </p>
-                        </div>
-                        <button onclick="printDebtInvoice('${debt.id || debt.debt_id}')" 
-                                class="btn btn-light" 
-                                style="background: rgba(255,255,255,0.2); color: white; border: 2px solid rgba(255,255,255,0.3);">
-                            <i class="fas fa-print"></i> طباعة الفاتورة
-                        </button>
-                    </div>
-                </div>
-                
-                <!-- محتوى الفاتورة -->
-                <div style="background: var(--theme-bg-secondary); padding: 20px; border-radius: 0 0 12px 12px; border: 2px solid #667eea; border-top: none;">
-                    
-                    <!-- معلومات العميل -->
-                    <div style="background: var(--theme-bg-primary); padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-                        <h4 style="margin: 0 0 10px 0; color: var(--primary-color); font-size: 1.1rem;">
-                            <i class="fas fa-user"></i> معلومات العميل
-                        </h4>
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;">
+                        
+                        <!-- معلومات الدين -->
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px;">
                             <div>
-                                <span style="color: var(--theme-text-secondary); font-size: 0.9rem;">الاسم:</span>
-                                <strong style="display: block; margin-top: 3px;">${debt.customer_name || 'غير محدد'}</strong>
+                                <div style="color: var(--theme-text-secondary); font-size: var(--font-size-sm);">
+                                    <i class="fas fa-hashtag"></i> رقم المرجع
+                                </div>
+                                <div style="font-size: var(--font-size-lg); font-weight: bold; margin-top: 5px; color: var(--primary-color);">
+                                    ${debt.invoice_id || debt.id}
+                                </div>
                             </div>
                             <div>
-                                <span style="color: var(--theme-text-secondary); font-size: 0.9rem;">الهاتف:</span>
-                                <strong style="display: block; margin-top: 3px;">${debt.customer_phone || 'غير محدد'}</strong>
+                                <div style="color: var(--theme-text-secondary); font-size: var(--font-size-sm);">
+                                    <i class="fas fa-calendar"></i> تاريخ الدين
+                                </div>
+                                <div style="font-size: var(--font-size-base); font-weight: 600; margin-top: 5px;">
+                                    ${new Date(debt.date || debt.timestamp).toLocaleDateString('ar-IQ', {
+                                        year: 'numeric',
+                                        month: 'long',
+                                        day: 'numeric'
+                                    })}
+                                </div>
                             </div>
-                            ${debt.customer_address ? `
                             <div>
-                                <span style="color: var(--theme-text-secondary); font-size: 0.9rem;">العنوان:</span>
-                                <strong style="display: block; margin-top: 3px;">${debt.customer_address}</strong>
+                                <div style="color: var(--theme-text-secondary); font-size: var(--font-size-sm);">
+                                    <i class="fas fa-credit-card"></i> طريقة الدفع
+                                </div>
+                                <div style="font-size: var(--font-size-base); font-weight: 500; margin-top: 5px;">
+                                    <i class="fas fa-calendar-alt"></i> أقساط
+                                </div>
                             </div>
-                            ` : ''}
                         </div>
-                    </div>
-                    
-                    <!-- جدول المنتجات -->
-                    <div style="margin-bottom: 20px;">
-                        <h4 style="margin: 0 0 15px 0; color: var(--primary-color); font-size: 1.1rem;">
-                            <i class="fas fa-shopping-cart"></i> المنتجات
-                        </h4>
-                        <div class="table-container" style="border-radius: 8px; overflow: hidden;">
-                            <table class="table" style="margin: 0;">
+                        
+                        <!-- جدول المنتجات -->
+                        <div class="table-container" style="margin-top: 15px;">
+                            <table class="table">
                                 <thead>
-                                    <tr style="background: var(--primary-color); color: white;">
-                                        <th style="padding: 12px;">المنتج</th>
-                                        <th style="padding: 12px; text-align: center;">الكمية</th>
-                                        <th style="padding: 12px; text-align: right;">السعر</th>
-                                        <th style="padding: 12px; text-align: right;">الإجمالي</th>
+                                    <tr>
+                                        <th>المنتج</th>
+                                        <th style="text-align: center;">الكمية</th>
+                                        <th>السعر</th>
+                                        <th>الإجمالي</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -25980,79 +25887,112 @@ if (typeof window !== 'undefined') {
                                 </tbody>
                             </table>
                         </div>
+                        
+                        <!-- ملخص الدين -->
+                        <div style="margin-top: 15px; padding: 15px; background: var(--theme-bg-card); border-radius: 8px;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                <span style="color: var(--theme-text-secondary);">المجموع الفرعي:</span>
+                                <span style="font-weight: 600;">${formatCurrency(debt.subtotal || 0)}</span>
+                            </div>
+                            ${debt.additional_amount ? `
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px; color: var(--warning-color);">
+                                <span>المبلغ الإضافي:</span>
+                                <span style="font-weight: 600;">+${formatCurrency(debt.additional_amount)}</span>
+                            </div>
+                            ` : ''}
+                            ${debt.down_payment ? `
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px; color: var(--success-color);">
+                                <span>الدفعة المقدمة:</span>
+                                <span style="font-weight: 600;">-${formatCurrency(debt.down_payment)}</span>
+                            </div>
+                            ` : ''}
+                            ${debt.installment_months ? `
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                <span style="color: var(--theme-text-secondary);">عدد الأقساط:</span>
+                                <span style="font-weight: 600;">${debt.installment_months} شهر</span>
+                            </div>
+                            ` : ''}
+                            ${debt.monthly_amount ? `
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                <span style="color: var(--theme-text-secondary);">القسط الشهري:</span>
+                                <span style="font-weight: 600;">${formatCurrency(debt.monthly_amount)}</span>
+                            </div>
+                            ` : ''}
+                            ${debt.start_date ? `
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                <span style="color: var(--theme-text-secondary);">تاريخ بداية الأقساط:</span>
+                                <span style="font-weight: 600;">${new Date(debt.start_date).toLocaleDateString('en-GB')}</span>
+                            </div>
+                            ` : ''}
+                            ${debt.notes ? `
+                            <div style="margin-top: 12px; padding: 10px; background: var(--theme-bg-secondary); border-radius: 6px;">
+                                <div style="color: var(--theme-text-secondary); font-size: var(--font-size-sm); margin-bottom: 5px;">
+                                    <i class="fas fa-sticky-note"></i> ملاحظات:
+                                </div>
+                                <div style="font-size: var(--font-size-base);">
+                                    ${debt.notes}
+                                </div>
+                            </div>
+                            ` : ''}
+                            <div style="display: flex; justify-content: space-between; padding-top: 10px; border-top: 2px solid var(--primary-color); font-size: var(--font-size-lg); font-weight: bold; color: var(--primary-color);">
+                                <span>المبلغ المتبقي:</span>
+                                <span>${formatCurrency(debt.remaining_amount || debt.final_total || 0)}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+            
+            // بناء HTML لكل فاتورة
+            const invoicesHTML = allInvoices.map((sale, index) => {
+                // التأكد من أن items مصفوفة
+                let items = [];
+                if (sale.items && Array.isArray(sale.items)) {
+                    items = sale.items;
+                } else if (typeof sale.items === 'string') {
+                    try {
+                        items = JSON.parse(sale.items);
+                    } catch (e) {
+                        items = [];
+                    }
+                }
+                
+                const itemsHTML = items.length > 0 ? items.map(item => {
+                    const price = item.product_price || item.price || 0;
+                    const quantity = item.quantity || 1;
+                    const total = quantity * price;
+                    return `
+                    <tr>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <i class="fas fa-box"></i>
+                                ${item.product_name || item.name || 'منتج'}
+                            </div>
+                        </td>
+                        <td style="text-align: center;">${quantity}</td>
+                        <td>${formatCurrency(price)}</td>
+                        <td style="font-weight: bold; color: var(--primary-color);">${formatCurrency(total)}</td>
+                    </tr>
+                    `;
+                }).join('') : '<tr><td colspan="4" style="text-align: center; padding: 20px; color: var(--theme-text-secondary);">لا توجد منتجات</td></tr>';
+                
+                const isFirst = index === 0;
+                const badgeColor = isFirst ? 'var(--primary-color)' : 'var(--warning-color)';
+                const badgeText = isFirst ? 'الفاتورة الأصلية' : `فاتورة مضافة #${index}`;
+                
+                return `
+                <div class="invoice-card" style="background: var(--theme-bg-secondary); padding: 20px; border-radius: 12px; margin-bottom: 20px; border: 2px solid ${badgeColor};">
+                    <!-- شارة الفاتورة -->
+                    <div style="display: inline-block; background: ${badgeColor}; color: white; padding: 0.4rem 1rem; border-radius: 20px; font-size: 0.85rem; font-weight: 600; margin-bottom: 15px;">
+                        <i class="fas ${isFirst ? 'fa-file-invoice' : 'fa-plus-circle'}"></i>
+                        ${badgeText}
                     </div>
                     
-                    <!-- تفاصيل الأقساط -->
-                    <div style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1)); padding: 20px; border-radius: 12px; border: 2px solid rgba(99, 102, 241, 0.3);">
-                        <h4 style="margin: 0 0 20px 0; color: var(--primary-color); font-size: 1.2rem; text-align: center;">
-                            <i class="fas fa-calculator"></i> تفاصيل الأقساط
-                        </h4>
-                        
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 20px;">
-                            <div style="background: white; padding: 15px; border-radius: 8px; text-align: center;">
-                                <div style="color: var(--theme-text-secondary); font-size: 0.85rem; margin-bottom: 5px;">المبلغ الأصلي</div>
-                                <div style="font-size: 1.3rem; font-weight: bold; color: #1e40af;">${formatCurrency(originalSubtotal)}</div>
-                            </div>
-                            
-                            ${additionalAmount > 0 ? `
-                            <div style="background: white; padding: 15px; border-radius: 8px; text-align: center;">
-                                <div style="color: var(--theme-text-secondary); font-size: 0.85rem; margin-bottom: 5px;">مبلغ إضافي</div>
-                                <div style="font-size: 1.3rem; font-weight: bold; color: #9f1239;">+${formatCurrency(additionalAmount)}</div>
-                            </div>
-                            ` : ''}
-                            
-                            <div style="background: white; padding: 15px; border-radius: 8px; text-align: center; border: 2px solid var(--primary-color);">
-                                <div style="color: var(--theme-text-secondary); font-size: 0.85rem; margin-bottom: 5px;">المبلغ الإجمالي الكلي</div>
-                                <div style="font-size: 1.3rem; font-weight: bold; color: var(--primary-color);">${formatCurrency(totalAmount)}</div>
-                            </div>
-                            
-                            ${downPayment > 0 ? `
-                            <div style="background: white; padding: 15px; border-radius: 8px; text-align: center;">
-                                <div style="color: var(--theme-text-secondary); font-size: 0.85rem; margin-bottom: 5px;">دفعة مقدمة</div>
-                                <div style="font-size: 1.3rem; font-weight: bold; color: #065f46;">-${formatCurrency(downPayment)}</div>
-                            </div>
-                            ` : ''}
-                        </div>
-                        
-                        <div style="background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%); padding: 20px; border-radius: 12px; text-align: center; color: white; margin-bottom: 15px;">
-                            <div style="font-size: 0.9rem; opacity: 0.9; margin-bottom: 5px;">💰 المبلغ النهائي المتبقي</div>
-                            <div style="font-size: 2rem; font-weight: bold;">${formatCurrency(remainingAmount)}</div>
-                        </div>
-                        
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px;">
-                            <div style="background: white; padding: 15px; border-radius: 8px; text-align: center;">
-                                <div style="color: var(--theme-text-secondary); font-size: 0.85rem; margin-bottom: 5px;">عدد الأشهر</div>
-                                <div style="font-size: 1.3rem; font-weight: bold; color: #78350f;">${installmentMonths}</div>
-                            </div>
-                            
-                            <div style="background: white; padding: 15px; border-radius: 8px; text-align: center;">
-                                <div style="color: var(--theme-text-secondary); font-size: 0.85rem; margin-bottom: 5px;">القسط الشهري</div>
-                                <div style="font-size: 1.3rem; font-weight: bold; color: #7c2d12;">${formatCurrency(monthlyAmount)}</div>
-                            </div>
-                            
-                            ${startDate ? `
-                            <div style="background: white; padding: 15px; border-radius: 8px; text-align: center;">
-                                <div style="color: var(--theme-text-secondary); font-size: 0.85rem; margin-bottom: 5px;">تاريخ البداية</div>
-                                <div style="font-size: 1rem; font-weight: bold; color: #3730a3;">${new Date(startDate).toLocaleDateString('ar-IQ')}</div>
-                            </div>
-                            ` : ''}
-                        </div>
-                    </div>
-                    
-                    ${debt.notes ? `
-                    <div style="background: var(--theme-bg-primary); padding: 15px; border-radius: 8px; margin-top: 20px; border-right: 4px solid var(--warning-color);">
-                        <div style="color: var(--theme-text-secondary); font-size: 0.9rem; margin-bottom: 5px;">
-                            <i class="fas fa-sticky-note"></i> ملاحظات:
-                        </div>
-                        <div style="color: var(--theme-text-primary);">${debt.notes}</div>
-                    </div>
-                    ` : ''}
-                </div>
-            `;
-        }
-        
-        // دالة مساعدة لعرض الفواتير القديمة (من نظام البيع)
-        function renderLegacyInvoiceDetails(container, allInvoices) {
+                    <!-- معلومات الفاتورة -->
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px;">
+                        <div>
+                            <div style="color: var(--theme-text-secondary); font-size: var(--font-size-sm);">
                                 <i class="fas fa-hashtag"></i> رقم الفاتورة
                             </div>
                             <div style="font-size: var(--font-size-lg); font-weight: bold; margin-top: 5px; color: ${badgeColor};">
@@ -30448,27 +30388,46 @@ body {
             return;
         }
         
-        const filtered = products.filter(p => 
-            p.name && p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            p.barcode && p.barcode.includes(searchTerm)
-        );
-        
-        if (filtered.length === 0) {
-            resultsContainer.innerHTML = '<div style="padding: 1rem; text-align: center; color: var(--theme-text-secondary);">لا توجد نتائج</div>';
+        // التأكد من وجود المنتجات
+        if (!products || products.length === 0) {
+            resultsContainer.innerHTML = '<div style="padding: 1rem; text-align: center; color: var(--theme-text-secondary);">لا توجد منتجات في النظام</div>';
             resultsContainer.style.display = 'block';
             return;
         }
         
-        resultsContainer.innerHTML = filtered.map(p => `
+        const searchLower = searchTerm.toLowerCase().trim();
+        const filtered = products.filter(p => {
+            if (!p) return false;
+            
+            const name = p.name || p.product_name || '';
+            const barcode = p.barcode || p.product_barcode || '';
+            
+            return name.toLowerCase().includes(searchLower) || barcode.includes(searchTerm);
+        });
+        
+        if (filtered.length === 0) {
+            resultsContainer.innerHTML = '<div style="padding: 1rem; text-align: center; color: var(--theme-text-secondary);">لا توجد نتائج للبحث عن "' + searchTerm + '"</div>';
+            resultsContainer.style.display = 'block';
+            return;
+        }
+        
+        resultsContainer.innerHTML = filtered.map(p => {
+            const name = p.name || p.product_name || 'منتج';
+            const price = p.product_cost_retail || p.price || 0;
+            const barcode = p.barcode || p.product_barcode || '';
+            
+            return `
             <div onclick="selectProductForDebt('${p.id}')" style="padding: 0.75rem; cursor: pointer; border-bottom: 1px solid var(--theme-border-color); transition: all 0.2s;"
                  onmouseover="this.style.background='var(--theme-bg-secondary)'" 
                  onmouseout="this.style.background='transparent'">
-                <div style="font-weight: 500; color: var(--theme-text-primary);">${p.name}</div>
-                <div style="font-size: 0.85rem; color: var(--theme-text-secondary);">
-                    ${p.product_cost_retail ? p.product_cost_retail.toLocaleString() : '0'} دينار
+                <div style="font-weight: 500; color: var(--theme-text-primary);">${name}</div>
+                <div style="font-size: 0.85rem; color: var(--theme-text-secondary); display: flex; justify-content: space-between; align-items: center; margin-top: 0.25rem;">
+                    <span>${price.toLocaleString()} دينار</span>
+                    ${barcode ? '<span style="background: var(--theme-bg-secondary); padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.75rem;">' + barcode + '</span>' : ''}
                 </div>
             </div>
-        `).join('');
+            `;
+        }).join('');
         
         resultsContainer.style.display = 'block';
     }
@@ -30476,13 +30435,22 @@ body {
     // دالة اختيار منتج من نتائج البحث
     function selectProductForDebt(productId) {
         const product = products.find(p => p.id === productId);
-        if (!product) return;
+        if (!product) {
+            console.error('المنتج غير موجود:', productId);
+            return;
+        }
         
-        document.getElementById('manualDebtProductName').value = product.name;
-        document.getElementById('manualDebtProductPrice').value = product.product_cost_retail || 0;
+        const name = product.name || product.product_name || 'منتج';
+        const price = product.product_cost_retail || product.price || 0;
+        
+        document.getElementById('manualDebtProductName').value = name;
+        document.getElementById('manualDebtProductPrice').value = price;
         document.getElementById('manualDebtProductQty').value = 1;
         document.getElementById('manualDebtProductSearchResults').style.display = 'none';
         document.getElementById('manualDebtProductSearch').value = '';
+        
+        // تحديث الإجمالي
+        updateManualDebtTotal();
     }
     
     // دالة إضافة منتج في نافذة الدين
@@ -30643,29 +30611,6 @@ body {
         } else {
             alert('⚠️ تعذر فتح نافذة الطباعة. يرجى التأكد من تفعيل النوافذ المنبثقة.');
         }
-    }
-    
-    // دالة طباعة فاتورة الدين (للاستدعاء من صفحة التفاصيل)
-    function printDebtInvoice(debtId) {
-        console.log('طباعة فاتورة الدين:', debtId);
-        
-        // البحث عن الدين
-        const debt = debtsData.find(d => 
-            d.id == debtId || 
-            d.debt_id == debtId ||
-            d.__backendId == debtId
-        );
-        
-        if (!debt) {
-            alert('⚠️ لم يتم العثور على الدين');
-            console.error('Debt not found:', debtId);
-            return;
-        }
-        
-        console.log('وجد الدين:', debt);
-        
-        // استخدام دالة showManualDebtInvoice الموجودة
-        showManualDebtInvoice(debt);
     }
     
     // دوال مماثلة لنافذة التعديل

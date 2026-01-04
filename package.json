@@ -1,134 +1,66 @@
 {
-  "name": "pos-system-pro",
-  "version": "2.0.3",
-  "description": "نظام نقاط البيع المتقدم المحسن - شركة الإبداع الرقمي",
+  "name": "legal-management-app",
+  "productName": "تطبيق الإدارة القانونية",
+  "version": "1.1.0",
+  "description": "تطبيق إدارة قانونية متكامل مع مزامنة سحابية",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "dev": "cross-env NODE_ENV=development electron .",
-    "build": "electron-builder",
+    "build": "npm run build-win",
+    "build-win": "electron-builder --win",
     "build-win-portable": "electron-builder --win portable",
-    "build-all": "electron-builder -mwl",
-    "postinstall": "electron-builder install-app-deps",
-    "rebuild": "electron-rebuild -f -w better-sqlite3",
-    "clean": "rimraf dist"
+    "build-mac": "electron-builder --mac",
+    "build-linux": "electron-builder --linux"
   },
-  "keywords": [
-    "pos",
-    "point-of-sale",
-    "invoice",
-    "printing",
-    "electron",
-    "sqlite",
-    "thermal-printer",
-    "installments",
-    "أقساط",
-    "نقاط البيع"
-  ],
-  "author": {
-    "name": "شركة الإبداع الرقمي",
-    "email": "info@digital-creativity.iq",
-    "url": "https://digital-creativity.iq"
-  },
+  "author": "الإبداع الرقمي",
   "license": "MIT",
-  "devDependencies": {
-    "@electron/rebuild": "^4.0.1",
-    "cross-env": "^7.0.3",
-    "electron": "^28.0.0",
-    "electron-builder": "^24.9.1"
-  },
   "dependencies": {
-    "better-sqlite3": "^12.2.0",
-    "electron-store": "^8.1.0",
-    "node-json-db": "^2.3.0"
+  },
+  "devDependencies": {
+    "electron": "^27.0.0",
+    "electron-builder": "^24.6.4"
   },
   "build": {
-    "appId": "com.digitalcreativity.pos.pro",
-    "productName": "نظام نقاط البيع المتقدم",
-    "copyright": "Copyright © 2025 شركة الإبداع الرقمي - إدارة كرار السعبري",
-    "asar": true,
-    "asarUnpack": [
-      "**/*.node"
-    ],
+    "appId": "com.digital-creativity.legal-management",
+    "productName": "تطبيق الإدارة القانونية",
+    "copyright": "Copyright © 2025 الإبداع الرقمي",
     "directories": {
-      "output": "dist",
-      "buildResources": "build"
-    },
+      "output": "dist"
+      },
     "files": [
-      "main.js",
-      "preload.js",
-      "splash.html",
-      "index.html",
-      "firebase-config.js",
-      "enhanced-modals.css",
-      "reports-system.js",
-      "expenses-system.js",
-      "installment-invoice-templates.js",
-      "_sdk/**/*",
-      "database/**/*",
-      "node_modules/**/*",
-      "!**/node_modules/*/{CHANGELOG.md,README.md,README,readme.md,readme}",
-      "!**/node_modules/.bin",
-      "!**/node_modules/*/build",
-      "!**/node_modules/*/test",
-      "!firebase/**/*"
-    ],
-    "extraResources": [
-      {
-        "from": "database",
-        "to": "database",
-        "filter": ["**/*"]
-      }
+      "**/*",
+      "!**/*.md",
+      "!**/node_modules/**",
+      "!dist/**"
     ],
     "win": {
-      "target": [
-        {
-          "target": "nsis",
-          "arch": [
-            "x64",
-            "ia32"
-          ]
-        }
-      ],
-      "icon": "build/icon.ico",
-      "requestedExecutionLevel": "requireAdministrator"
+      "target": ["nsis"],
+      "icon": "icon.ico"
     },
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
-      "installerIcon": "build/icon.ico",
-      "uninstallerIcon": "build/icon.ico",
-      "installerHeaderIcon": "build/icon.ico",
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "نظام نقاط البيع المتقدم",
-      "artifactName": "POS-System-Pro-Setup-${version}.${ext}",
+      "shortcutName": "تطبيق الإدارة القانونية",
+
       "deleteAppDataOnUninstall": false,
-      "language": "1025",
-      "installerLanguages": [
-        "ar_SA",
-        "en_US"
-      ],
+      "runAfterFinish": true,
       "license": "LICENSE.txt",
-      "warningsAsErrors": false,
+      "language": "1025",
+      "perMachine": true,
       "allowElevation": true,
-      "perMachine": true
-    },
-    "portable": {
-      "artifactName": "POS-System-Pro-Portable-${version}.${ext}"
-    },
-    "linux": {
-      "target": [
-        "AppImage",
-        "deb"
-      ],
-      "icon": "build/icon.png",
-      "category": "Office"
+      "menuCategory": true
     },
     "mac": {
-      "target": "dmg",
-      "icon": "build/icon.icns",
+      "target": ["dmg"],
+      "icon": "icon.png",
       "category": "public.app-category.business"
+    },
+    "linux": {
+      "target": ["AppImage", "deb"],
+      "icon": "icon.png",
+      "category": "Office"
     }
   }
 }

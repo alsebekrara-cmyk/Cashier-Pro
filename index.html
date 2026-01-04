@@ -194,15 +194,25 @@ body {
     font-weight: 600;
     text-align: center;
 }
+/* تحديث: جعل الحاوية الرئيسية مرنة وتدعم التمرير عند الحاجة */
 .a4-sheet {
     width: 297mm;
     height: 210mm;
     max-width: 100vw;
     max-height: 100vh;
     margin: 0 auto;
-        background: #fff;
-        position: relative;
-        /* شعار كخلفية عند الطباعة */
+    background: #fff;
+    position: relative;
+    overflow-x: auto;
+    overflow-y: auto;
+    /* شعار كخلفية عند الطباعة */
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    border-radius: 12px;
+    box-shadow: 0 0 20px #0001;
+    padding: 12px 16px;
+    box-sizing: border-box;
 }
 @media print {
   .a4-sheet::before {
@@ -237,12 +247,16 @@ body {
     justify-content: space-between;
     box-sizing: border-box;
 }
+/* تحديث: جعل الشبكة أكثر مرونة وتدعم التمرير الأفقي عند الحاجة */
 .a4-grid {
     display: grid;
-    grid-template-columns: 2fr 1.5fr 2fr;
-    grid-template-rows: 1fr 1fr 1fr;
+    grid-template-columns: repeat(3, minmax(180px, 1fr));
+    grid-template-rows: repeat(3, minmax(90px, auto));
     gap: 12px 16px;
     height: 100%;
+    min-width: 600px;
+    overflow-x: auto;
+    overflow-y: visible;
 }
 .a4-header {
     grid-column: 1 / 4;
@@ -262,6 +276,7 @@ body {
     font-size: 0.8rem;
     font-weight: 500;
 }
+/* تحديث: جعل الصناديق مرنة وتدعم overflow */
 .a4-box {
     background: #f8fafc;
     border-radius: 6px;
@@ -272,6 +287,9 @@ body {
     flex-direction: column;
     align-items: flex-start;
     min-height: 80px;
+    min-width: 160px;
+    overflow-x: auto;
+    overflow-y: visible;
 }
 .a4-box-title {
     font-weight: 700;
@@ -3532,17 +3550,27 @@ window.testSilentPrint = function() {
     }
     
     /* Responsive Design */
-    @media (max-width: 768px) {
-        .form-row {
+    @media (max-width: 900px) {
+        .a4-grid {
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: repeat(4, minmax(90px, auto));
+            min-width: 0;
+            overflow-x: auto;
+        }
+        .a4-box {
+            min-width: 120px;
+        }
+    }
+
+    @media (max-width: 600px) {
+        .a4-grid {
             grid-template-columns: 1fr;
+            grid-template-rows: repeat(6, minmax(90px, auto));
+            min-width: 0;
+            overflow-x: auto;
         }
-        
-        .action-buttons {
-            flex-direction: column;
-        }
-        
-        .btn-icon {
-            width: 100%;
+        .a4-box {
+            min-width: 100px;
         }
     }
     </style>
@@ -5854,7 +5882,7 @@ console.log(`
             display: grid;
             grid-template-columns: 1fr 550px; /* توسيع السلة من 400px إلى 550px */
             gap: 1.5rem;
-            height: 100%; /* ارتفاع كامل ثابت */
+            height: calc(100vh - 180px); /* تقليل الارتفاع لتجنب شريط المهام */
             align-items: stretch; /* تمديد العناصر بالكامل */
         }
 
@@ -5865,10 +5893,10 @@ console.log(`
             box-shadow: var(--shadow-md);
             border: 1px solid rgba(255,255,255,0.1);
             overflow: hidden;
-            height: 100%; /* ارتفاع كامل */
+            height: calc(100vh - 200px); /* تقليل الارتفاع */
             display: flex;
             flex-direction: column;
-            max-height: 100%; /* لا تتجاوز الارتفاع */
+            max-height: calc(100vh - 200px); /* لا تتجاوز الارتفاع */
         }
 
         .section-header {
@@ -6126,9 +6154,9 @@ console.log(`
             flex-direction: column;
             gap: 0.75rem; /* مسافة بين العناصر */
             position: relative;
-            height: 100%; /* ارتفاع كامل ثابت */
-            max-height: 100%; /* لا تتجاوز الارتفاع */
-            overflow: hidden; /* منع التجاوز الخارجي */
+            height: calc(100vh - 200px); /* تقليل الارتفاع لتجنب شريط المهام */
+            max-height: calc(100vh - 200px); /* لا تتجاوز الارتفاع */
+            overflow: visible; /* السماح بظهور المحتوى */
             transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
@@ -6293,7 +6321,7 @@ console.log(`
             align-content: start;
             width: 100%; /* عرض كامل للحاوية */
             min-height: 0; /* مهم جداً: يسمح بالتقلص */
-            max-height: 100%; /* لا تتجاوز المساحة المتاحة */
+            max-height: calc(100vh - 580px); /* ارتفاع محدد لضمان ظهور الأزرار فوق شريط المهام */
         }
 
         /* شريط التمرير دائم الظهور مع تأثير hover */
@@ -6687,6 +6715,10 @@ console.log(`
 
         /* ملخص السلة */
         .cart-summary {
+                        display: flex;
+                        flex-direction: column;
+                        gap: 0.5rem;
+                        flex-shrink: 0;
             border-top: 1px solid rgba(255,255,255,0.1);
             padding-top: 0.75rem;
             flex-shrink: 0; /* لا تتقلص - تبقى ثابتة */
@@ -6779,6 +6811,11 @@ console.log(`
             grid-template-columns: 1fr 1fr;
             gap: 0.75rem;
             margin-top: 1rem;
+            position: relative; /* تغيير من sticky إلى relative */
+            background: var(--theme-bg-card);
+            z-index: 10;
+            padding-bottom: 0.5rem;
+            flex-shrink: 0; /* لا تتقلص - تبقى ثابتة */
         }
 
         .payment-action-btn {
@@ -21950,7 +21987,7 @@ console.log(`
                         downPayment,
                         customerAddress,
                         cart: [...cart],
-                        finalTotal: newTotalAmount - downPayment, // 🔥 المبلغ النهائي الصحيح (بعد الإضافة والخصم)
+                        finalTotal: newRemainingAmount, // المبلغ النهائي المتبقي بعد خصم الدفعة المقدمة
                         originalSubtotal: finalTotal, // المبلغ الأصلي للمنتجات
                         start_date: installmentStartDate
                     }
@@ -21972,7 +22009,7 @@ console.log(`
                             // إضافة المنتجات الجديدة والمبالغ الجديدة
                             new_items: [...cart],
                             new_subtotal: cart.reduce((sum, item) => sum + (item.product_price * item.quantity), 0),
-                            new_final_total: newTotalAmount - downPayment // 🔥 المبلغ النهائي الصحيح (بعد الإضافة والخصم)
+                            new_final_total: newRemainingAmount // المبلغ النهائي المتبقي بعد خصم الدفعة المقدمة
                         });
                     }
                     closeModal('paymentModal');
@@ -22157,12 +22194,9 @@ if (typeof window !== 'undefined') {
             const totalBeforeDiscount = originalSubtotal + additionalAmount;
             
             // حساب المبلغ الإجمالي النهائي
-            let finalTotal = originalSubtotal; // البداية من المبلغ الأصلي
-            if (additionalAmount > 0) finalTotal += additionalAmount; // إضافة المبلغ الإضافي
-            if (downPayment > 0) finalTotal -= downPayment; // خصم الدفعة المقدمة
-            
-            const remainingAmount = installmentDetails.remaining_amount || sale.remaining_amount || (totalBeforeDiscount - downPayment);
-            const monthlyAmount = installmentDetails.monthly_amount || sale.monthly_amount || 0;
+            let finalTotal = originalSubtotal + additionalAmount; // المبلغ النهائي = الأصلي + الإضافي فقط
+            const remainingAmount = (finalTotal - downPayment); // المتبقي = النهائي - المقدمة
+            const monthlyAmount = installmentDetails.monthly_amount || sale.monthly_amount || (remainingAmount / (installmentDetails.installment_months || sale.installment_months || 1));
             const installmentMonths = installmentDetails.installment_months || sale.installment_months || 0;
             const startDate = installmentDetails.start_date || sale.start_date || null;
             const advancedControlUsed = installmentDetails.advanced_control_used || installmentDetails.custom_values_used || false;
@@ -22219,13 +22253,17 @@ if (typeof window !== 'undefined') {
                         <div style="font-weight:600;color:#9f1239;font-size:0.8rem;">مبلغ إضافي</div>
                         <div style="font-weight:bold;color:#be123c;">${toEnglishDigits(additionalAmount.toLocaleString('en'))}</div>
                     </div>` : ''}
+                    <div style="background:#e0e7ff;padding:4px;border-radius:4px;text-align:center;">
+                        <div style="font-weight:600;color:#3730a3;font-size:0.8rem;">المبلغ الإجمالي الكلي</div>
+                        <div style="font-weight:bold;color:#4338ca;">${toEnglishDigits(finalTotal.toLocaleString('en'))}</div>
+                    </div>
                     ${downPayment > 0 ? `<div style="background:#d1fae5;padding:4px;border-radius:4px;text-align:center;">
                         <div style="font-weight:600;color:#065f46;font-size:0.8rem;">دفعة مقدمة</div>
-                        <div style="font-weight:bold;color:#047857;">${toEnglishDigits(downPayment.toLocaleString('en'))}</div>
+                        <div style="font-weight:bold;color:#047857;">-${toEnglishDigits(downPayment.toLocaleString('en'))}</div>
                     </div>` : ''}
-                    <div style="background:#fee2e2;padding:4px;border-radius:4px;text-align:center;">
-                        <div style="font-weight:600;color:#7f1d1d;font-size:0.8rem;">المتبقي</div>
-                        <div style="font-weight:bold;color:#991b1b;">${toEnglishDigits(remainingAmount.toLocaleString('en'))}</div>
+                    <div style="background:#fee2e2;padding:4px;border-radius:4px;text-align:center;grid-column:span 2;">
+                        <div style="font-weight:600;color:#7f1d1d;font-size:0.9rem;">💰 المبلغ النهائي المتبقي</div>
+                        <div style="font-weight:bold;color:#991b1b;font-size:1.1rem;">${toEnglishDigits(remainingAmount.toLocaleString('en'))} دينار</div>
                     </div>
                     <div style="background:#fef3c7;padding:4px;border-radius:4px;text-align:center;">
                         <div style="font-weight:600;color:#78350f;font-size:0.8rem;">عدد الأشهر</div>
@@ -22778,13 +22816,28 @@ if (typeof window !== 'undefined') {
                     shouldDistribute = priceDifference !== 0;
                     finalTotal = newFinalTotal;
                 } else if (paymentType === 'أقساط') {
-                    // بيع تقسيط مع إضافة أو تعديل المبلغ
+                    // بيع تقسيط: إضافة المبلغ الإضافي وخصم الدفعة المقدمة
                     const additionalAmount = parseFloat(extraData.additional_amount) || 0;
                     const downPayment = parseFloat(extraData.down_payment) || 0;
-                    newFinalTotal = finalTotal + additionalAmount - downPayment;
-                    priceDifference = newFinalTotal - finalTotal;
+                    
+                    // المبلغ الإجمالي الكلي = المبلغ الأصلي + المبلغ الإضافي
+                    const totalAmount = finalTotal + additionalAmount;
+                    
+                    // المبلغ النهائي (المتبقي) = المبلغ الإجمالي - الدفعة المقدمة
+                    newFinalTotal = totalAmount - downPayment;
+                    
+                    // توزيع المبلغ الإضافي فقط على المنتجات (ليس الدفعة المقدمة)
+                    priceDifference = additionalAmount;
                     shouldDistribute = priceDifference !== 0;
+                    
                     finalTotal = newFinalTotal;
+                    
+                    console.log('📊 حسابات الأقساط:');
+                    console.log('  المبلغ الأصلي:', finalTotal - additionalAmount + downPayment);
+                    console.log('  المبلغ الإضافي:', additionalAmount);
+                    console.log('  المبلغ الإجمالي الكلي:', totalAmount);
+                    console.log('  الدفعة المقدمة:', downPayment);
+                    console.log('  المبلغ النهائي (المتبقي):', finalTotal);
                 }
 
                 if (shouldDistribute && cart.length > 0) {
@@ -22819,7 +22872,7 @@ if (typeof window !== 'undefined') {
                     tax: taxAmount,
                     discount: discountAmount,
                     additional_discount: additionalDiscount,
-                    final_total: finalTotal, // 🔥 هذا الآن يحتوي على المبلغ الصحيح بعد الإضافة والدفعة المقدمة
+                    final_total: finalTotal, // المبلغ النهائي المتبقي بعد خصم الدفعة المقدمة (للأقساط) أو المبلغ الكامل (للنقدي)
                     payment_method: paymentMethod,
                     payment_type: paymentType,
                     timestamp: new Date().toISOString(),
@@ -22832,11 +22885,11 @@ if (typeof window !== 'undefined') {
                     installment_details: paymentType === 'أقساط' ? {
                         // المبالغ الأساسية
                         original_subtotal: subtotal,
-                        original_total: subtotal + taxAmount - discountAmount, // المبلغ قبل الإضافة والدفعة
-                        total_amount: extraData.total_amount || (subtotal + taxAmount - discountAmount + (extraData.additional_amount || 0)),
+                        original_total: subtotal + taxAmount - discountAmount, // المبلغ الأصلي قبل الإضافة
+                        total_amount: extraData.total_amount || ((subtotal + taxAmount - discountAmount) + (extraData.additional_amount || 0)), // المبلغ الإجمالي الكلي
                         additional_amount: extraData.additional_amount || 0,
                         down_payment: extraData.down_payment || 0,
-                        remaining_amount: extraData.remaining_amount || 0,
+                        remaining_amount: extraData.remaining_amount || finalTotal, // المبلغ المتبقي = final_total
                         
                         // معلومات الأقساط
                         installment_months: extraData.installment_months || 0,
@@ -22949,7 +23002,7 @@ if (typeof window !== 'undefined') {
                                 customer_phone: extraData.customer_phone || '',
                                 customer_address: extraData.customer_address || '',
                                 total_amount: totalAmount,
-                                final_total: finalTotal, // 🔥 استخدام المبلغ النهائي الصحيح
+                                final_total: finalTotal, // المبلغ النهائي المتبقي بعد خصم الدفعة المقدمة
                                 remaining_amount: remainingAmount,
                                 paid_amount: downPayment,
                                 monthly_amount: monthlyAmount,
@@ -24869,25 +24922,25 @@ if (typeof window !== 'undefined') {
                             ملخص التقسيط
                         </div>
                         <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                            <span>إجمالي المبلغ:</span>
-                            <span style="font-weight: bold;">${formatCurrency(sale.final_total || 0)}</span>
+                            <span>الإجمالي النهائي:</span>
+                            <span style="font-weight: bold;">${formatCurrency(remainingAmount)}</span>
                         </div>
                         ${sale.down_payment > 0 ? `
                         <div style="display: flex; justify-content: space-between; margin-bottom: 5px; color: #10b981;">
                             <span>الدفعة الأولى:</span>
-                            <span style="font-weight: bold;">${formatCurrency(sale.down_payment)}</span>
+                            <span style="font-weight: bold;">${formatCurrency(downPayment)}</span>
                         </div>` : ''}
                         <div style="display: flex; justify-content: space-between; margin-bottom: 5px; padding-top: 5px; border-top: 1px dashed #0284c7;">
                             <span>المبلغ المتبقي:</span>
-                            <span style="font-weight: bold;">${formatCurrency(sale.remaining_amount || sale.final_total)}</span>
+                            <span style="font-weight: bold;">${formatCurrency(remainingAmount)}</span>
                         </div>
                         <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
                             <span>عدد الأقساط:</span>
-                            <span style="font-weight: bold;">${sale.installment_months} شهر</span>
+                            <span style="font-weight: bold;">${installmentMonths} شهر</span>
                         </div>
                         <div style="display: flex; justify-content: space-between; padding: 8px; background: white; border-radius: 4px; margin-top: 8px;">
                             <span style="color: #0284c7; font-weight: bold;">القسط الشهري:</span>
-                            <span style="font-weight: bold; color: #0284c7; font-size: ${settings.totalTextSize}px;">${formatCurrency(sale.monthly_amount)}</span>
+                            <span style="font-weight: bold; color: #0284c7; font-size: ${settings.totalTextSize}px;">${formatCurrency(monthlyAmount)}</span>
                         </div>
                     </div>
                     

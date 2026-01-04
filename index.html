@@ -21909,22 +21909,10 @@ console.log(`
                 const taxAmount = afterDiscount * taxRate;
                 finalTotal = afterDiscount + taxAmount;
 
-                // توزيع المبلغ الإضافي تلقائياً على المنتجات
-                if (additionalAmount > 0 && cart.length > 0) {
-                    const totalQuantity = cart.reduce((sum, item) => sum + item.quantity, 0);
-                    const perUnitDiff = additionalAmount / totalQuantity;
-                    let distributed = 0;
-                    cart.forEach((item, idx) => {
-                        let addForThis = perUnitDiff * item.quantity;
-                        if (idx === cart.length - 1) {
-                            addForThis += additionalAmount - (perUnitDiff * totalQuantity);
-                        }
-                        item.product_price = Math.round((item.product_price + addForThis / item.quantity));
-                        distributed += addForThis;
-                    });
-                }
+                // لا نوزع المبلغ الإضافي على أسعار المنتجات
+                // نحتفظ بالأسعار الأصلية كما هي
 
-                // المبلغ الإجمالي = المبلغ النهائي + المبلغ الإضافي
+                // المبلغ الإجمالي الكلي = المبلغ الأصلي + المبلغ الإضافي
                 newTotalAmount = finalTotal + additionalAmount;
                 // المبلغ المتبقي بعد الدفعة المقدمة
                 newRemainingAmount = newTotalAmount - downPayment;
@@ -21987,7 +21975,7 @@ console.log(`
                         downPayment,
                         customerAddress,
                         cart: [...cart],
-                        finalTotal: newRemainingAmount, // المبلغ النهائي المتبقي بعد خصم الدفعة المقدمة
+                        finalTotal: newTotalAmount - downPayment, // 🔥 المبلغ النهائي الصحيح (بعد الإضافة والخصم)
                         originalSubtotal: finalTotal, // المبلغ الأصلي للمنتجات
                         start_date: installmentStartDate
                     }
@@ -22009,7 +21997,7 @@ console.log(`
                             // إضافة المنتجات الجديدة والمبالغ الجديدة
                             new_items: [...cart],
                             new_subtotal: cart.reduce((sum, item) => sum + (item.product_price * item.quantity), 0),
-                            new_final_total: newRemainingAmount // المبلغ النهائي المتبقي بعد خصم الدفعة المقدمة
+                            new_final_total: newTotalAmount - downPayment // 🔥 المبلغ النهائي الصحيح (بعد الإضافة والخصم)
                         });
                     }
                     closeModal('paymentModal');
@@ -22191,11 +22179,11 @@ if (typeof window !== 'undefined') {
             const originalSubtotal = installmentDetails.original_subtotal || sale.subtotal || 0;
             const additionalAmount = installmentDetails.additional_amount || sale.additional_amount || 0;
             const downPayment = installmentDetails.down_payment || sale.down_payment || 0;
-            const totalBeforeDiscount = originalSubtotal + additionalAmount;
             
-            // حساب المبلغ الإجمالي النهائي
-            let finalTotal = originalSubtotal + additionalAmount; // المبلغ النهائي = الأصلي + الإضافي فقط
-            const remainingAmount = (finalTotal - downPayment); // المتبقي = النهائي - المقدمة
+            // حساب المبالغ بالترتيب الصحيح
+            const totalAmount = originalSubtotal + additionalAmount; // المبلغ الإجمالي الكلي
+            const remainingAmount = totalAmount - downPayment; // المبلغ المتبقي
+            const finalTotal = remainingAmount; // المبلغ النهائي = المتبقي
             const monthlyAmount = installmentDetails.monthly_amount || sale.monthly_amount || (remainingAmount / (installmentDetails.installment_months || sale.installment_months || 1));
             const installmentMonths = installmentDetails.installment_months || sale.installment_months || 0;
             const startDate = installmentDetails.start_date || sale.start_date || null;
@@ -22251,11 +22239,11 @@ if (typeof window !== 'undefined') {
                     </div>
                     ${additionalAmount > 0 ? `<div style="background:#fce7f3;padding:4px;border-radius:4px;text-align:center;">
                         <div style="font-weight:600;color:#9f1239;font-size:0.8rem;">مبلغ إضافي</div>
-                        <div style="font-weight:bold;color:#be123c;">${toEnglishDigits(additionalAmount.toLocaleString('en'))}</div>
+                        <div style="font-weight:bold;color:#be123c;">+${toEnglishDigits(additionalAmount.toLocaleString('en'))}</div>
                     </div>` : ''}
                     <div style="background:#e0e7ff;padding:4px;border-radius:4px;text-align:center;">
                         <div style="font-weight:600;color:#3730a3;font-size:0.8rem;">المبلغ الإجمالي الكلي</div>
-                        <div style="font-weight:bold;color:#4338ca;">${toEnglishDigits(finalTotal.toLocaleString('en'))}</div>
+                        <div style="font-weight:bold;color:#4338ca;">${toEnglishDigits(totalAmount.toLocaleString('en'))}</div>
                     </div>
                     ${downPayment > 0 ? `<div style="background:#d1fae5;padding:4px;border-radius:4px;text-align:center;">
                         <div style="font-weight:600;color:#065f46;font-size:0.8rem;">دفعة مقدمة</div>
@@ -22263,7 +22251,7 @@ if (typeof window !== 'undefined') {
                     </div>` : ''}
                     <div style="background:#fee2e2;padding:4px;border-radius:4px;text-align:center;grid-column:span 2;">
                         <div style="font-weight:600;color:#7f1d1d;font-size:0.9rem;">💰 المبلغ النهائي المتبقي</div>
-                        <div style="font-weight:bold;color:#991b1b;font-size:1.1rem;">${toEnglishDigits(remainingAmount.toLocaleString('en'))} دينار</div>
+                        <div style="font-weight:bold;color:#991b1b;font-size:1.1rem;">${toEnglishDigits(finalTotal.toLocaleString('en'))} دينار</div>
                     </div>
                     <div style="background:#fef3c7;padding:4px;border-radius:4px;text-align:center;">
                         <div style="font-weight:600;color:#78350f;font-size:0.8rem;">عدد الأشهر</div>
@@ -22816,28 +22804,27 @@ if (typeof window !== 'undefined') {
                     shouldDistribute = priceDifference !== 0;
                     finalTotal = newFinalTotal;
                 } else if (paymentType === 'أقساط') {
-                    // بيع تقسيط: إضافة المبلغ الإضافي وخصم الدفعة المقدمة
+                    // بيع تقسيط: الاحتفاظ بأسعار المنتجات الأصلية
                     const additionalAmount = parseFloat(extraData.additional_amount) || 0;
                     const downPayment = parseFloat(extraData.down_payment) || 0;
                     
                     // المبلغ الإجمالي الكلي = المبلغ الأصلي + المبلغ الإضافي
                     const totalAmount = finalTotal + additionalAmount;
                     
-                    // المبلغ النهائي (المتبقي) = المبلغ الإجمالي - الدفعة المقدمة
+                    // المبلغ النهائي المتبقي = المبلغ الإجمالي - الدفعة المقدمة
                     newFinalTotal = totalAmount - downPayment;
                     
-                    // توزيع المبلغ الإضافي فقط على المنتجات (ليس الدفعة المقدمة)
-                    priceDifference = additionalAmount;
-                    shouldDistribute = priceDifference !== 0;
+                    // لا نوزع أي شيء على أسعار المنتجات
+                    shouldDistribute = false;
                     
                     finalTotal = newFinalTotal;
                     
                     console.log('📊 حسابات الأقساط:');
-                    console.log('  المبلغ الأصلي:', finalTotal - additionalAmount + downPayment);
+                    console.log('  المبلغ الأصلي:', subtotal + taxAmount - discountAmount);
                     console.log('  المبلغ الإضافي:', additionalAmount);
                     console.log('  المبلغ الإجمالي الكلي:', totalAmount);
                     console.log('  الدفعة المقدمة:', downPayment);
-                    console.log('  المبلغ النهائي (المتبقي):', finalTotal);
+                    console.log('  المبلغ النهائي المتبقي:', finalTotal);
                 }
 
                 if (shouldDistribute && cart.length > 0) {
@@ -22872,7 +22859,7 @@ if (typeof window !== 'undefined') {
                     tax: taxAmount,
                     discount: discountAmount,
                     additional_discount: additionalDiscount,
-                    final_total: finalTotal, // المبلغ النهائي المتبقي بعد خصم الدفعة المقدمة (للأقساط) أو المبلغ الكامل (للنقدي)
+                    final_total: finalTotal, // 🔥 هذا الآن يحتوي على المبلغ الصحيح بعد الإضافة والدفعة المقدمة
                     payment_method: paymentMethod,
                     payment_type: paymentType,
                     timestamp: new Date().toISOString(),
@@ -22885,11 +22872,11 @@ if (typeof window !== 'undefined') {
                     installment_details: paymentType === 'أقساط' ? {
                         // المبالغ الأساسية
                         original_subtotal: subtotal,
-                        original_total: subtotal + taxAmount - discountAmount, // المبلغ الأصلي قبل الإضافة
-                        total_amount: extraData.total_amount || ((subtotal + taxAmount - discountAmount) + (extraData.additional_amount || 0)), // المبلغ الإجمالي الكلي
+                        original_total: subtotal + taxAmount - discountAmount, // المبلغ قبل الإضافة والدفعة
+                        total_amount: extraData.total_amount || (subtotal + taxAmount - discountAmount + (extraData.additional_amount || 0)),
                         additional_amount: extraData.additional_amount || 0,
                         down_payment: extraData.down_payment || 0,
-                        remaining_amount: extraData.remaining_amount || finalTotal, // المبلغ المتبقي = final_total
+                        remaining_amount: extraData.remaining_amount || 0,
                         
                         // معلومات الأقساط
                         installment_months: extraData.installment_months || 0,
@@ -23002,7 +22989,7 @@ if (typeof window !== 'undefined') {
                                 customer_phone: extraData.customer_phone || '',
                                 customer_address: extraData.customer_address || '',
                                 total_amount: totalAmount,
-                                final_total: finalTotal, // المبلغ النهائي المتبقي بعد خصم الدفعة المقدمة
+                                final_total: finalTotal, // 🔥 استخدام المبلغ النهائي الصحيح
                                 remaining_amount: remainingAmount,
                                 paid_amount: downPayment,
                                 monthly_amount: monthlyAmount,

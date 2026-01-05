@@ -53,17 +53,13 @@ function toEnglishDigits(str) {
     return str.replace(/[٠-٩]/g, d => '0123456789'['٠١٢٣٤٥٦٧٨٩'.indexOf(d)]);
 }
 // ✅ إيصال تسديد - مضغوط لصفحة واحدة A4 (مضمون 100%)
-function generateInstallmentPaymentReceipt(receiptData) {
-    const debt = receiptData.debt;
-    const paidInstallment = receiptData.paidInstallment;
-    const storeSettings = receiptData.storeSettings || {};
-    
+function generateInstallmentPaymentReceipt({debt, paidInstallment, storeSettings}) {
     // البيانات الأساسية
     const customerName = debt.customer_name || '';
     const customerPhone = debt.customer_phone || '';
     const storeName = 'معرض يعقوب للأجهزة الكهربائية';
-    const storeAddress = storeSettings.storeAddress || storeSettings.store_address || 'الحلة - باب الهاشمية';
-    const storePhone = storeSettings.storePhone || storeSettings.store_phone || '07803092185';
+    const storeAddress = storeSettings?.storeAddress || storeSettings?.store_address || 'الحلة - باب الهاشمية';
+    const storePhone = storeSettings?.storePhone || storeSettings?.store_phone || '07803092185';
     
     // معلومات القسط
     const paidMonth = paidInstallment.month;
@@ -75,9 +71,7 @@ function generateInstallmentPaymentReceipt(receiptData) {
     // ملاحظة من سجل التسديد
     let paymentNote = '';
     if (debt.payments && Array.isArray(debt.payments)) {
-        const paymentRecord = debt.payments.find(function(p) {
-            return p.month === paidMonth;
-        });
+        const paymentRecord = debt.payments.find(p => p.month === paidMonth);
         if (paymentRecord && paymentRecord.notes) {
             paymentNote = paymentRecord.notes;
         }
@@ -87,9 +81,9 @@ function generateInstallmentPaymentReceipt(receiptData) {
     let autoNote = '';
     if (paymentType === 'partial') {
         const remaining = originalAmount - paidAmount;
-        autoNote = 'تم دفع ' + toEnglishDigits(paidAmount.toLocaleString('en')) + ' د.ع من أصل ' + toEnglishDigits(originalAmount.toLocaleString('en')) + ' د.ع';
+        autoNote = `تم دفع ${toEnglishDigits(paidAmount.toLocaleString('en'))} د.ع من أصل ${toEnglishDigits(originalAmount.toLocaleString('en'))} د.ع`;
     } else {
-        autoNote = 'تم تسديد القسط بالكامل: ' + toEnglishDigits(paidAmount.toLocaleString('en')) + ' د.ع';
+        autoNote = `تم تسديد القسط بالكامل: ${toEnglishDigits(paidAmount.toLocaleString('en'))} د.ع`;
     }
     
     // تنسيق التاريخ
@@ -103,9 +97,7 @@ function generateInstallmentPaymentReceipt(receiptData) {
     
     // حسابات الأقساط
     const allInstallments = debt.installments || [];
-    const paidInstallments = allInstallments.filter(function(inst) {
-        return inst.status === 'paid';
-    });
+    const paidInstallments = allInstallments.filter(inst => inst.status === 'paid');
     const totalPaidAmount = debt.paid_amount || 0;
     const totalAmount = debt.total_amount || debt.final_total || 0;
     const remainingAmount = debt.remaining_amount || (totalAmount - totalPaidAmount);
@@ -114,384 +106,384 @@ function generateInstallmentPaymentReceipt(receiptData) {
     
     // معلومات إضافية
     const invoiceId = debt.invoice_id || debt.debt_id || 'غير محدد';
-    const receiptNumber = invoiceId + '-' + paidMonth;
+    const receiptNumber = `${invoiceId}-${paidMonth}`;
 
-    const html = '<!DOCTYPE html>' +
-'<html dir="rtl" lang="ar">' +
-'<head>' +
-'<meta charset="UTF-8">' +
-'<title>إيصال تسديد قسط</title>' +
-'<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">' +
-'<style>' +
-'* { margin: 0; padding: 0; box-sizing: border-box; }' +
-'body {' +
-'    font-family: "Cairo", sans-serif;' +
-'    background: white;' +
-'    color: #000;' +
-'    padding: 20px;' +
-'}' +
-'' +
-'.receipt-container {' +
-'    max-width: 210mm;' +
-'    margin: 0 auto;' +
-'    background: white;' +
-'    border: 3px solid #000;' +
-'    padding: 15px;' +
-'}' +
-'' +
-'.receipt-header {' +
-'    text-align: center;' +
-'    padding: 15px 0;' +
-'    border-bottom: 3px double #000;' +
-'    margin-bottom: 20px;' +
-'}' +
-'' +
-'.store-name {' +
-'    font-size: 26px;' +
-'    font-weight: 700;' +
-'    color: #000;' +
-'    margin-bottom: 8px;' +
-'    letter-spacing: 1px;' +
-'}' +
-'' +
-'.store-info {' +
-'    font-size: 14px;' +
-'    color: #333;' +
-'    margin-bottom: 15px;' +
-'}' +
-'' +
-'.devices-bar {' +
-'    display: grid;' +
-'    grid-template-columns: repeat(4, 1fr);' +
-'    gap: 10px;' +
-'    padding: 12px 0;' +
-'    border: 2px solid #ddd;' +
-'    border-radius: 8px;' +
-'    margin-top: 10px;' +
-'    background: white;' +
-'}' +
-'' +
-'.device-icon {' +
-'    display: flex;' +
-'    flex-direction: column;' +
-'    align-items: center;' +
-'    gap: 4px;' +
-'    font-size: 11px;' +
-'    color: #333;' +
-'}' +
-'' +
-'.device-icon span:first-child {' +
-'    font-size: 22px;' +
-'}' +
-'' +
-'.receipt-title {' +
-'    font-size: 20px;' +
-'    font-weight: 700;' +
-'    margin: 15px 0 10px 0;' +
-'    padding: 10px;' +
-'    border: 2px solid #000;' +
-'    border-radius: 5px;' +
-'    text-align: center;' +
-'    color: #000;' +
-'}' +
-'' +
-'.receipt-info {' +
-'    display: grid;' +
-'    grid-template-columns: 1fr 1fr;' +
-'    gap: 10px;' +
-'    padding: 15px 0;' +
-'    border-bottom: 2px solid #ddd;' +
-'}' +
-'' +
-'.info-box {' +
-'    border: 2px solid #ddd;' +
-'    border-radius: 5px;' +
-'    padding: 10px;' +
-'    background: white;' +
-'}' +
-'' +
-'.info-label {' +
-'    font-size: 12px;' +
-'    color: #666;' +
-'    font-weight: 600;' +
-'    margin-bottom: 5px;' +
-'}' +
-'' +
-'.info-value {' +
-'    font-size: 16px;' +
-'    font-weight: 700;' +
-'    color: #000;' +
-'}' +
-'' +
-'.customer-section {' +
-'    padding: 15px 0;' +
-'    border-bottom: 2px dashed #ccc;' +
-'}' +
-'' +
-'.section-title {' +
-'    font-size: 16px;' +
-'    font-weight: 700;' +
-'    color: #000;' +
-'    margin-bottom: 12px;' +
-'    padding-bottom: 8px;' +
-'    border-bottom: 2px solid #000;' +
-'}' +
-'' +
-'.customer-info {' +
-'    display: grid;' +
-'    grid-template-columns: 1fr 1fr;' +
-'    gap: 10px;' +
-'}' +
-'' +
-'.info-item {' +
-'    font-size: 14px;' +
-'    color: #333;' +
-'}' +
-'' +
-'.info-item strong {' +
-'    color: #000;' +
-'}' +
-'' +
-'.paid-installments {' +
-'    padding: 15px 0;' +
-'    border-bottom: 2px dashed #ccc;' +
-'}' +
-'' +
-'.installment-card {' +
-'    border: 2px solid #000;' +
-'    border-radius: 8px;' +
-'    padding: 15px;' +
-'    background: white;' +
-'}' +
-'' +
-'.installment-header {' +
-'    display: flex;' +
-'    justify-content: space-between;' +
-'    align-items: center;' +
-'    margin-bottom: 10px;' +
-'    padding-bottom: 10px;' +
-'    border-bottom: 1px solid #ddd;' +
-'}' +
-'' +
-'.installment-number {' +
-'    font-size: 18px;' +
-'    font-weight: 700;' +
-'    color: #000;' +
-'}' +
-'' +
-'.installment-amount {' +
-'    font-size: 20px;' +
-'    font-weight: 900;' +
-'    color: #000;' +
-'}' +
-'' +
-'.installment-details {' +
-'    font-size: 13px;' +
-'    color: #333;' +
-'    line-height: 1.8;' +
-'}' +
-'' +
-'.payment-status {' +
-'    display: inline-block;' +
-'    padding: 6px 16px;' +
-'    border-radius: 20px;' +
-'    font-size: 12px;' +
-'    font-weight: 600;' +
-'    margin-top: 8px;' +
-'    border: 2px solid #000;' +
-'}' +
-'' +
-'.status-full {' +
-'    background: white;' +
-'    color: #000;' +
-'}' +
-'' +
-'.status-partial {' +
-'    background: #f5f5f5;' +
-'    color: #000;' +
-'}' +
-'' +
-'.debt-summary {' +
-'    padding: 15px 0;' +
-'    border-bottom: 2px dashed #ccc;' +
-'}' +
-'' +
-'.summary-grid {' +
-'    display: grid;' +
-'    grid-template-columns: 1fr 1fr;' +
-'    gap: 12px;' +
-'}' +
-'' +
-'.summary-item {' +
-'    border: 2px solid #ddd;' +
-'    border-radius: 5px;' +
-'    padding: 12px;' +
-'    text-align: center;' +
-'    background: white;' +
-'}' +
-'' +
-'.summary-label {' +
-'    font-size: 12px;' +
-'    color: #666;' +
-'    margin-bottom: 6px;' +
-'}' +
-'' +
-'.summary-value {' +
-'    font-size: 18px;' +
-'    font-weight: 700;' +
-'    color: #000;' +
-'}' +
-'' +
-'.notes-section {' +
-'    padding: 15px 0;' +
-'}' +
-'' +
-'.note-text {' +
-'    font-size: 13px;' +
-'    color: #333;' +
-'    line-height: 1.8;' +
-'    border: 2px solid #ddd;' +
-'    padding: 12px;' +
-'    border-radius: 5px;' +
-'    background: white;' +
-'}' +
-'' +
-'.receipt-footer {' +
-'    text-align: center;' +
-'    padding: 15px 0;' +
-'    margin-top: 20px;' +
-'    border-top: 3px double #000;' +
-'    font-size: 12px;' +
-'    color: #333;' +
-'}' +
-'' +
-'@media print {' +
-'    body { padding: 0; }' +
-'    .receipt-container { border: 2px solid #000; }' +
-'}' +
-'</style>' +
-'</head>' +
-'<body>' +
-'<div class="receipt-container">' +
-'    <div class="receipt-header">' +
-'        <div class="store-name">' + storeName + '</div>' +
-'        <div class="store-info">' + storeAddress + ' • ' + storePhone + '</div>' +
-'        <div class="devices-bar">' +
-'            <div class="device-icon">' +
-'                <span>🧊</span>' +
-'                <span>ثلاجات</span>' +
-'            </div>' +
-'            <div class="device-icon">' +
-'                <span>❄️</span>' +
-'                <span>مبردات</span>' +
-'            </div>' +
-'            <div class="device-icon">' +
-'                <span>👔</span>' +
-'                <span>غسالات</span>' +
-'            </div>' +
-'            <div class="device-icon">' +
-'                <span>🔥</span>' +
-'                <span>مدافئ</span>' +
-'            </div>' +
-'            <div class="device-icon">' +
-'                <span>💨</span>' +
-'                <span>مراوح</span>' +
-'            </div>' +
-'            <div class="device-icon">' +
-'                <span>📺</span>' +
-'                <span>شاشات</span>' +
-'            </div>' +
-'            <div class="device-icon">' +
-'                <span>📱</span>' +
-'                <span>هواتف</span>' +
-'            </div>' +
-'            <div class="device-icon">' +
-'                <span>⚡</span>' +
-'                <span>أجهزة كهربائية</span>' +
-'            </div>' +
-'        </div>' +
-'        <div class="receipt-title">إيصال تسديد قسط</div>' +
-'    </div>' +
-'    <div class="receipt-info">' +
-'        <div class="info-box">' +
-'            <div class="info-label">رقم الإيصال</div>' +
-'            <div class="info-value">' + toEnglishDigits(receiptNumber) + '</div>' +
-'        </div>' +
-'        <div class="info-box">' +
-'            <div class="info-label">رقم الفاتورة</div>' +
-'            <div class="info-value">' + toEnglishDigits(invoiceId) + '</div>' +
-'        </div>' +
-'        <div class="info-box">' +
-'            <div class="info-label">التاريخ</div>' +
-'            <div class="info-value" style="font-size: 13px;">' + dateStr + '</div>' +
-'        </div>' +
-'        <div class="info-box">' +
-'            <div class="info-label">الوقت</div>' +
-'            <div class="info-value">' + timeStr + '</div>' +
-'        </div>' +
-'    </div>' +
-'    <div class="customer-section">' +
-'        <div class="section-title">👤 بيانات العميل</div>' +
-'        <div class="customer-info">' +
-'            <div class="info-item"><strong>الاسم:</strong> ' + customerName + '</div>' +
-(customerPhone ? '            <div class="info-item"><strong>الهاتف:</strong> ' + customerPhone + '</div>' : '') +
-'        </div>' +
-'    </div>' +
-'    <div class="paid-installments">' +
-'        <div class="section-title">💰 القسط المسدد</div>' +
-'        <div class="installment-card">' +
-'            <div class="installment-header">' +
-'                <div class="installment-number">القسط ' + toEnglishDigits(paidMonth) + ' من ' + toEnglishDigits(totalMonths) + '</div>' +
-'                <div class="installment-amount">' + toEnglishDigits(paidAmount.toLocaleString('en')) + ' د.ع</div>' +
-'            </div>' +
-'            <div class="installment-details">' +
-'                ' + autoNote +
-(paymentNote ? '<br>📝 ' + paymentNote : '') +
-'            </div>' +
-'            <span class="payment-status ' + (paymentType === 'full' ? 'status-full' : 'status-partial') + '">' +
-'                ' + (paymentType === 'full' ? '✓ تسديد كامل' : '⚠ تسديد جزئي') +
-'            </span>' +
-'        </div>' +
-'    </div>' +
-'    <div class="debt-summary">' +
-'        <div class="section-title">📊 ملخص الدين</div>' +
-'        <div class="summary-grid">' +
-'            <div class="summary-item">' +
-'                <div class="summary-label">إجمالي الدين</div>' +
-'                <div class="summary-value">' + toEnglishDigits(totalAmount.toLocaleString('en')) + ' د.ع</div>' +
-'            </div>' +
-'            <div class="summary-item">' +
-'                <div class="summary-label">المبلغ المسدد</div>' +
-'                <div class="summary-value">' + toEnglishDigits(totalPaidAmount.toLocaleString('en')) + ' د.ع</div>' +
-'            </div>' +
-'            <div class="summary-item">' +
-'                <div class="summary-label">المبلغ المتبقي</div>' +
-'                <div class="summary-value">' + toEnglishDigits(remainingAmount.toLocaleString('en')) + ' د.ع</div>' +
-'            </div>' +
-'            <div class="summary-item">' +
-'                <div class="summary-label">الأقساط المسددة</div>' +
-'                <div class="summary-value">' + toEnglishDigits(paidMonthsCount) + ' من ' + toEnglishDigits(totalMonths) + '</div>' +
-'            </div>' +
-'        </div>' +
-'    </div>' +
-'    <div class="notes-section">' +
-'        <div class="section-title">📌 ملاحظات هامة</div>' +
-'        <div class="note-text">' +
-'            • احتفظ بهذا الإيصال كإثبات للدفع<br>' +
-'            • للاستفسار اتصل على: ' + storePhone + '<br>' +
-'            • شكراً لثقتكم بنا' +
-'        </div>' +
-'    </div>' +
-'    <div class="receipt-footer">' +
-'        <div style="font-weight:700;margin-bottom:5px;">شكراً لثقتكم 🙏</div>' +
-'        <div>نظام كاش برو - Digital Creativity © ' + new Date().getFullYear() + '</div>' +
-'    </div>' +
-'</div>' +
-'</body>' +
-'</html>';
+    let html = `<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+<meta charset="UTF-8">
+<title>إيصال تسديد قسط</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    font-family: 'Cairo', sans-serif;
+    background: white;
+    color: #000;
+    padding: 20px;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+}
+
+.receipt-container {
+    max-width: 210mm;
+    margin: 0 auto;
+    background: white;
+    border: 3px solid #000;
+    padding: 15px;
+}
+
+.receipt-header {
+    text-align: center;
+    padding: 15px 0;
+    border-bottom: 3px double #000;
+    margin-bottom: 20px;
+}
+
+.store-name {
+    font-size: 26px;
+    font-weight: 700;
+    color: #000;
+    margin-bottom: 8px;
+    letter-spacing: 1px;
+}
+
+.store-info {
+    font-size: 14px;
+    color: #333;
+    margin-bottom: 15px;
+}
+
+.devices-bar {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    padding: 12px 0;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    margin-top: 10px;
+    background: white;
+}
+
+.device-icon {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    color: #333;
+}
+
+.device-icon span:first-child {
+    font-size: 22px;
+}
+
+.receipt-title {
+    font-size: 20px;
+    font-weight: 700;
+    margin: 15px 0 10px 0;
+    padding: 10px;
+    border: 2px solid #000;
+    border-radius: 5px;
+    text-align: center;
+    color: #000;
+}
+
+.receipt-info {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    padding: 15px 0;
+    border-bottom: 2px solid #ddd;
+}
+
+.info-box {
+    border: 2px solid #ddd;
+    border-radius: 5px;
+    padding: 10px;
+    background: white;
+}
+
+.info-label {
+    font-size: 12px;
+    color: #666;
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+.info-value {
+    font-size: 16px;
+    font-weight: 700;
+    color: #000;
+}
+
+.customer-section {
+    padding: 15px 0;
+    border-bottom: 2px dashed #ccc;
+}
+
+.section-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #000;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #000;
+}
+
+.customer-info {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.info-item {
+    font-size: 14px;
+    color: #333;
+}
+
+.info-item strong {
+    color: #000;
+}
+
+.paid-installments {
+    padding: 15px 0;
+    border-bottom: 2px dashed #ccc;
+}
+
+.installment-card {
+    border: 2px solid #000;
+    border-radius: 8px;
+    padding: 15px;
+    background: white;
+}
+
+.installment-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #ddd;
+}
+
+.installment-number {
+    font-size: 18px;
+    font-weight: 700;
+    color: #000;
+}
+
+.installment-amount {
+    font-size: 20px;
+    font-weight: 900;
+    color: #000;
+}
+
+.installment-details {
+    font-size: 13px;
+    color: #333;
+    line-height: 1.8;
+}
+
+.payment-status {
+    display: inline-block;
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-top: 8px;
+    border: 2px solid #000;
+}
+
+.status-full {
+    background: white;
+    color: #000;
+}
+
+.status-partial {
+    background: #f5f5f5;
+    color: #000;
+}
+
+.debt-summary {
+    padding: 15px 0;
+    border-bottom: 2px dashed #ccc;
+}
+
+.summary-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.summary-item {
+    border: 2px solid #ddd;
+    border-radius: 5px;
+    padding: 12px;
+    text-align: center;
+    background: white;
+}
+
+.summary-label {
+    font-size: 12px;
+    color: #666;
+    margin-bottom: 6px;
+}
+
+.summary-value {
+    font-size: 18px;
+    font-weight: 700;
+    color: #000;
+}
+
+.notes-section {
+    padding: 15px 0;
+}
+
+.note-text {
+    font-size: 13px;
+    color: #333;
+    line-height: 1.8;
+    border: 2px solid #ddd;
+    padding: 12px;
+    border-radius: 5px;
+    background: white;
+}
+
+.receipt-footer {
+    text-align: center;
+    padding: 15px 0;
+    margin-top: 20px;
+    border-top: 3px double #000;
+    font-size: 12px;
+    color: #333;
+}
+
+@media print {
+    body { padding: 0; }
+    .receipt-container { border: 2px solid #000; }
+}
+</style>
+</head>
+<body>
+<div class="receipt-container">
+    <div class="receipt-header">
+        <div class="store-name">${storeName}</div>
+        <div class="store-info">${storeAddress} • ${storePhone}</div>
+        <div class="devices-bar">
+            <div class="device-icon">
+                <span>🧊</span>
+                <span>ثلاجات</span>
+            </div>
+            <div class="device-icon">
+                <span>❄️</span>
+                <span>مبردات</span>
+            </div>
+            <div class="device-icon">
+                <span>👔</span>
+                <span>غسالات</span>
+            </div>
+            <div class="device-icon">
+                <span>🔥</span>
+                <span>مدافئ</span>
+            </div>
+            <div class="device-icon">
+                <span>💨</span>
+                <span>مراوح</span>
+            </div>
+            <div class="device-icon">
+                <span>📺</span>
+                <span>شاشات</span>
+            </div>
+            <div class="device-icon">
+                <span>📱</span>
+                <span>هواتف</span>
+            </div>
+            <div class="device-icon">
+                <span>⚡</span>
+                <span>أجهزة كهربائية</span>
+            </div>
+        </div>
+        <div class="receipt-title">إيصال تسديد قسط</div>
+    </div>
+    <div class="receipt-info">
+        <div class="info-box">
+            <div class="info-label">رقم الإيصال</div>
+            <div class="info-value">${toEnglishDigits(receiptNumber)}</div>
+        </div>
+        <div class="info-box">
+            <div class="info-label">رقم الفاتورة</div>
+            <div class="info-value">${toEnglishDigits(invoiceId)}</div>
+        </div>
+        <div class="info-box">
+            <div class="info-label">التاريخ</div>
+            <div class="info-value" style="font-size: 13px;">${dateStr}</div>
+        </div>
+        <div class="info-box">
+            <div class="info-label">الوقت</div>
+            <div class="info-value">${timeStr}</div>
+        </div>
+    </div>
+    <div class="customer-section">
+        <div class="section-title">👤 بيانات العميل</div>
+        <div class="customer-info">
+            <div class="info-item"><strong>الاسم:</strong> ${customerName}</div>
+            ${customerPhone ? `<div class="info-item"><strong>الهاتف:</strong> ${customerPhone}</div>` : ''}
+        </div>
+    </div>
+    <div class="paid-installments">
+        <div class="section-title">💰 القسط المسدد</div>
+        <div class="installment-card">
+            <div class="installment-header">
+                <div class="installment-number">القسط ${toEnglishDigits(paidMonth)} من ${toEnglishDigits(totalMonths)}</div>
+                <div class="installment-amount">${toEnglishDigits(paidAmount.toLocaleString('en'))} د.ع</div>
+            </div>
+            <div class="installment-details">
+                ${autoNote}${paymentNote ? `<br>📝 ${paymentNote}` : ''}
+            </div>
+            <span class="payment-status ${paymentType === 'full' ? 'status-full' : 'status-partial'}">
+                ${paymentType === 'full' ? '✓ تسديد كامل' : '⚠ تسديد جزئي'}
+            </span>
+        </div>
+    </div>
+    <div class="debt-summary">
+        <div class="section-title">📊 ملخص الدين</div>
+        <div class="summary-grid">
+            <div class="summary-item">
+                <div class="summary-label">إجمالي الدين</div>
+                <div class="summary-value">${toEnglishDigits(totalAmount.toLocaleString('en'))} د.ع</div>
+            </div>
+            <div class="summary-item">
+                <div class="summary-label">المبلغ المسدد</div>
+                <div class="summary-value">${toEnglishDigits(totalPaidAmount.toLocaleString('en'))} د.ع</div>
+            </div>
+            <div class="summary-item">
+                <div class="summary-label">المبلغ المتبقي</div>
+                <div class="summary-value">${toEnglishDigits(remainingAmount.toLocaleString('en'))} د.ع</div>
+            </div>
+            <div class="summary-item">
+                <div class="summary-label">الأقساط المسددة</div>
+                <div class="summary-value">${toEnglishDigits(paidMonthsCount)} من ${toEnglishDigits(totalMonths)}</div>
+            </div>
+        </div>
+    </div>
+    <div class="notes-section">
+        <div class="section-title">📌 ملاحظات هامة</div>
+        <div class="note-text">
+            • احتفظ بهذا الإيصال كإثبات للدفع<br>
+            • للاستفسار اتصل على: ${storePhone}<br>
+            • شكراً لثقتكم بنا
+        </div>
+    </div>
+    <div class="receipt-footer">
+        <div style="font-weight:700;margin-bottom:5px;">شكراً لثقتكم 🙏</div>
+        <div>نظام كاش برو - Digital Creativity © ${new Date().getFullYear()}</div>
+    </div>
+</div>
+</body>
+</html>`;
     
     return html;
-}
 }
 }
 </script>

@@ -135,9 +135,9 @@ body {
 
 .receipt-header {
     text-align: center;
-    padding: 15px 0;
+    padding: 6px 0 6px 0;
     border-bottom: 3px double #000;
-    margin-bottom: 20px;
+    margin-bottom: 8px;
 }
 
 .store-name {
@@ -155,36 +155,47 @@ body {
 }
 
 .devices-bar {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 10px;
-    padding: 12px 0;
-    border: 2px solid #ddd;
-    border-radius: 8px;
-    margin-top: 10px;
-    background: white;
-}
-
-.device-icon {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
     align-items: center;
     gap: 4px;
-    font-size: 11px;
-    color: #333;
+    padding: 2px 0;
+    border: 1px solid #bbb;
+    border-radius: 6px;
+    margin-top: 2px;
+    background: #fafafa;
+    min-height: 32px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
 }
 
+/* أيقونات الأجهزة في صف واحد وحجم أصغر */
+.device-icon {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 2px;
+    font-size: 9px;
+    color: #333;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: #f3f3f3;
+    min-width: 60px;
+    min-height: 22px;
+}
 .device-icon span:first-child {
-    font-size: 22px;
+    font-size: 15px;
+    margin-left: 2px;
 }
 
 .receipt-title {
     font-size: 20px;
     font-weight: 700;
-    margin: 15px 0 10px 0;
-    padding: 10px;
-    border: 2px solid #000;
-    border-radius: 5px;
+    margin: 2px 0 2px 0;
+    padding: 0;
+    border: none;
+    border-radius: 0;
     text-align: center;
     color: #000;
 }
@@ -192,8 +203,8 @@ body {
 .receipt-info {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    padding: 15px 0;
+    gap: 8px;
+    padding: 6px 0;
     border-bottom: 2px solid #ddd;
 }
 
@@ -218,7 +229,7 @@ body {
 }
 
 .customer-section {
-    padding: 15px 0;
+    padding: 6px 0;
     border-bottom: 2px dashed #ccc;
 }
 
@@ -247,52 +258,54 @@ body {
 }
 
 .paid-installments {
-    padding: 15px 0;
+    padding: 6px 0;
     border-bottom: 2px dashed #ccc;
 }
 
 .installment-card {
-    border: 2px solid #000;
-    border-radius: 8px;
-    padding: 15px;
+    border: 1px solid #000;
+    border-radius: 5px;
+    padding: 6px 10px;
     background: white;
+    margin-bottom: 4px;
 }
 
 .installment-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 10px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid #ddd;
+    margin-bottom: 4px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid #eee;
 }
 
 .installment-number {
-    font-size: 18px;
+    font-size: 13px;
     font-weight: 700;
     color: #000;
 }
 
 .installment-amount {
-    font-size: 20px;
-    font-weight: 900;
+    font-size: 15px;
+    font-weight: 700;
     color: #000;
 }
 
 .installment-details {
-    font-size: 13px;
+    font-size: 12px;
     color: #333;
-    line-height: 1.8;
+    line-height: 1.5;
+    margin-bottom: 2px;
 }
 
 .payment-status {
     display: inline-block;
-    padding: 6px 16px;
-    border-radius: 20px;
-    font-size: 12px;
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-size: 11px;
     font-weight: 600;
-    margin-top: 8px;
-    border: 2px solid #000;
+    margin-top: 2px;
+    border: 1px solid #000;
 }
 
 .status-full {
@@ -306,38 +319,44 @@ body {
 }
 
 .debt-summary {
-    padding: 15px 0;
-    border-bottom: 2px dashed #ccc;
+    padding: 4px 0 2px 0;
+    border-bottom: none;
+    margin-bottom: 0;
 }
 
 .summary-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    border: none;
 }
 
 .summary-item {
-    border: 2px solid #ddd;
-    border-radius: 5px;
-    padding: 12px;
+    border: none;
+    border-radius: 0;
+    padding: 2px 8px;
     text-align: center;
-    background: white;
+    background: none;
+    font-size: 13px;
+    min-width: 90px;
 }
 
 .summary-label {
-    font-size: 12px;
+    font-size: 11px;
     color: #666;
-    margin-bottom: 6px;
+    margin-bottom: 0;
 }
 
 .summary-value {
-    font-size: 18px;
+    font-size: 14px;
     font-weight: 700;
     color: #000;
 }
 
 .notes-section {
-    padding: 15px 0;
+    padding: 6px 0;
 }
 
 .note-text {
@@ -352,8 +371,8 @@ body {
 
 .receipt-footer {
     text-align: center;
-    padding: 15px 0;
-    margin-top: 20px;
+    padding: 6px 0;
+    margin-top: 8px;
     border-top: 3px double #000;
     font-size: 12px;
     color: #333;
@@ -369,7 +388,13 @@ body {
 <div class="receipt-container">
     <div class="receipt-header">
         <div class="store-name">${storeName}</div>
-        <div class="store-info">${storeAddress} • ${storePhone}</div>
+        <div class="receipt-header-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
+            <div style="font-size:13px; color:#333; font-weight:600;">${storeAddress} • ${storePhone}</div>
+            <div style="display:flex; gap:16px;">
+                <span style="font-size:13px; color:#333; font-weight:600;">رقم الإيصال: ${toEnglishDigits(receiptNumber)}</span>
+                <span style="font-size:13px; color:#333; font-weight:600;">رقم الفاتورة: ${toEnglishDigits(invoiceId)}</span>
+            </div>
+        </div>
         <div class="devices-bar">
             <div class="device-icon">
                 <span>🧊</span>
@@ -407,14 +432,6 @@ body {
         <div class="receipt-title">إيصال تسديد قسط</div>
     </div>
     <div class="receipt-info">
-        <div class="info-box">
-            <div class="info-label">رقم الإيصال</div>
-            <div class="info-value">${toEnglishDigits(receiptNumber)}</div>
-        </div>
-        <div class="info-box">
-            <div class="info-label">رقم الفاتورة</div>
-            <div class="info-value">${toEnglishDigits(invoiceId)}</div>
-        </div>
         <div class="info-box">
             <div class="info-label">التاريخ</div>
             <div class="info-value" style="font-size: 13px;">${dateStr}</div>
@@ -484,7 +501,6 @@ body {
 </html>`;
     
     return html;
-}
 }
 </script>
 <!doctype html>
@@ -11447,6 +11463,31 @@ console.log(`
           <option value="overdue">متأخر</option>
           <option value="upcoming">قادم</option>
           <option value="pending">معلق</option>
+          <option value="partially_paid">تسديد جزئي</option>
+         </select>
+        </div>
+        
+        <!-- 🔥 فلتر الأشهر - جديد -->
+        <div class="form-group">
+         <label for="paymentsMonthFilter" style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+          <i class="fas fa-calendar-alt" style="color: var(--primary-color);"></i>
+          <span>فلتر حسب الشهر</span>
+         </label>
+         <select id="paymentsMonthFilter" class="form-control" onchange="applyPaymentsFilters()">
+          <option value="all">جميع الأشهر</option>
+          <option value="1">الشهر 1</option>
+          <option value="2">الشهر 2</option>
+          <option value="3">الشهر 3</option>
+          <option value="4">الشهر 4</option>
+          <option value="5">الشهر 5</option>
+          <option value="6">الشهر 6</option>
+          <option value="7">الشهر 7</option>
+          <option value="8">الشهر 8</option>
+          <option value="9">الشهر 9</option>
+          <option value="10">الشهر 10</option>
+          <option value="11">الشهر 11</option>
+          <option value="12">الشهر 12</option>
+          <option value="13+">الشهر 13+</option>
          </select>
         </div>
         
@@ -11702,6 +11743,30 @@ console.log(`
           <option value="pending">قيد الانتظار</option>
           <option value="overdue">متأخرة</option>
           <option value="upcoming">قادمة</option>
+          <option value="partially_paid">تسديد جزئي</option>
+         </select>
+        </div>
+        
+        <!-- 🔥 فلتر الأشهر - جديد -->
+        <div class="form-group">
+         <label style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-primary);">
+          <i class="fas fa-calendar-alt"></i> الشهر:
+         </label>
+         <select id="paymentsMonthFilter" class="form-control" onchange="applyPaymentsFilters()">
+          <option value="all">جميع الأشهر</option>
+          <option value="1">الشهر 1</option>
+          <option value="2">الشهر 2</option>
+          <option value="3">الشهر 3</option>
+          <option value="4">الشهر 4</option>
+          <option value="5">الشهر 5</option>
+          <option value="6">الشهر 6</option>
+          <option value="7">الشهر 7</option>
+          <option value="8">الشهر 8</option>
+          <option value="9">الشهر 9</option>
+          <option value="10">الشهر 10</option>
+          <option value="11">الشهر 11</option>
+          <option value="12">الشهر 12</option>
+          <option value="13+">الشهر 13+</option>
          </select>
         </div>
         
@@ -25668,11 +25733,12 @@ if (typeof window !== 'undefined') {
             
             console.log('Final totalAmount:', totalAmount);
             
-            // حساب المبلغ المدفوع من الأقساط
+            // 🔥 إصلاح: حساب المبلغ المدفوع من الأقساط (كاملة وجزئية)
             let paidAmount = 0;
             let paidMonths = 0;
+            let partiallyPaidMonths = 0;
             
-            console.log('=== Calculating Paid Amount ===');
+            console.log('=== Calculating Paid Amount (FIXED) ===');
             console.log('Installments array:', debt.installments);
             console.log('Is array?', Array.isArray(debt.installments));
             console.log('Length:', debt.installments?.length);
@@ -25686,10 +25752,17 @@ if (typeof window !== 'undefined') {
                     console.log(`    Amount: ${inst.amount} (type: ${typeof inst.amount})`);
                     
                     if (inst.status === 'paid') {
+                        // قسط مسدد بالكامل
                         const instAmount = parseFloat(inst.paid_amount || inst.amount || 0);
-                        console.log(`    ✓ PAID - Adding amount: ${instAmount}`);
+                        console.log(`    ✓ FULLY PAID - Adding amount: ${instAmount}`);
                         paidAmount += instAmount;
                         paidMonths++;
+                    } else if (inst.status === 'partially_paid') {
+                        // قسط مسدد جزئياً - إضافة المبلغ المدفوع فقط
+                        const instPaidAmount = parseFloat(inst.paid_amount || 0);
+                        console.log(`    ⚠️ PARTIALLY PAID - Adding paid amount: ${instPaidAmount}`);
+                        paidAmount += instPaidAmount;
+                        partiallyPaidMonths++;
                     } else {
                         console.log(`    ✗ NOT PAID - Status is "${inst.status}"`);
                     }
@@ -25701,9 +25774,10 @@ if (typeof window !== 'undefined') {
                 console.log('⚠️ No installments found and no paid_amount field!');
             }
             
-            console.log('=== Paid Amount Calculation Complete ===');
+            console.log('=== Paid Amount Calculation Complete (FIXED) ===');
             console.log('Total Paid Amount:', paidAmount);
-            console.log('Paid Months:', paidMonths);
+            console.log('Fully Paid Months:', paidMonths);
+            console.log('Partially Paid Months:', partiallyPaidMonths);
             
             console.log('Final calculations:');
             console.log('  Total Amount:', totalAmount);
@@ -25711,14 +25785,15 @@ if (typeof window !== 'undefined') {
             console.log('  Paid Months:', paidMonths);
             
             // التأكد من صحة الأرقام
-            totalAmount = parseFloat(totalAmount) || 0;
-            paidAmount = parseFloat(paidAmount) || 0;
+            totalAmount = Math.round(parseFloat(totalAmount) || 0);
+            paidAmount = Math.round(parseFloat(paidAmount) || 0);
             
             // حساب المبلغ المتبقي
             let remainingAmount = totalAmount - paidAmount;
             
             // التأكد من أن المبلغ المتبقي لا يكون سالب
             if (remainingAmount < 0) remainingAmount = 0;
+            remainingAmount = Math.round(remainingAmount);
             
             // حساب النسبة المئوية مع حماية من القسمة على صفر
             let percentage = 0;
@@ -25749,6 +25824,7 @@ if (typeof window !== 'undefined') {
                     <div>
                         <div style="color: var(--theme-text-secondary); font-size: var(--font-size-base); margin-bottom: 5px;">المبلغ المدفوع</div>
                         <div style="font-size: 24px; font-weight: bold; color: var(--success-color);">${formatCurrency(paidAmount)}</div>
+                        ${partiallyPaidMonths > 0 ? `<div style="font-size: 0.85rem; color: var(--warning-color); margin-top: 5px;"><i class="fas fa-exclamation-circle"></i> (${partiallyPaidMonths} قسط جزئي)</div>` : ''}
                     </div>
                     <div>
                         <div style="color: var(--theme-text-secondary); font-size: var(--font-size-base); margin-bottom: 5px;">المبلغ المتبقي</div>
@@ -26230,26 +26306,88 @@ if (typeof window !== 'undefined') {
             
             const payments = debt.payments || [];
             
+            console.log('=== Rendering Payments History (FIXED) ===');
+            console.log('Total payments:', payments.length);
+            console.log('Payments:', payments);
+            
             if (payments.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 20px; color: var(--theme-text-secondary);">لا توجد تسديدات حتى الآن</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px; color: var(--theme-text-secondary);">لا توجد تسديدات حتى الآن</td></tr>';
                 return;
             }
             
-            tbody.innerHTML = payments.map(payment => {
-                // ملاحظة تلقائية للدفع الجزئي
-                let autoNote = payment.notes || '';
-                if (payment.payment_type === 'partial' && payment.difference > 0) {
-                    autoNote = `تم دفع جزء من القسط (${formatCurrency(payment.amount)})، المتبقي (${formatCurrency(payment.difference)}) تم ترحيله إلى الشهر القادم.`;
+            // 🔥 إصلاح: عرض جميع التسديدات (كاملة وجزئية) مع تفاصيل أكثر
+            tbody.innerHTML = payments.map((payment, index) => {
+                const paymentDate = new Date(payment.date);
+                const formattedDate = paymentDate.toLocaleString('ar-IQ', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                
+                // تحديد نوع التسديد
+                const isPartial = payment.payment_type === 'partial';
+                const paymentTypeIcon = isPartial ? '⚠️' : '✅';
+                const paymentTypeText = isPartial ? 'تسديد جزئي' : 'تسديد كامل';
+                const paymentTypeColor = isPartial ? 'var(--warning-color)' : 'var(--success-color)';
+                
+                // عرض تفاصيل التسديد الجزئي
+                let detailsHtml = '';
+                if (isPartial && payment.remaining_for_month > 0) {
+                    detailsHtml = `
+                        <div style="font-size: 0.85rem; color: var(--warning-color); margin-top: 5px;">
+                            المبلغ الأصلي: ${formatCurrency(payment.original_amount || 0)}<br>
+                            المتبقي: ${formatCurrency(payment.remaining_for_month)}
+                        </div>
+                    `;
                 }
+                
+                // 🆕 عرض معلومات الترحيل
+                let carryforwardHtml = '';
+                if (payment.carried_forward && payment.carried_forward_amount > 0) {
+                    carryforwardHtml = `
+                        <div style="font-size: 0.85rem; color: #f59e0b; margin-top: 8px; padding: 8px; background: rgba(251, 191, 36, 0.1); border-radius: 6px; border-right: 3px solid #f59e0b;">
+                            <i class="fas fa-arrow-circle-left"></i> 
+                            <strong>تم ترحيل ${formatCurrency(payment.carried_forward_amount)}</strong>
+                            <br>
+                            <small>إلى الشهر ${payment.carried_forward_to}</small>
+                        </div>
+                    `;
+                }
+                
                 return `
-                    <tr>
-                        <td>${new Date(payment.date).toLocaleString('en-US')}</td>
-                        <td style="font-weight: bold; color: var(--success-color);">${formatCurrency(payment.amount)}</td>
-                        <td><strong>الشهر ${payment.month}</strong></td>
-                        <td>${autoNote}</td>
+                    <tr style="background: ${index % 2 === 0 ? 'var(--theme-bg)' : 'var(--theme-bg-secondary)'};">
+                        <td style="padding: 15px;">
+                            <i class="fas fa-calendar-alt" style="color: var(--primary-color); margin-left: 8px;"></i>
+                            ${formattedDate}
+                        </td>
+                        <td style="font-weight: bold; color: var(--success-color); padding: 15px;">
+                            <i class="fas fa-money-bill-wave" style="margin-left: 5px;"></i>
+                            ${formatCurrency(payment.amount)}
+                        </td>
+                        <td style="padding: 15px;">
+                            <strong style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 6px 14px; border-radius: 20px; font-size: 0.9rem;">
+                                <i class="fas fa-calendar-check" style="margin-left: 5px;"></i>
+                                الشهر ${payment.month}
+                            </strong>
+                        </td>
+                        <td style="padding: 15px;">
+                            <div style="display: flex; align-items: center; gap: 8px; color: ${paymentTypeColor}; font-weight: 600;">
+                                <span style="font-size: 1.2rem;">${paymentTypeIcon}</span>
+                                ${paymentTypeText}
+                            </div>
+                            ${detailsHtml}
+                            ${carryforwardHtml}
+                        </td>
+                        <td style="padding: 15px; color: var(--theme-text-secondary);">
+                            ${payment.notes || '-'}
+                        </td>
                     </tr>
                 `;
             }).join('');
+            
+            console.log('✅ Rendered', payments.length, 'payment records');
         }
 
         // ================================================================
@@ -26286,33 +26424,42 @@ if (typeof window !== 'undefined') {
         function buildInstallmentRowWithCarryforward(inst, debt) {
             const dueDate = inst.due_date ? new Date(inst.due_date).toLocaleDateString('ar-IQ') : '-';
             const paidDate = inst.paid_date ? new Date(inst.paid_date).toLocaleDateString('ar-IQ') : '-';
-            // معلومات الترحيل
+            
+            // 🔥 معلومات الترحيل المستلمة
             const hasCarryforward = (inst.carryforward_received || 0) > 0;
-            const carryforwardInfo = hasCarryforward 
-                ? `<div style="color: #f59e0b; font-size: 0.85em; margin-top: 4px;">
-                     <i class="fas fa-arrow-left"></i> 
-                     مرحل من الشهر ${inst.carryforward_from_month}: 
-                     ${(inst.carryforward_received || 0).toLocaleString('en')} د.ع
-                   </div>` 
-                : '';
+            let carryforwardInfo = '';
+            
+            if (hasCarryforward && inst.carryforward_from && Array.isArray(inst.carryforward_from)) {
+                const carryforwardDetails = inst.carryforward_from.map(cf => 
+                    `الشهر ${cf.from_month} (${cf.amount.toLocaleString('en')} د.ع)`
+                ).join(' + ');
+                
+                carryforwardInfo = `<div style="color: #f59e0b; font-size: 0.85em; margin-top: 4px; font-weight: 600;">
+                     <i class="fas fa-arrow-circle-left"></i> 
+                     مرحل من: ${carryforwardDetails}
+                   </div>`;
+            }
+            
             // المبلغ الأصلي (قبل الترحيل)
             const originalAmount = inst.original_amount || inst.amount;
+            const currentAmount = parseFloat(inst.amount) || 0;
             const displayAmount = hasCarryforward 
                 ? `<div>
-                     <div style="font-weight: bold;">${inst.amount.toLocaleString('en')} د.ع</div>
+                     <div style="font-weight: bold; color: var(--primary-color);">${currentAmount.toLocaleString('en')} د.ع</div>
                      <div style="color: #6b7280; font-size: 0.85em;">
                        الأصلي: ${originalAmount.toLocaleString('en')} د.ع
                      </div>
                    </div>`
-                : `${inst.amount.toLocaleString('en')} د.ع`;
+                : `${currentAmount.toLocaleString('en')} د.ع`;
+            
             // الحالة مع التفاصيل
             let statusHtml = '';
             if (inst.status === 'paid') {
                 statusHtml = `<span class="installment-status paid">✓ مسدد</span>`;
             } else if (inst.status === 'partially_paid') {
-                const remaining = inst.amount - (inst.paid_amount || 0);
+                const remaining = Math.round(currentAmount - (inst.paid_amount || 0));
                 statusHtml = `<span class="installment-status partially_paid">⚠️ دفع جزئي</span>
-                              <div style="font-size: 0.85em; color: #dc2626; margin-top: 4px;">
+                              <div style="font-size: 0.85em; color: #dc2626; margin-top: 4px; font-weight: 600;">
                                 متبقي: ${remaining.toLocaleString('en')} د.ع
                               </div>`;
             } else {
@@ -26323,20 +26470,28 @@ if (typeof window !== 'undefined') {
                     ? `<span class="installment-status overdue">⏰ متأخر</span>` 
                     : `<span class="installment-status pending">⏳ معلق</span>`;
             }
+            
             return `
-                <tr>
-                    <td>${inst.month}</td>
+                <tr style="${hasCarryforward ? 'background: rgba(251, 191, 36, 0.05);' : ''}">
+                    <td><strong style="font-size: 1.1rem;">${inst.month}</strong></td>
                     <td>${displayAmount}${carryforwardInfo}</td>
                     <td>${dueDate}</td>
                     <td>${statusHtml}</td>
                     <td>${paidDate}</td>
                     <td>
-                        ${inst.status !== 'paid' 
-                            ? `<button class="action-btn" onclick="payInstallment('${debt.id}', ${inst.month})" 
+                        ${inst.status === 'paid' 
+                            ? `<button class="action-btn" style="background: var(--success-color); color: white; cursor: default;" disabled>
+                                <i class="fas fa-check-circle"></i> مسدد
+                               </button>`
+                            : inst.status === 'partially_paid'
+                            ? `<button class="action-btn" style="background: var(--warning-color);" onclick="payInstallment('${debt.id}', ${inst.month})" 
+                                title="تسديد المتبقي">
+                                <i class="fas fa-money-bill-wave"></i> تسديد المتبقي
+                               </button>`
+                            : `<button class="action-btn" onclick="payInstallment('${debt.id}', ${inst.month})" 
                                 title="تسديد القسط">
                                 <i class="fas fa-money-bill-wave"></i> تسديد
                                </button>`
-                            : `<span style="color: #10b981;">✓ تم الدفع</span>`
                         }
                     </td>
                 </tr>
@@ -26509,22 +26664,41 @@ if (typeof window !== 'undefined') {
                 return;
             }
             
-            console.log('=== Processing Installment Payment ===');
+            console.log('=== Processing Installment Payment (FIXED) ===');
             console.log('Month:', currentInstallmentMonth);
             console.log('Original installment amount:', installment.amount);
             console.log('Paid amount:', paidAmount);
             
-            // حساب المبلغ الأصلي للقسط
-            const originalAmount = parseFloat(installment.amount) || 0;
+            // 🔥 إصلاح: حساب المبلغ الأصلي للقسط بشكل صحيح
+            const originalAmount = parseFloat(installment.original_amount || installment.amount) || 0;
+            
+            // حساب المبلغ المدفوع سابقاً (في حالة التسديد الجزئي المتكرر)
+            const previouslyPaid = parseFloat(installment.paid_amount) || 0;
+            const totalPaidForThisInstallment = previouslyPaid + paidAmount;
+            
+            console.log('Original amount:', originalAmount);
+            console.log('Previously paid:', previouslyPaid);
+            console.log('Current payment:', paidAmount);
+            console.log('Total paid for installment:', totalPaidForThisInstallment);
             
             // تحديث القسط الحالي بالمبلغ المدفوع
             installment.paid_date = new Date().toISOString();
-            installment.paid_amount = paidAmount;
+            installment.paid_amount = totalPaidForThisInstallment;
             
-            // تحديد حالة القسط بناءً على المبلغ المدفوع
-            if (paidAmount >= originalAmount) {
+            // تخزين المبلغ الأصلي إذا لم يكن موجوداً
+            if (!installment.original_amount) {
+                installment.original_amount = originalAmount;
+            }
+            
+            // 🔥 إصلاح: تحديد حالة القسط بشكل صحيح (مع تقريب الأرقام)
+            const roundedTotal = Math.round(totalPaidForThisInstallment);
+            const roundedOriginal = Math.round(originalAmount);
+            
+            if (roundedTotal >= roundedOriginal) {
                 // دفع كامل
                 installment.status = 'paid';
+                // تأكد من أن المبلغ المدفوع لا يزيد عن الأصلي
+                installment.paid_amount = originalAmount;
                 console.log('✅ Full payment - status: paid');
             } else {
                 // دفع جزئي
@@ -26532,34 +26706,108 @@ if (typeof window !== 'undefined') {
                 console.log('⚠️ Partial payment - status: partially_paid');
             }
             
-            // إضافة السجل للتسديدات
+            // 🔥 إصلاح: إضافة السجل للتسديدات بشكل صحيح
             if (!debt.payments) {
                 debt.payments = [];
+            }
+            
+            // حساب الفرق (المتبقي من القسط)
+            const remainingForMonth = Math.round(originalAmount - totalPaidForThisInstallment);
+            const isPartialPayment = totalPaidForThisInstallment < originalAmount;
+            
+            // 🆕 نظام الترحيل التلقائي
+            let carriedForwardAmount = 0;
+            let carriedForwardTo = null;
+            
+            if (isPartialPayment && remainingForMonth > 0) {
+                // البحث عن القسط التالي
+                const nextInstallment = debt.installments.find(inst => inst.month === currentInstallmentMonth + 1);
+                
+                if (nextInstallment) {
+                    console.log('🔄 Carryforward detected - Remaining:', remainingForMonth);
+                    console.log('   Next installment (Month', nextInstallment.month, '):', nextInstallment.amount);
+                    
+                    // حفظ المبلغ الأصلي إذا لم يكن محفوظاً
+                    if (!nextInstallment.original_amount) {
+                        nextInstallment.original_amount = nextInstallment.amount;
+                    }
+                    
+                    // إضافة المبلغ المرحل إلى القسط التالي
+                    nextInstallment.amount = parseFloat(nextInstallment.amount) + remainingForMonth;
+                    
+                    // تسجيل معلومات الترحيل
+                    if (!nextInstallment.carryforward_received) {
+                        nextInstallment.carryforward_received = 0;
+                    }
+                    nextInstallment.carryforward_received += remainingForMonth;
+                    
+                    // حفظ مصدر الترحيل
+                    if (!nextInstallment.carryforward_from) {
+                        nextInstallment.carryforward_from = [];
+                    }
+                    nextInstallment.carryforward_from.push({
+                        from_month: currentInstallmentMonth,
+                        amount: remainingForMonth,
+                        date: new Date().toISOString()
+                    });
+                    
+                    carriedForwardAmount = remainingForMonth;
+                    carriedForwardTo = nextInstallment.month;
+                    
+                    console.log('   ✅ Carried forward', remainingForMonth, 'to month', nextInstallment.month);
+                    console.log('   New amount for month', nextInstallment.month, ':', nextInstallment.amount);
+                } else {
+                    console.log('⚠️ No next installment found - Cannot carryforward');
+                }
             }
             
             // إضافة معلومات للسجل
             const paymentRecord = {
                 date: new Date().toISOString(),
-                amount: paidAmount,
+                amount: paidAmount, // المبلغ المدفوع في هذه العملية فقط
                 month: currentInstallmentMonth,
                 original_amount: originalAmount,
-                payment_type: paidAmount >= originalAmount ? 'full' : 'partial',
-                notes: notes || `تسديد القسط الشهري رقم ${currentInstallmentMonth}`
+                total_paid_for_month: totalPaidForThisInstallment, // إجمالي المدفوع لهذا الشهر
+                remaining_for_month: remainingForMonth > 0 ? remainingForMonth : 0, // المتبقي لهذا الشهر
+                payment_type: isPartialPayment ? 'partial' : 'full',
+                difference: remainingForMonth > 0 ? remainingForMonth : 0,
+                carried_forward: carriedForwardAmount > 0, // هل تم الترحيل
+                carried_forward_amount: carriedForwardAmount, // المبلغ المرحل
+                carried_forward_to: carriedForwardTo, // إلى أي شهر
+                notes: notes || (isPartialPayment 
+                    ? `تسديد جزئي للقسط رقم ${currentInstallmentMonth} - المبلغ المدفوع: ${formatCurrency(paidAmount)} - المتبقي: ${formatCurrency(remainingForMonth)}${carriedForwardAmount > 0 ? ` - تم ترحيل ${formatCurrency(carriedForwardAmount)} إلى الشهر ${carriedForwardTo}` : ''}`
+                    : `تسديد كامل للقسط رقم ${currentInstallmentMonth}`)
             };
             
             debt.payments.push(paymentRecord);
             console.log('Payment record added:', paymentRecord);
             
-            // تحديث المبلغ المتبقي والمبلغ المدفوع - بدون تأثير على total_amount
+            // 🔥 إصلاح: تحديث المبلغ المتبقي والمبلغ المدفوع بشكل صحيح
             const totalAmount = debt.total_amount || debt.final_total || 0;
             const currentPaid = debt.paid_amount || 0;
             debt.paid_amount = currentPaid + paidAmount;
             
-            const currentRemaining = debt.remaining_amount !== undefined ? debt.remaining_amount : totalAmount;
-            debt.remaining_amount = currentRemaining - paidAmount;
+            // حساب المبلغ المتبقي من إجمالي جميع الأقساط بشكل دقيق
+            let totalRemainingFromInstallments = 0;
+            if (debt.installments && Array.isArray(debt.installments)) {
+                debt.installments.forEach(inst => {
+                    const instOriginal = parseFloat(inst.original_amount || inst.amount || 0);
+                    const instPaid = parseFloat(inst.paid_amount || 0);
+                    const instRemaining = instOriginal - instPaid;
+                    if (instRemaining > 0) {
+                        totalRemainingFromInstallments += instRemaining;
+                    }
+                });
+            }
+            
+            // 🔥 إصلاح: تقريب المبلغ المتبقي لتجنب مشاكل الكسور العشرية
+            debt.remaining_amount = Math.round(totalRemainingFromInstallments);
             if (debt.remaining_amount < 0) debt.remaining_amount = 0;
             
-            // تحديث الحالة
+            // 🔥 إصلاح: تقريب المبلغ المدفوع أيضاً
+            debt.paid_amount = Math.round(debt.paid_amount);
+            
+            // 🔥 إصلاح: تحديث الحالة بشكل دقيق
             const allFullyPaid = debt.installments.every(inst => inst.status === 'paid');
             const anyPartiallyPaid = debt.installments.some(inst => inst.status === 'partially_paid');
             
@@ -26571,9 +26819,11 @@ if (typeof window !== 'undefined') {
                 debt.status = 'نشط';
             }
             
-            console.log('Payment processed - Paid:', debt.paid_amount, 'Remaining:', debt.remaining_amount);
-            console.log('Total Amount (unchanged):', totalAmount);
-            console.log('Debt status:', debt.status);
+            console.log('Payment processed (FIXED):');
+            console.log('  - Total Amount:', totalAmount);
+            console.log('  - Paid Amount:', debt.paid_amount);
+            console.log('  - Remaining Amount:', debt.remaining_amount);
+            console.log('  - Debt Status:', debt.status);
             
             // حفظ في قاعدة البيانات
             if (window.dataSdk && debt.id) {
@@ -31509,39 +31759,111 @@ body {
             try {
                 allPayments = [];
                 
+                // 🔥 إصلاح: تحديث debtsData أولاً
+                if (window.dataSdk) {
+                    const allData = await window.dataSdk.query();
+                    if (allData.isOk) {
+                        debtsData = allData.data.filter(item => item.type === 'debt');
+                        console.log('✅ Updated debtsData:', debtsData.length, 'debts');
+                    }
+                }
+                
                 // تحميل الديون
-                const debts = window.dataSdk.query({ type: 'debt' });
+                const debts = debtsData.length > 0 ? debtsData : (window.dataSdk ? window.dataSdk.query({ type: 'debt' }) : []);
                 
                 if (!debts || debts.length === 0) {
                     console.log('⚠️ لا توجد ديون محفوظة');
                     return;
                 }
                 
-                // استخراج جميع الأقساط من الديون
+                console.log('=== Loading All Payments (FIXED) ===');
+                console.log('Total debts:', debts.length);
+                
+                // 🔥 إصلاح: استخراج التسديدات الفعلية من سجل payments بدلاً من الأقساط المجدولة
                 debts.forEach(debt => {
-                    if (debt.installments && Array.isArray(debt.installments)) {
-                        debt.installments.forEach((installment, index) => {
+                    // التحقق من وجود سجل تسديدات
+                    if (debt.payments && Array.isArray(debt.payments) && debt.payments.length > 0) {
+                        console.log(`Processing debt ${debt.id} - ${debt.payments.length} payments found`);
+                        
+                        // إضافة كل تسديد فعلي
+                        debt.payments.forEach((payment, index) => {
+                            // البحث عن القسط المرتبط للحصول على تاريخ الاستحقاق
+                            const relatedInstallment = debt.installments?.find(inst => inst.month === payment.month);
+                            
                             allPayments.push({
-                                id: `${debt.id}_${index}`,
+                                id: `${debt.id}_payment_${index}`,
                                 debt_id: debt.id,
                                 customer_name: debt.customer_name,
                                 customer_phone: debt.customer_phone,
-                                month: installment.month,
-                                amount: installment.amount,
-                                due_date: installment.due_date,
-                                paid_date: installment.paid_date,
-                                status: installment.status || 'pending',
-                                notes: installment.notes || '',
+                                month: payment.month,
+                                amount: payment.amount,
+                                original_amount: payment.original_amount || payment.amount,
+                                total_paid_for_month: payment.total_paid_for_month || payment.amount,
+                                remaining_for_month: payment.remaining_for_month || 0,
+                                payment_type: payment.payment_type || 'full',
+                                due_date: relatedInstallment?.due_date || payment.date,
+                                paid_date: payment.date,
+                                payment_date: payment.date, // تاريخ التسديد الفعلي
+                                status: 'paid', // جميع السجلات في payments هي تسديدات مدفوعة
+                                notes: payment.notes || '',
                                 total_debt: debt.total_amount || debt.final_total,
                                 monthly_amount: debt.monthly_amount,
                                 installment_months: debt.installment_months,
-                                installments: debt.installments // للاستخدام في التفاصيل
+                                installments: debt.installments
                             });
+                        });
+                    }
+                    
+                    // إضافة الأقساط غير المسددة أيضاً للعرض الكامل
+                    if (debt.installments && Array.isArray(debt.installments)) {
+                        debt.installments.forEach((installment, index) => {
+                            if (installment.status !== 'paid' && installment.status !== 'partially_paid') {
+                                allPayments.push({
+                                    id: `${debt.id}_installment_${index}`,
+                                    debt_id: debt.id,
+                                    customer_name: debt.customer_name,
+                                    customer_phone: debt.customer_phone,
+                                    month: installment.month,
+                                    amount: installment.amount,
+                                    original_amount: installment.original_amount || installment.amount,
+                                    due_date: installment.due_date,
+                                    paid_date: null,
+                                    payment_date: null,
+                                    status: installment.status || 'pending',
+                                    notes: installment.notes || '',
+                                    total_debt: debt.total_amount || debt.final_total,
+                                    monthly_amount: debt.monthly_amount,
+                                    installment_months: debt.installment_months,
+                                    installments: debt.installments
+                                });
+                            } else if (installment.status === 'partially_paid') {
+                                // إضافة الأقساط الجزئية لعرض المتبقي منها
+                                allPayments.push({
+                                    id: `${debt.id}_partial_${index}`,
+                                    debt_id: debt.id,
+                                    customer_name: debt.customer_name,
+                                    customer_phone: debt.customer_phone,
+                                    month: installment.month,
+                                    amount: installment.amount - (installment.paid_amount || 0), // المبلغ المتبقي
+                                    original_amount: installment.original_amount || installment.amount,
+                                    paid_amount: installment.paid_amount || 0,
+                                    due_date: installment.due_date,
+                                    paid_date: installment.paid_date,
+                                    payment_date: installment.paid_date,
+                                    status: 'partially_paid',
+                                    notes: `تسديد جزئي - المتبقي: ${formatCurrency((installment.amount || 0) - (installment.paid_amount || 0))}`,
+                                    total_debt: debt.total_amount || debt.final_total,
+                                    monthly_amount: debt.monthly_amount,
+                                    installment_months: debt.installment_months,
+                                    installments: debt.installments
+                                });
+                            }
                         });
                     }
                 });
 
-                console.log(`✅ تم تحميل ${allPayments.length} تسديد`);
+                console.log(`✅ تم تحميل ${allPayments.length} سجل (تسديدات وأقساط)`);
+                console.log('All payments:', allPayments);
             } catch (error) {
                 console.error('❌ خطأ في تحميل التسديدات:', error);
                 // تم إزالة الإشعار
@@ -31571,13 +31893,19 @@ body {
             const dateTo = document.getElementById('paymentsDateTo')?.value || '';
             const status = document.getElementById('paymentsStatusFilter')?.value || 'all';
             const sortBy = document.getElementById('paymentsSortFilter')?.value || 'date_desc';
+            const monthFilter = document.getElementById('paymentsMonthFilter')?.value || 'all';
             
             currentFilters.dateFrom = dateFrom;
             currentFilters.dateTo = dateTo;
             currentFilters.status = status;
             currentFilters.sortBy = sortBy;
+            currentFilters.monthFilter = monthFilter;
 
             filteredPayments = [...allPayments];
+            
+            console.log('=== Applying Filters (FIXED) ===');
+            console.log('Total payments before filters:', filteredPayments.length);
+            console.log('Filters:', currentFilters);
 
             // فلتر البحث النصي
             if (currentFilters.searchText) {
@@ -31586,35 +31914,54 @@ body {
                     payment.customer_name.toLowerCase().includes(searchLower) ||
                     (payment.customer_phone && payment.customer_phone.includes(searchLower))
                 );
+                console.log('After search filter:', filteredPayments.length);
             }
 
             // فلتر التاريخ من
             if (currentFilters.dateFrom) {
                 const fromDate = new Date(currentFilters.dateFrom);
                 filteredPayments = filteredPayments.filter(payment => {
-                    const dueDate = new Date(payment.due_date);
-                    return dueDate >= fromDate;
+                    const paymentDate = payment.payment_date ? new Date(payment.payment_date) : new Date(payment.due_date);
+                    return paymentDate >= fromDate;
                 });
+                console.log('After date from filter:', filteredPayments.length);
             }
 
             // فلتر التاريخ إلى
             if (currentFilters.dateTo) {
                 const toDate = new Date(currentFilters.dateTo);
                 filteredPayments = filteredPayments.filter(payment => {
-                    const dueDate = new Date(payment.due_date);
-                    return dueDate <= toDate;
+                    const paymentDate = payment.payment_date ? new Date(payment.payment_date) : new Date(payment.due_date);
+                    return paymentDate <= toDate;
                 });
+                console.log('After date to filter:', filteredPayments.length);
+            }
+            
+            // 🔥 فلتر الشهر - جديد
+            if (currentFilters.monthFilter && currentFilters.monthFilter !== 'all') {
+                if (currentFilters.monthFilter === '13+') {
+                    // الأشهر 13 وما فوق
+                    filteredPayments = filteredPayments.filter(payment => payment.month >= 13);
+                } else {
+                    // شهر محدد
+                    const monthNum = parseInt(currentFilters.monthFilter);
+                    filteredPayments = filteredPayments.filter(payment => payment.month === monthNum);
+                }
+                console.log('After month filter:', filteredPayments.length);
             }
 
             // فلتر الحالة
             if (currentFilters.status !== 'all') {
+                console.log('Filtering by status:', currentFilters.status);
+                
                 if (currentFilters.status === 'overdue') {
                     // الأقساط المتأخرة: غير مسددة وتاريخ الاستحقاق قد مضى
                     const today = new Date();
                     today.setHours(0, 0, 0, 0);
                     filteredPayments = filteredPayments.filter(payment => {
                         const dueDate = new Date(payment.due_date);
-                        return payment.status !== 'paid' && dueDate < today;
+                        dueDate.setHours(0, 0, 0, 0);
+                        return (payment.status === 'pending' || payment.status === 'partially_paid') && dueDate < today;
                     });
                 } else if (currentFilters.status === 'upcoming') {
                     // الأقساط القادمة: غير مسددة وتاريخ الاستحقاق لم يأتِ بعد
@@ -31622,22 +31969,30 @@ body {
                     today.setHours(0, 0, 0, 0);
                     filteredPayments = filteredPayments.filter(payment => {
                         const dueDate = new Date(payment.due_date);
-                        return payment.status !== 'paid' && dueDate >= today;
+                        dueDate.setHours(0, 0, 0, 0);
+                        return (payment.status === 'pending' || payment.status === 'partially_paid') && dueDate >= today;
                     });
                 } else {
-                    filteredPayments = filteredPayments.filter(payment => 
-                        payment.status === currentFilters.status
-                    );
+                    // فلترة مباشرة حسب الحالة
+                    filteredPayments = filteredPayments.filter(payment => {
+                        console.log(`  Payment month ${payment.month}: status = "${payment.status}"`);
+                        return payment.status === currentFilters.status;
+                    });
                 }
+                console.log('After status filter:', filteredPayments.length);
             }
 
             // الترتيب
             filteredPayments.sort((a, b) => {
                 switch (currentFilters.sortBy) {
                     case 'date_desc':
-                        return new Date(b.due_date) - new Date(a.due_date);
+                        const dateA = new Date(a.payment_date || a.due_date);
+                        const dateB = new Date(b.payment_date || b.due_date);
+                        return dateB - dateA;
                     case 'date_asc':
-                        return new Date(a.due_date) - new Date(b.due_date);
+                        const dateA2 = new Date(a.payment_date || a.due_date);
+                        const dateB2 = new Date(b.payment_date || b.due_date);
+                        return dateA2 - dateB2;
                     case 'amount_desc':
                         return b.amount - a.amount;
                     case 'amount_asc':
@@ -31650,6 +32005,9 @@ body {
                         return 0;
                 }
             });
+            
+            console.log('Final filtered count:', filteredPayments.length);
+            console.log('=================================');
 
             renderPaymentsTable();
             updatePaymentsStats();
@@ -31672,23 +32030,26 @@ body {
 
             if (noDataMessage) noDataMessage.style.display = 'none';
 
+            console.log('=== Rendering Payments Table (FIXED) ===');
+            console.log('Filtered payments:', filteredPayments.length);
+
             tbody.innerHTML = filteredPayments.map(payment => {
                 const statusInfo = getPaymentStatus(payment);
                 
-                // تنسيق تاريخ الاستحقاق مع اسم اليوم
-                const dueDate = new Date(payment.due_date);
-                const dueDayName = dueDate.toLocaleDateString('ar-IQ', { weekday: 'long' });
-                const dueDateStr = dueDate.toLocaleDateString('ar-IQ', {
+                // تحديد التاريخ المناسب للعرض (تاريخ التسديد أو الاستحقاق)
+                const displayDate = payment.payment_date ? new Date(payment.payment_date) : new Date(payment.due_date);
+                const dueDayName = displayDate.toLocaleDateString('ar-IQ', { weekday: 'long' });
+                const dueDateStr = displayDate.toLocaleDateString('ar-IQ', {
                     year: 'numeric',
                     month: 'long',
                     day: 'numeric'
                 });
                 const dueDateFull = `${dueDayName}<br>${dueDateStr}`;
                 
-                // تنسيق تاريخ التسديد مع اسم اليوم
+                // تنسيق تاريخ التسديد الفعلي
                 let paidDateFull = '-';
-                if (payment.paid_date) {
-                    const paidDate = new Date(payment.paid_date);
+                if (payment.paid_date || payment.payment_date) {
+                    const paidDate = new Date(payment.paid_date || payment.payment_date);
                     const paidDayName = paidDate.toLocaleDateString('ar-IQ', { weekday: 'long' });
                     const paidDateStr = paidDate.toLocaleDateString('ar-IQ', {
                         year: 'numeric',
@@ -31697,13 +32058,19 @@ body {
                     });
                     paidDateFull = `${paidDayName}<br>${paidDateStr}`;
                 }
+                
+                // إضافة معلومات التسديد الجزئي
+                let amountDisplay = `${payment.amount.toLocaleString('en')} دينار`;
+                if (payment.payment_type === 'partial' && payment.remaining_for_month > 0) {
+                    amountDisplay += `<br><small style="color: var(--warning-color); font-size: 0.85rem;">المتبقي: ${payment.remaining_for_month.toLocaleString('en')} د</small>`;
+                }
 
                 return `
-                    <tr>
+                    <tr style="${payment.payment_type === 'partial' ? 'background: rgba(251, 191, 36, 0.05);' : ''}">
                         <td><span style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 6px 16px; border-radius: 20px; font-weight: 700; font-size: 1rem;">الشهر ${payment.month}</span></td>
                         <td><strong style="font-size: 1rem;">${payment.customer_name}</strong></td>
                         <td style="direction: ltr; text-align: center;">${payment.customer_phone || '-'}</td>
-                        <td><strong style="color: var(--primary-color); font-size: 1.05rem;">${payment.amount.toLocaleString('en')} دينار</strong></td>
+                        <td style="text-align: center;"><strong style="color: var(--primary-color); font-size: 1.05rem;">${amountDisplay}</strong></td>
                         <td style="font-size: 0.9rem; line-height: 1.5;">${dueDateFull}</td>
                         <td style="font-size: 0.9rem; line-height: 1.5;">${paidDateFull}</td>
                         <td>
@@ -31717,8 +32084,15 @@ body {
                                     <i class="fas fa-eye" style="font-size: 1.3rem;"></i>
                                 </button>
                                 ${payment.status === 'paid' ? `
+                                    <button class="btn-icon btn-success" onclick="printPaymentReceiptFromPaymentsPage('${payment.debt_id}', ${payment.month})" title="طباعة الإيصال" style="width: 45px; height: 45px; border-radius: 12px; box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3); transition: all 0.3s;">
+                                        <i class="fas fa-print" style="font-size: 1.3rem;"></i>
+                                    </button>
                                     <button class="btn-icon btn-warning" onclick="cancelInstallmentPaymentFromPaymentsPage('${payment.debt_id}', ${payment.month})" title="إلغاء التسديد" style="width: 45px; height: 45px; border-radius: 12px; box-shadow: 0 4px 12px rgba(251, 191, 36, 0.3); transition: all 0.3s;">
                                         <i class="fas fa-undo-alt" style="font-size: 1.3rem;"></i>
+                                    </button>
+                                ` : payment.status === 'pending' || payment.status === 'partially_paid' ? `
+                                    <button class="btn-icon btn-primary" onclick="payInstallmentFromPaymentsPage('${payment.debt_id}', ${payment.month})" title="تسديد القسط" style="width: 45px; height: 45px; border-radius: 12px; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3); transition: all 0.3s;">
+                                        <i class="fas fa-money-bill-wave" style="font-size: 1.3rem;"></i>
                                     </button>
                                 ` : ''}
                             </div>
@@ -31726,6 +32100,8 @@ body {
                     </tr>
                 `;
             }).join('');
+            
+            console.log('✅ Table rendered with', filteredPayments.length, 'rows');
         }
 
         /**
@@ -31737,6 +32113,14 @@ body {
                     text: 'مسدد',
                     class: 'badge-success',
                     icon: 'fas fa-check-circle'
+                };
+            }
+            
+            if (payment.status === 'partially_paid') {
+                return {
+                    text: 'تسديد جزئي',
+                    class: 'badge-warning',
+                    icon: 'fas fa-exclamation-circle'
                 };
             }
 
@@ -31847,13 +32231,15 @@ body {
             document.getElementById('paymentsDateTo').value = '';
             document.getElementById('paymentsStatusFilter').value = 'all';
             document.getElementById('paymentsSortFilter').value = 'date_desc';
+            document.getElementById('paymentsMonthFilter').value = 'all';
             
             currentFilters = {
                 searchText: '',
                 dateFrom: '',
                 dateTo: '',
                 status: 'all',
-                sortBy: 'date_desc'
+                sortBy: 'date_desc',
+                monthFilter: 'all'
             };
             
             applyPaymentsFilters();
@@ -32192,7 +32578,7 @@ body {
 
         // إلغاء تسديد قسط من صفحة التسديدات
         window.cancelInstallmentPaymentFromPaymentsPage = async function(debtId, month) {
-            if (!confirm('هل أنت متأكد من إلغاء تسديد هذا القسط؟')) {
+            if (!confirm('هل أنت متأكد من إلغاء آخر تسديد لهذا القسط؟\n\nملاحظة: سيتم إلغاء آخر عملية تسديد فقط.')) {
                 return;
             }
 
@@ -32226,22 +32612,89 @@ body {
                     return;
                 }
 
-                const paidAmount = installment.paid_amount || installment.amount || 0;
-
-                // إلغاء التسديد
-                installment.status = 'pending';
-                installment.paid_date = null;
-                installment.paid_amount = 0;
+                // 🔥 إصلاح: البحث عن آخر تسديد لهذا الشهر
+                let lastPaymentIndex = -1;
+                let lastPayment = null;
                 
-                // تحديث المبلغ المدفوع والمتبقي - بدون تأثير على total_amount
-                debt.paid_amount = (debt.paid_amount || 0) - paidAmount;
+                if (debt.payments && Array.isArray(debt.payments)) {
+                    // البحث عن جميع التسديدات لهذا الشهر
+                    const monthPayments = debt.payments
+                        .map((p, index) => ({ payment: p, index: index }))
+                        .filter(item => item.payment.month === month);
+                    
+                    if (monthPayments.length > 0) {
+                        // أخذ آخر تسديد (الأحدث)
+                        const lastItem = monthPayments[monthPayments.length - 1];
+                        lastPaymentIndex = lastItem.index;
+                        lastPayment = lastItem.payment;
+                    }
+                }
+                
+                if (!lastPayment) {
+                    alert('لم يتم العثور على سجل التسديد');
+                    return;
+                }
+                
+                const amountToCancel = lastPayment.amount || 0;
+                
+                // 🔥 معالجة إلغاء الترحيل
+                if (lastPayment.carried_forward && lastPayment.carried_forward_amount > 0) {
+                    const carriedAmount = lastPayment.carried_forward_amount;
+                    const carriedToMonth = lastPayment.carried_forward_to;
+                    
+                    console.log('🔄 Reversing carryforward:', carriedAmount, 'from month', carriedToMonth);
+                    
+                    // البحث عن القسط الذي تم الترحيل إليه
+                    const nextInstallment = debt.installments.find(inst => inst.month === carriedToMonth);
+                    
+                    if (nextInstallment) {
+                        // إزالة المبلغ المرحل
+                        nextInstallment.amount = parseFloat(nextInstallment.amount) - carriedAmount;
+                        nextInstallment.carryforward_received = (nextInstallment.carryforward_received || 0) - carriedAmount;
+                        
+                        // إزالة من سجل carryforward_from
+                        if (nextInstallment.carryforward_from && Array.isArray(nextInstallment.carryforward_from)) {
+                            nextInstallment.carryforward_from = nextInstallment.carryforward_from.filter(
+                                cf => cf.from_month !== month
+                            );
+                            
+                            // إذا لم يعد هناك أي ترحيلات، امسح الحقول
+                            if (nextInstallment.carryforward_from.length === 0) {
+                                delete nextInstallment.carryforward_from;
+                                delete nextInstallment.carryforward_received;
+                            }
+                        }
+                        
+                        console.log('   ✅ Removed carryforward from month', carriedToMonth);
+                        console.log('   New amount for month', carriedToMonth, ':', nextInstallment.amount);
+                    }
+                }
+
+                // 🔥 إصلاح: تحديث المبلغ المدفوع للقسط
+                const newPaidAmount = (installment.paid_amount || 0) - amountToCancel;
+                installment.paid_amount = newPaidAmount > 0 ? newPaidAmount : 0;
+                
+                // تحديث حالة القسط
+                const originalAmount = installment.original_amount || installment.amount || 0;
+                if (installment.paid_amount <= 0) {
+                    installment.status = 'pending';
+                    installment.paid_date = null;
+                    installment.paid_amount = 0;
+                } else if (installment.paid_amount >= originalAmount) {
+                    installment.status = 'paid';
+                } else {
+                    installment.status = 'partially_paid';
+                }
+                
+                // تحديث المبلغ المدفوع والمتبقي للدين
+                debt.paid_amount = Math.round((debt.paid_amount || 0) - amountToCancel);
                 if (debt.paid_amount < 0) debt.paid_amount = 0;
                 
-                debt.remaining_amount = (debt.remaining_amount || 0) + paidAmount;
+                debt.remaining_amount = Math.round((debt.remaining_amount || 0) + amountToCancel);
                 
-                // إزالة السجل من payments إذا كان موجوداً
-                if (debt.payments && Array.isArray(debt.payments)) {
-                    debt.payments = debt.payments.filter(p => p.month !== month);
+                // 🔥 إصلاح: حذف السجل المحدد فقط من payments
+                if (lastPaymentIndex !== -1) {
+                    debt.payments.splice(lastPaymentIndex, 1);
                 }
 
                 // حفظ التحديثات
@@ -32255,7 +32708,7 @@ body {
                     });
                     
                     if (result.isOk) {
-                        alert('تم إلغاء التسديد بنجاح');
+                        alert('تم إلغاء آخر تسديد بنجاح');
                         // تحديث debtsData
                         const allData = await window.dataSdk.query();
                         if (allData.isOk) {
@@ -32263,20 +32716,24 @@ body {
                         }
                         // تحديث الصفحة
                         await refreshPaymentsPage();
-                        updateDebtsStats(); // تحديث الإحصائيات
+                        if (typeof updateDebtsStats === 'function') {
+                            updateDebtsStats();
+                        }
                     } else {
                         alert('حدث خطأ في الحفظ');
                     }
                 } else {
                     // حفظ محلي فقط
                     localStorage.setItem('debts', JSON.stringify(debtsData));
-                    alert('تم إلغاء التسديد بنجاح');
+                    alert('تم إلغاء آخر تسديد بنجاح');
                     await refreshPaymentsPage();
-                    updateDebtsStats();
+                    if (typeof updateDebtsStats === 'function') {
+                        updateDebtsStats();
+                    }
                 }
             } catch (error) {
                 console.error('خطأ في إلغاء التسديد:', error);
-                alert('حدث خطأ في إلغاء التسديد');
+                alert('حدث خطأ في إلغاء التسديد: ' + error.message);
             }
         };
 

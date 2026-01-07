@@ -3560,6 +3560,163 @@ window.testSilentPrint = function() {
         }
     }
 
+    /* ═══════════════════════════════════════════════════════════ */
+    /* أنماط نظام الصيانة */
+    /* ═══════════════════════════════════════════════════════════ */
+    
+    /* شارات الحالة */
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+    
+    .status-badge.pending {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        color: white;
+    }
+    
+    .status-badge.completed {
+        background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        color: white;
+    }
+    
+    /* أزرار الإجراءات */
+    .action-btn {
+        padding: 0.5rem;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 0.9rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 35px;
+        min-height: 35px;
+    }
+    
+    .action-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+    
+    .action-btn.view {
+        background: linear-gradient(135deg, #3b82f6, #2563eb);
+        color: white;
+    }
+    
+    .action-btn.edit {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        color: white;
+    }
+    
+    .action-btn.complete {
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: white;
+    }
+    
+    .action-btn.delete {
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+        color: white;
+    }
+    
+    /* تحسين الجداول */
+    .table-container {
+        overflow-x: auto;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    }
+    
+    /* تحسين النوافذ المنبثقة */
+    .modal-content {
+        animation: slideDown 0.3s ease-out;
+    }
+    
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-50px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* تحسين الإحصائيات */
+    .stat-card {
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+        transition: all 0.5s ease;
+    }
+    
+    .stat-card:hover::before {
+        top: -25%;
+        right: -25%;
+    }
+    
+    /* تحسين الفلاتر */
+    .filters-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1rem;
+    }
+    
+    /* استجابة للشاشات الصغيرة */
+    @media (max-width: 768px) {
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        
+        .action-buttons {
+            flex-direction: column;
+        }
+        
+        .action-btn {
+            width: 100%;
+        }
+        
+        .table {
+            font-size: 0.85rem;
+        }
+        
+        .table th,
+        .table td {
+            padding: 0.5rem;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .export-import-buttons {
+            flex-direction: column;
+        }
+        
+        .export-btn,
+        .import-btn {
+            width: 100%;
+        }
+    }
+
     @media (max-width: 600px) {
         .a4-grid {
             grid-template-columns: 1fr;
@@ -10184,77 +10341,6 @@ console.log(`
   </style>
   <!-- تكبير عناصر شريط الإحصائيات العلوي (top-bar-stats) -->
   <style>
-  
-  /* 🔧 أنماط نظام الصيانة */
-  .detail-card {
-      background: var(--theme-bg-secondary);
-      border-radius: 12px;
-      padding: 1.5rem;
-      border: 1px solid rgba(255, 255, 255, 0.05);
-  }
-  
-  .detail-header {
-      margin-bottom: 1rem;
-      padding-bottom: 0.75rem;
-      border-bottom: 2px solid rgba(99, 102, 241, 0.2);
-  }
-  
-  .detail-header h4 {
-      font-size: 1.25rem !important;
-      font-weight: 700 !important;
-      color: var(--theme-text-primary);
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-  }
-  
-  .detail-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 1rem;
-  }
-  
-  .detail-item {
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-  }
-  
-  .detail-label {
-      font-size: 0.9rem;
-      color: var(--theme-text-secondary);
-      font-weight: 600;
-  }
-  
-  .detail-value {
-      font-size: 1.1rem;
-      color: var(--theme-text-primary);
-      font-weight: 700;
-  }
-  
-  .detail-content {
-      padding: 1rem;
-      background: var(--theme-bg-tertiary);
-      border-radius: 8px;
-      color: var(--theme-text-primary);
-      line-height: 1.6;
-  }
-  
-  .badge-warning {
-      background: linear-gradient(135deg, #f59e0b, #d97706);
-      color: white;
-  }
-  
-  .success-btn {
-      background: linear-gradient(135deg, #10b981, #059669);
-      color: white;
-  }
-  
-  .success-btn:hover {
-      background: linear-gradient(135deg, #059669, #047857);
-  }
-  
-  </style>
   /* تكبير عناصر شريط الإحصائيات العلوي (top-bar-stats) */
   .top-bar-stats, .top-bar-stats .quick-stat-card {
       min-height: 70px;
@@ -10686,13 +10772,13 @@ console.log(`
     <div class="nav-section-title">المخزون</div>
     <div class="nav-item" id="productsNavItem"><a class="nav-link" onclick="showPage('products')"> <i class="fas fa-boxes nav-icon"></i> <span class="nav-text">إدارة المنتجات</span> </a></div>
     <div class="nav-item" id="inventoryNavItem"><a class="nav-link" onclick="showPage('inventory')"> <i class="fas fa-warehouse nav-icon"></i> <span class="nav-text">إدارة المخزن</span> </a></div>
+    <div class="nav-item" id="maintenanceNavItem"><a class="nav-link" onclick="showPage('maintenance')"> <i class="fas fa-tools nav-icon"></i> <span class="nav-text">إدارة الصيانة</span> </a></div>
      </div>
      <div class="nav-section">
     <div class="nav-section-title">المالية</div>
     <div class="nav-item" id="debtsNavItem"><a class="nav-link" onclick="showPage('debts')"> <i class="fas fa-credit-card nav-icon"></i> <span class="nav-text">إدارة الديون</span> </a></div>
     <div class="nav-item" id="paymentsNavItem"><a class="nav-link" onclick="showPage('payments')"> <i class="fas fa-hand-holding-usd nav-icon"></i> <span class="nav-text">التسديدات</span> </a></div>
     <div class="nav-item" id="expensesNavItem"><a class="nav-link" onclick="showPage('expenses')"> <i class="fas fa-money-bill-wave nav-icon"></i> <span class="nav-text">إدارة المصاريف</span> </a></div>
-    <div class="nav-item" id="maintenanceNavItem"><a class="nav-link" onclick="showPage('maintenance')"> <i class="fas fa-tools nav-icon"></i> <span class="nav-text">إدارة الصيانة</span> </a></div>
      </div>
         <div class="nav-item" id="reportsNavItem"><a class="nav-link" onclick="window.reportsManager && window.reportsManager.openReportsModal ? window.reportsManager.openReportsModal() : alert('تعذر تحميل نظام التقارير')"> <i class="fas fa-chart-bar nav-icon"></i> <span class="nav-text">التقارير</span> </a></div>
      <div class="nav-section">
@@ -11126,7 +11212,109 @@ console.log(`
         </tbody>
        </table>
       </div>
-     </div><!-- صفحة الفواتير -->
+     </div>
+     
+     <!-- ═══════════════════════════════════════════════════════════ -->
+     <!-- صفحة إدارة الصيانة -->
+     <!-- ═══════════════════════════════════════════════════════════ -->
+     <div id="maintenance" class="page">
+      <div class="section-header" style="margin-bottom: 1.5rem;">
+       <div class="section-title"><i class="fas fa-tools"></i> إدارة الصيانة</div>
+       <div class="pos-search-box">
+           <i class="fas fa-search"></i>
+           <input type="text" id="maintenanceSearchInput" class="pos-search-input" placeholder="ابحث عن جهاز..." onkeyup="filterMaintenanceItems()">
+       </div>
+       <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+        <div class="export-import-buttons">
+            <button class="export-btn" onclick="exportMaintenanceData('json')"> <i class="fas fa-download"></i> JSON </button> 
+            <button class="export-btn" onclick="exportMaintenanceData('excel')"> <i class="fas fa-file-excel"></i> Excel </button>
+            <button class="export-btn" onclick="exportMaintenanceData('word')"> <i class="fas fa-file-word"></i> Word </button> 
+            <button class="export-btn" onclick="exportMaintenanceData('pdf')"> <i class="fas fa-file-pdf"></i> PDF </button> 
+            <input type="file" id="importMaintenanceFile" accept=".json,.xlsx,.csv" style="display: none;" onchange="importMaintenanceData()"> 
+            <button class="import-btn" onclick="document.getElementById('importMaintenanceFile').click()"> <i class="fas fa-upload"></i> استيراد </button>
+        </div>
+        <button class="btn btn-primary" onclick="showAddMaintenanceModal()"> <i class="fas fa-plus"></i> إضافة جهاز للصيانة </button>
+       </div>
+      </div>
+      
+      <!-- إحصائيات الصيانة -->
+      <div class="stats-grid" style="margin-bottom: 1.5rem;">
+       <div class="stat-card">
+        <div class="stat-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);"><i class="fas fa-tools"></i></div>
+        <div class="stat-value" id="totalMaintenanceDevices">0</div>
+        <div class="stat-label">إجمالي الأجهزة</div>
+       </div>
+       <div class="stat-card">
+        <div class="stat-icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);"><i class="fas fa-clock"></i></div>
+        <div class="stat-value" id="pendingMaintenanceDevices">0</div>
+        <div class="stat-label">قيد الصيانة</div>
+       </div>
+       <div class="stat-card">
+        <div class="stat-icon" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);"><i class="fas fa-check-circle"></i></div>
+        <div class="stat-value" id="completedMaintenanceDevices">0</div>
+        <div class="stat-label">مكتملة الصيانة</div>
+       </div>
+       <div class="stat-card">
+        <div class="stat-icon" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);"><i class="fas fa-hand-holding-usd"></i></div>
+        <div class="stat-value" id="totalMaintenanceRevenue">0 دينار</div>
+        <div class="stat-label">إجمالي الإيرادات</div>
+       </div>
+      </div>
+      
+      <!-- فلاتر البحث -->
+      <div class="filters-section" style="margin-bottom: 1.5rem;">
+       <div class="filters-grid">
+        <div class="form-group">
+         <label class="form-label">حالة الصيانة</label> 
+         <select class="form-select" id="maintenanceStatusFilter" onchange="filterMaintenanceItems()"> 
+          <option value="all">جميع الحالات</option> 
+          <option value="pending">قيد الصيانة</option> 
+          <option value="completed">مكتملة</option> 
+         </select>
+        </div>
+        <div class="form-group">
+         <label class="form-label">نطاق السعر</label> 
+         <select class="form-select" id="maintenancePriceFilter" onchange="filterMaintenanceItems()"> 
+          <option value="all">جميع الأسعار</option> 
+          <option value="0-50000">أقل من 50,000 د.ع</option> 
+          <option value="50000-100000">50,000 - 100,000 د.ع</option> 
+          <option value="100000-200000">100,000 - 200,000 د.ع</option>
+          <option value="200000+">أكثر من 200,000 د.ع</option> 
+         </select>
+        </div>
+        <div class="form-group">
+         <label class="form-label">الشركة المصنعة</label> 
+         <select class="form-select" id="maintenanceCompanyFilter" onchange="filterMaintenanceItems()"> 
+          <option value="all">جميع الشركات</option>
+         </select>
+        </div>
+       </div>
+      </div>
+      
+      <!-- جدول الأجهزة -->
+      <div class="table-container">
+       <table class="table">
+        <thead>
+         <tr>
+          <th><i class="fas fa-hashtag"></i> #</th>
+          <th><i class="fas fa-mobile-alt"></i> اسم الجهاز</th>
+          <th><i class="fas fa-building"></i> الشركة</th>
+          <th><i class="fas fa-exclamation-circle"></i> الخلل</th>
+          <th><i class="fas fa-money-bill-wave"></i> سعر الصيانة</th>
+          <th><i class="fas fa-calendar-check"></i> تاريخ التسليم</th>
+          <th><i class="fas fa-calendar-alt"></i> تاريخ الاستلام</th>
+          <th><i class="fas fa-info-circle"></i> الحالة</th>
+          <th><i class="fas fa-cogs"></i> الإجراءات</th>
+         </tr>
+        </thead>
+        <tbody id="maintenanceTableBody">
+         <!-- البيانات ستظهر هنا -->
+        </tbody>
+       </table>
+      </div>
+     </div>
+     
+     <!-- صفحة الفواتير -->
      <div id="invoices" class="page">
       <div class="section-header" style="margin-bottom: 1.5rem;">
        <div class="section-title"><i class="fas fa-receipt"></i> إدارة الفواتير
@@ -12095,104 +12283,6 @@ console.log(`
          </table>
         </div>
        </div>
-      </div>
-     </div>
-     
-     <!-- 🔧 صفحة إدارة الصيانة المتكاملة -->
-     <div id="maintenance" class="page">
-      <div class="section-header" style="margin-bottom: 1.5rem;">
-       <div class="section-title"><i class="fas fa-tools"></i> إدارة الصيانة
-       </div>
-       <div class="pos-search-box">
-           <i class="fas fa-search"></i>
-           <input type="text" id="maintenanceSearchInput" class="pos-search-input" placeholder="ابحث في أجهزة الصيانة..." onkeyup="filterMaintenance()">
-       </div>
-       <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
-        <div class="export-import-buttons">
-            <button class="export-btn" onclick="exportData('maintenance', 'json')"> <i class="fas fa-download"></i> JSON </button> 
-            <button class="export-btn" onclick="exportData('maintenance', 'excel')"> <i class="fas fa-file-excel"></i> Excel </button> 
-            <button class="export-btn" onclick="exportData('maintenance', 'word')"> <i class="fas fa-file-word"></i> Word </button> 
-            <button class="export-btn" onclick="exportData('maintenance', 'pdf')"> <i class="fas fa-file-pdf"></i> PDF </button>
-            <input type="file" id="importMaintenanceFile" accept=".json,.xlsx,.csv" style="display: none;" onchange="importData('maintenance')"> 
-            <button class="import-btn" onclick="document.getElementById('importMaintenanceFile').click()"> <i class="fas fa-upload"></i> استيراد </button>
-        </div>
-        <button class="btn btn-primary" onclick="showAddMaintenanceModal()"> <i class="fas fa-plus"></i> إضافة جهاز للصيانة </button>
-       </div>
-      </div>
-      
-      <!-- الإحصائيات -->
-      <div class="stats-grid" style="margin-bottom: 1.5rem;">
-       <div class="stat-card">
-        <div class="stat-icon"><i class="fas fa-tools"></i></div>
-        <div class="stat-value" id="totalMaintenanceDevices">0</div>
-        <div class="stat-label">إجمالي الأجهزة</div>
-       </div>
-       <div class="stat-card">
-        <div class="stat-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706);"><i class="fas fa-clock"></i></div>
-        <div class="stat-value" id="pendingMaintenanceDevices">0</div>
-        <div class="stat-label">قيد الصيانة</div>
-       </div>
-       <div class="stat-card">
-        <div class="stat-icon" style="background: linear-gradient(135deg, #10b981, #059669);"><i class="fas fa-check-circle"></i></div>
-        <div class="stat-value" id="completedMaintenanceDevices">0</div>
-        <div class="stat-label">تم الصيانة</div>
-       </div>
-       <div class="stat-card">
-        <div class="stat-icon" style="background: linear-gradient(135deg, #6366f1, #4f46e5);"><i class="fas fa-money-bill-wave"></i></div>
-        <div class="stat-value" id="totalMaintenanceRevenue">0 دينار</div>
-        <div class="stat-label">إجمالي الإيرادات</div>
-       </div>
-      </div>
-      
-      <!-- الفلاتر -->
-      <div class="filters-section" style="margin-bottom: 1.5rem;">
-       <div class="filters-grid">
-        <div class="form-group">
-         <label class="form-label">حالة الصيانة</label>
-         <select class="form-select" id="maintenanceStatusFilter" onchange="filterMaintenance()">
-          <option value="all">جميع الحالات</option>
-          <option value="pending">قيد الصيانة</option>
-          <option value="completed">تم الصيانة</option>
-         </select>
-        </div>
-        <div class="form-group">
-         <label class="form-label">فلترة حسب السعر</label>
-         <select class="form-select" id="maintenancePriceFilter" onchange="filterMaintenance()">
-          <option value="all">جميع الأسعار</option>
-          <option value="low">أقل من 50,000 دينار</option>
-          <option value="medium">50,000 - 100,000 دينار</option>
-          <option value="high">أكثر من 100,000 دينار</option>
-         </select>
-        </div>
-        <div class="form-group">
-         <label class="form-label">فلترة حسب الشركة</label>
-         <select class="form-select" id="maintenanceCompanyFilter" onchange="filterMaintenance()">
-          <option value="all">جميع الشركات</option>
-         </select>
-        </div>
-       </div>
-      </div>
-      
-      <!-- جدول الصيانة -->
-      <div class="table-container">
-       <table class="table">
-        <thead>
-         <tr>
-          <th><i class="fas fa-hashtag"></i> #</th>
-          <th><i class="fas fa-mobile-alt"></i> اسم المنتج</th>
-          <th><i class="fas fa-building"></i> الشركة</th>
-          <th><i class="fas fa-exclamation-circle"></i> العطل</th>
-          <th><i class="fas fa-money-bill"></i> سعر الصيانة</th>
-          <th><i class="fas fa-calendar-plus"></i> تاريخ التسليم</th>
-          <th><i class="fas fa-calendar-check"></i> تاريخ الاستلام</th>
-          <th><i class="fas fa-info-circle"></i> الحالة</th>
-          <th><i class="fas fa-cogs"></i> الإجراءات</th>
-         </tr>
-        </thead>
-        <tbody id="maintenanceTableBody">
-         <!-- أجهزة الصيانة ستظهر هنا -->
-        </tbody>
-       </table>
       </div>
      </div>
      
@@ -15294,7 +15384,191 @@ console.log(`
      </div>
     </form>
    </div>
-  </div><!-- نافذة تعديل منتج -->
+  </div>
+  
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- نوافذ إدارة الصيانة -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  
+  <!-- نافذة إضافة جهاز للصيانة -->
+  <div id="addMaintenanceModal" class="modal">
+   <div class="modal-content">
+    <div class="modal-header">
+     <h3 class="modal-title"><i class="fas fa-plus-circle"></i> إضافة جهاز للصيانة</h3>
+     <button class="close-btn" onclick="closeModal('addMaintenanceModal')"> <i class="fas fa-times"></i> </button>
+    </div>
+    <form id="addMaintenanceForm" onsubmit="handleAddMaintenance(event)">
+     <div class="form-grid">
+      <div class="form-group">
+       <label class="form-label"><i class="fas fa-mobile-alt"></i> اسم الجهاز</label>
+       <input type="text" class="form-input" id="maintenanceDeviceName" required placeholder="مثال: iPhone 12 Pro Max">
+      </div>
+      <div class="form-group">
+       <label class="form-label"><i class="fas fa-building"></i> الشركة المصنعة</label>
+       <input type="text" class="form-input" id="maintenanceCompany" required placeholder="مثال: Apple">
+      </div>
+      <div class="form-group">
+       <label class="form-label"><i class="fas fa-user"></i> اسم العميل</label>
+       <input type="text" class="form-input" id="maintenanceCustomerName" required placeholder="اسم صاحب الجهاز">
+      </div>
+      <div class="form-group">
+       <label class="form-label"><i class="fas fa-phone"></i> رقم الهاتف</label>
+       <input type="tel" class="form-input" id="maintenanceCustomerPhone" required placeholder="07XXXXXXXXX">
+      </div>
+      <div class="form-group">
+       <label class="form-label"><i class="fas fa-exclamation-circle"></i> الخلل/العطل</label>
+       <input type="text" class="form-input" id="maintenanceProblem" required placeholder="وصف العطل">
+      </div>
+      <div class="form-group">
+       <label class="form-label"><i class="fas fa-money-bill-wave"></i> سعر الصيانة (د.ع)</label>
+       <input type="number" class="form-input" id="maintenancePrice" required placeholder="0" min="0">
+      </div>
+      <div class="form-group">
+       <label class="form-label"><i class="fas fa-calendar-check"></i> تاريخ التسليم</label>
+       <input type="date" class="form-input" id="maintenanceDeliveryDate" required>
+      </div>
+      <div class="form-group">
+       <label class="form-label"><i class="fas fa-calendar-alt"></i> تاريخ الاستلام المتوقع</label>
+       <input type="date" class="form-input" id="maintenanceExpectedDate" required>
+      </div>
+     </div>
+     <div class="form-group">
+      <label class="form-label"><i class="fas fa-clipboard"></i> ملاحظات إضافية</label>
+      <textarea class="form-input" id="maintenanceNotes" rows="3" placeholder="أي ملاحظات أخرى..."></textarea>
+     </div>
+     <div class="form-group">
+      <label class="form-label"><i class="fas fa-wrench"></i> سبب العطل التفصيلي</label>
+      <textarea class="form-input" id="maintenanceCauseDetails" rows="3" placeholder="الأسباب التي أدت إلى العطل..."></textarea>
+     </div>
+     <div class="form-actions">
+      <button type="button" class="btn btn-secondary" onclick="closeModal('addMaintenanceModal')">
+       <i class="fas fa-times"></i> إلغاء
+      </button>
+      <button type="submit" class="btn btn-primary">
+       <i class="fas fa-save"></i> حفظ الجهاز
+      </button>
+     </div>
+    </form>
+   </div>
+  </div>
+  
+  <!-- نافذة تعديل جهاز صيانة -->
+  <div id="editMaintenanceModal" class="modal">
+   <div class="modal-content">
+    <div class="modal-header">
+     <h3 class="modal-title"><i class="fas fa-edit"></i> تعديل بيانات الصيانة</h3>
+     <button class="close-btn" onclick="closeModal('editMaintenanceModal')"> <i class="fas fa-times"></i> </button>
+    </div>
+    <form id="editMaintenanceForm" onsubmit="handleEditMaintenance(event)">
+     <input type="hidden" id="editMaintenanceId">
+     <div class="form-grid">
+      <div class="form-group">
+       <label class="form-label"><i class="fas fa-mobile-alt"></i> اسم الجهاز</label>
+       <input type="text" class="form-input" id="editMaintenanceDeviceName" required>
+      </div>
+      <div class="form-group">
+       <label class="form-label"><i class="fas fa-building"></i> الشركة المصنعة</label>
+       <input type="text" class="form-input" id="editMaintenanceCompany" required>
+      </div>
+      <div class="form-group">
+       <label class="form-label"><i class="fas fa-user"></i> اسم العميل</label>
+       <input type="text" class="form-input" id="editMaintenanceCustomerName" required>
+      </div>
+      <div class="form-group">
+       <label class="form-label"><i class="fas fa-phone"></i> رقم الهاتف</label>
+       <input type="tel" class="form-input" id="editMaintenanceCustomerPhone" required>
+      </div>
+      <div class="form-group">
+       <label class="form-label"><i class="fas fa-exclamation-circle"></i> الخلل/العطل</label>
+       <input type="text" class="form-input" id="editMaintenanceProblem" required>
+      </div>
+      <div class="form-group">
+       <label class="form-label"><i class="fas fa-money-bill-wave"></i> سعر الصيانة (د.ع)</label>
+       <input type="number" class="form-input" id="editMaintenancePrice" required min="0">
+      </div>
+      <div class="form-group">
+       <label class="form-label"><i class="fas fa-calendar-check"></i> تاريخ التسليم</label>
+       <input type="date" class="form-input" id="editMaintenanceDeliveryDate" required>
+      </div>
+      <div class="form-group">
+       <label class="form-label"><i class="fas fa-calendar-alt"></i> تاريخ الاستلام المتوقع</label>
+       <input type="date" class="form-input" id="editMaintenanceExpectedDate" required>
+      </div>
+     </div>
+     <div class="form-group">
+      <label class="form-label"><i class="fas fa-clipboard"></i> ملاحظات إضافية</label>
+      <textarea class="form-input" id="editMaintenanceNotes" rows="3"></textarea>
+     </div>
+     <div class="form-group">
+      <label class="form-label"><i class="fas fa-wrench"></i> سبب العطل التفصيلي</label>
+      <textarea class="form-input" id="editMaintenanceCauseDetails" rows="3"></textarea>
+     </div>
+     <div class="form-actions">
+      <button type="button" class="btn btn-secondary" onclick="closeModal('editMaintenanceModal')">
+       <i class="fas fa-times"></i> إلغاء
+      </button>
+      <button type="submit" class="btn btn-success">
+       <i class="fas fa-save"></i> حفظ التعديلات
+      </button>
+     </div>
+    </form>
+   </div>
+  </div>
+  
+  <!-- نافذة عرض تفاصيل الصيانة -->
+  <div id="viewMaintenanceModal" class="modal">
+   <div class="modal-content" style="max-width: 800px;">
+    <div class="modal-header">
+     <h3 class="modal-title"><i class="fas fa-info-circle"></i> تفاصيل الصيانة</h3>
+     <button class="close-btn" onclick="closeModal('viewMaintenanceModal')"> <i class="fas fa-times"></i> </button>
+    </div>
+    <div id="maintenanceDetailsContent" style="padding: 2rem;">
+     <!-- التفاصيل ستظهر هنا -->
+    </div>
+    <div class="form-actions">
+     <button type="button" class="btn btn-secondary" onclick="closeModal('viewMaintenanceModal')">
+      <i class="fas fa-times"></i> إغلاق
+     </button>
+     <button type="button" class="btn btn-primary" onclick="printMaintenanceDetails()">
+      <i class="fas fa-print"></i> طباعة التفاصيل
+     </button>
+    </div>
+   </div>
+  </div>
+  
+  <!-- نافذة تأكيد إتمام الصيانة -->
+  <div id="completeMaintenanceModal" class="modal">
+   <div class="modal-content" style="max-width: 500px;">
+    <div class="modal-header">
+     <h3 class="modal-title"><i class="fas fa-check-circle"></i> تأكيد إتمام الصيانة</h3>
+     <button class="close-btn" onclick="closeModal('completeMaintenanceModal')"> <i class="fas fa-times"></i> </button>
+    </div>
+    <div style="padding: 2rem;">
+     <p style="font-size: 1.1rem; color: var(--theme-text-secondary); margin-bottom: 1.5rem;">
+      هل أنت متأكد من إتمام صيانة هذا الجهاز؟ سيتم تغيير حالته إلى "مكتملة".
+     </p>
+     <input type="hidden" id="completeMaintenanceId">
+     <div class="form-group">
+      <label class="form-label"><i class="fas fa-calendar"></i> تاريخ الاستلام الفعلي</label>
+      <input type="date" class="form-input" id="actualReceiveDate">
+     </div>
+     <div class="form-group">
+      <label class="form-label"><i class="fas fa-comment"></i> ملاحظات إضافية (اختياري)</label>
+      <textarea class="form-input" id="completeMaintenanceNotes" rows="3" placeholder="أي ملاحظات عند الإتمام..."></textarea>
+     </div>
+    </div>
+    <div class="form-actions">
+     <button type="button" class="btn btn-secondary" onclick="closeModal('completeMaintenanceModal')">
+      <i class="fas fa-times"></i> إلغاء
+     </button>
+     <button type="button" class="btn btn-success" onclick="confirmCompleteMaintenance()">
+      <i class="fas fa-check"></i> تأكيد الإتمام
+     </button>
+    </div>
+   </div>
+  </div>
+  
+  <!-- نافذة تعديل منتج -->
   <div id="editProductModal" class="modal">
    <div class="modal-content">
     <div class="modal-header">
@@ -17798,14 +18072,14 @@ console.log(`
                     totalAdded += result.added;
                     totalUpdated += result.updated;
                 }
-
+                
                 // دمج بيانات الصيانة
                 if (backupData.data.maintenance) {
-                    maintenanceData = maintenanceData || [];
-                    const result = await mergeDataWithLocal('maintenance', backupData.data.maintenance, maintenanceData);
+                    const currentMaintenance = JSON.parse(localStorage.getItem('maintenanceItems') || '[]');
+                    const result = await mergeDataWithLocal('maintenance', backupData.data.maintenance, currentMaintenance);
                     totalAdded += result.added;
                     totalUpdated += result.updated;
-                    localStorage.setItem('maintenanceData', JSON.stringify(maintenanceData));
+                    localStorage.setItem('maintenanceItems', JSON.stringify(currentMaintenance));
                 }
 
                 // استرجاع الإعدادات (اختياري - يمكن تخطيه)
@@ -20330,15 +20604,6 @@ console.log(`
             if (pageId === 'settings-backup') {
                 setTimeout(() => {
                     updateRegistrationUI();
-                }, 100);
-            }
-            
-            // تحديث واجهة الصيانة عند فتح صفحة الصيانة
-            if (pageId === 'maintenance') {
-                setTimeout(() => {
-                    if (typeof updateMaintenanceDisplay === 'function') {
-                        updateMaintenanceDisplay();
-                    }
                 }, 100);
             }
         }
@@ -28456,7 +28721,7 @@ body {
                         suppliers: suppliers || [],
                         sales: salesData || [],
                         debts: debtsData || [],
-                        maintenance: maintenanceData || [],
+                        maintenance: JSON.parse(localStorage.getItem('maintenanceItems') || '[]'),
                         settings: {
                             store: JSON.parse(localStorage.getItem('storeSettings') || '{}'),
                             system: JSON.parse(localStorage.getItem('systemSettings') || '{}'),
@@ -28471,7 +28736,7 @@ body {
                         totalSuppliers: (suppliers || []).length,
                         totalSales: (salesData || []).length,
                         totalDebts: (debtsData || []).length,
-                        totalMaintenance: (maintenanceData || []).length
+                        totalMaintenance: JSON.parse(localStorage.getItem('maintenanceItems') || '[]').length
                     }
                 };
 
@@ -28528,13 +28793,13 @@ body {
                         suppliers: suppliers || [],
                         sales: salesData || [],
                         debts: debtsData || [],
-                        maintenance: maintenanceData || []
+                        maintenance: JSON.parse(localStorage.getItem('maintenanceItems') || '[]')
                     },
                     stats: {
                         totalProducts: (products || []).length,
                         totalSales: (salesData || []).length,
                         totalDebts: (debtsData || []).length,
-                        totalMaintenance: (maintenanceData || []).length
+                        totalMaintenance: JSON.parse(localStorage.getItem('maintenanceItems') || '[]').length
                     }
                 };
 
@@ -30639,139 +30904,6 @@ body {
                         </button>
                     </div>
                 </form>
-            </div>
-        </div>
-    </div>
-    
-    <!-- 🔧 نافذة إضافة جهاز صيانة -->
-    <div id="addMaintenanceModal" class="modal">
-        <div class="modal-content" style="max-width: 800px;">
-            <div class="modal-header">
-                <h3 class="modal-title"><i class="fas fa-plus-circle"></i> إضافة جهاز للصيانة</h3>
-                <button class="close-btn" onclick="closeModal('addMaintenanceModal')">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <form id="addMaintenanceForm" onsubmit="handleAddMaintenance(event)">
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label class="form-label"><i class="fas fa-mobile-alt"></i> اسم المنتج/الجهاز</label>
-                        <input type="text" class="form-input" id="maintenanceProductName" required placeholder="مثال: هاتف آيفون 13">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label"><i class="fas fa-building"></i> اسم الشركة المصنعة</label>
-                        <input type="text" class="form-input" id="maintenanceCompany" required placeholder="مثال: Apple">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label"><i class="fas fa-exclamation-circle"></i> الخلل/العطل</label>
-                        <input type="text" class="form-input" id="maintenanceFault" required placeholder="مثال: الشاشة مكسورة">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label"><i class="fas fa-money-bill"></i> سعر الصيانة (دينار)</label>
-                        <input type="number" class="form-input" id="maintenancePrice" required min="0" step="1000" placeholder="0">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label"><i class="fas fa-calendar-plus"></i> تاريخ التسليم (من العميل)</label>
-                        <input type="date" class="form-input" id="maintenanceReceiveDate" required>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label"><i class="fas fa-calendar-check"></i> تاريخ الاستلام المتوقع (للعميل)</label>
-                        <input type="date" class="form-input" id="maintenanceDeliveryDate" required>
-                    </div>
-                    <div class="form-group" style="grid-column: span 2;">
-                        <label class="form-label"><i class="fas fa-sticky-note"></i> معلومات عن سبب العطل</label>
-                        <textarea class="form-input" id="maintenanceFaultReason" rows="3" placeholder="اكتب تفاصيل عن سبب العطل والملاحظات..."></textarea>
-                    </div>
-                    <div class="form-group" style="grid-column: span 2;">
-                        <label class="form-label"><i class="fas fa-user"></i> معلومات العميل</label>
-                        <input type="text" class="form-input" id="maintenanceCustomerInfo" placeholder="اسم العميل ورقم الهاتف">
-                    </div>
-                </div>
-                <div class="form-actions">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal('addMaintenanceModal')">
-                        <i class="fas fa-times"></i> إلغاء
-                    </button>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save"></i> حفظ الجهاز
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- 🔧 نافذة تعديل جهاز صيانة -->
-    <div id="editMaintenanceModal" class="modal">
-        <div class="modal-content" style="max-width: 800px;">
-            <div class="modal-header">
-                <h3 class="modal-title"><i class="fas fa-edit"></i> تعديل بيانات الجهاز</h3>
-                <button class="close-btn" onclick="closeModal('editMaintenanceModal')">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <form id="editMaintenanceForm" onsubmit="handleEditMaintenance(event)">
-                <input type="hidden" id="editMaintenanceId">
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label class="form-label"><i class="fas fa-mobile-alt"></i> اسم المنتج/الجهاز</label>
-                        <input type="text" class="form-input" id="editMaintenanceProductName" required>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label"><i class="fas fa-building"></i> اسم الشركة المصنعة</label>
-                        <input type="text" class="form-input" id="editMaintenanceCompany" required>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label"><i class="fas fa-exclamation-circle"></i> الخلل/العطل</label>
-                        <input type="text" class="form-input" id="editMaintenanceFault" required>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label"><i class="fas fa-money-bill"></i> سعر الصيانة (دينار)</label>
-                        <input type="number" class="form-input" id="editMaintenancePrice" required min="0" step="1000">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label"><i class="fas fa-calendar-plus"></i> تاريخ التسليم (من العميل)</label>
-                        <input type="date" class="form-input" id="editMaintenanceReceiveDate" required>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label"><i class="fas fa-calendar-check"></i> تاريخ الاستلام المتوقع (للعميل)</label>
-                        <input type="date" class="form-input" id="editMaintenanceDeliveryDate" required>
-                    </div>
-                    <div class="form-group" style="grid-column: span 2;">
-                        <label class="form-label"><i class="fas fa-sticky-note"></i> معلومات عن سبب العطل</label>
-                        <textarea class="form-input" id="editMaintenanceFaultReason" rows="3"></textarea>
-                    </div>
-                    <div class="form-group" style="grid-column: span 2;">
-                        <label class="form-label"><i class="fas fa-user"></i> معلومات العميل</label>
-                        <input type="text" class="form-input" id="editMaintenanceCustomerInfo">
-                    </div>
-                </div>
-                <div class="form-actions">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal('editMaintenanceModal')">
-                        <i class="fas fa-times"></i> إلغاء
-                    </button>
-                    <button type="submit" class="btn btn-success">
-                        <i class="fas fa-save"></i> حفظ التعديلات
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- 🔧 نافذة تفاصيل جهاز الصيانة -->
-    <div id="maintenanceDetailsModal" class="modal">
-        <div class="modal-content" style="max-width: 700px;">
-            <div class="modal-header">
-                <h3 class="modal-title"><i class="fas fa-info-circle"></i> تفاصيل جهاز الصيانة</h3>
-                <button class="close-btn" onclick="closeModal('maintenanceDetailsModal')">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="modal-body" id="maintenanceDetailsContent" style="padding: 2rem;">
-                <!-- التفاصيل ستظهر هنا -->
-            </div>
-            <div class="form-actions">
-                <button type="button" class="btn btn-secondary" onclick="closeModal('maintenanceDetailsModal')">
-                    <i class="fas fa-times"></i> إغلاق
-                </button>
             </div>
         </div>
     </div>
@@ -37222,116 +37354,182 @@ body {
 // في دالة restoreFromBackup()
 window.restoreOldDebtsFromBackup(backupData);
 
-// ═══════════════════════════════════════════════════════════════════════════
-// 🔧 نظام إدارة الصيانة المتكامل
-// ═══════════════════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════════════════
+// 🔧 نظام إدارة الصيانة - Maintenance Management System
+// ═══════════════════════════════════════════════════════════════════════════════
 
-// متغير تخزين بيانات الصيانة
-let maintenanceData = [];
+// دالة تشغيل الصوت
+function playSound(type) {
+    // يمكن إضافة تشغيل صوتي لاحقاً
+    if (typeof window.playNotificationSound === 'function') {
+        window.playNotificationSound(type);
+    }
+}
 
-// تحميل بيانات الصيانة عند تشغيل التطبيق
+// تخزين بيانات الصيانة
+let maintenanceItems = [];
+
+// تحميل البيانات عند بدء التطبيق
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initMaintenanceSystem);
+} else {
+    initMaintenanceSystem();
+}
+
+function initMaintenanceSystem() {
+    loadMaintenanceData();
+    initializeMaintenancePage();
+}
+
+// دالة تحميل بيانات الصيانة
 function loadMaintenanceData() {
-    const saved = localStorage.getItem('maintenanceData');
-    if (saved) {
-        try {
-            maintenanceData = JSON.parse(saved);
-        } catch (e) {
-            console.error('خطأ في تحميل بيانات الصيانة:', e);
-            maintenanceData = [];
-        }
+    try {
+        const stored = localStorage.getItem('maintenanceItems');
+        maintenanceItems = stored ? JSON.parse(stored) : [];
+        console.log('✅ تم تحميل بيانات الصيانة:', maintenanceItems.length, 'جهاز');
+    } catch (error) {
+        console.error('❌ خطأ في تحميل بيانات الصيانة:', error);
+        maintenanceItems = [];
     }
-    updateMaintenanceDisplay();
 }
 
-// حفظ بيانات الصيانة
+// دالة حفظ البيانات
 function saveMaintenanceData() {
-    localStorage.setItem('maintenanceData', JSON.stringify(maintenanceData));
-    updateMaintenanceDisplay();
+    try {
+        localStorage.setItem('maintenanceItems', JSON.stringify(maintenanceItems));
+        console.log('✅ تم حفظ بيانات الصيانة');
+        return true;
+    } catch (error) {
+        console.error('❌ خطأ في حفظ البيانات:', error);
+        return false;
+    }
 }
 
-// تحديث عرض الصيانة
-function updateMaintenanceDisplay() {
-    const tbody = document.getElementById('maintenanceTableBody');
-    if (!tbody) return;
+// تهيئة صفحة الصيانة
+function initializeMaintenancePage() {
+    updateMaintenanceStats();
+    displayMaintenanceItems();
+    loadCompanyFilters();
     
-    let filteredData = [...maintenanceData];
+    // تعيين التاريخ الافتراضي للتاريخ الحالي
+    const today = new Date().toISOString().split('T')[0];
+    const deliveryDateInput = document.getElementById('maintenanceDeliveryDate');
+    const expectedDateInput = document.getElementById('maintenanceExpectedDate');
+    const actualDateInput = document.getElementById('actualReceiveDate');
     
-    // تطبيق الفلاتر
-    const statusFilter = document.getElementById('maintenanceStatusFilter');
-    const priceFilter = document.getElementById('maintenancePriceFilter');
-    const companyFilter = document.getElementById('maintenanceCompanyFilter');
-    
-    if (statusFilter && statusFilter.value !== 'all') {
-        filteredData = filteredData.filter(item => item.status === statusFilter.value);
+    if (deliveryDateInput) deliveryDateInput.value = today;
+    if (actualDateInput) actualDateInput.value = today;
+}
+
+// دالة عرض نافذة إضافة جهاز
+window.showAddMaintenanceModal = function() {
+    const modal = document.getElementById('addMaintenanceModal');
+    if (modal) {
+        modal.style.display = 'flex';
+        const form = document.getElementById('addMaintenanceForm');
+        if (form) form.reset();
+        
+        // تعيين التاريخ الحالي
+        const today = new Date().toISOString().split('T')[0];
+        const deliveryDate = document.getElementById('maintenanceDeliveryDate');
+        if (deliveryDate) deliveryDate.value = today;
     }
+};
+
+// دالة إضافة جهاز جديد
+window.handleAddMaintenance = function(event) {
+    event.preventDefault();
     
-    if (priceFilter && priceFilter.value !== 'all') {
-        const priceValue = priceFilter.value;
-        filteredData = filteredData.filter(item => {
-            const price = parseFloat(item.price) || 0;
-            if (priceValue === 'low') return price < 50000;
-            if (priceValue === 'medium') return price >= 50000 && price <= 100000;
-            if (priceValue === 'high') return price > 100000;
-            return true;
-        });
-    }
+    const newItem = {
+            id: Date.now().toString(),
+            deviceName: document.getElementById('maintenanceDeviceName').value.trim(),
+            company: document.getElementById('maintenanceCompany').value.trim(),
+            customerName: document.getElementById('maintenanceCustomerName').value.trim(),
+            customerPhone: document.getElementById('maintenanceCustomerPhone').value.trim(),
+            problem: document.getElementById('maintenanceProblem').value.trim(),
+            price: parseFloat(document.getElementById('maintenancePrice').value) || 0,
+            deliveryDate: document.getElementById('maintenanceDeliveryDate').value,
+            expectedDate: document.getElementById('maintenanceExpectedDate').value,
+            notes: document.getElementById('maintenanceNotes').value.trim(),
+            causeDetails: document.getElementById('maintenanceCauseDetails').value.trim(),
+            status: 'pending', // pending أو completed
+            createdAt: new Date().toISOString(),
+            actualReceiveDate: null,
+            completedNotes: null
+        };
+        
+        maintenanceItems.push(newItem);
+        
+        if (saveMaintenanceData()) {
+            closeModal('addMaintenanceModal');
+            displayMaintenanceItems();
+            updateMaintenanceStats();
+            showNotification('✅ تم إضافة الجهاز بنجاح!', 'success');
+            playSound('success');
+        } else {
+            showNotification('❌ فشل في حفظ البيانات!', 'error');
+        }
+    };
     
-    if (companyFilter && companyFilter.value !== 'all') {
-        filteredData = filteredData.filter(item => item.company === companyFilter.value);
-    }
-    
-    // البحث
-    const searchInput = document.getElementById('maintenanceSearchInput');
-    if (searchInput && searchInput.value.trim()) {
-        const searchTerm = searchInput.value.trim().toLowerCase();
-        filteredData = filteredData.filter(item => 
-            item.productName.toLowerCase().includes(searchTerm) ||
-            item.company.toLowerCase().includes(searchTerm) ||
-            item.fault.toLowerCase().includes(searchTerm) ||
-            (item.customerInfo && item.customerInfo.toLowerCase().includes(searchTerm))
-        );
-    }
-    
-    // عرض البيانات
-    if (filteredData.length === 0) {
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="9" style="text-align: center; padding: 2rem; color: var(--theme-text-secondary);">
-                    <i class="fas fa-inbox" style="font-size: 3rem; margin-bottom: 1rem; display: block;"></i>
-                    <p>لا توجد أجهزة صيانة بعد</p>
-                </td>
-            </tr>
-        `;
-    } else {
-        tbody.innerHTML = filteredData.map((item, index) => {
-            const statusClass = item.status === 'completed' ? 'success' : 'warning';
-            const statusIcon = item.status === 'completed' ? 'fa-check-circle' : 'fa-clock';
-            const statusText = item.status === 'completed' ? 'تم الصيانة' : 'قيد الصيانة';
+    // دالة عرض الأجهزة
+    function displayMaintenanceItems() {
+        const tbody = document.getElementById('maintenanceTableBody');
+        if (!tbody) return;
+        
+        // تصفية البيانات
+        const filtered = filterMaintenanceData();
+        
+        if (filtered.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="9" style="text-align: center; padding: 3rem; color: var(--theme-text-secondary);">
+                        <i class="fas fa-inbox" style="font-size: 3rem; opacity: 0.5; display: block; margin-bottom: 1rem;"></i>
+                        <p style="font-size: 1.1rem; font-weight: 600;">لا توجد أجهزة</p>
+                        <p style="font-size: 0.9rem;">ابدأ بإضافة أول جهاز للصيانة</p>
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+        
+        tbody.innerHTML = filtered.map((item, index) => {
+            const statusBadge = item.status === 'completed' 
+                ? '<span class="status-badge completed"><i class="fas fa-check-circle"></i> مكتملة</span>'
+                : '<span class="status-badge pending"><i class="fas fa-clock"></i> قيد الصيانة</span>';
             
             return `
                 <tr>
                     <td>${index + 1}</td>
-                    <td><strong>${item.productName}</strong></td>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <i class="fas fa-mobile-alt" style="color: #6366f1;"></i>
+                            <strong>${item.deviceName}</strong>
+                        </div>
+                    </td>
                     <td>${item.company}</td>
-                    <td>${item.fault}</td>
-                    <td><strong style="color: #10b981;">${formatCurrency(item.price)}</strong></td>
-                    <td>${formatDateArabic(item.receiveDate)}</td>
-                    <td>${formatDateArabic(item.deliveryDate)}</td>
-                    <td><span class="badge badge-${statusClass}"><i class="fas ${statusIcon}"></i> ${statusText}</span></td>
+                    <td>
+                        <div style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                            ${item.problem}
+                        </div>
+                    </td>
+                    <td><strong style="color: #10b981;">${item.price.toLocaleString('en')} د.ع</strong></td>
+                    <td>${formatDate(item.deliveryDate)}</td>
+                    <td>${formatDate(item.expectedDate)}</td>
+                    <td>${statusBadge}</td>
                     <td>
                         <div class="action-buttons">
-                            <button class="action-btn view-btn" onclick="showMaintenanceDetails('${item.id}')" title="عرض التفاصيل">
+                            <button class="action-btn view" onclick="viewMaintenanceDetails('${item.id}')" title="عرض التفاصيل">
                                 <i class="fas fa-eye"></i>
                             </button>
-                            <button class="action-btn edit-btn" onclick="showEditMaintenanceModal('${item.id}')" title="تعديل">
+                            <button class="action-btn edit" onclick="editMaintenance('${item.id}')" title="تعديل">
                                 <i class="fas fa-edit"></i>
                             </button>
                             ${item.status === 'pending' ? `
-                                <button class="action-btn success-btn" onclick="markMaintenanceCompleted('${item.id}')" title="تم الصيانة">
+                                <button class="action-btn complete" onclick="showCompleteMaintenanceModal('${item.id}')" title="إتمام الصيانة">
                                     <i class="fas fa-check"></i>
                                 </button>
                             ` : ''}
-                            <button class="action-btn delete-btn" onclick="deleteMaintenance('${item.id}')" title="حذف">
+                            <button class="action-btn delete" onclick="deleteMaintenance('${item.id}')" title="حذف">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </div>
@@ -37341,513 +37539,683 @@ function updateMaintenanceDisplay() {
         }).join('');
     }
     
-    // تحديث الإحصائيات
-    updateMaintenanceStats();
-    updateCompanyFilter();
-}
-
-// تحديث الإحصائيات
-function updateMaintenanceStats() {
-    const total = maintenanceData.length;
-    const pending = maintenanceData.filter(item => item.status === 'pending').length;
-    const completed = maintenanceData.filter(item => item.status === 'completed').length;
-    const revenue = maintenanceData
-        .filter(item => item.status === 'completed')
-        .reduce((sum, item) => sum + (parseFloat(item.price) || 0), 0);
-    
-    document.getElementById('totalMaintenanceDevices').textContent = total;
-    document.getElementById('pendingMaintenanceDevices').textContent = pending;
-    document.getElementById('completedMaintenanceDevices').textContent = completed;
-    document.getElementById('totalMaintenanceRevenue').textContent = formatCurrency(revenue);
-}
-
-// تحديث فلتر الشركات
-function updateCompanyFilter() {
-    const companyFilter = document.getElementById('maintenanceCompanyFilter');
-    if (!companyFilter) return;
-    
-    const companies = [...new Set(maintenanceData.map(item => item.company))];
-    const currentValue = companyFilter.value;
-    
-    companyFilter.innerHTML = '<option value="all">جميع الشركات</option>';
-    companies.forEach(company => {
-        companyFilter.innerHTML += `<option value="${company}">${company}</option>`;
-    });
-    
-    companyFilter.value = currentValue;
-}
-
-// فتح نافذة إضافة جهاز
-function showAddMaintenanceModal() {
-    document.getElementById('addMaintenanceForm').reset();
-    // تعيين التاريخ الحالي للتسليم
-    const today = new Date().toISOString().split('T')[0];
-    document.getElementById('maintenanceReceiveDate').value = today;
-    // تعيين تاريخ الاستلام بعد 7 أيام
-    const nextWeek = new Date();
-    nextWeek.setDate(nextWeek.getDate() + 7);
-    document.getElementById('maintenanceDeliveryDate').value = nextWeek.toISOString().split('T')[0];
-    showModal('addMaintenanceModal');
-}
-
-// معالجة إضافة جهاز جديد
-function handleAddMaintenance(event) {
-    event.preventDefault();
-    
-    const newDevice = {
-        id: Date.now().toString(),
-        productName: document.getElementById('maintenanceProductName').value,
-        company: document.getElementById('maintenanceCompany').value,
-        fault: document.getElementById('maintenanceFault').value,
-        price: parseFloat(document.getElementById('maintenancePrice').value) || 0,
-        receiveDate: document.getElementById('maintenanceReceiveDate').value,
-        deliveryDate: document.getElementById('maintenanceDeliveryDate').value,
-        faultReason: document.getElementById('maintenanceFaultReason').value,
-        customerInfo: document.getElementById('maintenanceCustomerInfo').value,
-        status: 'pending',
-        addedDate: new Date().toISOString(),
-        completedDate: null
-    };
-    
-    maintenanceData.unshift(newDevice);
-    saveMaintenanceData();
-    closeModal('addMaintenanceModal');
-    
-    showNotification('تم إضافة الجهاز بنجاح', 'success');
-}
-
-// فتح نافذة تعديل جهاز
-function showEditMaintenanceModal(id) {
-    const device = maintenanceData.find(item => item.id === id);
-    if (!device) return;
-    
-    document.getElementById('editMaintenanceId').value = device.id;
-    document.getElementById('editMaintenanceProductName').value = device.productName;
-    document.getElementById('editMaintenanceCompany').value = device.company;
-    document.getElementById('editMaintenanceFault').value = device.fault;
-    document.getElementById('editMaintenancePrice').value = device.price;
-    document.getElementById('editMaintenanceReceiveDate').value = device.receiveDate;
-    document.getElementById('editMaintenanceDeliveryDate').value = device.deliveryDate;
-    document.getElementById('editMaintenanceFaultReason').value = device.faultReason || '';
-    document.getElementById('editMaintenanceCustomerInfo').value = device.customerInfo || '';
-    
-    showModal('editMaintenanceModal');
-}
-
-// معالجة تعديل جهاز
-function handleEditMaintenance(event) {
-    event.preventDefault();
-    
-    const id = document.getElementById('editMaintenanceId').value;
-    const index = maintenanceData.findIndex(item => item.id === id);
-    
-    if (index !== -1) {
-        maintenanceData[index] = {
-            ...maintenanceData[index],
-            productName: document.getElementById('editMaintenanceProductName').value,
-            company: document.getElementById('editMaintenanceCompany').value,
-            fault: document.getElementById('editMaintenanceFault').value,
-            price: parseFloat(document.getElementById('editMaintenancePrice').value) || 0,
-            receiveDate: document.getElementById('editMaintenanceReceiveDate').value,
-            deliveryDate: document.getElementById('editMaintenanceDeliveryDate').value,
-            faultReason: document.getElementById('editMaintenanceFaultReason').value,
-            customerInfo: document.getElementById('editMaintenanceCustomerInfo').value
-        };
-        
-        saveMaintenanceData();
-        closeModal('editMaintenanceModal');
-        showNotification('تم تعديل بيانات الجهاز بنجاح', 'success');
+    // دالة تنسيق التاريخ
+    function formatDate(dateString) {
+        if (!dateString) return '-';
+        const date = new Date(dateString);
+        const options = { year: 'numeric', month: 'long', day: 'numeric' };
+        return date.toLocaleDateString('ar-IQ', options);
     }
-}
-
-// عرض تفاصيل جهاز
-function showMaintenanceDetails(id) {
-    const device = maintenanceData.find(item => item.id === id);
-    if (!device) return;
     
-    const statusClass = device.status === 'completed' ? 'success' : 'warning';
-    const statusIcon = device.status === 'completed' ? 'fa-check-circle' : 'fa-clock';
-    const statusText = device.status === 'completed' ? 'تم الصيانة' : 'قيد الصيانة';
+    // دالة تصفية البيانات
+    function filterMaintenanceData() {
+        let filtered = [...maintenanceItems];
+        
+        // البحث النصي
+        const searchTerm = document.getElementById('maintenanceSearchInput')?.value.toLowerCase() || '';
+        if (searchTerm) {
+            filtered = filtered.filter(item => 
+                item.deviceName.toLowerCase().includes(searchTerm) ||
+                item.company.toLowerCase().includes(searchTerm) ||
+                item.customerName.toLowerCase().includes(searchTerm) ||
+                item.problem.toLowerCase().includes(searchTerm)
+            );
+        }
+        
+        // تصفية حسب الحالة
+        const statusFilter = document.getElementById('maintenanceStatusFilter')?.value || 'all';
+        if (statusFilter !== 'all') {
+            filtered = filtered.filter(item => item.status === statusFilter);
+        }
+        
+        // تصفية حسب السعر
+        const priceFilter = document.getElementById('maintenancePriceFilter')?.value || 'all';
+        if (priceFilter !== 'all') {
+            if (priceFilter === '0-50000') {
+                filtered = filtered.filter(item => item.price < 50000);
+            } else if (priceFilter === '50000-100000') {
+                filtered = filtered.filter(item => item.price >= 50000 && item.price <= 100000);
+            } else if (priceFilter === '100000-200000') {
+                filtered = filtered.filter(item => item.price > 100000 && item.price <= 200000);
+            } else if (priceFilter === '200000+') {
+                filtered = filtered.filter(item => item.price > 200000);
+            }
+        }
+        
+        // تصفية حسب الشركة
+        const companyFilter = document.getElementById('maintenanceCompanyFilter')?.value || 'all';
+        if (companyFilter !== 'all') {
+            filtered = filtered.filter(item => item.company === companyFilter);
+        }
+        
+        return filtered;
+    }
     
-    const content = `
-        <div style="display: grid; gap: 1.5rem;">
-            <div class="detail-card">
-                <div class="detail-header">
-                    <h4><i class="fas fa-mobile-alt"></i> معلومات الجهاز</h4>
-                </div>
-                <div class="detail-grid">
-                    <div class="detail-item">
-                        <span class="detail-label">اسم المنتج:</span>
-                        <span class="detail-value"><strong>${device.productName}</strong></span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">الشركة المصنعة:</span>
-                        <span class="detail-value">${device.company}</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">العطل:</span>
-                        <span class="detail-value">${device.fault}</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">سعر الصيانة:</span>
-                        <span class="detail-value"><strong style="color: #10b981;">${formatCurrency(device.price)}</strong></span>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="detail-card">
-                <div class="detail-header">
-                    <h4><i class="fas fa-calendar"></i> التواريخ</h4>
-                </div>
-                <div class="detail-grid">
-                    <div class="detail-item">
-                        <span class="detail-label">تاريخ التسليم (من العميل):</span>
-                        <span class="detail-value">${formatDateArabic(device.receiveDate)}</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">تاريخ الاستلام المتوقع:</span>
-                        <span class="detail-value">${formatDateArabic(device.deliveryDate)}</span>
-                    </div>
-                    ${device.completedDate ? `
-                        <div class="detail-item">
-                            <span class="detail-label">تاريخ إتمام الصيانة:</span>
-                            <span class="detail-value">${formatDateArabic(device.completedDate)}</span>
+    // دالة تحديث الإحصائيات
+    function updateMaintenanceStats() {
+        const total = maintenanceItems.length;
+        const pending = maintenanceItems.filter(item => item.status === 'pending').length;
+        const completed = maintenanceItems.filter(item => item.status === 'completed').length;
+        const totalRevenue = maintenanceItems
+            .filter(item => item.status === 'completed')
+            .reduce((sum, item) => sum + item.price, 0);
+        
+        const totalElem = document.getElementById('totalMaintenanceDevices');
+        const pendingElem = document.getElementById('pendingMaintenanceDevices');
+        const completedElem = document.getElementById('completedMaintenanceDevices');
+        const revenueElem = document.getElementById('totalMaintenanceRevenue');
+        
+        if (totalElem) totalElem.textContent = total;
+        if (pendingElem) pendingElem.textContent = pending;
+        if (completedElem) completedElem.textContent = completed;
+        if (revenueElem) revenueElem.textContent = totalRevenue.toLocaleString('en') + ' دينار';
+    }
+    
+    // دالة تحميل فلاتر الشركات
+    function loadCompanyFilters() {
+        const companyFilter = document.getElementById('maintenanceCompanyFilter');
+        if (!companyFilter) return;
+        
+        const companies = [...new Set(maintenanceItems.map(item => item.company))].sort();
+        const options = companies.map(company => 
+            `<option value="${company}">${company}</option>`
+        ).join('');
+        
+        companyFilter.innerHTML = '<option value="all">جميع الشركات</option>' + options;
+    }
+    
+    // دالة عرض تفاصيل الجهاز
+    window.viewMaintenanceDetails = function(id) {
+        const item = maintenanceItems.find(i => i.id === id);
+        if (!item) return;
+        
+        const content = document.getElementById('maintenanceDetailsContent');
+        if (!content) return;
+        
+        const statusBadge = item.status === 'completed' 
+            ? '<span class="status-badge completed"><i class="fas fa-check-circle"></i> مكتملة</span>'
+            : '<span class="status-badge pending"><i class="fas fa-clock"></i> قيد الصيانة</span>';
+        
+        content.innerHTML = `
+            <div style="display: grid; gap: 1.5rem;">
+                <div style="background: var(--theme-bg-tertiary); padding: 1.5rem; border-radius: 8px;">
+                    <h4 style="margin-bottom: 1rem; color: var(--theme-text-primary);">
+                        <i class="fas fa-mobile-alt"></i> معلومات الجهاز
+                    </h4>
+                    <div style="display: grid; gap: 1rem;">
+                        <div style="display: flex; justify-content: space-between; padding: 0.75rem; background: var(--theme-bg-secondary); border-radius: 4px;">
+                            <span style="color: var(--theme-text-secondary);">اسم الجهاز:</span>
+                            <strong>${item.deviceName}</strong>
                         </div>
+                        <div style="display: flex; justify-content: space-between; padding: 0.75rem; background: var(--theme-bg-secondary); border-radius: 4px;">
+                            <span style="color: var(--theme-text-secondary);">الشركة المصنعة:</span>
+                            <strong>${item.company}</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding: 0.75rem; background: var(--theme-bg-secondary); border-radius: 4px;">
+                            <span style="color: var(--theme-text-secondary);">الحالة:</span>
+                            ${statusBadge}
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="background: var(--theme-bg-tertiary); padding: 1.5rem; border-radius: 8px;">
+                    <h4 style="margin-bottom: 1rem; color: var(--theme-text-primary);">
+                        <i class="fas fa-user"></i> معلومات العميل
+                    </h4>
+                    <div style="display: grid; gap: 1rem;">
+                        <div style="display: flex; justify-content: space-between; padding: 0.75rem; background: var(--theme-bg-secondary); border-radius: 4px;">
+                            <span style="color: var(--theme-text-secondary);">اسم العميل:</span>
+                            <strong>${item.customerName}</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding: 0.75rem; background: var(--theme-bg-secondary); border-radius: 4px;">
+                            <span style="color: var(--theme-text-secondary);">رقم الهاتف:</span>
+                            <strong dir="ltr">${item.customerPhone}</strong>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="background: var(--theme-bg-tertiary); padding: 1.5rem; border-radius: 8px;">
+                    <h4 style="margin-bottom: 1rem; color: var(--theme-text-primary);">
+                        <i class="fas fa-wrench"></i> تفاصيل العطل
+                    </h4>
+                    <div style="display: grid; gap: 1rem;">
+                        <div style="padding: 0.75rem; background: var(--theme-bg-secondary); border-radius: 4px;">
+                            <div style="color: var(--theme-text-secondary); margin-bottom: 0.5rem;">الخلل/العطل:</div>
+                            <strong>${item.problem}</strong>
+                        </div>
+                        ${item.causeDetails ? `
+                        <div style="padding: 0.75rem; background: var(--theme-bg-secondary); border-radius: 4px;">
+                            <div style="color: var(--theme-text-secondary); margin-bottom: 0.5rem;">سبب العطل التفصيلي:</div>
+                            <div style="white-space: pre-wrap;">${item.causeDetails}</div>
+                        </div>
+                        ` : ''}
+                    </div>
+                </div>
+                
+                <div style="background: var(--theme-bg-tertiary); padding: 1.5rem; border-radius: 8px;">
+                    <h4 style="margin-bottom: 1rem; color: var(--theme-text-primary);">
+                        <i class="fas fa-calendar"></i> التواريخ
+                    </h4>
+                    <div style="display: grid; gap: 1rem;">
+                        <div style="display: flex; justify-content: space-between; padding: 0.75rem; background: var(--theme-bg-secondary); border-radius: 4px;">
+                            <span style="color: var(--theme-text-secondary);">تاريخ التسليم:</span>
+                            <strong>${formatDate(item.deliveryDate)}</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding: 0.75rem; background: var(--theme-bg-secondary); border-radius: 4px;">
+                            <span style="color: var(--theme-text-secondary);">تاريخ الاستلام المتوقع:</span>
+                            <strong>${formatDate(item.expectedDate)}</strong>
+                        </div>
+                        ${item.actualReceiveDate ? `
+                        <div style="display: flex; justify-content: space-between; padding: 0.75rem; background: var(--theme-bg-secondary); border-radius: 4px;">
+                            <span style="color: var(--theme-text-secondary);">تاريخ الاستلام الفعلي:</span>
+                            <strong style="color: #10b981;">${formatDate(item.actualReceiveDate)}</strong>
+                        </div>
+                        ` : ''}
+                    </div>
+                </div>
+                
+                <div style="background: var(--theme-bg-tertiary); padding: 1.5rem; border-radius: 8px;">
+                    <h4 style="margin-bottom: 1rem; color: var(--theme-text-primary);">
+                        <i class="fas fa-money-bill-wave"></i> المالية
+                    </h4>
+                    <div style="display: flex; justify-content: space-between; padding: 0.75rem; background: var(--theme-bg-secondary); border-radius: 4px;">
+                        <span style="color: var(--theme-text-secondary);">سعر الصيانة:</span>
+                        <strong style="color: #10b981; font-size: 1.2rem;">${item.price.toLocaleString('en')} د.ع</strong>
+                    </div>
+                </div>
+                
+                ${item.notes || item.completedNotes ? `
+                <div style="background: var(--theme-bg-tertiary); padding: 1.5rem; border-radius: 8px;">
+                    <h4 style="margin-bottom: 1rem; color: var(--theme-text-primary);">
+                        <i class="fas fa-sticky-note"></i> ملاحظات
+                    </h4>
+                    ${item.notes ? `
+                    <div style="padding: 0.75rem; background: var(--theme-bg-secondary); border-radius: 4px; margin-bottom: 1rem;">
+                        <div style="color: var(--theme-text-secondary); margin-bottom: 0.5rem;">ملاحظات عامة:</div>
+                        <div style="white-space: pre-wrap;">${item.notes}</div>
+                    </div>
+                    ` : ''}
+                    ${item.completedNotes ? `
+                    <div style="padding: 0.75rem; background: var(--theme-bg-secondary); border-radius: 4px;">
+                        <div style="color: var(--theme-text-secondary); margin-bottom: 0.5rem;">ملاحظات الإتمام:</div>
+                        <div style="white-space: pre-wrap;">${item.completedNotes}</div>
+                    </div>
                     ` : ''}
                 </div>
+                ` : ''}
             </div>
-            
-            ${device.faultReason ? `
-                <div class="detail-card">
-                    <div class="detail-header">
-                        <h4><i class="fas fa-sticky-note"></i> معلومات العطل</h4>
-                    </div>
-                    <div class="detail-content">
-                        <p>${device.faultReason}</p>
-                    </div>
-                </div>
-            ` : ''}
-            
-            ${device.customerInfo ? `
-                <div class="detail-card">
-                    <div class="detail-header">
-                        <h4><i class="fas fa-user"></i> معلومات العميل</h4>
-                    </div>
-                    <div class="detail-content">
-                        <p>${device.customerInfo}</p>
-                    </div>
-                </div>
-            ` : ''}
-            
-            <div class="detail-card">
-                <div class="detail-header">
-                    <h4><i class="fas fa-info-circle"></i> الحالة</h4>
-                </div>
-                <div class="detail-content">
-                    <span class="badge badge-${statusClass}" style="font-size: 1.1rem; padding: 0.5rem 1.5rem;">
-                        <i class="fas ${statusIcon}"></i> ${statusText}
-                    </span>
-                </div>
-            </div>
-        </div>
-    `;
-    
-    document.getElementById('maintenanceDetailsContent').innerHTML = content;
-    showModal('maintenanceDetailsModal');
-}
-
-// تحديد حالة الجهاز كـ "تم الصيانة"
-function markMaintenanceCompleted(id) {
-    if (!confirm('هل أنت متأكد من إتمام صيانة هذا الجهاز؟')) return;
-    
-    const index = maintenanceData.findIndex(item => item.id === id);
-    if (index !== -1) {
-        maintenanceData[index].status = 'completed';
-        maintenanceData[index].completedDate = new Date().toISOString();
-        saveMaintenanceData();
-        showNotification('تم إتمام الصيانة بنجاح', 'success');
-    }
-}
-
-// حذف جهاز
-function deleteMaintenance(id) {
-    if (!confirm('هل أنت متأكد من حذف هذا الجهاز؟ لا يمكن التراجع عن هذا الإجراء.')) return;
-    
-    const index = maintenanceData.findIndex(item => item.id === id);
-    if (index !== -1) {
-        maintenanceData.splice(index, 1);
-        saveMaintenanceData();
-        showNotification('تم حذف الجهاز بنجاح', 'success');
-    }
-}
-
-// فلترة الصيانة (يتم استدعاؤها عند كتابة في البحث)
-function filterMaintenance() {
-    updateMaintenanceDisplay();
-}
-
-// تصدير بيانات الصيانة
-function exportMaintenanceData(format) {
-    if (maintenanceData.length === 0) {
-        showNotification('لا توجد بيانات للتصدير', 'warning');
-        return;
-    }
-    
-    const dataType = 'maintenance';
-    
-    if (format === 'json') {
-        exportData(dataType, 'json');
-    } else if (format === 'excel') {
-        exportData(dataType, 'excel');
-    } else if (format === 'word') {
-        exportData(dataType, 'word');
-    } else if (format === 'pdf') {
-        exportData(dataType, 'pdf');
-    }
-}
-
-// دالة مساعدة لتنسيق التاريخ بالعربية
-function formatDateArabic(dateStr) {
-    if (!dateStr) return '-';
-    const date = new Date(dateStr);
-    const options = { year: 'numeric', month: 'long', day: 'numeric' };
-    return date.toLocaleDateString('ar-IQ', options);
-}
-
-// تحميل بيانات الصيانة عند بدء التطبيق
-document.addEventListener('DOMContentLoaded', function() {
-    loadMaintenanceData();
-});
-
-// إضافة دعم التصدير في دالة exportData الموجودة
-const originalExportData = window.exportData;
-window.exportData = function(type, format) {
-    if (type === 'maintenance') {
-        if (format === 'json') {
-            const dataStr = JSON.stringify(maintenanceData, null, 2);
-            const dataBlob = new Blob([dataStr], { type: 'application/json' });
-            const url = URL.createObjectURL(dataBlob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `maintenance-data-${new Date().toISOString().split('T')[0]}.json`;
-            link.click();
-            showNotification('تم تصدير البيانات بنجاح', 'success');
-        } else if (format === 'excel') {
-            const excelData = maintenanceData.map((item, index) => ({
-                '#': index + 1,
-                'اسم المنتج': item.productName,
-                'الشركة': item.company,
-                'العطل': item.fault,
-                'سعر الصيانة': item.price,
-                'تاريخ التسليم': item.receiveDate,
-                'تاريخ الاستلام': item.deliveryDate,
-                'الحالة': item.status === 'completed' ? 'تم الصيانة' : 'قيد الصيانة',
-                'معلومات العميل': item.customerInfo || '-',
-                'سبب العطل': item.faultReason || '-'
-            }));
-            
-            const ws = XLSX.utils.json_to_sheet(excelData);
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, 'الصيانة');
-            XLSX.writeFile(wb, `maintenance-data-${new Date().toISOString().split('T')[0]}.xlsx`);
-            showNotification('تم تصدير البيانات بنجاح', 'success');
-        } else if (format === 'pdf') {
-            generateMaintenancePDF();
-        } else if (format === 'word') {
-            generateMaintenanceWord();
-        }
-    } else {
-        originalExportData(type, format);
-    }
-};
-
-// توليد PDF للصيانة
-function generateMaintenancePDF() {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF({
-        orientation: 'landscape',
-        unit: 'mm',
-        format: 'a4'
-    });
-    
-    // إعداد الخط العربي
-    doc.addFont('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/fonts/Amiri-Regular.ttf', 'Amiri', 'normal');
-    doc.setFont('Amiri');
-    
-    // العنوان
-    doc.setFontSize(20);
-    doc.text('تقرير إدارة الصيانة', doc.internal.pageSize.getWidth() / 2, 20, { align: 'center' });
-    
-    // التاريخ
-    doc.setFontSize(12);
-    doc.text(`التاريخ: ${new Date().toLocaleDateString('ar-IQ')}`, doc.internal.pageSize.getWidth() - 20, 30, { align: 'right' });
-    
-    // الجدول
-    const tableData = maintenanceData.map((item, index) => [
-        (index + 1).toString(),
-        item.productName,
-        item.company,
-        item.fault,
-        formatCurrency(item.price),
-        formatDateArabic(item.receiveDate),
-        formatDateArabic(item.deliveryDate),
-        item.status === 'completed' ? 'تم' : 'قيد الصيانة'
-    ]);
-    
-    doc.autoTable({
-        head: [['#', 'المنتج', 'الشركة', 'العطل', 'السعر', 'تاريخ التسليم', 'تاريخ الاستلام', 'الحالة']],
-        body: tableData,
-        startY: 40,
-        styles: { font: 'Amiri', fontSize: 10, halign: 'right' },
-        headStyles: { fillColor: [99, 102, 241], textColor: 255 }
-    });
-    
-    doc.save(`maintenance-report-${new Date().toISOString().split('T')[0]}.pdf`);
-    showNotification('تم تصدير التقرير بنجاح', 'success');
-}
-
-// توليد Word للصيانة
-function generateMaintenanceWord() {
-    let content = `
-        <!DOCTYPE html>
-        <html dir="rtl" lang="ar">
-        <head>
-            <meta charset="UTF-8">
-            <style>
-                body { font-family: 'Traditional Arabic', Arial, sans-serif; direction: rtl; }
-                h1 { text-align: center; color: #6366f1; }
-                table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-                th, td { border: 1px solid #ddd; padding: 8px; text-align: right; }
-                th { background-color: #6366f1; color: white; }
-                .date { text-align: left; color: #666; margin: 10px 0; }
-            </style>
-        </head>
-        <body>
-            <h1>تقرير إدارة الصيانة</h1>
-            <p class="date">التاريخ: ${new Date().toLocaleDateString('ar-IQ')}</p>
-            <table>
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>اسم المنتج</th>
-                        <th>الشركة</th>
-                        <th>العطل</th>
-                        <th>السعر</th>
-                        <th>تاريخ التسليم</th>
-                        <th>تاريخ الاستلام</th>
-                        <th>الحالة</th>
-                        <th>معلومات العميل</th>
-                    </tr>
-                </thead>
-                <tbody>
-    `;
-    
-    maintenanceData.forEach((item, index) => {
-        content += `
-            <tr>
-                <td>${index + 1}</td>
-                <td>${item.productName}</td>
-                <td>${item.company}</td>
-                <td>${item.fault}</td>
-                <td>${formatCurrency(item.price)}</td>
-                <td>${formatDateArabic(item.receiveDate)}</td>
-                <td>${formatDateArabic(item.deliveryDate)}</td>
-                <td>${item.status === 'completed' ? 'تم الصيانة' : 'قيد الصيانة'}</td>
-                <td>${item.customerInfo || '-'}</td>
-            </tr>
         `;
-    });
-    
-    content += `
-                </tbody>
-            </table>
-        </body>
-        </html>
-    `;
-    
-    const blob = new Blob([content], { type: 'application/msword' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `maintenance-report-${new Date().toISOString().split('T')[0]}.doc`;
-    link.click();
-    showNotification('تم تصدير التقرير بنجاح', 'success');
-}
-
-// استيراد بيانات الصيانة
-const originalImportData = window.importData;
-window.importData = function(type) {
-    if (type === 'maintenance') {
-        const fileInput = document.getElementById('importMaintenanceFile');
-        const file = fileInput.files[0];
         
-        if (!file) {
-            showNotification('الرجاء اختيار ملف للاستيراد', 'warning');
+        const modal = document.getElementById('viewMaintenanceModal');
+        if (modal) modal.style.display = 'flex';
+    };
+    
+    // دالة تعديل جهاز
+    window.editMaintenance = function(id) {
+        const item = maintenanceItems.find(i => i.id === id);
+        if (!item) return;
+        
+        document.getElementById('editMaintenanceId').value = item.id;
+        document.getElementById('editMaintenanceDeviceName').value = item.deviceName;
+        document.getElementById('editMaintenanceCompany').value = item.company;
+        document.getElementById('editMaintenanceCustomerName').value = item.customerName;
+        document.getElementById('editMaintenanceCustomerPhone').value = item.customerPhone;
+        document.getElementById('editMaintenanceProblem').value = item.problem;
+        document.getElementById('editMaintenancePrice').value = item.price;
+        document.getElementById('editMaintenanceDeliveryDate').value = item.deliveryDate;
+        document.getElementById('editMaintenanceExpectedDate').value = item.expectedDate;
+        document.getElementById('editMaintenanceNotes').value = item.notes || '';
+        document.getElementById('editMaintenanceCauseDetails').value = item.causeDetails || '';
+        
+        const modal = document.getElementById('editMaintenanceModal');
+        if (modal) modal.style.display = 'flex';
+    };
+    
+    // دالة حفظ التعديلات
+    window.handleEditMaintenance = function(event) {
+        event.preventDefault();
+        
+        const id = document.getElementById('editMaintenanceId').value;
+        const index = maintenanceItems.findIndex(i => i.id === id);
+        
+        if (index === -1) {
+            showNotification('❌ الجهاز غير موجود!', 'error');
             return;
         }
         
+        maintenanceItems[index] = {
+            ...maintenanceItems[index],
+            deviceName: document.getElementById('editMaintenanceDeviceName').value.trim(),
+            company: document.getElementById('editMaintenanceCompany').value.trim(),
+            customerName: document.getElementById('editMaintenanceCustomerName').value.trim(),
+            customerPhone: document.getElementById('editMaintenanceCustomerPhone').value.trim(),
+            problem: document.getElementById('editMaintenanceProblem').value.trim(),
+            price: parseFloat(document.getElementById('editMaintenancePrice').value) || 0,
+            deliveryDate: document.getElementById('editMaintenanceDeliveryDate').value,
+            expectedDate: document.getElementById('editMaintenanceExpectedDate').value,
+            notes: document.getElementById('editMaintenanceNotes').value.trim(),
+            causeDetails: document.getElementById('editMaintenanceCauseDetails').value.trim()
+        };
+        
+        if (saveMaintenanceData()) {
+            closeModal('editMaintenanceModal');
+            displayMaintenanceItems();
+            updateMaintenanceStats();
+            loadCompanyFilters();
+            showNotification('✅ تم تحديث البيانات بنجاح!', 'success');
+            playSound('success');
+        } else {
+            showNotification('❌ فشل في حفظ التعديلات!', 'error');
+        }
+    };
+    
+    // دالة حذف جهاز
+    window.deleteMaintenance = function(id) {
+        const item = maintenanceItems.find(i => i.id === id);
+        if (!item) return;
+        
+        if (!confirm(`⚠️ هل أنت متأكد من حذف "${item.deviceName}"؟\n\nهذا الإجراء لا يمكن التراجع عنه!`)) {
+            return;
+        }
+        
+        maintenanceItems = maintenanceItems.filter(i => i.id !== id);
+        
+        if (saveMaintenanceData()) {
+            displayMaintenanceItems();
+            updateMaintenanceStats();
+            loadCompanyFilters();
+            showNotification('✅ تم حذف الجهاز بنجاح!', 'success');
+            playSound('success');
+        } else {
+            showNotification('❌ فشل في حذف الجهاز!', 'error');
+        }
+    };
+    
+    // دالة عرض نافذة إتمام الصيانة
+    window.showCompleteMaintenanceModal = function(id) {
+        document.getElementById('completeMaintenanceId').value = id;
+        
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('actualReceiveDate').value = today;
+        document.getElementById('completeMaintenanceNotes').value = '';
+        
+        const modal = document.getElementById('completeMaintenanceModal');
+        if (modal) modal.style.display = 'flex';
+    };
+    
+    // دالة تأكيد إتمام الصيانة
+    window.confirmCompleteMaintenance = function() {
+        const id = document.getElementById('completeMaintenanceId').value;
+        const index = maintenanceItems.findIndex(i => i.id === id);
+        
+        if (index === -1) {
+            showNotification('❌ الجهاز غير موجود!', 'error');
+            return;
+        }
+        
+        maintenanceItems[index].status = 'completed';
+        maintenanceItems[index].actualReceiveDate = document.getElementById('actualReceiveDate').value;
+        maintenanceItems[index].completedNotes = document.getElementById('completeMaintenanceNotes').value.trim();
+        maintenanceItems[index].completedAt = new Date().toISOString();
+        
+        if (saveMaintenanceData()) {
+            closeModal('completeMaintenanceModal');
+            displayMaintenanceItems();
+            updateMaintenanceStats();
+            showNotification('✅ تم إتمام الصيانة بنجاح!', 'success');
+            playSound('success');
+        } else {
+            showNotification('❌ فشل في حفظ البيانات!', 'error');
+        }
+    };
+    
+    // دالة البحث والتصفية
+    window.filterMaintenanceItems = function() {
+        displayMaintenanceItems();
+    };
+    
+    // دالة طباعة التفاصيل
+    window.printMaintenanceDetails = function() {
+        const content = document.getElementById('maintenanceDetailsContent');
+        if (!content) return;
+        
+        const printWindow = window.open('', '', 'width=800,height=600');
+        printWindow.document.write(`
+            <!DOCTYPE html>
+            <html lang="ar" dir="rtl">
+            <head>
+                <meta charset="UTF-8">
+                <title>تفاصيل الصيانة</title>
+                <style>
+                    * { margin: 0; padding: 0; box-sizing: border-box; }
+                    body { 
+                        font-family: 'Cairo', 'Segoe UI', Tahoma, sans-serif; 
+                        padding: 2rem; 
+                        background: white; 
+                        color: #1f2937;
+                    }
+                    h1 { 
+                        text-align: center; 
+                        margin-bottom: 2rem; 
+                        color: #6366f1; 
+                    }
+                    .content { 
+                        max-width: 800px; 
+                        margin: 0 auto; 
+                    }
+                    @media print {
+                        body { padding: 1rem; }
+                    }
+                </style>
+            </head>
+            <body>
+                <h1>🔧 تفاصيل الصيانة</h1>
+                <div class="content">
+                    ${content.innerHTML}
+                </div>
+            </body>
+            </html>
+        `);
+        printWindow.document.close();
+        printWindow.print();
+    };
+    
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // تصدير واستيراد البيانات
+    // ═══════════════════════════════════════════════════════════════════════════════
+    
+    // دالة تصدير البيانات
+    window.exportMaintenanceData = function(format) {
+        const data = maintenanceItems;
+        
+        if (data.length === 0) {
+            showNotification('⚠️ لا توجد بيانات للتصدير!', 'warning');
+            return;
+        }
+        
+        const timestamp = new Date().toISOString().split('T')[0];
+        
+        switch (format) {
+            case 'json':
+                exportToJSON(data, `maintenance_${timestamp}.json`);
+                break;
+            case 'excel':
+                exportToExcel(data, `maintenance_${timestamp}`);
+                break;
+            case 'word':
+                exportToWord(data, `maintenance_${timestamp}`);
+                break;
+            case 'pdf':
+                exportToPDF(data, `maintenance_${timestamp}`);
+                break;
+            default:
+                console.error('صيغة غير مدعومة:', format);
+        }
+    };
+    
+    // تصدير JSON
+    function exportToJSON(data, filename) {
+        const json = JSON.stringify(data, null, 2);
+        const blob = new Blob([json], { type: 'application/json' });
+        downloadFile(blob, filename);
+        showNotification('✅ تم التصدير بصيغة JSON', 'success');
+    }
+    
+    // تصدير Excel
+    function exportToExcel(data, filename) {
+        const header = ['#', 'اسم الجهاز', 'الشركة', 'العميل', 'الهاتف', 'الخلل', 'السعر', 'تاريخ التسليم', 'تاريخ الاستلام', 'الحالة'];
+        const rows = data.map((item, index) => [
+            index + 1,
+            item.deviceName,
+            item.company,
+            item.customerName,
+            item.customerPhone,
+            item.problem,
+            item.price,
+            item.deliveryDate,
+            item.expectedDate,
+            item.status === 'completed' ? 'مكتملة' : 'قيد الصيانة'
+        ]);
+        
+        let csv = header.join(',') + '\n';
+        rows.forEach(row => {
+            csv += row.map(cell => `"${cell}"`).join(',') + '\n';
+        });
+        
+        const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+        downloadFile(blob, filename + '.csv');
+        showNotification('✅ تم التصدير بصيغة Excel', 'success');
+    }
+    
+    // تصدير Word
+    function exportToWord(data, filename) {
+        let html = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <style>
+                    body { font-family: Arial, sans-serif; direction: rtl; }
+                    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                    th, td { border: 1px solid #ddd; padding: 8px; text-align: right; }
+                    th { background-color: #6366f1; color: white; }
+                    h1 { text-align: center; color: #6366f1; }
+                </style>
+            </head>
+            <body>
+                <h1>تقرير الصيانة</h1>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>اسم الجهاز</th>
+                            <th>الشركة</th>
+                            <th>العميل</th>
+                            <th>الهاتف</th>
+                            <th>الخلل</th>
+                            <th>السعر</th>
+                            <th>تاريخ التسليم</th>
+                            <th>تاريخ الاستلام</th>
+                            <th>الحالة</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+        
+        data.forEach((item, index) => {
+            html += `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td>${item.deviceName}</td>
+                    <td>${item.company}</td>
+                    <td>${item.customerName}</td>
+                    <td>${item.customerPhone}</td>
+                    <td>${item.problem}</td>
+                    <td>${item.price.toLocaleString('en')} د.ع</td>
+                    <td>${formatDate(item.deliveryDate)}</td>
+                    <td>${formatDate(item.expectedDate)}</td>
+                    <td>${item.status === 'completed' ? 'مكتملة' : 'قيد الصيانة'}</td>
+                </tr>
+            `;
+        });
+        
+        html += `
+                    </tbody>
+                </table>
+            </body>
+            </html>
+        `;
+        
+        const blob = new Blob(['\ufeff' + html], { type: 'application/msword' });
+        downloadFile(blob, filename + '.doc');
+        showNotification('✅ تم التصدير بصيغة Word', 'success');
+    }
+    
+    // تصدير PDF
+    function exportToPDF(data, filename) {
+        const printWindow = window.open('', '', 'width=800,height=600');
+        
+        let html = `
+            <!DOCTYPE html>
+            <html lang="ar" dir="rtl">
+            <head>
+                <meta charset="UTF-8">
+                <title>تقرير الصيانة</title>
+                <style>
+                    * { margin: 0; padding: 0; box-sizing: border-box; }
+                    body { font-family: 'Cairo', Arial, sans-serif; padding: 2rem; }
+                    h1 { text-align: center; color: #6366f1; margin-bottom: 2rem; }
+                    table { width: 100%; border-collapse: collapse; }
+                    th, td { border: 1px solid #ddd; padding: 8px; text-align: right; font-size: 0.9rem; }
+                    th { background-color: #6366f1; color: white; }
+                    tr:nth-child(even) { background-color: #f9fafb; }
+                    .footer { text-align: center; margin-top: 2rem; color: #6b7280; }
+                    @media print {
+                        body { padding: 1rem; }
+                    }
+                </style>
+            </head>
+            <body>
+                <h1>🔧 تقرير الصيانة</h1>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>الجهاز</th>
+                            <th>الشركة</th>
+                            <th>العميل</th>
+                            <th>الخلل</th>
+                            <th>السعر</th>
+                            <th>التسليم</th>
+                            <th>الحالة</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+        
+        data.forEach((item, index) => {
+            html += `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td>${item.deviceName}</td>
+                    <td>${item.company}</td>
+                    <td>${item.customerName}</td>
+                    <td>${item.problem}</td>
+                    <td>${item.price.toLocaleString('en')}</td>
+                    <td>${formatDate(item.deliveryDate)}</td>
+                    <td>${item.status === 'completed' ? '✅ مكتملة' : '⏳ قيد الصيانة'}</td>
+                </tr>
+            `;
+        });
+        
+        html += `
+                    </tbody>
+                </table>
+                <div class="footer">
+                    <p>تم الإنشاء بواسطة نظام إدارة الصيانة | ${new Date().toLocaleDateString('ar-IQ')}</p>
+                </div>
+            </body>
+            </html>
+        `;
+        
+        printWindow.document.write(html);
+        printWindow.document.close();
+        
+        setTimeout(() => {
+            printWindow.print();
+            showNotification('✅ جاهز للطباعة/حفظ كـ PDF', 'success');
+        }, 500);
+    }
+    
+    // دالة تنزيل الملف
+    function downloadFile(blob, filename) {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+    
+    // دالة استيراد البيانات
+    window.importMaintenanceData = function() {
+        const file = document.getElementById('importMaintenanceFile').files[0];
+        if (!file) return;
+        
         const reader = new FileReader();
         
-        if (file.name.endsWith('.json')) {
-            reader.onload = function(e) {
-                try {
-                    const imported = JSON.parse(e.target.result);
-                    if (Array.isArray(imported)) {
-                        if (confirm(`سيتم استيراد ${imported.length} جهاز. هل تريد المتابعة؟`)) {
-                            maintenanceData = [...maintenanceData, ...imported];
-                            saveMaintenanceData();
-                            showNotification('تم استيراد البيانات بنجاح', 'success');
+        reader.onload = function(e) {
+            try {
+                const content = e.target.result;
+                let imported = [];
+                
+                if (file.name.endsWith('.json')) {
+                    imported = JSON.parse(content);
+                } else if (file.name.endsWith('.csv') || file.name.endsWith('.xlsx')) {
+                    // معالجة CSV
+                    const lines = content.split('\n');
+                    const headers = lines[0].split(',');
+                    
+                    for (let i = 1; i < lines.length; i++) {
+                        const values = lines[i].split(',').map(v => v.replace(/^"|"$/g, ''));
+                        if (values.length >= 10) {
+                            imported.push({
+                                id: Date.now().toString() + i,
+                                deviceName: values[1],
+                                company: values[2],
+                                customerName: values[3],
+                                customerPhone: values[4],
+                                problem: values[5],
+                                price: parseFloat(values[6]) || 0,
+                                deliveryDate: values[7],
+                                expectedDate: values[8],
+                                status: values[9].includes('مكتملة') ? 'completed' : 'pending',
+                                notes: '',
+                                causeDetails: '',
+                                createdAt: new Date().toISOString()
+                            });
                         }
-                    } else {
-                        showNotification('صيغة الملف غير صحيحة', 'error');
                     }
-                } catch (error) {
-                    showNotification('خطأ في قراءة الملف', 'error');
                 }
-                fileInput.value = '';
-            };
-            reader.readAsText(file);
-        } else if (file.name.endsWith('.xlsx') || file.name.endsWith('.csv')) {
-            reader.onload = function(e) {
-                try {
-                    const data = new Uint8Array(e.target.result);
-                    const workbook = XLSX.read(data, { type: 'array' });
-                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-                    const jsonData = XLSX.utils.sheet_to_json(firstSheet);
-                    
-                    const imported = jsonData.map(row => ({
-                        id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
-                        productName: row['اسم المنتج'] || row.productName || '',
-                        company: row['الشركة'] || row.company || '',
-                        fault: row['العطل'] || row.fault || '',
-                        price: parseFloat(row['سعر الصيانة'] || row.price) || 0,
-                        receiveDate: row['تاريخ التسليم'] || row.receiveDate || '',
-                        deliveryDate: row['تاريخ الاستلام'] || row.deliveryDate || '',
-                        status: (row['الحالة'] === 'تم الصيانة' || row.status === 'completed') ? 'completed' : 'pending',
-                        customerInfo: row['معلومات العميل'] || row.customerInfo || '',
-                        faultReason: row['سبب العطل'] || row.faultReason || '',
-                        addedDate: new Date().toISOString(),
-                        completedDate: null
-                    }));
-                    
-                    if (confirm(`سيتم استيراد ${imported.length} جهاز. هل تريد المتابعة؟`)) {
-                        maintenanceData = [...maintenanceData, ...imported];
+                
+                if (imported.length > 0) {
+                    if (confirm(`تم العثور على ${imported.length} جهاز. هل تريد استيراد البيانات؟`)) {
+                        maintenanceItems = [...maintenanceItems, ...imported];
                         saveMaintenanceData();
-                        showNotification('تم استيراد البيانات بنجاح', 'success');
+                        displayMaintenanceItems();
+                        updateMaintenanceStats();
+                        loadCompanyFilters();
+                        showNotification(`✅ تم استيراد ${imported.length} جهاز بنجاح!`, 'success');
+                        playSound('success');
                     }
-                } catch (error) {
-                    showNotification('خطأ في قراءة الملف', 'error');
+                } else {
+                    showNotification('⚠️ لم يتم العثور على بيانات صالحة!', 'warning');
                 }
-                fileInput.value = '';
-            };
-            reader.readAsArrayBuffer(file);
-        }
-    } else {
-        originalImportData(type);
+            } catch (error) {
+                console.error('خطأ في الاستيراد:', error);
+                showNotification('❌ فشل في استيراد البيانات!', 'error');
+            }
+        };
+        
+        reader.readAsText(file);
+};
+
+// تصدير الدوال العامة
+window.MaintenanceSystem = {
+    loadData: loadMaintenanceData,
+    saveData: saveMaintenanceData,
+    getData: () => maintenanceItems,
+    setData: (data) => {
+        maintenanceItems = data;
+        saveMaintenanceData();
+        displayMaintenanceItems();
+        updateMaintenanceStats();
     }
 };
 
-console.log('🔧 نظام إدارة الصيانة تم تحميله بنجاح');
+console.log('✅ نظام الصيانة جاهز!');
 
 </script>
 

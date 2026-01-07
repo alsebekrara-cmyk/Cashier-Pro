@@ -37359,521 +37359,733 @@ window.restoreOldDebtsFromBackup(backupData);
 // ═══════════════════════════════════════════════════════════════════════════════
 // 🔧 نظام إدارة الصيانة - Maintenance Management System  
 // ═══════════════════════════════════════════════════════════════════════════════
-// نظام متكامل لإدارة صيانة الأجهزة مع دعم التصدير/الاستيراد والإحصائيات
 
-(function() {
-    'use strict';
+// تخزين بيانات الصيانة
+var maintenanceItems = [];
+
+// تحميل البيانات عند جاهزية DOM
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(initMaintenanceSystem, 200);
+    });
+} else {
+    setTimeout(initMaintenanceSystem, 200);
+}
+
+function initMaintenanceSystem() {
+    console.log('🔧 تهيئة نظام الصيانة...');
+    loadMaintenanceData();
+    setTimeout(function() {
+        initializeMaintenancePage();
+        console.log('✅ نظام الصيانة جاهز!');
+    }, 300);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// دوال إدارة البيانات
+// ═══════════════════════════════════════════════════════════════════
+
+function loadMaintenanceData() {
+    try {
+        var stored = localStorage.getItem('maintenanceItems');
+        maintenanceItems = stored ? JSON.parse(stored) : [];
+        console.log('✅ تم تحميل', maintenanceItems.length, 'جهاز');
+    } catch (error) {
+        console.error('❌ خطأ في التحميل:', error);
+        maintenanceItems = [];
+    }
+}
+
+function saveMaintenanceData() {
+    try {
+        localStorage.setItem('maintenanceItems', JSON.stringify(maintenanceItems));
+        return true;
+    } catch (error) {
+        console.error('❌ خطأ في الحفظ:', error);
+        return false;
+    }
+}
+
+function initializeMaintenancePage() {
+    updateMaintenanceStats();
+    displayMaintenanceItems();
+    loadCompanyFilters();
     
-    // تخزين بيانات الصيانة
-    let maintenanceItems = [];
-    
-    // تحميل البيانات عند جاهزية DOM
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initMaintenanceSystem);
-    } else {
-        setTimeout(initMaintenanceSystem, 100);
+    var today = new Date().toISOString().split('T')[0];
+    setElementValue('maintenanceDeliveryDate', today);
+    setElementValue('actualReceiveDate', today);
+}
+
+function setElementValue(id, value) {
+    var elem = document.getElementById(id);
+    if (elem) elem.value = value;
+}
+
+function escapeHtml(text) {
+    if (!text) return '';
+    var div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function formatMaintenanceDate(dateString) {
+    if (!dateString) return '-';
+    try {
+        var date = new Date(dateString);
+        return date.toLocaleDateString('ar-IQ', { year: 'numeric', month: 'long', day: 'numeric' });
+    } catch (e) {
+        return dateString;
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// إدارة النوافذ المنبثقة
+// ═══════════════════════════════════════════════════════════════════
+
+window.showAddMaintenanceModal = function() {
+    console.log('🪟 فتح نافذة إضافة جهاز...');
+    var modal = document.getElementById('addMaintenanceModal');
+    if (!modal) {
+        console.error('❌ النافذة غير موجودة!');
+        return;
     }
     
-    function initMaintenanceSystem() {
-        console.log('🔧 تهيئة نظام الصيانة...');
-        loadMaintenanceData();
-        setTimeout(() => {
-            initializeMaintenancePage();
-            console.log('✅ نظام الصيانة جاهز!');
-        }, 500);
-    }
+    var form = document.getElementById('addMaintenanceForm');
+    if (form) form.reset();
     
-    // ═══════════════════════════════════════════════════════════════════
-    // دوال إدارة البيانات
-    // ═══════════════════════════════════════════════════════════════════
+    var today = new Date().toISOString().split('T')[0];
+    setElementValue('maintenanceDeliveryDate', today);
     
-    function loadMaintenanceData() {
-        try {
-            const stored = localStorage.getItem('maintenanceItems');
-            maintenanceItems = stored ? JSON.parse(stored) : [];
-            console.log('✅ تم تحميل', maintenanceItems.length, 'جهاز');
-        } catch (error) {
-            console.error('❌ خطأ في التحميل:', error);
-            maintenanceItems = [];
+    modal.classList.add('active');
+    console.log('✅ تم فتح النافذة');
+};
+
+// تصدير closeModal إذا لم تكن موجودة
+if (typeof window.closeModal === 'undefined') {
+    window.closeModal = function(modalId) {
+        console.log('🚪 إغلاق نافذة:', modalId);
+        var modal = document.getElementById(modalId);
+        if (modal) {
+            modal.classList.remove('active');
+            var form = modal.querySelector('form');
+            if (form) form.reset();
+            console.log('✅ تم إغلاق النافذة');
         }
-    }
+    };
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// إدارة الأجهزة - إضافة
+// ═══════════════════════════════════════════════════════════════════
+
+window.handleAddMaintenance = function(event) {
+    event.preventDefault();
+    console.log('➕ إضافة جهاز جديد...');
     
-    function saveMaintenanceData() {
-        try {
-            localStorage.setItem('maintenanceItems', JSON.stringify(maintenanceItems));
-            return true;
-        } catch (error) {
-            console.error('❌ خطأ في الحفظ:', error);
-            return false;
-        }
-    }
+    var newItem = {
+        id: Date.now().toString(),
+        deviceName: document.getElementById('maintenanceDeviceName').value.trim(),
+        company: document.getElementById('maintenanceCompany').value.trim(),
+        customerName: document.getElementById('maintenanceCustomerName').value.trim(),
+        customerPhone: document.getElementById('maintenanceCustomerPhone').value.trim(),
+        problem: document.getElementById('maintenanceProblem').value.trim(),
+        price: parseFloat(document.getElementById('maintenancePrice').value) || 0,
+        deliveryDate: document.getElementById('maintenanceDeliveryDate').value,
+        expectedDate: document.getElementById('maintenanceExpectedDate').value,
+        notes: document.getElementById('maintenanceNotes').value.trim(),
+        causeDetails: document.getElementById('maintenanceCauseDetails').value.trim(),
+        status: 'pending',
+        createdAt: new Date().toISOString(),
+        actualReceiveDate: null,
+        completedNotes: null
+    };
     
-    function initializeMaintenancePage() {
+    maintenanceItems.push(newItem);
+    
+    if (saveMaintenanceData()) {
+        closeModal('addMaintenanceModal');
+        displayMaintenanceItems();
         updateMaintenanceStats();
-        displayMaintenanceItems();
         loadCompanyFilters();
-        
-        const today = new Date().toISOString().split('T')[0];
-        setElementValue('maintenanceDeliveryDate', today);
-        setElementValue('actualReceiveDate', today);
+        showNotification('✅ تم إضافة الجهاز بنجاح!', 'success');
+        console.log('✅ تم إضافة الجهاز:', newItem.deviceName);
+    } else {
+        showNotification('❌ فشل في حفظ البيانات!', 'error');
+    }
+};
+
+// ═══════════════════════════════════════════════════════════════════
+// عرض الأجهزة
+// ═══════════════════════════════════════════════════════════════════
+
+function displayMaintenanceItems() {
+    var tbody = document.getElementById('maintenanceTableBody');
+    if (!tbody) {
+        console.log('⚠️ جدول الصيانة غير موجود');
+        return;
     }
     
-    function setElementValue(id, value) {
-        const elem = document.getElementById(id);
-        if (elem) elem.value = value;
+    var filtered = filterMaintenanceData();
+    
+    if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:3rem;color:var(--theme-text-secondary);"><i class="fas fa-inbox" style="font-size:3rem;opacity:0.5;display:block;margin-bottom:1rem;"></i><p style="font-size:1.1rem;font-weight:600;">لا توجد أجهزة</p><p style="font-size:0.9rem;">ابدأ بإضافة أول جهاز للصيانة</p></td></tr>';
+        return;
     }
     
-    function escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
+    var html = '';
+    for (var i = 0; i < filtered.length; i++) {
+        var item = filtered[i];
+        var statusBadge = item.status === 'completed' 
+            ? '<span class="status-badge completed"><i class="fas fa-check-circle"></i> مكتملة</span>'
+            : '<span class="status-badge pending"><i class="fas fa-clock"></i> قيد الصيانة</span>';
+        
+        var completeBtn = item.status === 'pending' 
+            ? '<button class="action-btn complete" onclick="showCompleteMaintenanceModal(\'' + item.id + '\')" title="إتمام"><i class="fas fa-check"></i></button>'
+            : '';
+        
+        html += '<tr>';
+        html += '<td>' + (i + 1) + '</td>';
+        html += '<td><div style="display:flex;align-items:center;gap:0.5rem;"><i class="fas fa-mobile-alt" style="color:#6366f1;"></i><strong>' + escapeHtml(item.deviceName) + '</strong></div></td>';
+        html += '<td>' + escapeHtml(item.company) + '</td>';
+        html += '<td><div style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + escapeHtml(item.problem) + '</div></td>';
+        html += '<td><strong style="color:#10b981;">' + item.price.toLocaleString('en') + ' د.ع</strong></td>';
+        html += '<td>' + formatMaintenanceDate(item.deliveryDate) + '</td>';
+        html += '<td>' + formatMaintenanceDate(item.expectedDate) + '</td>';
+        html += '<td>' + statusBadge + '</td>';
+        html += '<td><div class="action-buttons">';
+        html += '<button class="action-btn view" onclick="viewMaintenanceDetails(\'' + item.id + '\')" title="عرض"><i class="fas fa-eye"></i></button>';
+        html += '<button class="action-btn edit" onclick="editMaintenance(\'' + item.id + '\')" title="تعديل"><i class="fas fa-edit"></i></button>';
+        html += completeBtn;
+        html += '<button class="action-btn delete" onclick="deleteMaintenance(\'' + item.id + '\')" title="حذف"><i class="fas fa-trash"></i></button>';
+        html += '</div></td>';
+        html += '</tr>';
     }
     
-    function formatDate(dateString) {
-        if (!dateString) return '-';
-        try {
-            const date = new Date(dateString);
-            return date.toLocaleDateString('ar-IQ', { year: 'numeric', month: 'long', day: 'numeric' });
-        } catch (e) {
-            return dateString;
+    tbody.innerHTML = html;
+    console.log('✅ تم عرض', filtered.length, 'جهاز');
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// تصفية البيانات
+// ═══════════════════════════════════════════════════════════════════
+
+function filterMaintenanceData() {
+    var filtered = maintenanceItems.slice();
+    
+    var searchInput = document.getElementById('maintenanceSearchInput');
+    var searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
+    if (searchTerm) {
+        filtered = filtered.filter(function(item) {
+            return item.deviceName.toLowerCase().indexOf(searchTerm) !== -1 ||
+                   item.company.toLowerCase().indexOf(searchTerm) !== -1 ||
+                   item.customerName.toLowerCase().indexOf(searchTerm) !== -1 ||
+                   item.problem.toLowerCase().indexOf(searchTerm) !== -1;
+        });
+    }
+    
+    var statusFilter = document.getElementById('maintenanceStatusFilter');
+    var status = statusFilter ? statusFilter.value : 'all';
+    if (status !== 'all') {
+        filtered = filtered.filter(function(item) {
+            return item.status === status;
+        });
+    }
+    
+    var priceFilter = document.getElementById('maintenancePriceFilter');
+    var priceRange = priceFilter ? priceFilter.value : 'all';
+    if (priceRange !== 'all') {
+        if (priceRange === '0-50000') {
+            filtered = filtered.filter(function(item) { return item.price < 50000; });
+        } else if (priceRange === '50000-100000') {
+            filtered = filtered.filter(function(item) { return item.price >= 50000 && item.price <= 100000; });
+        } else if (priceRange === '100000-200000') {
+            filtered = filtered.filter(function(item) { return item.price > 100000 && item.price <= 200000; });
+        } else if (priceRange === '200000+') {
+            filtered = filtered.filter(function(item) { return item.price > 200000; });
         }
     }
     
-    // ═══════════════════════════════════════════════════════════════════
-    // إدارة النوافذ
-    // ═══════════════════════════════════════════════════════════════════
-    
-    window.showAddMaintenanceModal = function() {
-        const modal = document.getElementById('addMaintenanceModal');
-        if (!modal) return;
-        
-        const form = document.getElementById('addMaintenanceForm');
-        if (form) form.reset();
-        
-        setElementValue('maintenanceDeliveryDate', new Date().toISOString().split('T')[0]);
-        modal.classList.add('active');
-    };
-    
-    // ═══════════════════════════════════════════════════════════════════
-    // إدارة الأجهزة
-    // ═══════════════════════════════════════════════════════════════════
-    
-    window.handleAddMaintenance = function(event) {
-        event.preventDefault();
-        
-        const newItem = {
-            id: Date.now().toString(),
-            deviceName: document.getElementById('maintenanceDeviceName').value.trim(),
-            company: document.getElementById('maintenanceCompany').value.trim(),
-            customerName: document.getElementById('maintenanceCustomerName').value.trim(),
-            customerPhone: document.getElementById('maintenanceCustomerPhone').value.trim(),
-            problem: document.getElementById('maintenanceProblem').value.trim(),
-            price: parseFloat(document.getElementById('maintenancePrice').value) || 0,
-            deliveryDate: document.getElementById('maintenanceDeliveryDate').value,
-            expectedDate: document.getElementById('maintenanceExpectedDate').value,
-            notes: document.getElementById('maintenanceNotes').value.trim(),
-            causeDetails: document.getElementById('maintenanceCauseDetails').value.trim(),
-            status: 'pending',
-            createdAt: new Date().toISOString(),
-            actualReceiveDate: null,
-            completedNotes: null
-        };
-        
-        maintenanceItems.push(newItem);
-        
-        if (saveMaintenanceData()) {
-            closeModal('addMaintenanceModal');
-            displayMaintenanceItems();
-            updateMaintenanceStats();
-            loadCompanyFilters();
-            showNotification('✅ تم إضافة الجهاز بنجاح!', 'success');
-        }
-    };
-    
-    function displayMaintenanceItems() {
-        const tbody = document.getElementById('maintenanceTableBody');
-        if (!tbody) return;
-        
-        const filtered = filterMaintenanceData();
-        
-        if (filtered.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:3rem;color:var(--theme-text-secondary);"><i class="fas fa-inbox" style="font-size:3rem;opacity:0.5;display:block;margin-bottom:1rem;"></i><p style="font-size:1.1rem;font-weight:600;">لا توجد أجهزة</p></td></tr>';
-            return;
-        }
-        
-        tbody.innerHTML = filtered.map((item, index) => `
-            <tr>
-                <td>${index + 1}</td>
-                <td><div style="display:flex;align-items:center;gap:0.5rem;"><i class="fas fa-mobile-alt" style="color:#6366f1;"></i><strong>${escapeHtml(item.deviceName)}</strong></div></td>
-                <td>${escapeHtml(item.company)}</td>
-                <td><div style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(item.problem)}</div></td>
-                <td><strong style="color:#10b981;">${item.price.toLocaleString('en')} د.ع</strong></td>
-                <td>${formatDate(item.deliveryDate)}</td>
-                <td>${formatDate(item.expectedDate)}</td>
-                <td>${item.status === 'completed' ? '<span class="status-badge completed"><i class="fas fa-check-circle"></i> مكتملة</span>' : '<span class="status-badge pending"><i class="fas fa-clock"></i> قيد الصيانة</span>'}</td>
-                <td><div class="action-buttons">
-                    <button class="action-btn view" onclick="viewMaintenanceDetails('${item.id}')" title="عرض"><i class="fas fa-eye"></i></button>
-                    <button class="action-btn edit" onclick="editMaintenance('${item.id}')" title="تعديل"><i class="fas fa-edit"></i></button>
-                    ${item.status === 'pending' ? `<button class="action-btn complete" onclick="showCompleteMaintenanceModal('${item.id}')" title="إتمام"><i class="fas fa-check"></i></button>` : ''}
-                    <button class="action-btn delete" onclick="deleteMaintenance('${item.id}')" title="حذف"><i class="fas fa-trash"></i></button>
-                </div></td>
-            </tr>
-        `).join('');
+    var companyFilter = document.getElementById('maintenanceCompanyFilter');
+    var company = companyFilter ? companyFilter.value : 'all';
+    if (company !== 'all') {
+        filtered = filtered.filter(function(item) {
+            return item.company === company;
+        });
     }
     
-    function filterMaintenanceData() {
-        let filtered = [...maintenanceItems];
-        
-        const searchTerm = document.getElementById('maintenanceSearchInput')?.value.toLowerCase() || '';
-        if (searchTerm) {
-            filtered = filtered.filter(item => 
-                item.deviceName.toLowerCase().includes(searchTerm) ||
-                item.company.toLowerCase().includes(searchTerm) ||
-                item.customerName.toLowerCase().includes(searchTerm) ||
-                item.problem.toLowerCase().includes(searchTerm)
-            );
+    return filtered;
+}
+
+window.filterMaintenanceItems = function() {
+    displayMaintenanceItems();
+};
+
+// ═══════════════════════════════════════════════════════════════════
+// الإحصائيات
+// ═══════════════════════════════════════════════════════════════════
+
+function updateMaintenanceStats() {
+    var total = maintenanceItems.length;
+    var pending = 0;
+    var completed = 0;
+    var totalRevenue = 0;
+    
+    for (var i = 0; i < maintenanceItems.length; i++) {
+        if (maintenanceItems[i].status === 'pending') {
+            pending++;
+        } else if (maintenanceItems[i].status === 'completed') {
+            completed++;
+            totalRevenue += maintenanceItems[i].price;
         }
-        
-        const statusFilter = document.getElementById('maintenanceStatusFilter')?.value || 'all';
-        if (statusFilter !== 'all') {
-            filtered = filtered.filter(item => item.status === statusFilter);
-        }
-        
-        const priceFilter = document.getElementById('maintenancePriceFilter')?.value || 'all';
-        if (priceFilter !== 'all') {
-            if (priceFilter === '0-50000') filtered = filtered.filter(item => item.price < 50000);
-            else if (priceFilter === '50000-100000') filtered = filtered.filter(item => item.price >= 50000 && item.price <= 100000);
-            else if (priceFilter === '100000-200000') filtered = filtered.filter(item => item.price > 100000 && item.price <= 200000);
-            else if (priceFilter === '200000+') filtered = filtered.filter(item => item.price > 200000);
-        }
-        
-        const companyFilter = document.getElementById('maintenanceCompanyFilter')?.value || 'all';
-        if (companyFilter !== 'all') {
-            filtered = filtered.filter(item => item.company === companyFilter);
-        }
-        
-        return filtered;
     }
     
-    function updateMaintenanceStats() {
-        const total = maintenanceItems.length;
-        const pending = maintenanceItems.filter(item => item.status === 'pending').length;
-        const completed = maintenanceItems.filter(item => item.status === 'completed').length;
-        const totalRevenue = maintenanceItems.filter(item => item.status === 'completed').reduce((sum, item) => sum + item.price, 0);
-        
-        setElementText('totalMaintenanceDevices', total);
-        setElementText('pendingMaintenanceDevices', pending);
-        setElementText('completedMaintenanceDevices', completed);
-        setElementText('totalMaintenanceRevenue', totalRevenue.toLocaleString('en') + ' دينار');
+    setElementText('totalMaintenanceDevices', total);
+    setElementText('pendingMaintenanceDevices', pending);
+    setElementText('completedMaintenanceDevices', completed);
+    setElementText('totalMaintenanceRevenue', totalRevenue.toLocaleString('en') + ' دينار');
+}
+
+function setElementText(id, text) {
+    var elem = document.getElementById(id);
+    if (elem) elem.textContent = text;
+}
+
+function loadCompanyFilters() {
+    var companyFilter = document.getElementById('maintenanceCompanyFilter');
+    if (!companyFilter) return;
+    
+    var companies = [];
+    for (var i = 0; i < maintenanceItems.length; i++) {
+        if (companies.indexOf(maintenanceItems[i].company) === -1) {
+            companies.push(maintenanceItems[i].company);
+        }
+    }
+    companies.sort();
+    
+    var html = '<option value="all">جميع الشركات</option>';
+    for (var j = 0; j < companies.length; j++) {
+        html += '<option value="' + escapeHtml(companies[j]) + '">' + escapeHtml(companies[j]) + '</option>';
+    }
+    companyFilter.innerHTML = html;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// عرض التفاصيل
+// ═══════════════════════════════════════════════════════════════════
+
+window.viewMaintenanceDetails = function(id) {
+    var item = null;
+    for (var i = 0; i < maintenanceItems.length; i++) {
+        if (maintenanceItems[i].id === id) {
+            item = maintenanceItems[i];
+            break;
+        }
     }
     
-    function setElementText(id, text) {
-        const elem = document.getElementById(id);
-        if (elem) elem.textContent = text;
+    if (!item) {
+        showNotification('❌ الجهاز غير موجود!', 'error');
+        return;
     }
     
-    function loadCompanyFilters() {
-        const companyFilter = document.getElementById('maintenanceCompanyFilter');
-        if (!companyFilter) return;
-        
-        const companies = [...new Set(maintenanceItems.map(item => item.company))].sort();
-        companyFilter.innerHTML = '<option value="all">جميع الشركات</option>' + 
-            companies.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+    var content = document.getElementById('maintenanceDetailsContent');
+    if (!content) return;
+    
+    var statusBadge = item.status === 'completed' 
+        ? '<span class="status-badge completed"><i class="fas fa-check-circle"></i> مكتملة</span>'
+        : '<span class="status-badge pending"><i class="fas fa-clock"></i> قيد الصيانة</span>';
+    
+    content.innerHTML = '<div style="display:grid;gap:1.5rem;">' +
+        '<div style="background:var(--theme-bg-tertiary);padding:1.5rem;border-radius:8px;">' +
+            '<h4 style="margin-bottom:1rem;color:var(--theme-text-primary);"><i class="fas fa-mobile-alt"></i> معلومات الجهاز</h4>' +
+            '<div style="display:grid;gap:1rem;">' +
+                '<div style="display:flex;justify-content:space-between;padding:0.75rem;background:var(--theme-bg-secondary);border-radius:4px;">' +
+                    '<span style="color:var(--theme-text-secondary);">اسم الجهاز:</span><strong>' + escapeHtml(item.deviceName) + '</strong>' +
+                '</div>' +
+                '<div style="display:flex;justify-content:space-between;padding:0.75rem;background:var(--theme-bg-secondary);border-radius:4px;">' +
+                    '<span style="color:var(--theme-text-secondary);">الشركة المصنعة:</span><strong>' + escapeHtml(item.company) + '</strong>' +
+                '</div>' +
+                '<div style="display:flex;justify-content:space-between;padding:0.75rem;background:var(--theme-bg-secondary);border-radius:4px;">' +
+                    '<span style="color:var(--theme-text-secondary);">الحالة:</span>' + statusBadge +
+                '</div>' +
+            '</div>' +
+        '</div>' +
+        '<div style="background:var(--theme-bg-tertiary);padding:1.5rem;border-radius:8px;">' +
+            '<h4 style="margin-bottom:1rem;color:var(--theme-text-primary);"><i class="fas fa-user"></i> معلومات العميل</h4>' +
+            '<div style="display:grid;gap:1rem;">' +
+                '<div style="display:flex;justify-content:space-between;padding:0.75rem;background:var(--theme-bg-secondary);border-radius:4px;">' +
+                    '<span style="color:var(--theme-text-secondary);">اسم العميل:</span><strong>' + escapeHtml(item.customerName) + '</strong>' +
+                '</div>' +
+                '<div style="display:flex;justify-content:space-between;padding:0.75rem;background:var(--theme-bg-secondary);border-radius:4px;">' +
+                    '<span style="color:var(--theme-text-secondary);">رقم الهاتف:</span><strong dir="ltr">' + escapeHtml(item.customerPhone) + '</strong>' +
+                '</div>' +
+            '</div>' +
+        '</div>' +
+        '<div style="background:var(--theme-bg-tertiary);padding:1.5rem;border-radius:8px;">' +
+            '<h4 style="margin-bottom:1rem;color:var(--theme-text-primary);"><i class="fas fa-wrench"></i> تفاصيل العطل</h4>' +
+            '<div style="display:grid;gap:1rem;">' +
+                '<div style="padding:0.75rem;background:var(--theme-bg-secondary);border-radius:4px;">' +
+                    '<div style="color:var(--theme-text-secondary);margin-bottom:0.5rem;">الخلل/العطل:</div>' +
+                    '<strong>' + escapeHtml(item.problem) + '</strong>' +
+                '</div>' +
+                (item.causeDetails ? '<div style="padding:0.75rem;background:var(--theme-bg-secondary);border-radius:4px;">' +
+                    '<div style="color:var(--theme-text-secondary);margin-bottom:0.5rem;">سبب العطل التفصيلي:</div>' +
+                    '<div style="white-space:pre-wrap;">' + escapeHtml(item.causeDetails) + '</div>' +
+                '</div>' : '') +
+            '</div>' +
+        '</div>' +
+        '<div style="background:var(--theme-bg-tertiary);padding:1.5rem;border-radius:8px;">' +
+            '<h4 style="margin-bottom:1rem;color:var(--theme-text-primary);"><i class="fas fa-calendar"></i> التواريخ</h4>' +
+            '<div style="display:grid;gap:1rem;">' +
+                '<div style="display:flex;justify-content:space-between;padding:0.75rem;background:var(--theme-bg-secondary);border-radius:4px;">' +
+                    '<span style="color:var(--theme-text-secondary);">تاريخ التسليم:</span><strong>' + formatMaintenanceDate(item.deliveryDate) + '</strong>' +
+                '</div>' +
+                '<div style="display:flex;justify-content:space-between;padding:0.75rem;background:var(--theme-bg-secondary);border-radius:4px;">' +
+                    '<span style="color:var(--theme-text-secondary);">تاريخ الاستلام المتوقع:</span><strong>' + formatMaintenanceDate(item.expectedDate) + '</strong>' +
+                '</div>' +
+                (item.actualReceiveDate ? '<div style="display:flex;justify-content:space-between;padding:0.75rem;background:var(--theme-bg-secondary);border-radius:4px;">' +
+                    '<span style="color:var(--theme-text-secondary);">تاريخ الاستلام الفعلي:</span><strong style="color:#10b981;">' + formatMaintenanceDate(item.actualReceiveDate) + '</strong>' +
+                '</div>' : '') +
+            '</div>' +
+        '</div>' +
+        '<div style="background:var(--theme-bg-tertiary);padding:1.5rem;border-radius:8px;">' +
+            '<h4 style="margin-bottom:1rem;color:var(--theme-text-primary);"><i class="fas fa-money-bill-wave"></i> المالية</h4>' +
+            '<div style="display:flex;justify-content:space-between;padding:0.75rem;background:var(--theme-bg-secondary);border-radius:4px;">' +
+                '<span style="color:var(--theme-text-secondary);">سعر الصيانة:</span>' +
+                '<strong style="color:#10b981;font-size:1.2rem;">' + item.price.toLocaleString('en') + ' د.ع</strong>' +
+            '</div>' +
+        '</div>' +
+        (item.notes || item.completedNotes ? '<div style="background:var(--theme-bg-tertiary);padding:1.5rem;border-radius:8px;">' +
+            '<h4 style="margin-bottom:1rem;color:var(--theme-text-primary);"><i class="fas fa-sticky-note"></i> ملاحظات</h4>' +
+            (item.notes ? '<div style="padding:0.75rem;background:var(--theme-bg-secondary);border-radius:4px;margin-bottom:1rem;">' +
+                '<div style="color:var(--theme-text-secondary);margin-bottom:0.5rem;">ملاحظات عامة:</div>' +
+                '<div style="white-space:pre-wrap;">' + escapeHtml(item.notes) + '</div>' +
+            '</div>' : '') +
+            (item.completedNotes ? '<div style="padding:0.75rem;background:var(--theme-bg-secondary);border-radius:4px;">' +
+                '<div style="color:var(--theme-text-secondary);margin-bottom:0.5rem;">ملاحظات الإتمام:</div>' +
+                '<div style="white-space:pre-wrap;">' + escapeHtml(item.completedNotes) + '</div>' +
+            '</div>' : '') +
+        '</div>' : '') +
+    '</div>';
+    
+    var modal = document.getElementById('viewMaintenanceModal');
+    if (modal) modal.classList.add('active');
+};
+
+// ═══════════════════════════════════════════════════════════════════
+// التعديل
+// ═══════════════════════════════════════════════════════════════════
+
+window.editMaintenance = function(id) {
+    var item = null;
+    for (var i = 0; i < maintenanceItems.length; i++) {
+        if (maintenanceItems[i].id === id) {
+            item = maintenanceItems[i];
+            break;
+        }
     }
     
-    // ═══════════════════════════════════════════════════════════════════
-    // عرض التفاصيل
-    // ═══════════════════════════════════════════════════════════════════
+    if (!item) {
+        showNotification('❌ الجهاز غير موجود!', 'error');
+        return;
+    }
     
-    window.viewMaintenanceDetails = function(id) {
-        const item = maintenanceItems.find(i => i.id === id);
-        if (!item) return;
-        
-        const content = document.getElementById('maintenanceDetailsContent');
-        if (!content) return;
-        
-        content.innerHTML = `
-            <div style="display:grid;gap:1.5rem;">
-                <div style="background:var(--theme-bg-tertiary);padding:1.5rem;border-radius:8px;">
-                    <h4 style="margin-bottom:1rem;"><i class="fas fa-mobile-alt"></i> معلومات الجهاز</h4>
-                    <div style="display:grid;gap:1rem;">
-                        <div style="display:flex;justify-content:space-between;padding:0.75rem;background:var(--theme-bg-secondary);border-radius:4px;">
-                            <span>اسم الجهاز:</span><strong>${escapeHtml(item.deviceName)}</strong>
-                        </div>
-                        <div style="display:flex;justify-content:space-between;padding:0.75rem;background:var(--theme-bg-secondary);border-radius:4px;">
-                            <span>الشركة:</span><strong>${escapeHtml(item.company)}</strong>
-                        </div>
-                    </div>
-                </div>
-                <div style="background:var(--theme-bg-tertiary);padding:1.5rem;border-radius:8px;">
-                    <h4 style="margin-bottom:1rem;"><i class="fas fa-user"></i> معلومات العميل</h4>
-                    <div style="display:grid;gap:1rem;">
-                        <div style="display:flex;justify-content:space-between;padding:0.75rem;background:var(--theme-bg-secondary);border-radius:4px;">
-                            <span>الاسم:</span><strong>${escapeHtml(item.customerName)}</strong>
-                        </div>
-                        <div style="display:flex;justify-content:space-between;padding:0.75rem;background:var(--theme-bg-secondary);border-radius:4px;">
-                            <span>الهاتف:</span><strong>${escapeHtml(item.customerPhone)}</strong>
-                        </div>
-                    </div>
-                </div>
-                <div style="background:var(--theme-bg-tertiary);padding:1.5rem;border-radius:8px;">
-                    <h4 style="margin-bottom:1rem;"><i class="fas fa-wrench"></i> تفاصيل العطل</h4>
-                    <div style="padding:0.75rem;background:var(--theme-bg-secondary);border-radius:4px;">
-                        <strong>${escapeHtml(item.problem)}</strong>
-                    </div>
-                    ${item.causeDetails ? `<div style="padding:0.75rem;background:var(--theme-bg-secondary);border-radius:4px;margin-top:1rem;">${escapeHtml(item.causeDetails)}</div>` : ''}
-                </div>
-                <div style="background:var(--theme-bg-tertiary);padding:1.5rem;border-radius:8px;">
-                    <h4 style="margin-bottom:1rem;"><i class="fas fa-money-bill-wave"></i> المالية</h4>
-                    <div style="display:flex;justify-content:space-between;padding:0.75rem;background:var(--theme-bg-secondary);border-radius:4px;">
-                        <span>السعر:</span><strong style="color:#10b981;font-size:1.2rem;">${item.price.toLocaleString('en')} د.ع</strong>
-                    </div>
-                </div>
-            </div>
-        `;
-        
-        const modal = document.getElementById('viewMaintenanceModal');
-        if (modal) modal.classList.add('active');
-    };
+    document.getElementById('editMaintenanceId').value = item.id;
+    document.getElementById('editMaintenanceDeviceName').value = item.deviceName;
+    document.getElementById('editMaintenanceCompany').value = item.company;
+    document.getElementById('editMaintenanceCustomerName').value = item.customerName;
+    document.getElementById('editMaintenanceCustomerPhone').value = item.customerPhone;
+    document.getElementById('editMaintenanceProblem').value = item.problem;
+    document.getElementById('editMaintenancePrice').value = item.price;
+    document.getElementById('editMaintenanceDeliveryDate').value = item.deliveryDate;
+    document.getElementById('editMaintenanceExpectedDate').value = item.expectedDate;
+    document.getElementById('editMaintenanceNotes').value = item.notes || '';
+    document.getElementById('editMaintenanceCauseDetails').value = item.causeDetails || '';
     
-    // ═══════════════════════════════════════════════════════════════════
-    // التعديل
-    // ═══════════════════════════════════════════════════════════════════
+    var modal = document.getElementById('editMaintenanceModal');
+    if (modal) modal.classList.add('active');
+};
+
+window.handleEditMaintenance = function(event) {
+    event.preventDefault();
     
-    window.editMaintenance = function(id) {
-        const item = maintenanceItems.find(i => i.id === id);
-        if (!item) return;
-        
-        document.getElementById('editMaintenanceId').value = item.id;
-        document.getElementById('editMaintenanceDeviceName').value = item.deviceName;
-        document.getElementById('editMaintenanceCompany').value = item.company;
-        document.getElementById('editMaintenanceCustomerName').value = item.customerName;
-        document.getElementById('editMaintenanceCustomerPhone').value = item.customerPhone;
-        document.getElementById('editMaintenanceProblem').value = item.problem;
-        document.getElementById('editMaintenancePrice').value = item.price;
-        document.getElementById('editMaintenanceDeliveryDate').value = item.deliveryDate;
-        document.getElementById('editMaintenanceExpectedDate').value = item.expectedDate;
-        document.getElementById('editMaintenanceNotes').value = item.notes || '';
-        document.getElementById('editMaintenanceCauseDetails').value = item.causeDetails || '';
-        
-        const modal = document.getElementById('editMaintenanceModal');
-        if (modal) modal.classList.add('active');
-    };
-    
-    window.handleEditMaintenance = function(event) {
-        event.preventDefault();
-        
-        const id = document.getElementById('editMaintenanceId').value;
-        const index = maintenanceItems.findIndex(i => i.id === id);
-        if (index === -1) return;
-        
-        maintenanceItems[index] = {
-            ...maintenanceItems[index],
-            deviceName: document.getElementById('editMaintenanceDeviceName').value.trim(),
-            company: document.getElementById('editMaintenanceCompany').value.trim(),
-            customerName: document.getElementById('editMaintenanceCustomerName').value.trim(),
-            customerPhone: document.getElementById('editMaintenanceCustomerPhone').value.trim(),
-            problem: document.getElementById('editMaintenanceProblem').value.trim(),
-            price: parseFloat(document.getElementById('editMaintenancePrice').value) || 0,
-            deliveryDate: document.getElementById('editMaintenanceDeliveryDate').value,
-            expectedDate: document.getElementById('editMaintenanceExpectedDate').value,
-            notes: document.getElementById('editMaintenanceNotes').value.trim(),
-            causeDetails: document.getElementById('editMaintenanceCauseDetails').value.trim()
-        };
-        
-        if (saveMaintenanceData()) {
-            closeModal('editMaintenanceModal');
-            displayMaintenanceItems();
-            updateMaintenanceStats();
-            loadCompanyFilters();
-            showNotification('✅ تم التحديث بنجاح!', 'success');
+    var id = document.getElementById('editMaintenanceId').value;
+    var index = -1;
+    for (var i = 0; i < maintenanceItems.length; i++) {
+        if (maintenanceItems[i].id === id) {
+            index = i;
+            break;
         }
-    };
+    }
     
-    // ═══════════════════════════════════════════════════════════════════
-    // الحذف والإتمام
-    // ═══════════════════════════════════════════════════════════════════
+    if (index === -1) {
+        showNotification('❌ الجهاز غير موجود!', 'error');
+        return;
+    }
     
-    window.deleteMaintenance = function(id) {
-        const item = maintenanceItems.find(i => i.id === id);
-        if (!item || !confirm(`⚠️ حذف "${item.deviceName}"؟`)) return;
-        
-        maintenanceItems = maintenanceItems.filter(i => i.id !== id);
-        if (saveMaintenanceData()) {
-            displayMaintenanceItems();
-            updateMaintenanceStats();
-            loadCompanyFilters();
-            showNotification('✅ تم الحذف!', 'success');
-        }
-    };
+    maintenanceItems[index].deviceName = document.getElementById('editMaintenanceDeviceName').value.trim();
+    maintenanceItems[index].company = document.getElementById('editMaintenanceCompany').value.trim();
+    maintenanceItems[index].customerName = document.getElementById('editMaintenanceCustomerName').value.trim();
+    maintenanceItems[index].customerPhone = document.getElementById('editMaintenanceCustomerPhone').value.trim();
+    maintenanceItems[index].problem = document.getElementById('editMaintenanceProblem').value.trim();
+    maintenanceItems[index].price = parseFloat(document.getElementById('editMaintenancePrice').value) || 0;
+    maintenanceItems[index].deliveryDate = document.getElementById('editMaintenanceDeliveryDate').value;
+    maintenanceItems[index].expectedDate = document.getElementById('editMaintenanceExpectedDate').value;
+    maintenanceItems[index].notes = document.getElementById('editMaintenanceNotes').value.trim();
+    maintenanceItems[index].causeDetails = document.getElementById('editMaintenanceCauseDetails').value.trim();
     
-    window.showCompleteMaintenanceModal = function(id) {
-        document.getElementById('completeMaintenanceId').value = id;
-        setElementValue('actualReceiveDate', new Date().toISOString().split('T')[0]);
-        document.getElementById('completeMaintenanceNotes').value = '';
-        
-        const modal = document.getElementById('completeMaintenanceModal');
-        if (modal) modal.classList.add('active');
-    };
-    
-    window.confirmCompleteMaintenance = function() {
-        const id = document.getElementById('completeMaintenanceId').value;
-        const index = maintenanceItems.findIndex(i => i.id === id);
-        if (index === -1) return;
-        
-        maintenanceItems[index].status = 'completed';
-        maintenanceItems[index].actualReceiveDate = document.getElementById('actualReceiveDate').value;
-        maintenanceItems[index].completedNotes = document.getElementById('completeMaintenanceNotes').value.trim();
-        maintenanceItems[index].completedAt = new Date().toISOString();
-        
-        if (saveMaintenanceData()) {
-            closeModal('completeMaintenanceModal');
-            displayMaintenanceItems();
-            updateMaintenanceStats();
-            showNotification('✅ تم إتمام الصيانة!', 'success');
-        }
-    };
-    
-    // ═══════════════════════════════════════════════════════════════════
-    // التصفية والطباعة
-    // ═══════════════════════════════════════════════════════════════════
-    
-    window.filterMaintenanceItems = function() {
+    if (saveMaintenanceData()) {
+        closeModal('editMaintenanceModal');
         displayMaintenanceItems();
-    };
-    
-    window.printMaintenanceDetails = function() {
-        const content = document.getElementById('maintenanceDetailsContent');
-        if (!content) return;
-        
-        const w = window.open('', '', 'width=800,height=600');
-        w.document.write(`<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8"><title>تفاصيل الصيانة</title><style>*{margin:0;padding:0;box-sizing:border-box;}body{font-family:Cairo,Arial,sans-serif;padding:2rem;background:white;color:#1f2937;}h1{text-align:center;margin-bottom:2rem;color:#6366f1;}.content{max-width:800px;margin:0 auto;}@media print{body{padding:1rem;}}</style></head><body><h1>🔧 تفاصيل الصيانة</h1><div class="content">${content.innerHTML}</div></body></html>`);
-        w.document.close();
-        setTimeout(() => w.print(), 500);
-    };
-    
-    // ═══════════════════════════════════════════════════════════════════
-    // التصدير والاستيراد
-    // ═══════════════════════════════════════════════════════════════════
-    
-    window.exportMaintenanceData = function(format) {
-        if (maintenanceItems.length === 0) {
-            showNotification('⚠️ لا توجد بيانات!', 'warning');
-            return;
+        updateMaintenanceStats();
+        loadCompanyFilters();
+        showNotification('✅ تم تحديث البيانات بنجاح!', 'success');
+    } else {
+        showNotification('❌ فشل في حفظ التعديلات!', 'error');
+    }
+};
+
+// ═══════════════════════════════════════════════════════════════════
+// الحذف
+// ═══════════════════════════════════════════════════════════════════
+
+window.deleteMaintenance = function(id) {
+    var item = null;
+    for (var i = 0; i < maintenanceItems.length; i++) {
+        if (maintenanceItems[i].id === id) {
+            item = maintenanceItems[i];
+            break;
         }
-        
-        const timestamp = new Date().toISOString().split('T')[0];
-        
-        if (format === 'json') {
-            const json = JSON.stringify(maintenanceItems, null, 2);
-            downloadFile(new Blob([json], { type: 'application/json' }), `maintenance_${timestamp}.json`);
-            showNotification('✅ تم التصدير!', 'success');
-        } else if (format === 'excel' || format === 'word') {
-            const csv = createCSV();
-            const ext = format === 'excel' ? 'csv' : 'doc';
-            downloadFile(new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' }), `maintenance_${timestamp}.${ext}`);
-            showNotification('✅ تم التصدير!', 'success');
-        } else if (format === 'pdf') {
-            window.print();
-        }
-    };
+    }
     
-    function createCSV() {
-        const headers = ['#', 'الجهاز', 'الشركة', 'العميل', 'الهاتف', 'الخلل', 'السعر', 'التسليم', 'الاستلام', 'الحالة'];
-        const rows = maintenanceItems.map((item, i) => [
+    if (!item) return;
+    
+    if (!confirm('⚠️ هل أنت متأكد من حذف "' + item.deviceName + '"؟\n\nهذا الإجراء لا يمكن التراجع عنه!')) {
+        return;
+    }
+    
+    var newItems = [];
+    for (var j = 0; j < maintenanceItems.length; j++) {
+        if (maintenanceItems[j].id !== id) {
+            newItems.push(maintenanceItems[j]);
+        }
+    }
+    maintenanceItems = newItems;
+    
+    if (saveMaintenanceData()) {
+        displayMaintenanceItems();
+        updateMaintenanceStats();
+        loadCompanyFilters();
+        showNotification('✅ تم حذف الجهاز بنجاح!', 'success');
+    } else {
+        showNotification('❌ فشل في حذف الجهاز!', 'error');
+    }
+};
+
+// ═══════════════════════════════════════════════════════════════════
+// إتمام الصيانة
+// ═══════════════════════════════════════════════════════════════════
+
+window.showCompleteMaintenanceModal = function(id) {
+    document.getElementById('completeMaintenanceId').value = id;
+    
+    var today = new Date().toISOString().split('T')[0];
+    setElementValue('actualReceiveDate', today);
+    document.getElementById('completeMaintenanceNotes').value = '';
+    
+    var modal = document.getElementById('completeMaintenanceModal');
+    if (modal) modal.classList.add('active');
+};
+
+window.confirmCompleteMaintenance = function() {
+    var id = document.getElementById('completeMaintenanceId').value;
+    var index = -1;
+    for (var i = 0; i < maintenanceItems.length; i++) {
+        if (maintenanceItems[i].id === id) {
+            index = i;
+            break;
+        }
+    }
+    
+    if (index === -1) {
+        showNotification('❌ الجهاز غير موجود!', 'error');
+        return;
+    }
+    
+    maintenanceItems[index].status = 'completed';
+    maintenanceItems[index].actualReceiveDate = document.getElementById('actualReceiveDate').value;
+    maintenanceItems[index].completedNotes = document.getElementById('completeMaintenanceNotes').value.trim();
+    maintenanceItems[index].completedAt = new Date().toISOString();
+    
+    if (saveMaintenanceData()) {
+        closeModal('completeMaintenanceModal');
+        displayMaintenanceItems();
+        updateMaintenanceStats();
+        showNotification('✅ تم إتمام الصيانة بنجاح!', 'success');
+    } else {
+        showNotification('❌ فشل في حفظ البيانات!', 'error');
+    }
+};
+
+// ═══════════════════════════════════════════════════════════════════
+// الطباعة
+// ═══════════════════════════════════════════════════════════════════
+
+window.printMaintenanceDetails = function() {
+    var content = document.getElementById('maintenanceDetailsContent');
+    if (!content) return;
+    
+    var w = window.open('', '', 'width=800,height=600');
+    w.document.write('<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8"><title>تفاصيل الصيانة</title><style>*{margin:0;padding:0;box-sizing:border-box;}body{font-family:Cairo,Arial,sans-serif;padding:2rem;background:white;color:#1f2937;}h1{text-align:center;margin-bottom:2rem;color:#6366f1;}.content{max-width:800px;margin:0 auto;}@media print{body{padding:1rem;}}</style></head><body><h1>🔧 تفاصيل الصيانة</h1><div class="content">' + content.innerHTML + '</div></body></html>');
+    w.document.close();
+    setTimeout(function() { w.print(); }, 500);
+};
+
+// ═══════════════════════════════════════════════════════════════════
+// التصدير
+// ═══════════════════════════════════════════════════════════════════
+
+window.exportMaintenanceData = function(format) {
+    if (maintenanceItems.length === 0) {
+        showNotification('⚠️ لا توجد بيانات للتصدير!', 'warning');
+        return;
+    }
+    
+    var timestamp = new Date().toISOString().split('T')[0];
+    
+    if (format === 'json') {
+        var json = JSON.stringify(maintenanceItems, null, 2);
+        downloadMaintenanceFile(new Blob([json], { type: 'application/json' }), 'maintenance_' + timestamp + '.json');
+        showNotification('✅ تم التصدير بصيغة JSON', 'success');
+    } else if (format === 'excel' || format === 'word') {
+        var csv = createMaintenanceCSV();
+        var ext = format === 'excel' ? 'csv' : 'doc';
+        downloadMaintenanceFile(new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' }), 'maintenance_' + timestamp + '.' + ext);
+        showNotification('✅ تم التصدير بصيغة ' + format.toUpperCase(), 'success');
+    } else if (format === 'pdf') {
+        window.print();
+    }
+};
+
+function createMaintenanceCSV() {
+    var headers = ['#', 'الجهاز', 'الشركة', 'العميل', 'الهاتف', 'الخلل', 'السعر', 'التسليم', 'الاستلام', 'الحالة'];
+    var csv = headers.join(',') + '\n';
+    
+    for (var i = 0; i < maintenanceItems.length; i++) {
+        var item = maintenanceItems[i];
+        var row = [
             i + 1,
-            item.deviceName,
-            item.company,
-            item.customerName,
-            item.customerPhone,
-            item.problem,
+            '"' + item.deviceName + '"',
+            '"' + item.company + '"',
+            '"' + item.customerName + '"',
+            '"' + item.customerPhone + '"',
+            '"' + item.problem + '"',
             item.price,
             item.deliveryDate,
             item.expectedDate,
             item.status === 'completed' ? 'مكتملة' : 'قيد الصيانة'
-        ]);
-        
-        return [headers.join(','), ...rows.map(r => r.map(c => `"${c}"`).join(','))].join('\n');
+        ];
+        csv += row.join(',') + '\n';
     }
     
-    function downloadFile(blob, filename) {
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-    }
+    return csv;
+}
+
+function downloadMaintenanceFile(blob, filename) {
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// الاستيراد
+// ═══════════════════════════════════════════════════════════════════
+
+window.importMaintenanceData = function() {
+    var fileInput = document.getElementById('importMaintenanceFile');
+    if (!fileInput || !fileInput.files || !fileInput.files[0]) return;
     
-    window.importMaintenanceData = function() {
-        const file = document.getElementById('importMaintenanceFile').files[0];
-        if (!file) return;
-        
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            try {
-                let imported = [];
-                const content = e.target.result;
-                
-                if (file.name.endsWith('.json')) {
-                    imported = JSON.parse(content);
-                } else if (file.name.endsWith('.csv')) {
-                    const lines = content.split('\n');
-                    for (let i = 1; i < lines.length; i++) {
-                        const values = lines[i].split(',').map(v => v.replace(/^"|"$/g, ''));
-                        if (values.length >= 10) {
-                            imported.push({
-                                id: Date.now().toString() + i,
-                                deviceName: values[1],
-                                company: values[2],
-                                customerName: values[3],
-                                customerPhone: values[4],
-                                problem: values[5],
-                                price: parseFloat(values[6]) || 0,
-                                deliveryDate: values[7],
-                                expectedDate: values[8],
-                                status: values[9].includes('مكتملة') ? 'completed' : 'pending',
-                                notes: '',
-                                causeDetails: '',
-                                createdAt: new Date().toISOString()
-                            });
-                        }
+    var file = fileInput.files[0];
+    var reader = new FileReader();
+    
+    reader.onload = function(e) {
+        try {
+            var imported = [];
+            var content = e.target.result;
+            
+            if (file.name.endsWith('.json')) {
+                imported = JSON.parse(content);
+            } else if (file.name.endsWith('.csv')) {
+                var lines = content.split('\n');
+                for (var i = 1; i < lines.length; i++) {
+                    if (!lines[i].trim()) continue;
+                    var values = lines[i].split(',');
+                    if (values.length >= 10) {
+                        imported.push({
+                            id: Date.now().toString() + i,
+                            deviceName: values[1].replace(/^"|"$/g, ''),
+                            company: values[2].replace(/^"|"$/g, ''),
+                            customerName: values[3].replace(/^"|"$/g, ''),
+                            customerPhone: values[4].replace(/^"|"$/g, ''),
+                            problem: values[5].replace(/^"|"$/g, ''),
+                            price: parseFloat(values[6]) || 0,
+                            deliveryDate: values[7],
+                            expectedDate: values[8],
+                            status: values[9].indexOf('مكتملة') !== -1 ? 'completed' : 'pending',
+                            notes: '',
+                            causeDetails: '',
+                            createdAt: new Date().toISOString(),
+                            actualReceiveDate: null,
+                            completedNotes: null
+                        });
                     }
                 }
-                
-                if (imported.length > 0 && confirm(`استيراد ${imported.length} جهاز؟`)) {
-                    maintenanceItems = [...maintenanceItems, ...imported];
+            }
+            
+            if (imported.length > 0) {
+                if (confirm('هل تريد استيراد ' + imported.length + ' جهاز؟')) {
+                    for (var j = 0; j < imported.length; j++) {
+                        maintenanceItems.push(imported[j]);
+                    }
                     saveMaintenanceData();
                     displayMaintenanceItems();
                     updateMaintenanceStats();
                     loadCompanyFilters();
-                    showNotification(`✅ تم استيراد ${imported.length} جهاز!`, 'success');
+                    showNotification('✅ تم استيراد ' + imported.length + ' جهاز بنجاح!', 'success');
                 }
-            } catch (error) {
-                console.error('خطأ في الاستيراد:', error);
-                showNotification('❌ فشل الاستيراد!', 'error');
+            } else {
+                showNotification('⚠️ لم يتم العثور على بيانات صالحة!', 'warning');
             }
-        };
-        reader.readAsText(file);
-    };
-    
-    // تصدير API
-    window.MaintenanceSystem = {
-        loadData: loadMaintenanceData,
-        saveData: saveMaintenanceData,
-        getData: () => maintenanceItems,
-        setData: (data) => {
-            maintenanceItems = data;
-            saveMaintenanceData();
-            displayMaintenanceItems();
-            updateMaintenanceStats();
+        } catch (error) {
+            console.error('خطأ في الاستيراد:', error);
+            showNotification('❌ فشل في استيراد البيانات!', 'error');
         }
     };
     
-})();
+    reader.readAsText(file);
+};
 
+// ═══════════════════════════════════════════════════════════════════
+// API عام
+// ═══════════════════════════════════════════════════════════════════
+
+window.MaintenanceSystem = {
+    loadData: loadMaintenanceData,
+    saveData: saveMaintenanceData,
+    getData: function() { return maintenanceItems; },
+    setData: function(data) {
+        maintenanceItems = data;
+        saveMaintenanceData();
+        displayMaintenanceItems();
+        updateMaintenanceStats();
+    }
+};
+
+console.log('🔧 نظام الصيانة محمّل ومستعد!');
 </script>
 
 </body>

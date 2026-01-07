@@ -382,3 +382,117 @@ input[type="number"]:hover {
   opacity: 0.6;
   background: #f3f3f3;
 }
+
+/* ==================== تنسيق جداول المصاريف ==================== */
+
+/* أعمدة المبالغ */
+.expense-amount-cell {
+  font-weight: 600;
+  font-size: 1.05rem;
+  padding: 0.75rem 1rem;
+}
+
+.expense-amount-negative {
+  color: #e74c3c !important;
+}
+
+.expense-paid-cell {
+  color: var(--success-color, #22c55e) !important;
+  font-weight: 600;
+  font-size: 1.05rem;
+  padding: 0.75rem 1rem;
+}
+
+.expense-remaining-cell {
+  color: var(--warning-color, #f59e0b) !important;
+  font-weight: 600;
+  font-size: 1.05rem;
+  padding: 0.75rem 1rem;
+}
+
+/* تأثيرات hover على صفوف الجدول */
+.table tbody tr:hover .expense-paid-cell {
+  background: rgba(34, 197, 94, 0.1);
+  border-radius: 4px;
+}
+
+.table tbody tr:hover .expense-remaining-cell {
+  background: rgba(245, 158, 11, 0.1);
+  border-radius: 4px;
+}
+
+/* أيقونات الحالة في رأس الجدول */
+.table th i.fa-check-circle,
+.table th i.fa-exclamation-circle {
+  margin-left: 0.3rem;
+}
+
+/* تنسيق badges لأنواع المصاريف */
+.expense-type-badge {
+  display: inline-block;
+  padding: 0.35rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  background: var(--theme-bg-secondary);
+  border: 1px solid var(--theme-border);
+}
+
+/* تنسيق responsive للجداول */
+@media (max-width: 1200px) {
+  .expense-amount-cell,
+  .expense-paid-cell,
+  .expense-remaining-cell {
+    font-size: 0.95rem;
+    padding: 0.5rem 0.75rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .expense-amount-cell,
+  .expense-paid-cell,
+  .expense-remaining-cell {
+    font-size: 0.85rem;
+    padding: 0.4rem 0.5rem;
+  }
+  
+  .expense-type-badge {
+    font-size: 0.8rem;
+    padding: 0.25rem 0.5rem;
+  }
+}
+
+/* تحسين شكل stats cards للمصاريف */
+.stat-card .stat-icon i.fa-check-circle {
+  color: var(--success-color, #22c55e);
+}
+
+.stat-card .stat-icon i.fa-exclamation-circle {
+  color: var(--warning-color, #f59e0b);
+}
+
+/* تأثيرات للبطاقات الإحصائية */
+.stats-grid {
+  display: grid;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+/* Animation للأرقام عند التحديث */
+@keyframes numberUpdate {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+    color: var(--primary-color);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.stat-value.updating {
+  animation: numberUpdate 0.5s ease;
+}
+

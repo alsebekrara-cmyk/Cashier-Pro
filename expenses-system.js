@@ -1,5 +1,12 @@
+// دالة لحساب المبلغ المتبقي تلقائياً عند إدخال المبلغ الكلي أو المدفوع
+function updateExpensePaidRemaining() {
+    const amount = parseFloat(document.getElementById('expenseAmount').value) || 0;
+    const paid = parseFloat(document.getElementById('expensePaid').value) || 0;
+    const remaining = Math.max(amount - paid, 0);
+    document.getElementById('expenseRemaining').value = remaining;
+}
 // تعريف مصفوفة المصاريف العامة
-let expensesData = [];
+var expensesData = [];
 /**
  * 💰 نظام إدارة المصاريف والمشتريات الشامل
  * شركة الإبداع الرقمي - كرار السعبري
@@ -105,27 +112,35 @@ function closeViewPurchaseModal() {
  * حفظ مصروف جديد
  */
 async function saveExpense() {
+
     const type = document.getElementById('expenseType').value;
     const amount = parseFloat(document.getElementById('expenseAmount').value);
+    const paid = parseFloat(document.getElementById('expensePaid').value) || 0;
+    const remaining = Math.max(amount - paid, 0);
     const description = document.getElementById('expenseDescription').value;
     const date = document.getElementById('expenseDate').value;
-    
+
     // التحقق من البيانات
     if (!type || !amount || !date) {
         showNotification('يرجى ملء جميع الحقول المطلوبة', 'error');
         return;
     }
-    
     if (amount <= 0) {
         showNotification('المبلغ يجب أن يكون أكبر من صفر', 'error');
         return;
     }
-    
+    if (paid < 0 || paid > amount) {
+        showNotification('المبلغ المدفوع يجب أن يكون بين 0 والمبلغ الكلي', 'error');
+        return;
+    }
+
     // إنشاء كائن المصروف
     const expense = {
         id: Date.now(),
         type: type,
         amount: amount,
+        paid: paid,
+        remaining: remaining,
         description: description,
         date: date,
         createdAt: new Date().toISOString(),
@@ -209,7 +224,7 @@ async function loadExpenses() {
         tbody.innerHTML = '';
         
         if (expensesData.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 3rem; color: var(--theme-text-tertiary);">لا توجد مصاريف مسجلة</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; padding: 3rem; color: var(--theme-text-tertiary);">لا توجد مصاريف مسجلة</td></tr>';
             return;
         }
         
@@ -225,7 +240,9 @@ async function loadExpenses() {
                         ${getExpenseTypeLabel(expense.type)}
                     </span>
                 </td>
-                <td class="expense-amount-cell expense-amount-negative">${expense.amount.toLocaleString()} دينار</td>
+                <td class="expense-amount-cell expense-amount-negative">${(expense.amount || 0).toLocaleString()} دينار</td>
+                <td class="expense-paid-cell" style="color: var(--success-color); font-weight: 500;">${(expense.paid || 0).toLocaleString()} دينار</td>
+                <td class="expense-remaining-cell" style="color: var(--warning-color); font-weight: 500;">${(expense.remaining !== undefined ? expense.remaining : (expense.amount || 0)).toLocaleString()} دينار</td>
                 <td>${new Date(expense.date).toLocaleDateString('ar-IQ')}</td>
                 <td>${expense.description || '-'}</td>
                 <td>${expense.createdBy || '-'}</td>
@@ -703,8 +720,13 @@ async function updateExpensesStats() {
         }
         
         // حساب المجاميع
-        const totalExpenses = expenses.reduce((sum, exp) => sum + exp.amount, 0);
-        const totalPurchases = purchases.reduce((sum, pur) => sum + pur.totalAmount, 0);
+        const totalExpenses = expenses.reduce((sum, exp) => sum + (exp.amount || 0), 0);
+        const totalPaid = expenses.reduce((sum, exp) => sum + (exp.paid || 0), 0);
+        const totalRemaining = expenses.reduce((sum, exp) => {
+            const remaining = exp.remaining !== undefined ? exp.remaining : (exp.amount || 0) - (exp.paid || 0);
+            return sum + remaining;
+        }, 0);
+        const totalPurchases = purchases.reduce((sum, pur) => sum + (pur.totalAmount || 0), 0);
         
         // حساب مصاريف هذا الشهر
         const currentMonth = new Date().getMonth();
@@ -714,15 +736,19 @@ async function updateExpensesStats() {
                 const expDate = new Date(exp.date);
                 return expDate.getMonth() === currentMonth && expDate.getFullYear() === currentYear;
             })
-            .reduce((sum, exp) => sum + exp.amount, 0);
+            .reduce((sum, exp) => sum + (exp.amount || 0), 0);
         
         // تحديث العناصر
         const totalExpensesEl = document.getElementById('totalExpensesAmount');
+        const totalPaidEl = document.getElementById('totalPaidAmount');
+        const totalRemainingEl = document.getElementById('totalRemainingAmount');
         const totalPurchasesEl = document.getElementById('totalPurchasesAmount');
         const monthlyExpensesEl = document.getElementById('monthlyExpensesAmount');
         const totalCountEl = document.getElementById('totalExpensesCount');
         
         if (totalExpensesEl) totalExpensesEl.textContent = totalExpenses.toLocaleString() + ' دينار';
+        if (totalPaidEl) totalPaidEl.textContent = totalPaid.toLocaleString() + ' دينار';
+        if (totalRemainingEl) totalRemainingEl.textContent = totalRemaining.toLocaleString() + ' دينار';
         if (totalPurchasesEl) totalPurchasesEl.textContent = totalPurchases.toLocaleString() + ' دينار';
         if (monthlyExpensesEl) monthlyExpensesEl.textContent = monthlyExpenses.toLocaleString() + ' دينار';
         if (totalCountEl) totalCountEl.textContent = (expenses.length + purchases.length).toLocaleString();
@@ -931,6 +957,22 @@ function updatePurchasedProductsTable(purchases) {
 }
 
 // ==================== دوال البحث والتصفية ====================
+
+/**
+ * تصفية فواتير المشتريات
+ */
+function filterPurchases() {
+    const searchTerm = document.getElementById('purchasesSearchInput')?.value.toLowerCase() || '';
+    const tbody = document.getElementById('purchasesTableBody');
+    if (!tbody) return;
+    
+    const rows = tbody.getElementsByTagName('tr');
+    
+    Array.from(rows).forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(searchTerm) ? '' : 'none';
+    });
+}
 
 /**
  * تصفية المصاريف
@@ -1235,6 +1277,7 @@ function viewExpenseDetails(expenseId) {
                     </h4>
                 </div>
                 
+
                 <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
                     <div>
                         <div style="color: var(--theme-text-tertiary); font-size: 0.9rem;">نوع المصروف</div>
@@ -1244,21 +1287,30 @@ function viewExpenseDetails(expenseId) {
                             </span>
                         </div>
                     </div>
-                    
                     <div>
-                        <div style="color: var(--theme-text-tertiary); font-size: 0.9rem;">المبلغ</div>
-                        <div style="margin-top: 0.5rem; font-size: 1.5rem; font-weight: bold; color: var(--danger-color);">
-                            ${expense.amount.toLocaleString()} دينار
+                        <div style="color: var(--theme-text-tertiary); font-size: 0.9rem;">المبلغ الكلي</div>
+                        <div style="margin-top: 0.5rem; font-size: 1.2rem; font-weight: bold; color: var(--danger-color);">
+                            ${(expense.amount || 0).toLocaleString()} دينار
                         </div>
                     </div>
-                    
+                    <div>
+                        <div style="color: var(--theme-text-tertiary); font-size: 0.9rem;">المبلغ المدفوع</div>
+                        <div style="margin-top: 0.5rem; font-size: 1.1rem; font-weight: bold; color: var(--success-color);">
+                            ${(expense.paid || 0).toLocaleString()} دينار
+                        </div>
+                    </div>
+                    <div>
+                        <div style="color: var(--theme-text-tertiary); font-size: 0.9rem;">المبلغ المتبقي</div>
+                        <div style="margin-top: 0.5rem; font-size: 1.1rem; font-weight: bold; color: var(--warning-color);">
+                            ${(expense.remaining !== undefined ? expense.remaining : (expense.amount || 0)).toLocaleString()} دينار
+                        </div>
+                    </div>
                     <div>
                         <div style="color: var(--theme-text-tertiary); font-size: 0.9rem;">التاريخ</div>
                         <div style="margin-top: 0.5rem; font-weight: 500;">
                             ${new Date(expense.date).toLocaleDateString('ar-IQ', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
                         </div>
                     </div>
-                    
                     <div>
                         <div style="color: var(--theme-text-tertiary); font-size: 0.9rem;">المستخدم</div>
                         <div style="margin-top: 0.5rem; font-weight: 500;">
@@ -1335,6 +1387,8 @@ function editExpense(expenseId) {
     // ملء النموذج بالبيانات الحالية
     document.getElementById('expenseType').value = expense.type;
     document.getElementById('expenseAmount').value = expense.amount;
+    document.getElementById('expensePaid').value = expense.paid || '';
+    document.getElementById('expenseRemaining').value = (expense.remaining !== undefined ? expense.remaining : (expense.amount || 0));
     document.getElementById('expenseDescription').value = expense.description || '';
     document.getElementById('expenseDate').value = expense.date;
     
@@ -1357,32 +1411,39 @@ function editExpense(expenseId) {
 async function updateExpense(expenseId) {
     const type = document.getElementById('expenseType').value;
     const amount = parseFloat(document.getElementById('expenseAmount').value);
+    const paid = parseFloat(document.getElementById('expensePaid').value) || 0;
+    const remaining = Math.max(amount - paid, 0);
     const description = document.getElementById('expenseDescription').value;
     const date = document.getElementById('expenseDate').value;
-    
+
     // التحقق من البيانات
     if (!type || !amount || !date) {
         showNotification('يرجى ملء جميع الحقول المطلوبة', 'error');
         return;
     }
-    
     if (amount <= 0) {
         showNotification('المبلغ يجب أن يكون أكبر من صفر', 'error');
         return;
     }
-    
+    if (paid < 0 || paid > amount) {
+        showNotification('المبلغ المدفوع يجب أن يكون بين 0 والمبلغ الكلي', 'error');
+        return;
+    }
+
     // العثور على المصروف
     const expenseIndex = expensesData.findIndex(e => e.id === expenseId);
     if (expenseIndex === -1) {
         showNotification('لم يتم العثور على المصروف', 'error');
         return;
     }
-    
+
     // تحديث البيانات
     const updatedExpense = {
         ...expensesData[expenseIndex],
         type: type,
         amount: amount,
+        paid: paid,
+        remaining: remaining,
         description: description,
         date: date,
         updatedAt: new Date().toISOString(),
@@ -1438,8 +1499,75 @@ function resetExpenseForm() {
     // تفريغ الحقول
     document.getElementById('expenseType').value = '';
     document.getElementById('expenseAmount').value = '';
+    document.getElementById('expensePaid').value = '';
+    document.getElementById('expenseRemaining').value = '';
     document.getElementById('expenseDescription').value = '';
     document.getElementById('expenseDate').valueAsDate = new Date();
 }
+
+/**
+ * تعديل فاتورة مشتريات
+ */
+function editPurchase(purchaseId) {
+    showNotification('ميزة تعديل فاتورة المشتريات قيد التطوير', 'info');
+    // يمكن إضافة منطق التعديل لاحقاً
+}
+
+/**
+ * تصدير تقارير المصاريف
+ */
+function exportExpensesReport(format) {
+    showNotification(`جاري تصدير التقرير بصيغة ${format}...`, 'info');
+    
+    // يمكن إضافة منطق التصدير الفعلي لاحقاً
+    // مثال: استدعاء دالة التصدير من النظام الرئيسي
+    if (typeof window.exportData === 'function') {
+        window.exportData('expenses', format);
+    } else {
+        console.warn('دالة التصدير غير متوفرة');
+    }
+}
+
+// ==================== تصدير جميع الوظائف للنطاق العالمي ====================
+
+// دوال التبويبات
+window.switchExpenseTab = switchExpenseTab;
+
+// دوال النوافذ المنبثقة
+window.showAddExpenseModal = showAddExpenseModal;
+window.closeAddExpenseModal = closeAddExpenseModal;
+window.showAddPurchaseModal = showAddPurchaseModal;
+window.closeAddPurchaseModal = closeAddPurchaseModal;
+window.closeViewPurchaseModal = closeViewPurchaseModal;
+
+// دوال إدارة المصاريف
+window.saveExpense = saveExpense;
+window.deleteExpense = deleteExpense;
+window.loadExpenses = loadExpenses;
+window.updateExpensePaidRemaining = updateExpensePaidRemaining;
+window.filterExpenses = filterExpenses;
+window.viewExpenseDetails = viewExpenseDetails;
+window.closeExpenseDetailsModal = closeExpenseDetailsModal;
+window.editExpense = editExpense;
+window.updateExpense = updateExpense;
+window.resetExpenseForm = resetExpenseForm;
+
+// دوال إدارة المشتريات
+window.addPurchaseItem = addPurchaseItem;
+window.removePurchaseItem = removePurchaseItem;
+window.updatePurchaseTotal = updatePurchaseTotal;
+window.savePurchase = savePurchase;
+window.deletePurchase = deletePurchase;
+window.loadPurchases = loadPurchases;
+window.filterPurchases = filterPurchases;
+window.viewPurchaseDetails = viewPurchaseDetails;
+window.editPurchase = editPurchase;
+
+// دوال الإحصائيات
+window.updateExpensesStats = updateExpensesStats;
+
+// دوال التقارير
+window.updateExpensesReports = updateExpensesReports;
+window.exportExpensesReport = exportExpensesReport;
 
 console.log('💰 تم تحميل نظام إدارة المصاريف - شركة الإبداع الرقمي');

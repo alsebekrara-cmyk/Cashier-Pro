@@ -10646,6 +10646,8 @@ console.log(`
     <div class="nav-item" id="productsNavItem"><a class="nav-link" onclick="showPage('products')"> <i class="fas fa-boxes nav-icon"></i> <span class="nav-text">إدارة المنتجات</span> </a></div>
     <div class="nav-item" id="inventoryNavItem"><a class="nav-link" onclick="showPage('inventory')"> <i class="fas fa-warehouse nav-icon"></i> <span class="nav-text">إدارة المخزن</span> </a></div>
     <div class="nav-item" id="maintenanceNavItem"><a class="nav-link" onclick="showPage('maintenance')"> <i class="fas fa-tools nav-icon"></i> <span class="nav-text">إدارة الصيانة</span> </a></div>
+    <div class="nav-item" id="sparePartsNavItem"><a class="nav-link" onclick="showPage('spareParts')"> <i class="fas fa-cogs nav-icon"></i> <span class="nav-text">قطع الغيار</span> </a></div>
+    <div class="nav-item" id="deliveredDevicesNavItem"><a class="nav-link" onclick="showPage('deliveredDevices')"> <i class="fas fa-check-double nav-icon"></i> <span class="nav-text">الأجهزة المستلمة</span> </a></div>
      </div>
      <div class="nav-section">
     <div class="nav-section-title">المالية</div>
@@ -11136,24 +11138,25 @@ console.log(`
       </div>
 
       <!-- الفلاتر -->
-      <div class="filters-container" style="margin-bottom: 1.5rem;">
-       <div class="filter-group">
+      <!-- الفلاتر -->
+      <div style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; margin-bottom: 1.5rem; padding: 1rem; background: var(--theme-bg-card); border-radius: 12px; box-shadow: var(--shadow-sm);">
+       <div class="filter-group" style="margin: 0;">
         <label><i class="fas fa-filter"></i> حالة الصيانة:</label>
-        <select id="maintenanceStatusFilter" onchange="filterMaintenanceByStatus()">
+        <select id="maintenanceStatusFilter" onchange="filterMaintenanceByStatus()" class="form-control" style="min-width: 150px;">
          <option value="all">جميع الأجهزة</option>
          <option value="pending">قيد الصيانة</option>
          <option value="completed">تمت الصيانة</option>
         </select>
        </div>
-       <div class="filter-group">
+       <div class="filter-group" style="margin: 0;">
         <label><i class="fas fa-building"></i> الشركة:</label>
-        <select id="maintenanceCompanyFilter" onchange="filterMaintenanceByCompany()">
+        <select id="maintenanceCompanyFilter" onchange="filterMaintenanceByCompany()" class="form-control" style="min-width: 150px;">
          <option value="all">جميع الشركات</option>
         </select>
        </div>
-       <div class="filter-group">
+       <div class="filter-group" style="margin: 0;">
         <label><i class="fas fa-calendar-alt"></i> الفترة:</label>
-        <select id="maintenancePeriodFilter" onchange="filterMaintenanceByPeriod()">
+        <select id="maintenancePeriodFilter" onchange="filterMaintenanceByPeriod()" class="form-control" style="min-width: 150px;">
          <option value="all">جميع الفترات</option>
          <option value="today">اليوم</option>
          <option value="week">هذا الأسبوع</option>
@@ -11161,16 +11164,16 @@ console.log(`
          <option value="custom">فترة مخصصة</option>
         </select>
        </div>
-       <div class="filter-group" id="customMaintenanceDateRange" style="display: none;">
+       <div id="customMaintenanceDateRange" style="display: none; gap: 0.5rem; align-items: center; margin: 0;">
         <label>من:</label>
-        <input type="date" id="maintenanceDateFrom">
+        <input type="date" id="maintenanceDateFrom" class="form-control" style="width: auto;">
         <label>إلى:</label>
-        <input type="date" id="maintenanceDateTo">
+        <input type="date" id="maintenanceDateTo" class="form-control" style="width: auto;">
         <button class="btn btn-primary btn-sm" onclick="applyCustomMaintenanceDateFilter()">تطبيق</button>
        </div>
-       <div class="filter-group">
+       <div class="filter-group" style="margin: 0;">
         <label><i class="fas fa-dollar-sign"></i> نطاق السعر:</label>
-        <select id="maintenancePriceFilter" onchange="filterMaintenanceByPrice()">
+        <select id="maintenancePriceFilter" onchange="filterMaintenanceByPrice()" class="form-control" style="min-width: 150px;">
          <option value="all">جميع الأسعار</option>
          <option value="0-50000">أقل من 50,000 دينار</option>
          <option value="50000-100000">50,000 - 100,000 دينار</option>
@@ -11178,8 +11181,8 @@ console.log(`
          <option value="200000+">أكثر من 200,000 دينار</option>
         </select>
        </div>
-       <button class="btn btn-secondary btn-sm" onclick="resetMaintenanceFilters()">
-        <i class="fas fa-redo"></i> إعادة تعيين الفلاتر
+       <button class="btn btn-secondary btn-sm" onclick="resetMaintenanceFilters()" style="margin-right: auto;">
+        <i class="fas fa-redo"></i> إعادة تعيين
        </button>
       </div>
       
@@ -11201,6 +11204,228 @@ console.log(`
         </thead>
         <tbody id="maintenanceTableBody">
          <!-- بيانات الصيانة ستظهر هنا -->
+        </tbody>
+       </table>
+      </div>
+     </div>
+
+     <!-- صفحة إدارة قطع الغيار -->
+     <div id="spareParts" class="page">
+      <div class="section-header" style="margin-bottom: 1.5rem;">
+       <div class="section-title"><i class="fas fa-cogs"></i> إدارة قطع الغيار والأدوات
+       </div>
+       <div class="pos-search-box">
+           <i class="fas fa-search"></i>
+           <input type="text" id="sparePartsSearchInput" class="pos-search-input" placeholder="ابحث في قطع الغيار..." onkeyup="filterSpareParts()">
+       </div>
+       <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+        <div class="export-import-buttons">
+            <button class="export-btn" onclick="exportData('spareParts', 'json')"> <i class="fas fa-download"></i> JSON </button> 
+            <button class="export-btn" onclick="exportData('spareParts', 'excel')"> <i class="fas fa-file-excel"></i> Excel </button> 
+            <button class="export-btn" onclick="exportData('spareParts', 'word')"> <i class="fas fa-file-word"></i> Word </button>
+            <button class="export-btn" onclick="exportData('spareParts', 'pdf')"> <i class="fas fa-file-pdf"></i> PDF </button>
+            <label class="export-btn" style="cursor: pointer; margin: 0;">
+                <i class="fas fa-upload"></i> استيراد
+                <input type="file" id="sparePartsImportFile" accept=".json,.xlsx,.xls,.csv" style="display: none;" onchange="importSparePartsData(this)">
+            </label>
+        </div>
+        <button class="btn btn-success" onclick="showAddSparePartModal()"> <i class="fas fa-plus"></i> إضافة قطعة غيار </button>
+       </div>
+      </div>
+      
+      <!-- الإحصائيات -->
+      <div class="stats-grid" style="margin-bottom: 1.5rem;">
+       <div class="stat-card">
+        <div class="stat-icon" style="background: linear-gradient(135deg, #6366f1, #4f46e5);"><i class="fas fa-cogs"></i></div>
+        <div class="stat-value" id="totalSparePartsCount">0</div>
+        <div class="stat-label">إجمالي القطع</div>
+       </div>
+       <div class="stat-card">
+        <div class="stat-icon" style="background: linear-gradient(135deg, #10b981, #059669);"><i class="fas fa-boxes"></i></div>
+        <div class="stat-value" id="totalSparePartsQuantity">0</div>
+        <div class="stat-label">إجمالي الكمية</div>
+       </div>
+       <div class="stat-card">
+        <div class="stat-icon" style="background: linear-gradient(135deg, #ef4444, #dc2626);"><i class="fas fa-exclamation-triangle"></i></div>
+        <div class="stat-value" id="lowStockSparePartsCount">0</div>
+        <div class="stat-label">قطع قليلة الكمية</div>
+       </div>
+       <div class="stat-card">
+        <div class="stat-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706);"><i class="fas fa-money-bill-wave"></i></div>
+        <div class="stat-value" id="totalSparePartsValue">0 دينار</div>
+        <div class="stat-label">القيمة الإجمالية</div>
+       </div>
+      </div>
+
+      <!-- تنبيهات الكميات القليلة -->
+      <div id="lowStockAlert" style="display: none; background: linear-gradient(135deg, #ef4444, #dc2626); color: white; padding: 1rem; border-radius: 12px; margin-bottom: 1.5rem; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);">
+       <div style="display: flex; align-items: center; gap: 1rem;">
+        <i class="fas fa-exclamation-triangle" style="font-size: 2rem;"></i>
+        <div>
+         <h3 style="margin: 0; font-size: 1.1rem;">تنبيه: قطع قليلة الكمية</h3>
+         <p style="margin: 0.5rem 0 0 0; opacity: 0.9;" id="lowStockAlertMessage">يوجد قطع غيار بكميات قليلة تحتاج إلى إعادة طلب</p>
+        </div>
+        <button onclick="filterSparePartsByStock('low')" style="margin-right: auto; background: white; color: #ef4444; border: none; padding: 0.5rem 1rem; border-radius: 8px; font-weight: bold; cursor: pointer;">
+         <i class="fas fa-eye"></i> عرض القطع
+        </button>
+       </div>
+      </div>
+
+      <!-- الفلاتر -->
+      <div style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; margin-bottom: 1.5rem; padding: 1rem; background: var(--theme-bg-card); border-radius: 12px; box-shadow: var(--shadow-sm);">
+       <div class="filter-group" style="margin: 0;">
+        <label><i class="fas fa-filter"></i> حالة المخزون:</label>
+        <select id="sparePartsStockFilter" onchange="filterSparePartsByStock()" class="form-control" style="min-width: 150px;">
+         <option value="all">جميع القطع</option>
+         <option value="available">متوفر</option>
+         <option value="low">كمية قليلة</option>
+         <option value="out">نفذت الكمية</option>
+        </select>
+       </div>
+       <div class="filter-group" style="margin: 0;">
+        <label><i class="fas fa-tag"></i> التصنيف:</label>
+        <select id="sparePartsCategoryFilter" onchange="filterSparePartsByCategory()" class="form-control" style="min-width: 150px;">
+         <option value="all">جميع التصنيفات</option>
+        </select>
+       </div>
+       <div class="filter-group" style="margin: 0;">
+        <label><i class="fas fa-dollar-sign"></i> نطاق السعر:</label>
+        <select id="sparePartsPriceFilter" onchange="filterSparePartsByPrice()" class="form-control" style="min-width: 150px;">
+         <option value="all">جميع الأسعار</option>
+         <option value="0-10000">أقل من 10,000 دينار</option>
+         <option value="10000-50000">10,000 - 50,000 دينار</option>
+         <option value="50000-100000">50,000 - 100,000 دينار</option>
+         <option value="100000+">أكثر من 100,000 دينار</option>
+        </select>
+       </div>
+       <button class="btn btn-secondary btn-sm" onclick="resetSparePartsFilters()" style="margin-right: auto;">
+        <i class="fas fa-redo"></i> إعادة تعيين
+       </button>
+      </div>
+      
+      <!-- جدول قطع الغيار -->
+      <div class="table-container">
+       <table class="table">
+        <thead>
+         <tr>
+          <th><i class="fas fa-hashtag"></i> #</th>
+          <th><i class="fas fa-cog"></i> اسم القطعة</th>
+          <th><i class="fas fa-tag"></i> التصنيف</th>
+          <th><i class="fas fa-barcode"></i> رمز القطعة</th>
+          <th><i class="fas fa-boxes"></i> الكمية</th>
+          <th><i class="fas fa-shopping-cart"></i> سعر الشراء</th>
+          <th><i class="fas fa-money-bill"></i> سعر البيع</th>
+          <th><i class="fas fa-store"></i> سعر المفرد</th>
+          <th><i class="fas fa-warehouse"></i> سعر الجملة</th>
+          <th><i class="fas fa-chart-line"></i> الربح المتوقع</th>
+          <th><i class="fas fa-info-circle"></i> الحالة</th>
+          <th><i class="fas fa-cogs"></i> الإجراءات</th>
+         </tr>
+        </thead>
+        <tbody id="sparePartsTableBody">
+         <!-- بيانات قطع الغيار ستظهر هنا -->
+        </tbody>
+       </table>
+      </div>
+     </div>
+
+     <!-- صفحة الأجهزة المستلمة -->
+     <div id="deliveredDevices" class="page">
+      <div class="section-header" style="margin-bottom: 1.5rem;">
+       <div class="section-title"><i class="fas fa-check-double"></i> الأجهزة المستلمة والمنجزة
+       </div>
+       <div class="pos-search-box">
+           <i class="fas fa-search"></i>
+           <input type="text" id="deliveredDevicesSearchInput" class="pos-search-input" placeholder="ابحث في الأجهزة المستلمة..." onkeyup="filterDeliveredDevices()">
+       </div>
+       <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+        <div class="export-import-buttons">
+            <button class="export-btn" onclick="exportData('deliveredDevices', 'json')"> <i class="fas fa-download"></i> JSON </button> 
+            <button class="export-btn" onclick="exportData('deliveredDevices', 'excel')"> <i class="fas fa-file-excel"></i> Excel </button> 
+            <button class="export-btn" onclick="exportData('deliveredDevices', 'word')"> <i class="fas fa-file-word"></i> Word </button>
+            <button class="export-btn" onclick="exportData('deliveredDevices', 'pdf')"> <i class="fas fa-file-pdf"></i> PDF </button>
+        </div>
+       </div>
+      </div>
+      
+      <!-- الإحصائيات -->
+      <div class="stats-grid" style="margin-bottom: 1.5rem;">
+       <div class="stat-card">
+        <div class="stat-icon" style="background: linear-gradient(135deg, #10b981, #059669);"><i class="fas fa-check-circle"></i></div>
+        <div class="stat-value" id="totalDeliveredDevices">0</div>
+        <div class="stat-label">إجمالي الأجهزة المستلمة</div>
+       </div>
+       <div class="stat-card">
+        <div class="stat-icon" style="background: linear-gradient(135deg, #6366f1, #4f46e5);"><i class="fas fa-money-bill-wave"></i></div>
+        <div class="stat-value" id="totalDeliveredRevenue">0 دينار</div>
+        <div class="stat-label">إجمالي الإيرادات</div>
+       </div>
+       <div class="stat-card">
+        <div class="stat-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706);"><i class="fas fa-calendar-week"></i></div>
+        <div class="stat-value" id="weekDeliveredDevices">0</div>
+        <div class="stat-label">تسليمات هذا الأسبوع</div>
+       </div>
+       <div class="stat-card">
+        <div class="stat-icon" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);"><i class="fas fa-chart-line"></i></div>
+        <div class="stat-value" id="avgDeliveryTime">0 يوم</div>
+        <div class="stat-label">متوسط وقت الصيانة</div>
+       </div>
+      </div>
+
+      <!-- الفلاتر -->
+      <div style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; margin-bottom: 1.5rem; padding: 1rem; background: var(--theme-bg-card); border-radius: 12px; box-shadow: var(--shadow-sm);">
+       <div class="filter-group" style="margin: 0;">
+        <label><i class="fas fa-calendar-alt"></i> الفترة:</label>
+        <select id="deliveredPeriodFilter" onchange="filterDeliveredByPeriod()" class="form-control" style="min-width: 150px;">
+         <option value="all">جميع الفترات</option>
+         <option value="today">اليوم</option>
+         <option value="week">هذا الأسبوع</option>
+         <option value="month">هذا الشهر</option>
+         <option value="custom">فترة مخصصة</option>
+        </select>
+       </div>
+       <div id="customDeliveredDateRange" style="display: none; gap: 0.5rem; align-items: center; margin: 0;">
+        <label>من:</label>
+        <input type="date" id="deliveredDateFrom" class="form-control" style="width: auto;">
+        <label>إلى:</label>
+        <input type="date" id="deliveredDateTo" class="form-control" style="width: auto;">
+        <button class="btn btn-primary btn-sm" onclick="applyCustomDeliveredDateFilter()">تطبيق</button>
+       </div>
+       <div class="filter-group" style="margin: 0;">
+        <label><i class="fas fa-credit-card"></i> طريقة الدفع:</label>
+        <select id="paymentMethodFilter" onchange="filterDeliveredByPayment()" class="form-control" style="min-width: 150px;">
+         <option value="all">جميع الطرق</option>
+         <option value="cash">نقداً</option>
+         <option value="card">بطاقة</option>
+         <option value="transfer">تحويل</option>
+         <option value="mixed">مختلط</option>
+        </select>
+       </div>
+       <button class="btn btn-secondary btn-sm" onclick="resetDeliveredFilters()" style="margin-right: auto;">
+        <i class="fas fa-redo"></i> إعادة تعيين
+       </button>
+      </div>
+      
+      <!-- جدول الأجهزة المستلمة -->
+      <div class="table-container">
+       <table class="table">
+        <thead>
+         <tr>
+          <th><i class="fas fa-hashtag"></i> #</th>
+          <th><i class="fas fa-box"></i> المنتج</th>
+          <th><i class="fas fa-building"></i> الشركة</th>
+          <th><i class="fas fa-exclamation-triangle"></i> الخلل</th>
+          <th><i class="fas fa-money-bill"></i> سعر الصيانة</th>
+          <th><i class="fas fa-cogs"></i> قطع الغيار</th>
+          <th><i class="fas fa-calculator"></i> المبلغ الإجمالي</th>
+          <th><i class="fas fa-hand-holding-usd"></i> المبلغ المستلم</th>
+          <th><i class="fas fa-calendar"></i> تاريخ التسليم</th>
+          <th><i class="fas fa-credit-card"></i> طريقة الدفع</th>
+          <th><i class="fas fa-cogs"></i> الإجراءات</th>
+         </tr>
+        </thead>
+        <tbody id="deliveredDevicesTableBody">
+         <!-- بيانات الأجهزة المستلمة ستظهر هنا -->
         </tbody>
        </table>
       </div>
@@ -12007,11 +12232,21 @@ console.log(`
       </div>
       
       <!-- الإحصائيات الشاملة -->
-      <div class="stats-grid" style="margin-bottom: 1.5rem;">
+      <div class="stats-grid" style="margin-bottom: 1.5rem; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
        <div class="stat-card">
         <div class="stat-icon"><i class="fas fa-money-bill-wave"></i></div>
         <div class="stat-value" id="totalExpensesAmount">0 دينار</div>
         <div class="stat-label">إجمالي المصاريف</div>
+       </div>
+       <div class="stat-card">
+        <div class="stat-icon"><i class="fas fa-check-circle" style="color: var(--success-color);"></i></div>
+        <div class="stat-value" id="totalPaidAmount" style="color: var(--success-color);">0 دينار</div>
+        <div class="stat-label">المبالغ المدفوعة</div>
+       </div>
+       <div class="stat-card">
+        <div class="stat-icon"><i class="fas fa-exclamation-circle" style="color: var(--warning-color);"></i></div>
+        <div class="stat-value" id="totalRemainingAmount" style="color: var(--warning-color);">0 دينار</div>
+        <div class="stat-label">المبالغ المتبقية</div>
        </div>
        <div class="stat-card">
         <div class="stat-icon"><i class="fas fa-shopping-cart"></i></div>
@@ -12051,7 +12286,9 @@ console.log(`
           <tr>
            <th><i class="fas fa-hashtag"></i> #</th>
            <th><i class="fas fa-list"></i> نوع المصروف</th>
-           <th><i class="fas fa-money-bill"></i> المبلغ</th>
+           <th><i class="fas fa-money-bill"></i> المبلغ الكلي</th>
+           <th><i class="fas fa-check-circle" style="color: var(--success-color);"></i> المدفوع</th>
+           <th><i class="fas fa-exclamation-circle" style="color: var(--warning-color);"></i> المتبقي</th>
            <th><i class="fas fa-calendar"></i> التاريخ</th>
            <th><i class="fas fa-sticky-note"></i> الوصف</th>
            <th><i class="fas fa-user"></i> المضاف بواسطة</th>
@@ -16138,9 +16375,24 @@ console.log(`
       </select>
      </div>
      <div class="form-group">
-      <label><i class="fas fa-money-bill"></i> المبلغ (دينار)</label>
-      <input type="number" id="expenseAmount" class="form-control" placeholder="أدخل المبلغ" min="0" required>
+      <label><i class="fas fa-money-bill"></i> المبلغ الكلي (دينار)</label>
+      <input type="number" id="expenseAmount" class="form-control" placeholder="أدخل المبلغ الكلي" min="0" required oninput="updateExpensePaidRemaining()">
      </div>
+     
+     <!-- حقول الدفع الجزئي -->
+     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+      <div class="form-group">
+       <label><i class="fas fa-check-circle" style="color: var(--success-color);"></i> المبلغ المدفوع (دينار)</label>
+       <input type="number" id="expensePaid" class="form-control" placeholder="المبلغ المدفوع" min="0" oninput="updateExpensePaidRemaining()">
+       <small style="color: var(--theme-text-tertiary); display: block; margin-top: 0.3rem;">اترك فارغاً إذا لم يتم الدفع</small>
+      </div>
+      <div class="form-group">
+       <label><i class="fas fa-exclamation-circle" style="color: var(--warning-color);"></i> المبلغ المتبقي (دينار)</label>
+       <input type="number" id="expenseRemaining" class="form-control" placeholder="المبلغ المتبقي" readonly style="background: var(--theme-bg-secondary); cursor: not-allowed;">
+       <small style="color: var(--theme-text-tertiary); display: block; margin-top: 0.3rem;">يتم حسابه تلقائياً</small>
+      </div>
+     </div>
+     
      <div class="form-group">
       <label><i class="fas fa-sticky-note"></i> الوصف</label>
       <textarea id="expenseDescription" class="form-control" rows="3" placeholder="وصف تفصيلي للمصروف"></textarea>
@@ -20264,6 +20516,8 @@ console.log(`
                 'products': 'إدارة المنتجات',
                 'inventory': 'إدارة المخزن',
                 'maintenance': 'إدارة الصيانة',
+                'spareParts': 'قطع الغيار',
+                'deliveredDevices': 'الأجهزة المستلمة',
                 'invoices': 'الفواتير',
                 'debts': 'إدارة الديون',
                 'payments': 'التسديدات والأقساط',
@@ -20290,6 +20544,23 @@ console.log(`
                 setTimeout(() => {
                     displayMaintenanceData();
                     updateMaintenanceStats();
+                }, 100);
+            }
+            
+            // تحديث بيانات قطع الصيانة عند فتح الصفحة
+            if (pageId === 'spareParts') {
+                setTimeout(() => {
+                    displaySparePartsData();
+                    updateSparePartsStats();
+                    checkStockAlerts();
+                }, 100);
+            }
+            
+            // تحديث بيانات الأجهزة المستلمة عند فتح الصفحة
+            if (pageId === 'deliveredDevices') {
+                setTimeout(() => {
+                    displayDeliveredDevicesData();
+                    updateDeliveredStats();
                 }, 100);
             }
             
@@ -29439,9 +29710,15 @@ body {
 
         // دالة عرض نافذة إضافة جهاز للصيانة
         function showAddMaintenanceModal() {
+            // تحميل قطع الغيار المتوفرة
+            const availableParts = sparePartsData.filter(part => part.quantity > 0);
+            const partsOptions = availableParts.map(part => 
+                `<option value="${part.id}" data-price="${part.sellPrice}">${part.name} - ${formatCurrency(part.sellPrice)} (متوفر: ${part.quantity})</option>`
+            ).join('');
+            
             const modalHTML = `
                 <div class="modal active" id="addMaintenanceModal" style="display: flex;">
-                    <div class="modal-content" style="max-width: 800px; width: 90%;">
+                    <div class="modal-content" style="max-width: 900px; width: 90%; max-height: 85vh; overflow-y: auto;">
                         <div class="modal-header">
                             <h2><i class="fas fa-tools"></i> إضافة جهاز للصيانة</h2>
                             <button class="close-btn" onclick="closeMaintenanceModal()">&times;</button>
@@ -29473,6 +29750,86 @@ body {
                                         <label><i class="fas fa-calendar-alt"></i> تاريخ التسليم المتوقع *</label>
                                         <input type="date" id="maintenanceDeliveryDate" class="form-control" required>
                                     </div>
+                                    
+                                    <!-- قسم قطع الغيار المستخدمة -->
+                                    <div class="form-group" style="grid-column: 1 / -1; background: #f8f9fa; padding: 1rem; border-radius: 8px; margin-top: 1rem;">
+                                        <h4 style="color: var(--primary-color); margin-bottom: 1rem;">
+                                            <i class="fas fa-cogs"></i> قطع الغيار المستخدمة
+                                        </h4>
+                                        <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
+                                            <button type="button" class="btn btn-sm btn-primary" onclick="togglePartSelectionMode('select')" id="selectModeBtn">
+                                                <i class="fas fa-list"></i> اختيار من القائمة
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-secondary" onclick="togglePartSelectionMode('manual')" id="manualModeBtn">
+                                                <i class="fas fa-keyboard"></i> إدخال يدوي
+                                            </button>
+                                        </div>
+                                        
+                                        <!-- وضع الاختيار من القائمة -->
+                                        <div id="selectPartMode" style="display: block;">
+                                            <div style="display: grid; grid-template-columns: 2fr 1fr auto; gap: 0.5rem; align-items: end;">
+                                                <div class="form-group" style="margin: 0;">
+                                                    <label><i class="fas fa-cog"></i> قطعة الغيار</label>
+                                                    <select id="selectedSparePartId" class="form-control" onchange="updatePartPrice()">
+                                                        <option value="">اختر قطعة غيار</option>
+                                                        ${partsOptions}
+                                                    </select>
+                                                </div>
+                                                <div class="form-group" style="margin: 0;">
+                                                    <label><i class="fas fa-layer-group"></i> الكمية</label>
+                                                    <input type="number" id="selectedPartQuantity" class="form-control" min="1" value="1" placeholder="1">
+                                                </div>
+                                                <button type="button" class="btn btn-success" onclick="addSelectedPart()" style="margin-bottom: 0;">
+                                                    <i class="fas fa-plus"></i> إضافة
+                                                </button>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- وضع الإدخال اليدوي -->
+                                        <div id="manualPartMode" style="display: none;">
+                                            <div style="display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 0.5rem; align-items: end;">
+                                                <div class="form-group" style="margin: 0;">
+                                                    <label><i class="fas fa-cog"></i> اسم القطعة</label>
+                                                    <input type="text" id="manualPartName" class="form-control" placeholder="أدخل اسم القطعة">
+                                                </div>
+                                                <div class="form-group" style="margin: 0;">
+                                                    <label><i class="fas fa-money-bill"></i> السعر</label>
+                                                    <input type="number" id="manualPartPrice" class="form-control" min="0" step="1000" placeholder="0">
+                                                </div>
+                                                <div class="form-group" style="margin: 0;">
+                                                    <label><i class="fas fa-layer-group"></i> الكمية</label>
+                                                    <input type="number" id="manualPartQuantity" class="form-control" min="1" value="1" placeholder="1">
+                                                </div>
+                                                <button type="button" class="btn btn-success" onclick="addManualPart()" style="margin-bottom: 0;">
+                                                    <i class="fas fa-plus"></i> إضافة
+                                                </button>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- قائمة القطع المضافة -->
+                                        <div id="addedPartsList" style="margin-top: 1rem;">
+                                            <table class="table" id="maintenancePartsTable" style="display: none; font-size: 0.9rem;">
+                                                <thead>
+                                                    <tr>
+                                                        <th>القطعة</th>
+                                                        <th>الكمية</th>
+                                                        <th>السعر</th>
+                                                        <th>الإجمالي</th>
+                                                        <th>إجراء</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="maintenancePartsTableBody"></tbody>
+                                                <tfoot>
+                                                    <tr style="font-weight: bold; background: #e9ecef;">
+                                                        <td colspan="3" style="text-align: left;">إجمالي قطع الغيار:</td>
+                                                        <td id="totalPartsPrice">0 دينار</td>
+                                                        <td></td>
+                                                    </tr>
+                                                </tfoot>
+                                            </table>
+                                        </div>
+                                    </div>
+                                    
                                     <div class="form-group" style="grid-column: 1 / -1;">
                                         <label><i class="fas fa-info-circle"></i> معلومات عن سبب العطل</label>
                                         <textarea id="maintenanceCauseInfo" class="form-control" rows="3" placeholder="تفاصيل إضافية عن سبب العطل..."></textarea>
@@ -29501,14 +29858,151 @@ body {
             // تعيين التاريخ الحالي كافتراضي
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('maintenanceReceiveDate').value = today;
+            
+            // تهيئة مصفوفة القطع المستخدمة
+            window.maintenanceUsedParts = [];
+        }
+
+        // دالة تبديل وضع اختيار القطع
+        function togglePartSelectionMode(mode) {
+            const selectMode = document.getElementById('selectPartMode');
+            const manualMode = document.getElementById('manualPartMode');
+            const selectBtn = document.getElementById('selectModeBtn');
+            const manualBtn = document.getElementById('manualModeBtn');
+            
+            if (mode === 'select') {
+                selectMode.style.display = 'block';
+                manualMode.style.display = 'none';
+                selectBtn.classList.remove('btn-secondary');
+                selectBtn.classList.add('btn-primary');
+                manualBtn.classList.remove('btn-primary');
+                manualBtn.classList.add('btn-secondary');
+            } else {
+                selectMode.style.display = 'none';
+                manualMode.style.display = 'block';
+                manualBtn.classList.remove('btn-secondary');
+                manualBtn.classList.add('btn-primary');
+                selectBtn.classList.remove('btn-primary');
+                selectBtn.classList.add('btn-secondary');
+            }
+        }
+
+        // دالة تحديث سعر القطعة المختارة
+        function updatePartPrice() {
+            const selectElement = document.getElementById('selectedSparePartId');
+            const selectedOption = selectElement.options[selectElement.selectedIndex];
+            // يمكن استخدام هذه الدالة لتحديثات إضافية إذا لزم الأمر
+        }
+
+        // دالة إضافة قطعة من القائمة
+        function addSelectedPart() {
+            const selectElement = document.getElementById('selectedSparePartId');
+            const partId = selectElement.value;
+            const quantity = parseInt(document.getElementById('selectedPartQuantity').value) || 1;
+            
+            if (!partId) {
+                showNotification('الرجاء اختيار قطعة غيار', 'warning');
+                return;
+            }
+            
+            const part = sparePartsData.find(p => p.id == partId);
+            if (!part) return;
+            
+            if (quantity > part.quantity) {
+                showNotification(`الكمية المطلوبة (${quantity}) أكبر من المتوفر (${part.quantity})`, 'error');
+                return;
+            }
+            
+            window.maintenanceUsedParts.push({
+                id: partId,
+                name: part.name,
+                price: part.sellPrice,
+                quantity: quantity,
+                total: part.sellPrice * quantity,
+                fromInventory: true
+            });
+            
+            updatePartsTable();
+            
+            // إعادة تعيين الحقول
+            selectElement.value = '';
+            document.getElementById('selectedPartQuantity').value = 1;
+        }
+
+        // دالة إضافة قطعة يدوياً
+        function addManualPart() {
+            const name = document.getElementById('manualPartName').value.trim();
+            const price = parseFloat(document.getElementById('manualPartPrice').value) || 0;
+            const quantity = parseInt(document.getElementById('manualPartQuantity').value) || 1;
+            
+            if (!name) {
+                showNotification('الرجاء إدخال اسم القطعة', 'warning');
+                return;
+            }
+            
+            window.maintenanceUsedParts.push({
+                id: null,
+                name: name,
+                price: price,
+                quantity: quantity,
+                total: price * quantity,
+                fromInventory: false
+            });
+            
+            updatePartsTable();
+            
+            // إعادة تعيين الحقول
+            document.getElementById('manualPartName').value = '';
+            document.getElementById('manualPartPrice').value = '';
+            document.getElementById('manualPartQuantity').value = 1;
+        }
+
+        // دالة تحديث جدول القطع
+        function updatePartsTable() {
+            const table = document.getElementById('maintenancePartsTable');
+            const tbody = document.getElementById('maintenancePartsTableBody');
+            const totalEl = document.getElementById('totalPartsPrice');
+            
+            if (window.maintenanceUsedParts.length === 0) {
+                table.style.display = 'none';
+                return;
+            }
+            
+            table.style.display = 'table';
+            
+            tbody.innerHTML = window.maintenanceUsedParts.map((part, index) => `
+                <tr>
+                    <td>${part.name} ${part.fromInventory ? '<span class="badge" style="background: #10b981; font-size: 0.7rem; margin-right: 0.5rem;">من المخزون</span>' : ''}</td>
+                    <td>${part.quantity}</td>
+                    <td>${formatCurrency(part.price)}</td>
+                    <td><strong>${formatCurrency(part.total)}</strong></td>
+                    <td>
+                        <button type="button" class="btn btn-sm btn-danger" onclick="removePartFromList(${index})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+            
+            const total = window.maintenanceUsedParts.reduce((sum, part) => sum + part.total, 0);
+            totalEl.textContent = formatCurrency(total);
+        }
+
+        // دالة حذف قطعة من القائمة
+        function removePartFromList(index) {
+            window.maintenanceUsedParts.splice(index, 1);
+            updatePartsTable();
         }
 
         // دالة إغلاق نافذة الصيانة
         function closeMaintenanceModal() {
-            const modal = document.getElementById('addMaintenanceModal') || document.getElementById('editMaintenanceModal');
+            const modal = document.getElementById('addMaintenanceModal') || 
+                          document.getElementById('editMaintenanceModal') ||
+                          document.getElementById('deliveryModal');
             if (modal) {
                 modal.remove();
             }
+            window.maintenanceUsedParts = [];
         }
 
         // دالة إضافة جهاز للصيانة
@@ -29525,10 +30019,23 @@ body {
                 deliveryDate: document.getElementById('maintenanceDeliveryDate').value,
                 causeInfo: document.getElementById('maintenanceCauseInfo').value,
                 notes: document.getElementById('maintenanceNotes').value,
+                usedParts: window.maintenanceUsedParts || [],
+                partsTotal: window.maintenanceUsedParts.reduce((sum, part) => sum + part.total, 0),
                 status: 'pending',
                 addedBy: currentUser,
                 addedDate: new Date().toISOString()
             };
+            
+            // تحديث كميات قطع الغيار من المخزون
+            newMaintenance.usedParts.forEach(part => {
+                if (part.fromInventory && part.id) {
+                    const sparePartIndex = sparePartsData.findIndex(sp => sp.id == part.id);
+                    if (sparePartIndex !== -1) {
+                        sparePartsData[sparePartIndex].quantity -= part.quantity;
+                        localStorage.setItem('sparePartsData', JSON.stringify(sparePartsData));
+                    }
+                }
+            });
             
             maintenanceData.push(newMaintenance);
             localStorage.setItem('maintenanceData', JSON.stringify(maintenanceData));
@@ -29536,6 +30043,12 @@ body {
             closeMaintenanceModal();
             displayMaintenanceData();
             updateMaintenanceStats();
+            
+            // تحديث إحصائيات قطع الغيار إذا كانت الصفحة مفتوحة
+            if (document.getElementById('spareParts') && document.getElementById('spareParts').style.display === 'block') {
+                displaySparePartsData();
+                updateSparePartsStats();
+            }
             
             showNotification('تم إضافة الجهاز للصيانة بنجاح', 'success');
         }
@@ -29776,21 +30289,154 @@ body {
         }
 
         // دالة تغيير حالة الصيانة إلى مكتملة
+        // دالة إتمام الصيانة وفتح نافذة التسليم
         function completeMaintenance(id) {
-            if (!confirm('هل تريد تأكيد إتمام الصيانة؟')) return;
+            const item = maintenanceData.find(m => m.id === id);
+            if (!item) return;
             
-            const index = maintenanceData.findIndex(m => m.id === id);
-            if (index === -1) return;
+            showDeliveryModal(item);
+        }
+
+        // دالة عرض نافذة تسليم الجهاز
+        function showDeliveryModal(maintenanceItem) {
+            const totalCost = maintenanceItem.price + (maintenanceItem.partsTotal || 0);
             
-            maintenanceData[index].status = 'completed';
-            maintenanceData[index].completedDate = new Date().toISOString();
+            const modalHTML = `
+                <div class="modal active" id="deliveryModal" style="display: flex;">
+                    <div class="modal-content" style="max-width: 700px;">
+                        <div class="modal-header" style="background: linear-gradient(135deg, #10b981, #059669); color: white;">
+                            <h2><i class="fas fa-check-circle"></i> تسليم الجهاز واستلام المبلغ</h2>
+                            <button class="close-btn" onclick="closeMaintenanceModal()" style="color: white;">&times;</button>
+                        </div>
+                        <div class="modal-body">
+                            <!-- معلومات الجهاز -->
+                            <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
+                                <h3 style="margin: 0 0 0.5rem 0; color: var(--primary-color);">${maintenanceItem.productName}</h3>
+                                <div style="display: grid; gap: 0.5rem; font-size: 0.95rem;">
+                                    <div><i class="fas fa-building"></i> الشركة: <strong>${maintenanceItem.companyName}</strong></div>
+                                    <div><i class="fas fa-exclamation-triangle"></i> الخلل: <strong>${maintenanceItem.fault}</strong></div>
+                                    <div><i class="fas fa-calendar"></i> تاريخ الاستلام: <strong>${formatDate(maintenanceItem.receiveDate)}</strong></div>
+                                </div>
+                            </div>
+                            
+                            <!-- ملخص التكلفة -->
+                            <div style="background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem;">
+                                <div style="display: grid; gap: 0.75rem;">
+                                    <div style="display: flex; justify-content: space-between;">
+                                        <span>سعر الصيانة:</span>
+                                        <strong style="font-size: 1.1rem;">${formatCurrency(maintenanceItem.price)}</strong>
+                                    </div>
+                                    ${maintenanceItem.usedParts && maintenanceItem.usedParts.length > 0 ? `
+                                    <div style="display: flex; justify-content: space-between;">
+                                        <span>قطع الغيار (${maintenanceItem.usedParts.length} قطعة):</span>
+                                        <strong style="font-size: 1.1rem;">${formatCurrency(maintenanceItem.partsTotal || 0)}</strong>
+                                    </div>` : ''}
+                                    <div style="border-top: 2px solid rgba(255,255,255,0.3); padding-top: 0.75rem; margin-top: 0.5rem;">
+                                        <div style="display: flex; justify-content: space-between; font-size: 1.3rem;">
+                                            <span><i class="fas fa-money-bill-wave"></i> المبلغ الإجمالي:</span>
+                                            <strong>${formatCurrency(totalCost)}</strong>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <form onsubmit="completeDelivery(event, ${maintenanceItem.id})">
+                                <div class="form-group">
+                                    <label><i class="fas fa-calendar-check"></i> تاريخ التسليم الفعلي *</label>
+                                    <input type="date" id="actualDeliveryDate" class="form-control" required value="${new Date().toISOString().split('T')[0]}">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label><i class="fas fa-money-bill"></i> المبلغ المستلم (دينار) *</label>
+                                    <input type="number" id="receivedAmount" class="form-control" required min="0" step="1000" value="${totalCost}" placeholder="${totalCost}">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label><i class="fas fa-credit-card"></i> طريقة الدفع *</label>
+                                    <select id="paymentMethod" class="form-control" required>
+                                        <option value="cash">نقداً</option>
+                                        <option value="card">بطاقة</option>
+                                        <option value="transfer">تحويل بنكي</option>
+                                        <option value="mixed">مختلط</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label><i class="fas fa-user"></i> اسم المستلم</label>
+                                    <input type="text" id="receiverName" class="form-control" placeholder="اسم الشخص المستلم للجهاز">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label><i class="fas fa-sticky-note"></i> ملاحظات التسليم</label>
+                                    <textarea id="deliveryNotes" class="form-control" rows="2" placeholder="أي ملاحظات عند التسليم..."></textarea>
+                                </div>
+                                
+                                <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                                    <button type="submit" class="btn btn-success" style="flex: 1;">
+                                        <i class="fas fa-check-circle"></i> تأكيد التسليم
+                                    </button>
+                                    <button type="button" class="btn btn-secondary" onclick="closeMaintenanceModal()" style="flex: 1;">
+                                        <i class="fas fa-times"></i> إلغاء
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            `;
             
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+        }
+
+        // دالة إكمال عملية التسليم
+        function completeDelivery(event, maintenanceId) {
+            event.preventDefault();
+            
+            const maintenanceIndex = maintenanceData.findIndex(m => m.id === maintenanceId);
+            if (maintenanceIndex === -1) return;
+            
+            const maintenanceItem = maintenanceData[maintenanceIndex];
+            
+            // إنشاء سجل جهاز مستلم
+            const deliveredDevice = {
+                id: Date.now(),
+                maintenanceId: maintenanceId,
+                productName: maintenanceItem.productName,
+                companyName: maintenanceItem.companyName,
+                fault: maintenanceItem.fault,
+                maintenancePrice: maintenanceItem.price,
+                usedParts: maintenanceItem.usedParts || [],
+                partsTotal: maintenanceItem.partsTotal || 0,
+                totalCost: maintenanceItem.price + (maintenanceItem.partsTotal || 0),
+                receiveDate: maintenanceItem.receiveDate,
+                expectedDeliveryDate: maintenanceItem.deliveryDate,
+                actualDeliveryDate: document.getElementById('actualDeliveryDate').value,
+                receivedAmount: parseFloat(document.getElementById('receivedAmount').value),
+                paymentMethod: document.getElementById('paymentMethod').value,
+                receiverName: document.getElementById('receiverName').value,
+                deliveryNotes: document.getElementById('deliveryNotes').value,
+                causeInfo: maintenanceItem.causeInfo,
+                notes: maintenanceItem.notes,
+                deliveredBy: currentUser,
+                deliveredDate: new Date().toISOString()
+            };
+            
+            // إضافة إلى قائمة الأجهزة المستلمة
+            if (!window.deliveredDevicesData) {
+                window.deliveredDevicesData = JSON.parse(localStorage.getItem('deliveredDevicesData')) || [];
+            }
+            window.deliveredDevicesData.push(deliveredDevice);
+            localStorage.setItem('deliveredDevicesData', JSON.stringify(window.deliveredDevicesData));
+            
+            // حذف من قائمة الصيانة
+            maintenanceData.splice(maintenanceIndex, 1);
             localStorage.setItem('maintenanceData', JSON.stringify(maintenanceData));
             
+            closeMaintenanceModal();
             displayMaintenanceData();
             updateMaintenanceStats();
             
-            showNotification('تم تأكيد إتمام الصيانة بنجاح', 'success');
+            showNotification('تم تسليم الجهاز واستلام المبلغ بنجاح', 'success');
         }
 
         // دالة حذف جهاز من الصيانة
@@ -30205,6 +30851,1746 @@ body {
 
         // ══════════════════════════════════════════════════════════════════════════════
         // نهاية نظام إدارة الصيانة
+        // ══════════════════════════════════════════════════════════════════════════════
+
+        // ══════════════════════════════════════════════════════════════════════════════
+        // نظام إدارة قطع الصيانة - Spare Parts Management System
+        // ══════════════════════════════════════════════════════════════════════════════
+
+        // مصفوفة تخزين قطع الصيانة
+        let sparePartsData = JSON.parse(localStorage.getItem('sparePartsData')) || [];
+        
+        // مصفوفة تخزين فواتير الشراء
+        let purchaseInvoicesData = JSON.parse(localStorage.getItem('purchaseInvoicesData')) || [];
+
+        // إعدادات التنبيهات
+        const LOW_STOCK_THRESHOLD = 5; // الحد الأدنى للتنبيه
+        const OUT_OF_STOCK = 0; // نفاد المخزون
+
+        // دالة عرض نافذة إضافة قطعة
+        function showAddSparePartModal() {
+            const modalHTML = `
+                <div class="modal active" id="addSparePartModal" style="display: flex;">
+                    <div class="modal-content" style="max-width: 900px; width: 90%;">
+                        <div class="modal-header">
+                            <h2><i class="fas fa-cogs"></i> إضافة قطعة صيانة جديدة</h2>
+                            <button class="close-btn" onclick="closeSparePartModal()">&times;</button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="sparePartForm" onsubmit="addSparePart(event)">
+                                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
+                                    <div class="form-group">
+                                        <label><i class="fas fa-box"></i> اسم القطعة *</label>
+                                        <input type="text" id="sparePartName" class="form-control" required placeholder="مثال: شاشة لاب توب 15.6">
+                                    </div>
+                                    <div class="form-group">
+                                        <label><i class="fas fa-barcode"></i> الكود/الباركود</label>
+                                        <input type="text" id="sparePartCode" class="form-control" placeholder="مثال: LCD-156-001">
+                                    </div>
+                                    <div class="form-group">
+                                        <label><i class="fas fa-layer-group"></i> التصنيف *</label>
+                                        <select id="sparePartCategory" class="form-control" required>
+                                            <option value="">اختر التصنيف</option>
+                                            <option value="electronics">إلكترونيات</option>
+                                            <option value="mechanical">ميكانيكية</option>
+                                            <option value="tools">أدوات</option>
+                                            <option value="accessories">إكسسوارات</option>
+                                            <option value="other">أخرى</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label><i class="fas fa-building"></i> اسم المورد *</label>
+                                        <input type="text" id="sparePartSupplier" class="form-control" required placeholder="مثال: شركة التقنية">
+                                    </div>
+                                    <div class="form-group">
+                                        <label><i class="fas fa-phone"></i> هاتف المورد</label>
+                                        <input type="text" id="sparePartSupplierPhone" class="form-control" placeholder="مثال: 07701234567">
+                                    </div>
+                                    <div class="form-group">
+                                        <label><i class="fas fa-shopping-cart"></i> سعر الشراء (دينار) *</label>
+                                        <input type="number" id="sparePartPurchasePrice" class="form-control" required min="0" step="1000" placeholder="50000">
+                                    </div>
+                                    <div class="form-group">
+                                        <label><i class="fas fa-tag"></i> سعر البيع المفرد (دينار) *</label>
+                                        <input type="number" id="sparePartRetailPrice" class="form-control" required min="0" step="1000" placeholder="75000">
+                                    </div>
+                                    <div class="form-group">
+                                        <label><i class="fas fa-tags"></i> سعر الجملة (دينار) *</label>
+                                        <input type="number" id="sparePartWholesalePrice" class="form-control" required min="0" step="1000" placeholder="65000">
+                                    </div>
+                                    <div class="form-group">
+                                        <label><i class="fas fa-boxes"></i> الكمية المتوفرة *</label>
+                                        <input type="number" id="sparePartQuantity" class="form-control" required min="0" step="1" placeholder="10">
+                                    </div>
+                                    <div class="form-group">
+                                        <label><i class="fas fa-exclamation-triangle"></i> الحد الأدنى للتنبيه</label>
+                                        <input type="number" id="sparePartMinStock" class="form-control" min="0" step="1" placeholder="5" value="5">
+                                    </div>
+                                    <div class="form-group">
+                                        <label><i class="fas fa-map-marker-alt"></i> موقع التخزين</label>
+                                        <input type="text" id="sparePartLocation" class="form-control" placeholder="مثال: رف 3 - صندوق A">
+                                    </div>
+                                    <div class="form-group">
+                                        <label><i class="fas fa-file-invoice"></i> رقم الفاتورة</label>
+                                        <input type="text" id="sparePartInvoiceNumber" class="form-control" placeholder="رقم فاتورة الشراء">
+                                    </div>
+                                    <div class="form-group" style="grid-column: 1 / -1;">
+                                        <label><i class="fas fa-sticky-note"></i> الوصف والملاحظات</label>
+                                        <textarea id="sparePartDescription" class="form-control" rows="3" placeholder="وصف تفصيلي للقطعة وأي ملاحظات إضافية..."></textarea>
+                                    </div>
+                                    <div class="form-group" style="grid-column: 1 / -1;">
+                                        <label><i class="fas fa-info-circle"></i> المواصفات الفنية</label>
+                                        <textarea id="sparePartSpecs" class="form-control" rows="2" placeholder="المواصفات الفنية والتفاصيل..."></textarea>
+                                    </div>
+                                </div>
+                                <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                                    <button type="submit" class="btn btn-success" style="flex: 1;">
+                                        <i class="fas fa-save"></i> حفظ
+                                    </button>
+                                    <button type="button" class="btn btn-secondary" onclick="closeSparePartModal()" style="flex: 1;">
+                                        <i class="fas fa-times"></i> إلغاء
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+        }
+
+        // دالة إغلاق نافذة قطع الصيانة
+        function closeSparePartModal() {
+            const modal = document.getElementById('addSparePartModal') || 
+                         document.getElementById('editSparePartModal') ||
+                         document.getElementById('addInvoiceModal');
+            if (modal) {
+                modal.remove();
+            }
+        }
+
+        // دالة إضافة قطعة صيانة
+        function addSparePart(event) {
+            event.preventDefault();
+            
+            const newPart = {
+                id: Date.now(),
+                name: document.getElementById('sparePartName').value,
+                code: document.getElementById('sparePartCode').value,
+                category: document.getElementById('sparePartCategory').value,
+                supplier: document.getElementById('sparePartSupplier').value,
+                supplierPhone: document.getElementById('sparePartSupplierPhone').value,
+                purchasePrice: parseFloat(document.getElementById('sparePartPurchasePrice').value),
+                retailPrice: parseFloat(document.getElementById('sparePartRetailPrice').value),
+                wholesalePrice: parseFloat(document.getElementById('sparePartWholesalePrice').value),
+                quantity: parseInt(document.getElementById('sparePartQuantity').value),
+                minStock: parseInt(document.getElementById('sparePartMinStock').value) || LOW_STOCK_THRESHOLD,
+                location: document.getElementById('sparePartLocation').value,
+                invoiceNumber: document.getElementById('sparePartInvoiceNumber').value,
+                description: document.getElementById('sparePartDescription').value,
+                specs: document.getElementById('sparePartSpecs').value,
+                addedBy: currentUser,
+                addedDate: new Date().toISOString(),
+                lastModified: new Date().toISOString()
+            };
+            
+            sparePartsData.push(newPart);
+            localStorage.setItem('sparePartsData', JSON.stringify(sparePartsData));
+            
+            closeSparePartModal();
+            displaySparePartsData();
+            updateSparePartsStats();
+            checkStockAlerts();
+            
+            showNotification('تم إضافة القطعة بنجاح', 'success');
+        }
+
+        // دالة عرض بيانات قطع الصيانة
+        function displaySparePartsData(data = sparePartsData) {
+            const tbody = document.getElementById('sparePartsTableBody');
+            if (!tbody) return;
+            
+            if (data.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="10" style="text-align: center; padding: 3rem; color: #666;">
+                            <i class="fas fa-cogs" style="font-size: 3rem; opacity: 0.3; margin-bottom: 1rem; display: block;"></i>
+                            لا توجد قطع صيانة مسجلة حالياً
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            tbody.innerHTML = data.map((item, index) => {
+                let stockStatus, statusBadge, rowStyle;
+                
+                if (item.quantity === 0) {
+                    stockStatus = 'نافد';
+                    statusBadge = '<span class="badge" style="background: #ef4444;">نافد</span>';
+                    rowStyle = 'background: rgba(239, 68, 68, 0.1);';
+                } else if (item.quantity <= item.minStock) {
+                    stockStatus = 'قليل';
+                    statusBadge = '<span class="badge" style="background: #f59e0b;">قليل</span>';
+                    rowStyle = 'background: rgba(245, 158, 11, 0.1);';
+                } else {
+                    stockStatus = 'متوفر';
+                    statusBadge = '<span class="badge" style="background: #10b981;">متوفر</span>';
+                    rowStyle = '';
+                }
+                
+                const categoryNames = {
+                    'electronics': 'إلكترونيات',
+                    'mechanical': 'ميكانيكية',
+                    'tools': 'أدوات',
+                    'accessories': 'إكسسوارات',
+                    'other': 'أخرى'
+                };
+                
+                return `
+                    <tr style="${rowStyle}">
+                        <td>${index + 1}</td>
+                        <td><strong>${item.name}</strong>${item.code ? '<br><small style="color: #666;">(' + item.code + ')</small>' : ''}</td>
+                        <td>${categoryNames[item.category] || item.category}</td>
+                        <td>${item.supplier}</td>
+                        <td>${formatCurrency(item.purchasePrice)}</td>
+                        <td><strong style="color: #10b981;">${formatCurrency(item.retailPrice)}</strong></td>
+                        <td><strong style="color: #06b6d4;">${formatCurrency(item.wholesalePrice)}</strong></td>
+                        <td><strong>${item.quantity}</strong></td>
+                        <td>${statusBadge}</td>
+                        <td>
+                            <div style="display: flex; gap: 0.5rem; justify-content: center;">
+                                <button class="btn btn-sm btn-info" onclick="showSparePartDetails(${item.id})" title="عرض التفاصيل">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-sm btn-primary" onclick="editSparePart(${item.id})" title="تعديل">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-sm btn-success" onclick="adjustStock(${item.id})" title="تعديل الكمية">
+                                    <i class="fas fa-boxes"></i>
+                                </button>
+                                <button class="btn btn-sm btn-danger" onclick="deleteSparePart(${item.id})" title="حذف">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+            
+            updateSupplierFilter();
+        }
+
+        // دالة عرض تفاصيل القطعة
+        function showSparePartDetails(id) {
+            const item = sparePartsData.find(p => p.id === id);
+            if (!item) return;
+            
+            const categoryNames = {
+                'electronics': 'إلكترونيات',
+                'mechanical': 'ميكانيكية',
+                'tools': 'أدوات',
+                'accessories': 'إكسسوارات',
+                'other': 'أخرى'
+            };
+            
+            const profit = item.retailPrice - item.purchasePrice;
+            const profitMargin = ((profit / item.purchasePrice) * 100).toFixed(2);
+            const totalValue = item.quantity * item.purchasePrice;
+            const expectedProfit = item.quantity * profit;
+            
+            const modalHTML = `
+                <div class="modal active" id="sparePartDetailsModal" style="display: flex;">
+                    <div class="modal-content" style="max-width: 800px;">
+                        <div class="modal-header">
+                            <h2><i class="fas fa-cogs"></i> تفاصيل القطعة</h2>
+                            <button class="close-btn" onclick="closeSparePartDetailsModal()">&times;</button>
+                        </div>
+                        <div class="modal-body">
+                            <div style="display: grid; gap: 1.5rem;">
+                                <div class="info-row">
+                                    <span class="info-label"><i class="fas fa-box"></i> اسم القطعة:</span>
+                                    <span class="info-value"><strong>${item.name}</strong></span>
+                                </div>
+                                ${item.code ? `
+                                <div class="info-row">
+                                    <span class="info-label"><i class="fas fa-barcode"></i> الكود:</span>
+                                    <span class="info-value">${item.code}</span>
+                                </div>` : ''}
+                                <div class="info-row">
+                                    <span class="info-label"><i class="fas fa-layer-group"></i> التصنيف:</span>
+                                    <span class="info-value">${categoryNames[item.category]}</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label"><i class="fas fa-building"></i> المورد:</span>
+                                    <span class="info-value">${item.supplier}${item.supplierPhone ? ' - ' + item.supplierPhone : ''}</span>
+                                </div>
+                                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; padding: 1rem; background: #f3f4f6; border-radius: 8px;">
+                                    <div class="info-row" style="flex-direction: column; align-items: flex-start; border: none; padding: 0;">
+                                        <span class="info-label"><i class="fas fa-shopping-cart"></i> سعر الشراء:</span>
+                                        <span class="info-value" style="font-size: 1.2rem;"><strong>${formatCurrency(item.purchasePrice)}</strong></span>
+                                    </div>
+                                    <div class="info-row" style="flex-direction: column; align-items: flex-start; border: none; padding: 0;">
+                                        <span class="info-label"><i class="fas fa-tag"></i> سعر المفرد:</span>
+                                        <span class="info-value" style="font-size: 1.2rem; color: #10b981;"><strong>${formatCurrency(item.retailPrice)}</strong></span>
+                                    </div>
+                                    <div class="info-row" style="flex-direction: column; align-items: flex-start; border: none; padding: 0;">
+                                        <span class="info-label"><i class="fas fa-tags"></i> سعر الجملة:</span>
+                                        <span class="info-value" style="font-size: 1.2rem; color: #06b6d4;"><strong>${formatCurrency(item.wholesalePrice)}</strong></span>
+                                    </div>
+                                    <div class="info-row" style="flex-direction: column; align-items: flex-start; border: none; padding: 0;">
+                                        <span class="info-label"><i class="fas fa-chart-line"></i> هامش الربح:</span>
+                                        <span class="info-value" style="font-size: 1.2rem; color: #8b5cf6;"><strong>${profitMargin}%</strong></span>
+                                    </div>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label"><i class="fas fa-boxes"></i> الكمية المتوفرة:</span>
+                                    <span class="info-value"><strong style="font-size: 1.3rem;">${item.quantity}</strong></span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label"><i class="fas fa-exclamation-triangle"></i> الحد الأدنى:</span>
+                                    <span class="info-value">${item.minStock}</span>
+                                </div>
+                                ${item.location ? `
+                                <div class="info-row">
+                                    <span class="info-label"><i class="fas fa-map-marker-alt"></i> موقع التخزين:</span>
+                                    <span class="info-value">${item.location}</span>
+                                </div>` : ''}
+                                ${item.invoiceNumber ? `
+                                <div class="info-row">
+                                    <span class="info-label"><i class="fas fa-file-invoice"></i> رقم الفاتورة:</span>
+                                    <span class="info-value">${item.invoiceNumber}</span>
+                                </div>` : ''}
+                                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; padding: 1rem; background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1)); border-radius: 8px;">
+                                    <div class="info-row" style="flex-direction: column; align-items: flex-start; border: none; padding: 0;">
+                                        <span class="info-label"><i class="fas fa-money-bill-wave"></i> قيمة المخزون:</span>
+                                        <span class="info-value" style="font-size: 1.1rem;"><strong>${formatCurrency(totalValue)}</strong></span>
+                                    </div>
+                                    <div class="info-row" style="flex-direction: column; align-items: flex-start; border: none; padding: 0;">
+                                        <span class="info-label"><i class="fas fa-chart-line"></i> الربح المتوقع:</span>
+                                        <span class="info-value" style="font-size: 1.1rem; color: #10b981;"><strong>${formatCurrency(expectedProfit)}</strong></span>
+                                    </div>
+                                </div>
+                                ${item.description ? `
+                                <div class="info-row" style="flex-direction: column; align-items: flex-start;">
+                                    <span class="info-label"><i class="fas fa-sticky-note"></i> الوصف:</span>
+                                    <span class="info-value" style="margin-top: 0.5rem; padding: 1rem; background: #f3f4f6; border-radius: 8px; width: 100%;">${item.description}</span>
+                                </div>` : ''}
+                                ${item.specs ? `
+                                <div class="info-row" style="flex-direction: column; align-items: flex-start;">
+                                    <span class="info-label"><i class="fas fa-info-circle"></i> المواصفات:</span>
+                                    <span class="info-value" style="margin-top: 0.5rem; padding: 1rem; background: #f3f4f6; border-radius: 8px; width: 100%;">${item.specs}</span>
+                                </div>` : ''}
+                                <div class="info-row">
+                                    <span class="info-label"><i class="fas fa-user"></i> أضيف بواسطة:</span>
+                                    <span class="info-value">${item.addedBy || 'غير محدد'}</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label"><i class="fas fa-calendar"></i> تاريخ الإضافة:</span>
+                                    <span class="info-value">${formatDate(item.addedDate)}</span>
+                                </div>
+                            </div>
+                            <button class="btn btn-secondary" onclick="closeSparePartDetailsModal()" style="width: 100%; margin-top: 1.5rem;">
+                                <i class="fas fa-times"></i> إغلاق
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+        }
+
+        function closeSparePartDetailsModal() {
+            const modal = document.getElementById('sparePartDetailsModal');
+            if (modal) modal.remove();
+        }
+
+        // دالة تعديل قطعة الصيانة
+        function editSparePart(id) {
+            const item = sparePartsData.find(p => p.id === id);
+            if (!item) return;
+            
+            const modalHTML = `
+                <div class="modal active" id="editSparePartModal" style="display: flex;">
+                    <div class="modal-content" style="max-width: 900px; width: 90%;">
+                        <div class="modal-header">
+                            <h2><i class="fas fa-edit"></i> تعديل بيانات القطعة</h2>
+                            <button class="close-btn" onclick="closeSparePartModal()">&times;</button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="editSparePartForm" onsubmit="updateSparePart(event, ${id})">
+                                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
+                                    <div class="form-group">
+                                        <label><i class="fas fa-box"></i> اسم القطعة *</label>
+                                        <input type="text" id="editSparePartName" class="form-control" required value="${item.name}">
+                                    </div>
+                                    <div class="form-group">
+                                        <label><i class="fas fa-barcode"></i> الكود/الباركود</label>
+                                        <input type="text" id="editSparePartCode" class="form-control" value="${item.code || ''}">
+                                    </div>
+                                    <div class="form-group">
+                                        <label><i class="fas fa-layer-group"></i> التصنيف *</label>
+                                        <select id="editSparePartCategory" class="form-control" required>
+                                            <option value="electronics" ${item.category === 'electronics' ? 'selected' : ''}>إلكترونيات</option>
+                                            <option value="mechanical" ${item.category === 'mechanical' ? 'selected' : ''}>ميكانيكية</option>
+                                            <option value="tools" ${item.category === 'tools' ? 'selected' : ''}>أدوات</option>
+                                            <option value="accessories" ${item.category === 'accessories' ? 'selected' : ''}>إكسسوارات</option>
+                                            <option value="other" ${item.category === 'other' ? 'selected' : ''}>أخرى</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label><i class="fas fa-building"></i> اسم المورد *</label>
+                                        <input type="text" id="editSparePartSupplier" class="form-control" required value="${item.supplier}">
+                                    </div>
+                                    <div class="form-group">
+                                        <label><i class="fas fa-phone"></i> هاتف المورد</label>
+                                        <input type="text" id="editSparePartSupplierPhone" class="form-control" value="${item.supplierPhone || ''}">
+                                    </div>
+                                    <div class="form-group">
+                                        <label><i class="fas fa-shopping-cart"></i> سعر الشراء (دينار) *</label>
+                                        <input type="number" id="editSparePartPurchasePrice" class="form-control" required min="0" step="1000" value="${item.purchasePrice}">
+                                    </div>
+                                    <div class="form-group">
+                                        <label><i class="fas fa-tag"></i> سعر البيع المفرد (دينار) *</label>
+                                        <input type="number" id="editSparePartRetailPrice" class="form-control" required min="0" step="1000" value="${item.retailPrice}">
+                                    </div>
+                                    <div class="form-group">
+                                        <label><i class="fas fa-tags"></i> سعر الجملة (دينار) *</label>
+                                        <input type="number" id="editSparePartWholesalePrice" class="form-control" required min="0" step="1000" value="${item.wholesalePrice}">
+                                    </div>
+                                    <div class="form-group">
+                                        <label><i class="fas fa-boxes"></i> الكمية المتوفرة *</label>
+                                        <input type="number" id="editSparePartQuantity" class="form-control" required min="0" step="1" value="${item.quantity}">
+                                    </div>
+                                    <div class="form-group">
+                                        <label><i class="fas fa-exclamation-triangle"></i> الحد الأدنى للتنبيه</label>
+                                        <input type="number" id="editSparePartMinStock" class="form-control" min="0" step="1" value="${item.minStock}">
+                                    </div>
+                                    <div class="form-group">
+                                        <label><i class="fas fa-map-marker-alt"></i> موقع التخزين</label>
+                                        <input type="text" id="editSparePartLocation" class="form-control" value="${item.location || ''}">
+                                    </div>
+                                    <div class="form-group">
+                                        <label><i class="fas fa-file-invoice"></i> رقم الفاتورة</label>
+                                        <input type="text" id="editSparePartInvoiceNumber" class="form-control" value="${item.invoiceNumber || ''}">
+                                    </div>
+                                    <div class="form-group" style="grid-column: 1 / -1;">
+                                        <label><i class="fas fa-sticky-note"></i> الوصف والملاحظات</label>
+                                        <textarea id="editSparePartDescription" class="form-control" rows="3">${item.description || ''}</textarea>
+                                    </div>
+                                    <div class="form-group" style="grid-column: 1 / -1;">
+                                        <label><i class="fas fa-info-circle"></i> المواصفات الفنية</label>
+                                        <textarea id="editSparePartSpecs" class="form-control" rows="2">${item.specs || ''}</textarea>
+                                    </div>
+                                </div>
+                                <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                                    <button type="submit" class="btn btn-primary" style="flex: 1;">
+                                        <i class="fas fa-save"></i> حفظ التعديلات
+                                    </button>
+                                    <button type="button" class="btn btn-secondary" onclick="closeSparePartModal()" style="flex: 1;">
+                                        <i class="fas fa-times"></i> إلغاء
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+        }
+
+        // دالة تحديث قطعة الصيانة
+        function updateSparePart(event, id) {
+            event.preventDefault();
+            
+            const index = sparePartsData.findIndex(p => p.id === id);
+            if (index === -1) return;
+            
+            sparePartsData[index] = {
+                ...sparePartsData[index],
+                name: document.getElementById('editSparePartName').value,
+                code: document.getElementById('editSparePartCode').value,
+                category: document.getElementById('editSparePartCategory').value,
+                supplier: document.getElementById('editSparePartSupplier').value,
+                supplierPhone: document.getElementById('editSparePartSupplierPhone').value,
+                purchasePrice: parseFloat(document.getElementById('editSparePartPurchasePrice').value),
+                retailPrice: parseFloat(document.getElementById('editSparePartRetailPrice').value),
+                wholesalePrice: parseFloat(document.getElementById('editSparePartWholesalePrice').value),
+                quantity: parseInt(document.getElementById('editSparePartQuantity').value),
+                minStock: parseInt(document.getElementById('editSparePartMinStock').value),
+                location: document.getElementById('editSparePartLocation').value,
+                invoiceNumber: document.getElementById('editSparePartInvoiceNumber').value,
+                description: document.getElementById('editSparePartDescription').value,
+                specs: document.getElementById('editSparePartSpecs').value,
+                lastModified: new Date().toISOString()
+            };
+            
+            localStorage.setItem('sparePartsData', JSON.stringify(sparePartsData));
+            
+            closeSparePartModal();
+            displaySparePartsData();
+            updateSparePartsStats();
+            checkStockAlerts();
+            
+            showNotification('تم تحديث بيانات القطعة بنجاح', 'success');
+        }
+
+        // دالة تعديل الكمية
+        function adjustStock(id) {
+            const item = sparePartsData.find(p => p.id === id);
+            if (!item) return;
+            
+            const modalHTML = `
+                <div class="modal active" id="adjustStockModal" style="display: flex;">
+                    <div class="modal-content" style="max-width: 500px;">
+                        <div class="modal-header">
+                            <h2><i class="fas fa-boxes"></i> تعديل كمية: ${item.name}</h2>
+                            <button class="close-btn" onclick="closeAdjustStockModal()">&times;</button>
+                        </div>
+                        <div class="modal-body">
+                            <div style="text-align: center; padding: 1rem; background: #f3f4f6; border-radius: 8px; margin-bottom: 1.5rem;">
+                                <div style="font-size: 0.9rem; color: #666; margin-bottom: 0.5rem;">الكمية الحالية</div>
+                                <div style="font-size: 2rem; font-weight: bold; color: #6366f1;">${item.quantity}</div>
+                            </div>
+                            <form id="adjustStockForm" onsubmit="saveStockAdjustment(event, ${id})">
+                                <div class="form-group">
+                                    <label><i class="fas fa-exchange-alt"></i> نوع العملية *</label>
+                                    <select id="adjustType" class="form-control" required onchange="updateAdjustmentType()">
+                                        <option value="">اختر نوع العملية</option>
+                                        <option value="add">إضافة (+)</option>
+                                        <option value="subtract">سحب (-)</option>
+                                        <option value="set">تعيين الكمية</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label><i class="fas fa-calculator"></i> <span id="quantityLabel">الكمية *</span></label>
+                                    <input type="number" id="adjustQuantity" class="form-control" required min="0" step="1" placeholder="0">
+                                </div>
+                                <div class="form-group">
+                                    <label><i class="fas fa-sticky-note"></i> السبب</label>
+                                    <textarea id="adjustReason" class="form-control" rows="2" placeholder="سبب التعديل (اختياري)"></textarea>
+                                </div>
+                                <div id="newQuantityPreview" style="display: none; padding: 1rem; background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1)); border-radius: 8px; margin-top: 1rem; text-align: center;">
+                                    <div style="font-size: 0.9rem; color: #666; margin-bottom: 0.5rem;">الكمية الجديدة</div>
+                                    <div id="newQuantityValue" style="font-size: 1.5rem; font-weight: bold; color: #10b981;"></div>
+                                </div>
+                                <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                                    <button type="submit" class="btn btn-primary" style="flex: 1;">
+                                        <i class="fas fa-check"></i> تأكيد
+                                    </button>
+                                    <button type="button" class="btn btn-secondary" onclick="closeAdjustStockModal()" style="flex: 1;">
+                                        <i class="fas fa-times"></i> إلغاء
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+            
+            // إضافة مستمع للتحديث التلقائي
+            document.getElementById('adjustQuantity').addEventListener('input', updateAdjustmentPreview);
+        }
+
+        function updateAdjustmentType() {
+            const type = document.getElementById('adjustType').value;
+            const label = document.getElementById('quantityLabel');
+            
+            switch(type) {
+                case 'add':
+                    label.textContent = 'الكمية المضافة *';
+                    break;
+                case 'subtract':
+                    label.textContent = 'الكمية المسحوبة *';
+                    break;
+                case 'set':
+                    label.textContent = 'الكمية الجديدة *';
+                    break;
+            }
+            
+            updateAdjustmentPreview();
+        }
+
+        function updateAdjustmentPreview() {
+            const type = document.getElementById('adjustType')?.value;
+            const quantity = parseInt(document.getElementById('adjustQuantity')?.value) || 0;
+            const preview = document.getElementById('newQuantityPreview');
+            const previewValue = document.getElementById('newQuantityValue');
+            
+            if (!type || !preview || !previewValue) return;
+            
+            const currentQuantity = parseInt(document.querySelector('#adjustStockModal .modal-body > div > div:last-child').textContent);
+            let newQuantity;
+            
+            switch(type) {
+                case 'add':
+                    newQuantity = currentQuantity + quantity;
+                    break;
+                case 'subtract':
+                    newQuantity = Math.max(0, currentQuantity - quantity);
+                    break;
+                case 'set':
+                    newQuantity = quantity;
+                    break;
+                default:
+                    preview.style.display = 'none';
+                    return;
+            }
+            
+            preview.style.display = 'block';
+            previewValue.textContent = newQuantity;
+            previewValue.style.color = newQuantity < currentQuantity ? '#ef4444' : '#10b981';
+        }
+
+        function saveStockAdjustment(event, id) {
+            event.preventDefault();
+            
+            const type = document.getElementById('adjustType').value;
+            const quantity = parseInt(document.getElementById('adjustQuantity').value);
+            const reason = document.getElementById('adjustReason').value;
+            
+            const index = sparePartsData.findIndex(p => p.id === id);
+            if (index === -1) return;
+            
+            const oldQuantity = sparePartsData[index].quantity;
+            let newQuantity;
+            
+            switch(type) {
+                case 'add':
+                    newQuantity = oldQuantity + quantity;
+                    break;
+                case 'subtract':
+                    newQuantity = Math.max(0, oldQuantity - quantity);
+                    break;
+                case 'set':
+                    newQuantity = quantity;
+                    break;
+            }
+            
+            sparePartsData[index].quantity = newQuantity;
+            sparePartsData[index].lastModified = new Date().toISOString();
+            
+            // حفظ سجل التعديل
+            if (!sparePartsData[index].adjustmentHistory) {
+                sparePartsData[index].adjustmentHistory = [];
+            }
+            sparePartsData[index].adjustmentHistory.push({
+                date: new Date().toISOString(),
+                type: type,
+                oldQuantity: oldQuantity,
+                newQuantity: newQuantity,
+                changeAmount: quantity,
+                reason: reason,
+                user: currentUser
+            });
+            
+            localStorage.setItem('sparePartsData', JSON.stringify(sparePartsData));
+            
+            closeAdjustStockModal();
+            displaySparePartsData();
+            updateSparePartsStats();
+            checkStockAlerts();
+            
+            showNotification(`تم تحديث الكمية من ${oldQuantity} إلى ${newQuantity}`, 'success');
+        }
+
+        function closeAdjustStockModal() {
+            const modal = document.getElementById('adjustStockModal');
+            if (modal) modal.remove();
+        }
+
+        // دالة حذف قطعة صيانة
+        function deleteSparePart(id) {
+            if (!confirm('هل أنت متأكد من حذف هذه القطعة؟')) return;
+            
+            sparePartsData = sparePartsData.filter(p => p.id !== id);
+            localStorage.setItem('sparePartsData', JSON.stringify(sparePartsData));
+            
+            displaySparePartsData();
+            updateSparePartsStats();
+            checkStockAlerts();
+            
+            showNotification('تم حذف القطعة بنجاح', 'success');
+        }
+
+        // دالة تحديث الإحصائيات
+        function updateSparePartsStats() {
+            const total = sparePartsData.length;
+            const totalQuantity = sparePartsData.reduce((sum, p) => sum + p.quantity, 0);
+            const lowStock = sparePartsData.filter(p => p.quantity > 0 && p.quantity <= p.minStock).length;
+            const outOfStock = sparePartsData.filter(p => p.quantity === 0).length;
+            const totalValue = sparePartsData.reduce((sum, p) => sum + (p.quantity * p.purchasePrice), 0);
+            const expectedProfit = sparePartsData.reduce((sum, p) => sum + (p.quantity * (p.retailPrice - p.purchasePrice)), 0);
+            
+            updateElement('totalSpareParts', total);
+            updateElement('totalSparePartsQuantity', totalQuantity);
+            updateElement('lowStockSpareParts', lowStock);
+            updateElement('outOfStockSpareParts', outOfStock);
+            updateElement('totalSparePartsValue', formatCurrency(totalValue));
+            updateElement('expectedSparePartsProfit', formatCurrency(expectedProfit));
+        }
+
+        // دالة فحص التنبيهات
+        function checkStockAlerts() {
+            const alertsContainer = document.getElementById('sparePartsAlerts');
+            if (!alertsContainer) return;
+            
+            const outOfStock = sparePartsData.filter(p => p.quantity === 0);
+            const lowStock = sparePartsData.filter(p => p.quantity > 0 && p.quantity <= p.minStock);
+            
+            if (outOfStock.length === 0 && lowStock.length === 0) {
+                alertsContainer.innerHTML = '';
+                return;
+            }
+            
+            let alertsHTML = '';
+            
+            if (outOfStock.length > 0) {
+                alertsHTML += `
+                    <div class="alert alert-danger" style="display: flex; align-items: center; gap: 1rem; padding: 1rem; border-radius: 8px; background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(220, 38, 38, 0.1)); border-left: 4px solid #ef4444;">
+                        <i class="fas fa-times-circle" style="font-size: 2rem; color: #ef4444;"></i>
+                        <div style="flex: 1;">
+                            <div style="font-weight: bold; font-size: 1.1rem; margin-bottom: 0.5rem;">
+                                <i class="fas fa-exclamation-triangle"></i> تنبيه: ${outOfStock.length} قطعة نافدة
+                            </div>
+                            <div style="font-size: 0.9rem; color: #666;">
+                                ${outOfStock.map(p => p.name).join(', ')}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            if (lowStock.length > 0) {
+                alertsHTML += `
+                    <div class="alert alert-warning" style="display: flex; align-items: center; gap: 1rem; padding: 1rem; border-radius: 8px; background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(217, 119, 6, 0.1)); border-left: 4px solid #f59e0b; margin-top: ${outOfStock.length > 0 ? '1rem' : '0'};">
+                        <i class="fas fa-exclamation-triangle" style="font-size: 2rem; color: #f59e0b;"></i>
+                        <div style="flex: 1;">
+                            <div style="font-weight: bold; font-size: 1.1rem; margin-bottom: 0.5rem;">
+                                <i class="fas fa-info-circle"></i> تنبيه: ${lowStock.length} قطعة قليلة
+                            </div>
+                            <div style="font-size: 0.9rem; color: #666;">
+                                ${lowStock.map(p => `${p.name} (${p.quantity})`).join(', ')}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            alertsContainer.innerHTML = alertsHTML;
+        }
+
+        // دالة البحث
+        function filterSpareParts() {
+            const searchTerm = document.getElementById('sparePartsSearchInput').value.toLowerCase();
+            
+            const filtered = sparePartsData.filter(item => 
+                item.name.toLowerCase().includes(searchTerm) ||
+                (item.code && item.code.toLowerCase().includes(searchTerm)) ||
+                item.supplier.toLowerCase().includes(searchTerm) ||
+                item.category.toLowerCase().includes(searchTerm)
+            );
+            
+            displaySparePartsData(filtered);
+        }
+
+        // دوال الفلترة
+        function filterSparePartsByStock() {
+            const status = document.getElementById('sparePartsStockFilter').value;
+            
+            let filtered = sparePartsData;
+            if (status !== 'all') {
+                filtered = sparePartsData.filter(p => {
+                    switch(status) {
+                        case 'available':
+                            return p.quantity > p.minStock;
+                        case 'low':
+                            return p.quantity > 0 && p.quantity <= p.minStock;
+                        case 'out':
+                            return p.quantity === 0;
+                        default:
+                            return true;
+                    }
+                });
+            }
+            
+            displaySparePartsData(filtered);
+        }
+
+        function filterSparePartsBySupplier() {
+            const supplier = document.getElementById('sparePartsSupplierFilter').value;
+            
+            let filtered = sparePartsData;
+            if (supplier !== 'all') {
+                filtered = sparePartsData.filter(p => p.supplier === supplier);
+            }
+            
+            displaySparePartsData(filtered);
+        }
+
+        function filterSparePartsByCategory() {
+            const category = document.getElementById('sparePartsCategoryFilter').value;
+            
+            let filtered = sparePartsData;
+            if (category !== 'all') {
+                filtered = sparePartsData.filter(p => p.category === category);
+            }
+            
+            displaySparePartsData(filtered);
+        }
+
+        function filterSparePartsByPrice() {
+            const priceRange = document.getElementById('sparePartsPriceFilter').value;
+            
+            let filtered = sparePartsData;
+            if (priceRange !== 'all') {
+                if (priceRange.includes('+')) {
+                    const minPrice = parseInt(priceRange.replace('+', ''));
+                    filtered = sparePartsData.filter(p => p.retailPrice >= minPrice);
+                } else {
+                    const [min, max] = priceRange.split('-').map(Number);
+                    filtered = sparePartsData.filter(p => p.retailPrice >= min && p.retailPrice <= max);
+                }
+            }
+            
+            displaySparePartsData(filtered);
+        }
+
+        function resetSparePartsFilters() {
+            document.getElementById('sparePartsStockFilter').value = 'all';
+            document.getElementById('sparePartsSupplierFilter').value = 'all';
+            document.getElementById('sparePartsCategoryFilter').value = 'all';
+            document.getElementById('sparePartsPriceFilter').value = 'all';
+            document.getElementById('sparePartsSearchInput').value = '';
+            
+            displaySparePartsData();
+        }
+
+        // دالة تحديث قائمة الموردين
+        function updateSupplierFilter() {
+            const supplierFilter = document.getElementById('sparePartsSupplierFilter');
+            if (!supplierFilter) return;
+            
+            const suppliers = [...new Set(sparePartsData.map(p => p.supplier))];
+            
+            const currentValue = supplierFilter.value;
+            supplierFilter.innerHTML = '<option value="all">جميع الموردين</option>';
+            
+            suppliers.forEach(supplier => {
+                supplierFilter.innerHTML += `<option value="${supplier}">${supplier}</option>`;
+            });
+            
+            supplierFilter.value = currentValue;
+        }
+
+        // دالة استيراد البيانات
+        function importSparePartsData(input) {
+            const file = input.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                try {
+                    let importedData = [];
+                    
+                    if (file.name.endsWith('.json')) {
+                        importedData = JSON.parse(e.target.result);
+                    } else {
+                        showNotification('الرجاء استخدام ملفات JSON للاستيراد', 'warning');
+                        return;
+                    }
+                    
+                    if (!Array.isArray(importedData)) {
+                        throw new Error('صيغة البيانات غير صحيحة');
+                    }
+                    
+                    importedData.forEach(item => {
+                        if (!sparePartsData.find(p => p.id === item.id)) {
+                            sparePartsData.push(item);
+                        }
+                    });
+                    
+                    localStorage.setItem('sparePartsData', JSON.stringify(sparePartsData));
+                    
+                    displaySparePartsData();
+                    updateSparePartsStats();
+                    checkStockAlerts();
+                    
+                    showNotification(`تم استيراد ${importedData.length} قطعة بنجاح`, 'success');
+                } catch (error) {
+                    showNotification('خطأ في استيراد البيانات: ' + error.message, 'error');
+                }
+                
+                input.value = '';
+            };
+            
+            reader.readAsText(file);
+        }
+
+        // تحديث دالة exportData لدعم قطع الصيانة
+        const originalExportDataSpareParts = exportData;
+        exportData = async function(type, format) {
+            if (type === 'spareParts') {
+                if (sparePartsData.length === 0) {
+                    showNotification('لا توجد بيانات للتصدير', 'warning');
+                    return;
+                }
+                
+                const filename = 'قطع_الصيانة';
+                
+                try {
+                    switch(format) {
+                        case 'json':
+                            exportToJSON(sparePartsData, filename);
+                            break;
+                        case 'excel':
+                            exportSparePartsToExcel(sparePartsData, filename);
+                            break;
+                        case 'word':
+                            exportSparePartsToWord(sparePartsData, filename);
+                            break;
+                        case 'pdf':
+                            exportSparePartsToPDF(sparePartsData, filename);
+                            break;
+                    }
+                } catch (error) {
+                    showNotification('حدث خطأ أثناء التصدير', 'error');
+                }
+            } else {
+                return originalExportDataSpareParts(type, format);
+            }
+        };
+
+        // دوال التصدير
+        function exportSparePartsToExcel(data, filename) {
+            const categoryNames = {
+                'electronics': 'إلكترونيات',
+                'mechanical': 'ميكانيكية',
+                'tools': 'أدوات',
+                'accessories': 'إكسسوارات',
+                'other': 'أخرى'
+            };
+            
+            const ws_data = [
+                ['#', 'اسم القطعة', 'الكود', 'التصنيف', 'المورد', 'هاتف المورد', 'سعر الشراء', 'سعر المفرد', 'سعر الجملة', 'الكمية', 'الموقع', 'رقم الفاتورة']
+            ];
+            
+            data.forEach((item, index) => {
+                ws_data.push([
+                    index + 1,
+                    item.name,
+                    item.code || '',
+                    categoryNames[item.category],
+                    item.supplier,
+                    item.supplierPhone || '',
+                    item.purchasePrice,
+                    item.retailPrice,
+                    item.wholesalePrice,
+                    item.quantity,
+                    item.location || '',
+                    item.invoiceNumber || ''
+                ]);
+            });
+            
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.aoa_to_sheet(ws_data);
+            
+            ws['!cols'] = [
+                {wch: 5}, {wch: 25}, {wch: 15}, {wch: 15}, {wch: 20},
+                {wch: 15}, {wch: 12}, {wch: 12}, {wch: 12}, {wch: 8}, {wch: 20}, {wch: 15}
+            ];
+            
+            XLSX.utils.book_append_sheet(wb, ws, 'قطع الصيانة');
+            XLSX.writeFile(wb, `${filename}_${new Date().toISOString().split('T')[0]}.xlsx`);
+        }
+
+        function exportSparePartsToWord(data, filename) {
+            const categoryNames = {
+                'electronics': 'إلكترونيات',
+                'mechanical': 'ميكانيكية',
+                'tools': 'أدوات',
+                'accessories': 'إكسسوارات',
+                'other': 'أخرى'
+            };
+            
+            let content = `
+                <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+                <head>
+                    <meta charset='utf-8'>
+                    <style>
+                        body { direction: rtl; font-family: Arial; }
+                        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                        th, td { border: 1px solid #ddd; padding: 8px; text-align: right; font-size: 12px; }
+                        th { background-color: #4CAF50; color: white; }
+                        h1 { text-align: center; color: #333; }
+                    </style>
+                </head>
+                <body>
+                    <h1>تقرير قطع الصيانة</h1>
+                    <p>تاريخ التصدير: ${new Date().toLocaleDateString('ar-IQ')}</p>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>القطعة</th>
+                                <th>التصنيف</th>
+                                <th>المورد</th>
+                                <th>سعر الشراء</th>
+                                <th>سعر المفرد</th>
+                                <th>الكمية</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            data.forEach((item, index) => {
+                content += `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>${item.name}</td>
+                        <td>${categoryNames[item.category]}</td>
+                        <td>${item.supplier}</td>
+                        <td>${formatCurrency(item.purchasePrice)}</td>
+                        <td>${formatCurrency(item.retailPrice)}</td>
+                        <td>${item.quantity}</td>
+                    </tr>
+                `;
+            });
+            
+            content += `
+                        </tbody>
+                    </table>
+                </body>
+                </html>
+            `;
+            
+            const blob = new Blob(['\ufeff', content], {
+                type: 'application/msword'
+            });
+            
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `${filename}_${new Date().toISOString().split('T')[0]}.doc`;
+            link.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function exportSparePartsToPDF(data, filename) {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('l', 'mm', 'a4');
+            
+            doc.addFont('https://cdn.jsdelivr.net/npm/amiri-font@1.0.0/Amiri-Regular.ttf', 'Amiri', 'normal');
+            doc.setFont('Amiri');
+            
+            doc.setFontSize(18);
+            doc.text('تقرير قطع الصيانة', 148, 20, { align: 'center' });
+            
+            doc.setFontSize(12);
+            doc.text(`تاريخ التصدير: ${new Date().toLocaleDateString('ar-IQ')}`, 148, 30, { align: 'center' });
+            
+            const categoryNames = {
+                'electronics': 'إلكترونيات',
+                'mechanical': 'ميكانيكية',
+                'tools': 'أدوات',
+                'accessories': 'إكسسوارات',
+                'other': 'أخرى'
+            };
+            
+            const tableData = data.map((item, index) => [
+                (index + 1).toString(),
+                item.name,
+                categoryNames[item.category],
+                item.supplier,
+                formatCurrency(item.purchasePrice),
+                formatCurrency(item.retailPrice),
+                item.quantity.toString()
+            ]);
+            
+            doc.autoTable({
+                startY: 40,
+                head: [['#', 'القطعة', 'التصنيف', 'المورد', 'سعر الشراء', 'سعر المفرد', 'الكمية']],
+                body: tableData,
+                styles: {
+                    font: 'Amiri',
+                    fontSize: 10,
+                    halign: 'right'
+                },
+                headStyles: {
+                    fillColor: [99, 102, 241],
+                    textColor: 255,
+                    fontSize: 11,
+                    fontStyle: 'bold'
+                },
+                margin: { right: 10, left: 10 }
+            });
+            
+            doc.save(`${filename}_${new Date().toISOString().split('T')[0]}.pdf`);
+        }
+
+        // تهيئة صفحة قطع الصيانة
+        document.addEventListener('DOMContentLoaded', function() {
+            if (document.getElementById('spareParts')) {
+                displaySparePartsData();
+                updateSparePartsStats();
+                checkStockAlerts();
+            }
+        });
+
+        // دالة إضافة فاتورة شراء
+        function showAddInvoiceModal() {
+            const modalHTML = `
+                <div class="modal active" id="addInvoiceModal" style="display: flex;">
+                    <div class="modal-content" style="max-width: 1000px; width: 95%;">
+                        <div class="modal-header">
+                            <h2><i class="fas fa-file-invoice"></i> إضافة فاتورة شراء قطع صيانة</h2>
+                            <button class="close-btn" onclick="closeSparePartModal()">&times;</button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="invoiceForm" onsubmit="addPurchaseInvoice(event)">
+                                <h3 style="margin-bottom: 1rem;"><i class="fas fa-info-circle"></i> معلومات الفاتورة</h3>
+                                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 2rem;">
+                                    <div class="form-group">
+                                        <label><i class="fas fa-file-invoice"></i> رقم الفاتورة *</label>
+                                        <input type="text" id="invoiceNumber" class="form-control" required placeholder="INV-001">
+                                    </div>
+                                    <div class="form-group">
+                                        <label><i class="fas fa-building"></i> اسم المورد *</label>
+                                        <input type="text" id="invoiceSupplier" class="form-control" required placeholder="شركة التقنية">
+                                    </div>
+                                    <div class="form-group">
+                                        <label><i class="fas fa-calendar"></i> تاريخ الفاتورة *</label>
+                                        <input type="date" id="invoiceDate" class="form-control" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label><i class="fas fa-phone"></i> هاتف المورد</label>
+                                        <input type="text" id="invoiceSupplierPhone" class="form-control" placeholder="07701234567">
+                                    </div>
+                                    <div class="form-group" style="grid-column: span 2;">
+                                        <label><i class="fas fa-sticky-note"></i> ملاحظات</label>
+                                        <input type="text" id="invoiceNotes" class="form-control" placeholder="ملاحظات إضافية...">
+                                    </div>
+                                </div>
+                                
+                                <h3 style="margin-bottom: 1rem;"><i class="fas fa-boxes"></i> قطع الفاتورة</h3>
+                                <div id="invoiceItemsContainer" style="margin-bottom: 1rem;">
+                                    <!-- القطع ستضاف هنا -->
+                                </div>
+                                
+                                <button type="button" class="btn btn-success btn-sm" onclick="addInvoiceItem()" style="margin-bottom: 2rem;">
+                                    <i class="fas fa-plus"></i> إضافة قطعة
+                                </button>
+                                
+                                <div style="padding: 1.5rem; background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1)); border-radius: 8px; margin-bottom: 1.5rem;">
+                                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; text-align: center;">
+                                        <div>
+                                            <div style="font-size: 0.9rem; color: #666; margin-bottom: 0.5rem;">إجمالي القطع</div>
+                                            <div id="totalInvoiceItems" style="font-size: 1.5rem; font-weight: bold; color: #6366f1;">0</div>
+                                        </div>
+                                        <div>
+                                            <div style="font-size: 0.9rem; color: #666; margin-bottom: 0.5rem;">إجمالي الكمية</div>
+                                            <div id="totalInvoiceQuantity" style="font-size: 1.5rem; font-weight: bold; color: #10b981;">0</div>
+                                        </div>
+                                        <div>
+                                            <div style="font-size: 0.9rem; color: #666; margin-bottom: 0.5rem;">إجمالي المبلغ</div>
+                                            <div id="totalInvoiceAmount" style="font-size: 1.5rem; font-weight: bold; color: #8b5cf6;">0 دينار</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div style="display: flex; gap: 1rem;">
+                                    <button type="submit" class="btn btn-primary" style="flex: 1;">
+                                        <i class="fas fa-save"></i> حفظ الفاتورة
+                                    </button>
+                                    <button type="button" class="btn btn-secondary" onclick="closeSparePartModal()" style="flex: 1;">
+                                        <i class="fas fa-times"></i> إلغاء
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+            
+            // تعيين التاريخ الحالي
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('invoiceDate').value = today;
+            
+            // إضافة قطعة واحدة افتراضياً
+            addInvoiceItem();
+        }
+
+        let invoiceItemCounter = 0;
+
+        function addInvoiceItem() {
+            invoiceItemCounter++;
+            const container = document.getElementById('invoiceItemsContainer');
+            
+            const itemHTML = `
+                <div class="invoice-item" id="invoiceItem${invoiceItemCounter}" style="padding: 1rem; border: 2px solid #e5e7eb; border-radius: 8px; margin-bottom: 1rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <h4 style="margin: 0;"><i class="fas fa-box"></i> قطعة #${invoiceItemCounter}</h4>
+                        <button type="button" class="btn btn-sm btn-danger" onclick="removeInvoiceItem(${invoiceItemCounter})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem;">
+                        <div class="form-group" style="grid-column: span 2;">
+                            <label><i class="fas fa-box"></i> اسم القطعة *</label>
+                            <input type="text" class="form-control item-name" required placeholder="مثال: شاشة لاب توب">
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-barcode"></i> الكود</label>
+                            <input type="text" class="form-control item-code" placeholder="LCD-156">
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-layer-group"></i> التصنيف *</label>
+                            <select class="form-control item-category" required>
+                                <option value="">اختر...</option>
+                                <option value="electronics">إلكترونيات</option>
+                                <option value="mechanical">ميكانيكية</option>
+                                <option value="tools">أدوات</option>
+                                <option value="accessories">إكسسوارات</option>
+                                <option value="other">أخرى</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-shopping-cart"></i> سعر الشراء *</label>
+                            <input type="number" class="form-control item-purchase-price" required min="0" step="1000" placeholder="50000" onchange="updateInvoiceTotals()">
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-tag"></i> سعر المفرد *</label>
+                            <input type="number" class="form-control item-retail-price" required min="0" step="1000" placeholder="75000">
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-tags"></i> سعر الجملة *</label>
+                            <input type="number" class="form-control item-wholesale-price" required min="0" step="1000" placeholder="65000">
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-boxes"></i> الكمية *</label>
+                            <input type="number" class="form-control item-quantity" required min="1" step="1" placeholder="10" onchange="updateInvoiceTotals()">
+                        </div>
+                        <div class="form-group" style="grid-column: span 4;">
+                            <label><i class="fas fa-sticky-note"></i> وصف/ملاحظات</label>
+                            <input type="text" class="form-control item-description" placeholder="وصف القطعة...">
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            container.insertAdjacentHTML('beforeend', itemHTML);
+            updateInvoiceTotals();
+        }
+
+        function removeInvoiceItem(id) {
+            const item = document.getElementById('invoiceItem' + id);
+            if (item) {
+                item.remove();
+                updateInvoiceTotals();
+            }
+        }
+
+        function updateInvoiceTotals() {
+            const items = document.querySelectorAll('.invoice-item');
+            let totalItems = items.length;
+            let totalQuantity = 0;
+            let totalAmount = 0;
+            
+            items.forEach(item => {
+                const quantity = parseInt(item.querySelector('.item-quantity')?.value) || 0;
+                const price = parseFloat(item.querySelector('.item-purchase-price')?.value) || 0;
+                
+                totalQuantity += quantity;
+                totalAmount += quantity * price;
+            });
+            
+            document.getElementById('totalInvoiceItems').textContent = totalItems;
+            document.getElementById('totalInvoiceQuantity').textContent = totalQuantity;
+            document.getElementById('totalInvoiceAmount').textContent = formatCurrency(totalAmount);
+        }
+
+        function addPurchaseInvoice(event) {
+            event.preventDefault();
+            
+            const invoiceNumber = document.getElementById('invoiceNumber').value;
+            const supplier = document.getElementById('invoiceSupplier').value;
+            const supplierPhone = document.getElementById('invoiceSupplierPhone').value;
+            const invoiceDate = document.getElementById('invoiceDate').value;
+            const notes = document.getElementById('invoiceNotes').value;
+            
+            const items = [];
+            const itemElements = document.querySelectorAll('.invoice-item');
+            
+            itemElements.forEach(itemEl => {
+                const item = {
+                    name: itemEl.querySelector('.item-name').value,
+                    code: itemEl.querySelector('.item-code').value,
+                    category: itemEl.querySelector('.item-category').value,
+                    purchasePrice: parseFloat(itemEl.querySelector('.item-purchase-price').value),
+                    retailPrice: parseFloat(itemEl.querySelector('.item-retail-price').value),
+                    wholesalePrice: parseFloat(itemEl.querySelector('.item-wholesale-price').value),
+                    quantity: parseInt(itemEl.querySelector('.item-quantity').value),
+                    description: itemEl.querySelector('.item-description').value
+                };
+                items.push(item);
+            });
+            
+            if (items.length === 0) {
+                showNotification('يجب إضافة قطعة واحدة على الأقل', 'warning');
+                return;
+            }
+            
+            // حفظ الفاتورة
+            const invoice = {
+                id: Date.now(),
+                invoiceNumber: invoiceNumber,
+                supplier: supplier,
+                supplierPhone: supplierPhone,
+                date: invoiceDate,
+                notes: notes,
+                items: items,
+                totalItems: items.length,
+                totalQuantity: items.reduce((sum, i) => sum + i.quantity, 0),
+                totalAmount: items.reduce((sum, i) => sum + (i.quantity * i.purchasePrice), 0),
+                addedBy: currentUser,
+                addedDate: new Date().toISOString()
+            };
+            
+            purchaseInvoicesData.push(invoice);
+            localStorage.setItem('purchaseInvoicesData', JSON.stringify(purchaseInvoicesData));
+            
+            // إضافة القطع إلى المخزون
+            items.forEach(item => {
+                const existingPart = sparePartsData.find(p => 
+                    p.name === item.name && p.code === item.code
+                );
+                
+                if (existingPart) {
+                    // تحديث الكمية
+                    existingPart.quantity += item.quantity;
+                    existingPart.lastModified = new Date().toISOString();
+                } else {
+                    // إضافة قطعة جديدة
+                    const newPart = {
+                        id: Date.now() + Math.random(),
+                        name: item.name,
+                        code: item.code,
+                        category: item.category,
+                        supplier: supplier,
+                        supplierPhone: supplierPhone,
+                        purchasePrice: item.purchasePrice,
+                        retailPrice: item.retailPrice,
+                        wholesalePrice: item.wholesalePrice,
+                        quantity: item.quantity,
+                        minStock: LOW_STOCK_THRESHOLD,
+                        location: '',
+                        invoiceNumber: invoiceNumber,
+                        description: item.description,
+                        specs: '',
+                        addedBy: currentUser,
+                        addedDate: new Date().toISOString(),
+                        lastModified: new Date().toISOString()
+                    };
+                    sparePartsData.push(newPart);
+                }
+            });
+            
+            localStorage.setItem('sparePartsData', JSON.stringify(sparePartsData));
+            
+            closeSparePartModal();
+            displaySparePartsData();
+            updateSparePartsStats();
+            checkStockAlerts();
+            
+            showNotification(`تم إضافة فاتورة ${invoiceNumber} بنجاح مع ${items.length} قطعة`, 'success');
+        }
+
+        // نهاية نظام إدارة قطع الصيانة
+        // ══════════════════════════════════════════════════════════════════════════════
+
+        // ══════════════════════════════════════════════════════════════════════════════
+        // نظام الأجهزة المستلمة - Delivered Devices System
+        // ══════════════════════════════════════════════════════════════════════════════
+
+        // مصفوفة تخزين الأجهزة المستلمة
+        let deliveredDevicesData = JSON.parse(localStorage.getItem('deliveredDevicesData')) || [];
+
+        // دالة عرض بيانات الأجهزة المستلمة
+        function displayDeliveredDevicesData(data = deliveredDevicesData) {
+            const tbody = document.getElementById('deliveredDevicesTableBody');
+            if (!tbody) return;
+            
+            if (data.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="11" style="text-align: center; padding: 3rem; color: #666;">
+                            <i class="fas fa-check-double" style="font-size: 3rem; opacity: 0.3; margin-bottom: 1rem; display: block;"></i>
+                            لا توجد أجهزة مستلمة حتى الآن
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            tbody.innerHTML = data.map((item, index) => {
+                const paymentMethods = {
+                    'cash': '<span class="badge" style="background: #10b981;">نقداً</span>',
+                    'card': '<span class="badge" style="background: #6366f1;">بطاقة</span>',
+                    'transfer': '<span class="badge" style="background: #8b5cf6;">تحويل</span>',
+                    'mixed': '<span class="badge" style="background: #f59e0b;">مختلط</span>'
+                };
+                
+                const partsCount = item.usedParts ? item.usedParts.length : 0;
+                const partsTotal = item.partsTotal || 0;
+                
+                return `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td><strong>${item.productName}</strong></td>
+                        <td>${item.companyName}</td>
+                        <td>${item.fault}</td>
+                        <td>${formatCurrency(item.maintenancePrice)}</td>
+                        <td>${partsCount > 0 ? `${partsCount} قطعة<br><small>(${formatCurrency(partsTotal)})</small>` : '-'}</td>
+                        <td><strong style="color: #6366f1;">${formatCurrency(item.totalCost)}</strong></td>
+                        <td><strong style="color: #10b981;">${formatCurrency(item.receivedAmount)}</strong></td>
+                        <td>${formatDate(item.actualDeliveryDate)}</td>
+                        <td>${paymentMethods[item.paymentMethod] || item.paymentMethod}</td>
+                        <td>
+                            <div style="display: flex; gap: 0.5rem; justify-content: center;">
+                                <button class="btn btn-sm btn-info" onclick="showDeliveredDeviceDetails(${item.id})" title="عرض التفاصيل">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-sm btn-danger" onclick="deleteDeliveredDevice(${item.id})" title="حذف">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // دالة عرض تفاصيل جهاز مستلم
+        function showDeliveredDeviceDetails(id) {
+            const item = deliveredDevicesData.find(d => d.id === id);
+            if (!item) return;
+            
+            const paymentMethods = {
+                'cash': 'نقداً',
+                'card': 'بطاقة',
+                'transfer': 'تحويل بنكي',
+                'mixed': 'مختلط'
+            };
+            
+            const modalHTML = `
+                <div class="modal active" id="deliveredDeviceDetailsModal" style="display: flex;">
+                    <div class="modal-content" style="max-width: 800px; max-height: 85vh; overflow-y: auto;">
+                        <div class="modal-header" style="background: linear-gradient(135deg, #10b981, #059669); color: white;">
+                            <h2><i class="fas fa-check-circle"></i> تفاصيل الجهاز المستلم</h2>
+                            <button class="close-btn" onclick="closeDeliveredDeviceModal()" style="color: white;">&times;</button>
+                        </div>
+                        <div class="modal-body">
+                            <!-- معلومات الجهاز -->
+                            <h3 style="color: var(--primary-color); margin-bottom: 1rem;">
+                                <i class="fas fa-box"></i> معلومات الجهاز
+                            </h3>
+                            <div style="display: grid; gap: 1rem; margin-bottom: 2rem;">
+                                <div class="info-row">
+                                    <span class="info-label"><i class="fas fa-box"></i> اسم المنتج:</span>
+                                    <span class="info-value"><strong>${item.productName}</strong></span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label"><i class="fas fa-building"></i> الشركة:</span>
+                                    <span class="info-value">${item.companyName}</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label"><i class="fas fa-exclamation-triangle"></i> الخلل:</span>
+                                    <span class="info-value" style="color: #ef4444;">${item.fault}</span>
+                                </div>
+                            </div>
+
+                            <!-- التكاليف -->
+                            <h3 style="color: var(--primary-color); margin-bottom: 1rem;">
+                                <i class="fas fa-money-bill-wave"></i> التكاليف والأسعار
+                            </h3>
+                            <div style="display: grid; gap: 1rem; margin-bottom: 2rem;">
+                                <div class="info-row">
+                                    <span class="info-label"><i class="fas fa-tools"></i> سعر الصيانة:</span>
+                                    <span class="info-value">${formatCurrency(item.maintenancePrice)}</span>
+                                </div>
+                                ${item.usedParts && item.usedParts.length > 0 ? `
+                                <div class="info-row">
+                                    <span class="info-label"><i class="fas fa-cogs"></i> قطع الغيار (${item.usedParts.length} قطعة):</span>
+                                    <span class="info-value">${formatCurrency(item.partsTotal)}</span>
+                                </div>
+                                <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin: 0.5rem 0;">
+                                    <h4 style="margin: 0 0 0.5rem 0; font-size: 0.9rem; color: #666;">قائمة القطع المستخدمة:</h4>
+                                    ${item.usedParts.map(part => `
+                                        <div style="display: flex; justify-content: space-between; padding: 0.25rem 0; font-size: 0.85rem;">
+                                            <span>${part.name} ${part.fromInventory ? '<span class="badge" style="background: #10b981; font-size: 0.7rem;">من المخزون</span>' : ''}</span>
+                                            <span>${part.quantity} × ${formatCurrency(part.price)} = <strong>${formatCurrency(part.total)}</strong></span>
+                                        </div>
+                                    `).join('')}
+                                </div>` : ''}
+                                <div class="info-row" style="background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; padding: 1rem; border-radius: 8px; margin-top: 0.5rem;">
+                                    <span class="info-label" style="color: white;"><i class="fas fa-calculator"></i> المبلغ الإجمالي:</span>
+                                    <span class="info-value" style="color: white; font-size: 1.2rem;"><strong>${formatCurrency(item.totalCost)}</strong></span>
+                                </div>
+                            </div>
+
+                            <!-- معلومات الدفع -->
+                            <h3 style="color: var(--primary-color); margin-bottom: 1rem;">
+                                <i class="fas fa-credit-card"></i> معلومات الدفع والتسليم
+                            </h3>
+                            <div style="display: grid; gap: 1rem; margin-bottom: 2rem;">
+                                <div class="info-row">
+                                    <span class="info-label"><i class="fas fa-hand-holding-usd"></i> المبلغ المستلم:</span>
+                                    <span class="info-value"><strong style="color: #10b981; font-size: 1.1rem;">${formatCurrency(item.receivedAmount)}</strong></span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label"><i class="fas fa-credit-card"></i> طريقة الدفع:</span>
+                                    <span class="info-value">${paymentMethods[item.paymentMethod] || item.paymentMethod}</span>
+                                </div>
+                                ${item.receiverName ? `
+                                <div class="info-row">
+                                    <span class="info-label"><i class="fas fa-user"></i> المستلم:</span>
+                                    <span class="info-value">${item.receiverName}</span>
+                                </div>` : ''}
+                            </div>
+
+                            <!-- التواريخ -->
+                            <h3 style="color: var(--primary-color); margin-bottom: 1rem;">
+                                <i class="fas fa-calendar-alt"></i> التواريخ
+                            </h3>
+                            <div style="display: grid; gap: 1rem; margin-bottom: 2rem;">
+                                <div class="info-row">
+                                    <span class="info-label"><i class="fas fa-calendar-check"></i> تاريخ الاستلام للصيانة:</span>
+                                    <span class="info-value">${formatDate(item.receiveDate)}</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label"><i class="fas fa-calendar"></i> التسليم المتوقع:</span>
+                                    <span class="info-value">${formatDate(item.expectedDeliveryDate)}</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label"><i class="fas fa-calendar-check"></i> التسليم الفعلي:</span>
+                                    <span class="info-value"><strong>${formatDate(item.actualDeliveryDate)}</strong></span>
+                                </div>
+                            </div>
+
+                            ${item.causeInfo || item.deliveryNotes ? `
+                            <h3 style="color: var(--primary-color); margin-bottom: 1rem;">
+                                <i class="fas fa-sticky-note"></i> ملاحظات
+                            </h3>
+                            ${item.causeInfo ? `
+                            <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                                <h4 style="margin: 0 0 0.5rem 0; font-size: 0.9rem; color: #666;">سبب العطل:</h4>
+                                <p style="margin: 0;">${item.causeInfo}</p>
+                            </div>` : ''}
+                            ${item.deliveryNotes ? `
+                            <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                                <h4 style="margin: 0 0 0.5rem 0; font-size: 0.9rem; color: #666;">ملاحظات التسليم:</h4>
+                                <p style="margin: 0;">${item.deliveryNotes}</p>
+                            </div>` : ''}` : ''}
+
+                            <div class="info-row">
+                                <span class="info-label"><i class="fas fa-user"></i> تم التسليم بواسطة:</span>
+                                <span class="info-value">${item.deliveredBy || 'غير محدد'}</span>
+                            </div>
+
+                            <button class="btn btn-secondary" onclick="closeDeliveredDeviceModal()" style="width: 100%; margin-top: 1.5rem;">
+                                <i class="fas fa-times"></i> إغلاق
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+        }
+
+        function closeDeliveredDeviceModal() {
+            const modal = document.getElementById('deliveredDeviceDetailsModal');
+            if (modal) modal.remove();
+        }
+
+        // دالة حذف جهاز مستلم
+        function deleteDeliveredDevice(id) {
+            if (!confirm('هل أنت متأكد من حذف هذا السجل؟\nملاحظة: سيتم إرجاع قطع الغيار المستخدمة إلى المخزون.')) return;
+            
+            const deviceIndex = deliveredDevicesData.findIndex(d => d.id === id);
+            if (deviceIndex === -1) return;
+            
+            const device = deliveredDevicesData[deviceIndex];
+            
+            // إرجاع قطع الغيار إلى المخزون
+            if (device.usedParts && device.usedParts.length > 0) {
+                device.usedParts.forEach(part => {
+                    if (part.fromInventory && part.id) {
+                        const sparePartIndex = sparePartsData.findIndex(sp => sp.id == part.id);
+                        if (sparePartIndex !== -1) {
+                            sparePartsData[sparePartIndex].quantity += part.quantity;
+                        }
+                    }
+                });
+                localStorage.setItem('sparePartsData', JSON.stringify(sparePartsData));
+            }
+            
+            deliveredDevicesData.splice(deviceIndex, 1);
+            localStorage.setItem('deliveredDevicesData', JSON.stringify(deliveredDevicesData));
+            
+            displayDeliveredDevicesData();
+            updateDeliveredStats();
+            
+            showNotification('تم حذف السجل وإرجاع قطع الغيار للمخزون', 'success');
+        }
+
+        // دالة تحديث الإحصائيات
+        function updateDeliveredStats() {
+            const totalDevices = deliveredDevicesData.length;
+            const totalRevenue = deliveredDevicesData.reduce((sum, item) => sum + item.receivedAmount, 0);
+            
+            // عدد التسليمات في هذا الأسبوع
+            const oneWeekAgo = new Date();
+            oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+            const weekDevices = deliveredDevicesData.filter(item => 
+                new Date(item.actualDeliveryDate) >= oneWeekAgo
+            ).length;
+            
+            // متوسط وقت الصيانة
+            let avgDays = 0;
+            if (deliveredDevicesData.length > 0) {
+                const totalDays = deliveredDevicesData.reduce((sum, item) => {
+                    const receiveDate = new Date(item.receiveDate);
+                    const deliveryDate = new Date(item.actualDeliveryDate);
+                    const diffTime = Math.abs(deliveryDate - receiveDate);
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    return sum + diffDays;
+                }, 0);
+                avgDays = Math.round(totalDays / deliveredDevicesData.length);
+            }
+            
+            const totalEl = document.getElementById('totalDeliveredDevices');
+            const revenueEl = document.getElementById('totalDeliveredRevenue');
+            const weekEl = document.getElementById('weekDeliveredDevices');
+            const avgEl = document.getElementById('avgDeliveryTime');
+            
+            if (totalEl) totalEl.textContent = totalDevices;
+            if (revenueEl) revenueEl.textContent = formatCurrency(totalRevenue);
+            if (weekEl) weekEl.textContent = weekDevices;
+            if (avgEl) avgEl.textContent = `${avgDays} ${avgDays === 1 ? 'يوم' : 'يوم'}`;
+        }
+
+        // دالة البحث
+        function filterDeliveredDevices() {
+            const searchTerm = document.getElementById('deliveredDevicesSearchInput').value.toLowerCase();
+            
+            const filtered = deliveredDevicesData.filter(item => 
+                item.productName.toLowerCase().includes(searchTerm) ||
+                item.companyName.toLowerCase().includes(searchTerm) ||
+                item.fault.toLowerCase().includes(searchTerm) ||
+                (item.receiverName && item.receiverName.toLowerCase().includes(searchTerm))
+            );
+            
+            displayDeliveredDevicesData(filtered);
+        }
+
+        // دالة الفلترة حسب الفترة
+        function filterDeliveredByPeriod() {
+            const period = document.getElementById('deliveredPeriodFilter').value;
+            const customDateRange = document.getElementById('customDeliveredDateRange');
+            
+            if (period === 'custom') {
+                customDateRange.style.display = 'flex';
+                return;
+            } else {
+                customDateRange.style.display = 'none';
+            }
+            
+            const today = new Date();
+            let filtered = deliveredDevicesData;
+            
+            if (period !== 'all') {
+                filtered = deliveredDevicesData.filter(item => {
+                    const itemDate = new Date(item.actualDeliveryDate);
+                    
+                    switch(period) {
+                        case 'today':
+                            return itemDate.toDateString() === today.toDateString();
+                        case 'week':
+                            const weekAgo = new Date(today);
+                            weekAgo.setDate(weekAgo.getDate() - 7);
+                            return itemDate >= weekAgo;
+                        case 'month':
+                            return itemDate.getMonth() === today.getMonth() && 
+                                   itemDate.getFullYear() === today.getFullYear();
+                        default:
+                            return true;
+                    }
+                });
+            }
+            
+            displayDeliveredDevicesData(filtered);
+        }
+
+        // دالة تطبيق الفترة المخصصة
+        function applyCustomDeliveredDateFilter() {
+            const dateFrom = document.getElementById('deliveredDateFrom').value;
+            const dateTo = document.getElementById('deliveredDateTo').value;
+            
+            if (!dateFrom || !dateTo) {
+                showNotification('الرجاء اختيار تاريخ البداية والنهاية', 'warning');
+                return;
+            }
+            
+            const filtered = deliveredDevicesData.filter(item => {
+                const itemDate = new Date(item.actualDeliveryDate);
+                return itemDate >= new Date(dateFrom) && itemDate <= new Date(dateTo);
+            });
+            
+            displayDeliveredDevicesData(filtered);
+        }
+
+        // دالة الفلترة حسب طريقة الدفع
+        function filterDeliveredByPayment() {
+            const method = document.getElementById('paymentMethodFilter').value;
+            
+            let filtered = deliveredDevicesData;
+            if (method !== 'all') {
+                filtered = deliveredDevicesData.filter(item => item.paymentMethod === method);
+            }
+            
+            displayDeliveredDevicesData(filtered);
+        }
+
+        // دالة إعادة تعيين الفلاتر
+        function resetDeliveredFilters() {
+            document.getElementById('deliveredPeriodFilter').value = 'all';
+            document.getElementById('paymentMethodFilter').value = 'all';
+            document.getElementById('deliveredDevicesSearchInput').value = '';
+            document.getElementById('customDeliveredDateRange').style.display = 'none';
+            
+            displayDeliveredDevicesData();
+        }
+
+        // تهيئة صفحة الأجهزة المستلمة
+        document.addEventListener('DOMContentLoaded', function() {
+            if (document.getElementById('deliveredDevices')) {
+                deliveredDevicesData = JSON.parse(localStorage.getItem('deliveredDevicesData')) || [];
+                displayDeliveredDevicesData();
+                updateDeliveredStats();
+            }
+        });
+
+        // ══════════════════════════════════════════════════════════════════════════════
+        // نهاية نظام الأجهزة المستلمة
         // ══════════════════════════════════════════════════════════════════════════════
 
         // استيراد البيانات

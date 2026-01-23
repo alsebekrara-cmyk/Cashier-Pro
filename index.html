@@ -23019,8 +23019,13 @@ console.log(`
             console.log('Rendering debts:', debtsData);
             console.log('Current filter:', currentDebtFilter);
             
+            // 🔥 فلترة الديون - استبعاد الديون القديمة تماماً
+            // صفحة الديون تعرض فقط الديون من نقطة البيع (وليس الديون القديمة)
+            const regularDebts = debtsData.filter(debt => !debt.is_old_debt);
+            console.log('📊 الديون العادية (بدون الديون القديمة):', regularDebts.length);
+            
             // ترتيب البيانات - الأحدث أولاً
-            const sortedDebts = [...debtsData].sort((a, b) => {
+            const sortedDebts = [...regularDebts].sort((a, b) => {
                 const dateA = new Date(a.timestamp || a.date || a.created_at || 0);
                 const dateB = new Date(b.timestamp || b.date || b.created_at || 0);
                 return dateB.getTime() - dateA.getTime();
@@ -23228,6 +23233,10 @@ console.log(`
         function updateDebtsStats() {
             console.log('🔄 تحديث إحصائيات الديون...');
             
+            // 🔥 فلترة الديون - استبعاد الديون القديمة تماماً
+            const regularDebts = debtsData.filter(debt => !debt.is_old_debt);
+            console.log('📊 حساب إحصائيات الديون العادية فقط (بدون الديون القديمة)');
+            
             // حساب الإحصائيات
             let totalDebtsAmount = 0;
             let uniqueCustomers = new Set();
@@ -23235,8 +23244,8 @@ console.log(`
             let paidCount = 0;
             let activeCount = 0;
             
-            // إضافة العملاء من debtsData (الديون اليدوية والتقسيط من التطبيق)
-            debtsData.forEach(debt => {
+            // إضافة العملاء من الديون العادية فقط
+            regularDebts.forEach(debt => {
                 // حساب الإجمالي
                 const debtTotal = debt.total_amount || debt.final_total || 0;
                 totalDebtsAmount += debtTotal;
@@ -37043,10 +37052,25 @@ body {
     }
     
     // ============================================
-    // 📜 دوال إدارة الديون القديمة
+    // 📜 دوال إدارة الديون القديمة - نظام مستقل تماماً
+    // ============================================
+    // 
+    // ⚠️ هام: هذا النظام مستقل تماماً عن نظام الديون العادي
+    // 
+    // 🎯 الهدف: إدارة الديون التي كانت موجودة قبل استخدام البرنامج
+    // 
+    // 📊 المصفوفة: oldDebtsData (مستقلة - لا تُضاف إلى debtsData)
+    // 📁 التخزين: localStorage.oldDebtsData + Firebase.old_debts
+    // 🔄 العرض: صفحة مستقلة تماماً مع جدول وإحصائيات خاصة
+    // 
+    // 🚫 الفصل التام:
+    //    - لا تظهر الديون القديمة في صفحة الديون العادية
+    //    - لا تظهر الديون العادية في صفحة الديون القديمة
+    //    - كل نظام له دوال وواجهة مستقلة
+    // 
     // ============================================
     
-    // مصفوفة الديون القديمة
+    // مصفوفة الديون القديمة - مستقلة تماماً عن debtsData
     let oldDebtsData = [];
     
     // تحميل الديون القديمة عند تهيئة المتغير
@@ -37190,25 +37214,23 @@ body {
         console.log('💾 حفظ الدين القديم:', newOldDebt);
         
         try {
-            // 1. إضافة إلى debtsData (حتى يظهر في الديون العادية)
-            debtsData.push(newOldDebt);
-            console.log('✅ تمت الإضافة إلى debtsData');
+            // ⚠️ الديون القديمة مستقلة تماماً - لا تُضاف إلى debtsData
+            // فقط تُضاف إلى oldDebtsData
             
-            // 2. إضافة إلى oldDebtsData
+            // 1. إضافة إلى oldDebtsData فقط
             oldDebtsData.push(newOldDebt);
             console.log('✅ تمت الإضافة إلى oldDebtsData');
+            console.log('📊 إجمالي الديون القديمة:', oldDebtsData.length);
             
-            // 3. حفظ في localStorage
-            await saveToLocalStorage('debtsData', debtsData);
+            // 2. حفظ في localStorage
             await saveToLocalStorage('oldDebtsData', oldDebtsData);
             console.log('✅ تم حفظ في localStorage');
             
-            // 4. حفظ نسخة احتياطية
-            const cachedDebts = debtsData.map(d => ({...d, type: d.is_old_debt ? 'old_debt' : 'debt'}));
-            localStorage.setItem('cached_debts', JSON.stringify(cachedDebts));
+            // 3. حفظ نسخة احتياطية منفصلة
+            localStorage.setItem('cached_old_debts', JSON.stringify(oldDebtsData));
             console.log('✅ تم حفظ نسخة احتياطية');
             
-            // 5. محاولة الحفظ في dataSdk (اختياري)
+            // 4. محاولة الحفظ في dataSdk (اختياري)
             if (window.dataSdk) {
                 try {
                     await window.dataSdk.create(newOldDebt);
@@ -37218,14 +37240,14 @@ body {
                 }
             }
             
-            // 6. محاولة الحفظ في Firebase (اختياري)
+            // 5. محاولة الحفظ في Firebase (اختياري)
             if (window.database) {
                 try {
                     const uid = localStorage.getItem('app_uid');
                     if (uid) {
-                        await window.database.ref(`users/${uid}/debts/${debtId}`).set(newOldDebt);
+                        // حفظ في مسار منفصل للديون القديمة فقط
                         await window.database.ref(`users/${uid}/old_debts/${debtId}`).set(newOldDebt);
-                        console.log('✅ تم حفظ في Firebase');
+                        console.log('✅ تم حفظ في Firebase (مسار الديون القديمة)');
                     }
                 } catch (fbError) {
                     console.warn('⚠️ فشل الحفظ في Firebase:', fbError);
@@ -37235,14 +37257,13 @@ body {
             // إغلاق النافذة وتحديث الجدول
             closeAddOldDebtModal();
             
-            console.log('📊 تحديث الجدول - إجمالي الديون:', debtsData.length);
-            console.log('📊 تحديث الجدول - الديون القديمة:', oldDebtsData.length);
-            console.log('📊 الديون القديمة المفلترة:', debtsData.filter(d => d.is_old_debt === true).length);
+            console.log('📊 تحديث جدول الديون القديمة فقط');
+            console.log('📊 إجمالي الديون القديمة:', oldDebtsData.length);
             
-            // التأكد من تحديث الجدول
+            // التأكد من تحديث جدول الديون القديمة فقط
             setTimeout(() => {
                 renderOldDebtsTable();
-                renderDebtsTable(); // تحديث جدول الديون العادية أيضاً
+                // لا نقوم بتحديث renderDebtsTable() لأن الديون القديمة مستقلة
             }, 200);
             
             alert('✅ تم حفظ الدين القديم بنجاح!');
@@ -37267,13 +37288,12 @@ body {
         
         tbody.innerHTML = '';
         
-        console.log('📊 إجمالي debtsData:', debtsData.length);
         console.log('📊 إجمالي oldDebtsData:', oldDebtsData.length);
         
-        // فلترة الديون القديمة فقط
-        const oldDebts = debtsData.filter(d => d.is_old_debt === true);
+        // استخدام oldDebtsData مباشرة - مصفوفة مستقلة تماماً
+        const oldDebts = oldDebtsData;
         
-        console.log('📊 الديون القديمة المفلترة:', oldDebts.length);
+        console.log('📊 الديون القديمة للعرض:', oldDebts.length);
         
         if (oldDebts.length === 0) {
             console.log('ℹ️ لا توجد ديون قديمة للعرض');
@@ -37334,7 +37354,8 @@ body {
     function updateOldDebtsStats() {
         console.log('📊 updateOldDebtsStats - بدء التحديث');
         
-        const oldDebts = debtsData.filter(d => d.is_old_debt === true);
+        // استخدام oldDebtsData مباشرة - مصفوفة مستقلة تماماً
+        const oldDebts = oldDebtsData;
         
         let totalDebts = 0;
         let unpaidDebts = 0;
@@ -37376,24 +37397,45 @@ body {
         console.log('✅ updateOldDebtsStats - اكتمل التحديث');
     }
     
-    // فلترة الديون القديمة
+    // فلترة الديون القديمة بالبحث
     function filterOldDebts() {
         const searchTerm = document.getElementById('oldDebtsSearchInput').value.toLowerCase();
         const rows = document.querySelectorAll('#oldDebtsTableBody tr');
         
+        console.log('🔍 البحث في الديون القديمة:', searchTerm);
+        
+        let visibleCount = 0;
         rows.forEach(row => {
+            // تخطي صف "لا توجد ديون"
+            if (row.cells.length === 1) return;
+            
             const text = row.textContent.toLowerCase();
-            row.style.display = text.includes(searchTerm) ? '' : 'none';
+            const isVisible = text.includes(searchTerm);
+            row.style.display = isVisible ? '' : 'none';
+            
+            if (isVisible) visibleCount++;
         });
+        
+        console.log(`✅ عدد النتائج: ${visibleCount} من ${rows.length}`);
     }
     
     // فلترة الديون القديمة حسب الحالة
     function filterOldDebtsByStatus(status) {
+        console.log('🔍 فلترة الديون القديمة حسب الحالة:', status);
+        
         const rows = document.querySelectorAll('#oldDebtsTableBody tr');
         
+        let visibleCount = 0;
         rows.forEach(row => {
+            // تخطي صف "لا توجد ديون"
+            if (row.cells.length === 1) {
+                row.style.display = '';
+                return;
+            }
+            
             if (status === 'all') {
                 row.style.display = '';
+                visibleCount++;
             } else {
                 const statusBadge = row.querySelector('.status-badge');
                 if (!statusBadge) return;
@@ -37408,21 +37450,136 @@ body {
                 }
                 
                 row.style.display = shouldShow ? '' : 'none';
+                if (shouldShow) visibleCount++;
             }
         });
+        
+        console.log(`✅ عدد النتائج المفلترة: ${visibleCount}`);
     }
     
     // عرض تفاصيل دين قديم
     function viewOldDebtDetails(debtId) {
-        const debt = debtsData.find(d => d.id === debtId);
+        console.log('👁️ عرض تفاصيل دين قديم:', debtId);
+        
+        // البحث في oldDebtsData فقط - مصفوفة مستقلة تماماً
+        const debt = oldDebtsData.find(d => d.id === debtId);
+        
         if (!debt) {
-            alert('⚠️ لم يتم العثور على الدين');
+            alert('⚠️ لم يتم العثور على الدين القديم');
+            console.error('❌ الدين غير موجود في oldDebtsData');
             return;
         }
         
-        // عرض التفاصيل في نافذة منبثقة أو في صفحة التسديدات
-        showPage('payments');
-        // يمكن إضافة المزيد من التفاصيل هنا
+        console.log('✅ تم العثور على الدين:', debt);
+        
+        // إنشاء نافذة منبثقة لعرض التفاصيل
+        const totalAmount = debt.total_amount || 0;
+        const paidAmount = debt.paid_amount || 0;
+        const remainingAmount = totalAmount - paidAmount;
+        
+        let installmentsHtml = '';
+        if (debt.installments && debt.installments.length > 0) {
+            installmentsHtml = '\n\n📅 جدول الأقساط:\n';
+            debt.installments.forEach((inst, idx) => {
+                const status = inst.status === 'paid' ? '✅ مدفوع' : '⏳ معلق';
+                const dueDate = new Date(inst.due_date).toLocaleDateString('ar-IQ');
+                installmentsHtml += `\nالقسط ${idx + 1}: ${formatCurrency(inst.amount)} - ${dueDate} - ${status}`;
+            });
+        }
+        
+        const details = `
+📜 تفاصيل الدين القديم
+
+👤 العميل: ${debt.customer_name}
+📞 الهاتف: ${debt.customer_phone}
+📍 العنوان: ${debt.customer_address || 'غير محدد'}
+
+💰 المبلغ الإجمالي: ${formatCurrency(totalAmount)}
+✅ المبلغ المدفوع: ${formatCurrency(paidAmount)}
+⏳ المبلغ المتبقي: ${formatCurrency(remainingAmount)}
+
+📅 عدد الأقساط: ${debt.installment_months}
+💳 القسط الشهري: ${formatCurrency(debt.monthly_amount)}
+📆 تاريخ الدين: ${formatDate(debt.date)}
+📝 الملاحظات: ${debt.notes || 'لا توجد'}
+🛒 المنتج/الخدمة: ${debt.product_description || 'غير محدد'}
+${installmentsHtml}
+        `.trim();
+        
+        alert(details);
+        
+        // TODO: يمكن فتح صفحة تسديد خاصة بالديون القديمة
+        // showOldDebtPaymentModal(debtId);
+    }
+    
+    // تسديد قسط من دين قديم
+    async function payOldDebtInstallment(debtId, installmentIndex) {
+        console.log('💰 تسديد قسط من دين قديم:', debtId, 'قسط:', installmentIndex);
+        
+        const debt = oldDebtsData.find(d => d.id === debtId);
+        if (!debt) {
+            alert('⚠️ لم يتم العثور على الدين القديم');
+            return;
+        }
+        
+        if (!debt.installments || !debt.installments[installmentIndex]) {
+            alert('⚠️ القسط غير موجود');
+            return;
+        }
+        
+        const installment = debt.installments[installmentIndex];
+        
+        if (installment.status === 'paid') {
+            alert('⚠️ هذا القسط مدفوع بالفعل');
+            return;
+        }
+        
+        const amount = parseFloat(prompt(`💰 أدخل المبلغ المدفوع (القسط: ${formatCurrency(installment.amount)}):`, installment.amount));
+        
+        if (!amount || amount <= 0) {
+            alert('⚠️ المبلغ غير صحيح');
+            return;
+        }
+        
+        try {
+            // تحديث القسط
+            installment.status = 'paid';
+            installment.paid_amount = amount;
+            installment.paid_date = new Date().toISOString();
+            
+            // تحديث المبلغ المدفوع الإجمالي
+            debt.paid_amount = (debt.paid_amount || 0) + amount;
+            debt.remaining_amount = debt.total_amount - debt.paid_amount;
+            
+            // تحديث الحالة
+            const allPaid = debt.installments.every(inst => inst.status === 'paid');
+            if (allPaid) {
+                debt.status = 'مسدد';
+            }
+            
+            // حفظ التغييرات
+            await saveToLocalStorage('oldDebtsData', oldDebtsData);
+            localStorage.setItem('cached_old_debts', JSON.stringify(oldDebtsData));
+            
+            // حفظ في Firebase
+            if (window.database) {
+                try {
+                    const uid = localStorage.getItem('app_uid');
+                    if (uid) {
+                        await window.database.ref(`users/${uid}/old_debts/${debtId}`).set(debt);
+                    }
+                } catch (fbError) {
+                    console.warn('⚠️ فشل الحفظ في Firebase:', fbError);
+                }
+            }
+            
+            renderOldDebtsTable();
+            alert('✅ تم تسديد القسط بنجاح!');
+            
+        } catch (error) {
+            console.error('❌ خطأ في تسديد القسط:', error);
+            alert('❌ حدث خطأ في تسديد القسط');
+        }
     }
     
     // حذف دين قديم
@@ -37432,37 +37589,37 @@ body {
         }
         
         try {
-            // حذف من debtsData
-            const debtIndex = debtsData.findIndex(d => d.id === debtId);
-            if (debtIndex !== -1) {
-                debtsData.splice(debtIndex, 1);
-            }
+            console.log('🗑️ حذف دين قديم:', debtId);
             
-            // حذف من oldDebtsData
+            // حذف من oldDebtsData فقط - مصفوفة مستقلة تماماً
             const oldDebtIndex = oldDebtsData.findIndex(d => d.id === debtId);
             if (oldDebtIndex !== -1) {
                 oldDebtsData.splice(oldDebtIndex, 1);
+                console.log('✅ تم الحذف من oldDebtsData');
+            } else {
+                console.warn('⚠️ لم يتم العثور على الدين في oldDebtsData');
             }
             
             // حفظ التغييرات
-            await saveToLocalStorage('debtsData', debtsData);
             await saveToLocalStorage('oldDebtsData', oldDebtsData);
+            localStorage.setItem('cached_old_debts', JSON.stringify(oldDebtsData));
+            console.log('✅ تم حفظ التغييرات');
             
             // حذف من Firebase إن وجد
             if (window.database) {
                 try {
                     const uid = localStorage.getItem('app_uid');
                     if (uid) {
-                        await window.database.ref(`users/${uid}/debts/${debtId}`).remove();
                         await window.database.ref(`users/${uid}/old_debts/${debtId}`).remove();
+                        console.log('✅ تم الحذف من Firebase');
                     }
                 } catch (fbError) {
                     console.warn('⚠️ فشل الحذف من Firebase:', fbError);
                 }
             }
             
+            // تحديث جدول الديون القديمة فقط
             renderOldDebtsTable();
-            renderDebtsTable();
             alert('✅ تم حذف الدين القديم بنجاح');
             
         } catch (error) {
@@ -37486,21 +37643,18 @@ body {
                 }
             }
             
-            // التأكد من أن الديون القديمة موجودة في debtsData
-            let addedCount = 0;
-            oldDebtsData.forEach(oldDebt => {
-                const exists = debtsData.find(d => d.id === oldDebt.id);
-                if (!exists) {
-                    debtsData.push(oldDebt);
-                    addedCount++;
-                }
-            });
-            
-            if (addedCount > 0) {
-                console.log('✅ تمت إضافة', addedCount, 'دين قديم إلى debtsData');
+            // ⚠️ تنظيف: إزالة أي ديون قديمة من debtsData (في حال وجودها بالخطأ)
+            const oldDebtsInDebtsData = debtsData.filter(d => d.is_old_debt === true);
+            if (oldDebtsInDebtsData.length > 0) {
+                console.warn('⚠️ تم العثور على', oldDebtsInDebtsData.length, 'دين قديم في debtsData - سيتم إزالتهم');
+                debtsData = debtsData.filter(d => !d.is_old_debt);
+                await saveToLocalStorage('debtsData', debtsData);
+                console.log('✅ تم تنظيف debtsData من الديون القديمة');
             }
             
             console.log('✅ تم تحميل الديون القديمة بنجاح - الإجمالي:', oldDebtsData.length);
+            console.log('📊 الديون القديمة مستقلة تماماً عن debtsData');
+            console.log('📊 debtsData الحالي:', debtsData.length, 'دين');
         } catch (error) {
             console.error('❌ خطأ في تحميل الديون القديمة:', error);
             oldDebtsData = [];

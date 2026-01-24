@@ -585,12 +585,7 @@ body {
 function showPage(page) {
     console.log('📄 عرض الصفحة:', page);
     
-    // إخفاء جميع الصفحات والأقسام
-    document.querySelectorAll('.page').forEach(pageElem => {
-        pageElem.style.display = 'none';
-        pageElem.classList.remove('active');
-    });
-    
+    // إخفاء جميع الأقسام
     document.querySelectorAll('.section').forEach(section => {
         section.style.display = 'none';
     });
@@ -600,29 +595,28 @@ function showPage(page) {
         item.classList.remove('active');
     });
 
-    // عرض الصفحة المطلوبة
+    // عرض قسم التقارير إذا كان page هو 'reports'
     if (page === 'reports') {
         const reportsSection = document.getElementById('reportsSection');
         if (reportsSection) {
             reportsSection.style.display = 'block';
+            // إضافة الكلاس النشط لزر التقارير
             const reportsNavBtn = document.querySelector('.nav-item .nav-link .fa-chart-bar')?.parentElement?.parentElement;
             if (reportsNavBtn) {
                 reportsNavBtn.classList.add('active');
             }
         }
     } else if (page === 'oldDebts') {
-        // معالجة صفحة الديون القديمة
+        // معالجة خاصة لصفحة الديون القديمة
         const oldDebtsPage = document.getElementById('oldDebts');
         if (oldDebtsPage) {
             oldDebtsPage.classList.add('active');
             oldDebtsPage.style.display = 'block';
             
             // تحديث جدول الديون القديمة
-            setTimeout(() => {
-                if (typeof renderOldDebtsTable === 'function') {
-                    renderOldDebtsTable();
-                }
-            }, 100);
+            if (typeof renderOldDebtsTable === 'function') {
+                renderOldDebtsTable();
+            }
             
             // إضافة الكلاس النشط للزر
             const oldDebtsNavItem = document.getElementById('oldDebtsNavItem');
@@ -631,26 +625,10 @@ function showPage(page) {
             }
         }
     } else {
-        // معالجة الصفحات العادية
-        const targetPage = document.getElementById(page);
-        const targetSection = document.getElementById(page + 'Section');
-        
-        if (targetPage) {
-            targetPage.style.display = 'block';
-            targetPage.classList.add('active');
-            
-            // معالجة خاصة للديون العادية
-            if (page === 'debts' && typeof renderDebtsTable === 'function') {
-                setTimeout(() => renderDebtsTable(), 100);
-            }
-        } else if (targetSection) {
-            targetSection.style.display = 'block';
-        }
-        
-        // تفعيل زر القائمة المناسب
-        const navItem = document.getElementById(page + 'NavItem');
-        if (navItem) {
-            navItem.classList.add('active');
+        // منطق عرض الصفحات الأخرى
+        const pageSection = document.getElementById(page + 'Section');
+        if (pageSection) {
+            pageSection.style.display = 'block';
         }
     }
     
@@ -13217,6 +13195,117 @@ console.log(`
       </div>
      </div>
      
+     <!-- 📊 صفحة عرض تفاصيل الدين القديم -->
+     <div id="oldDebtDetails" class="page">
+      <div class="section-header" style="margin-bottom: 1.5rem;">
+       <div class="section-title">
+        <i class="fas fa-file-invoice"></i> تفاصيل الدين القديم
+       </div>
+       <button class="btn btn-secondary" onclick="showPage('oldDebts')">
+        <i class="fas fa-arrow-right"></i> العودة للقائمة
+       </button>
+      </div>
+      
+      <!-- معلومات العميل والإحصائيات -->
+      <div class="stats-grid" style="margin-bottom: 1.5rem;">
+       <div class="stat-card">
+        <div class="stat-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);"><i class="fas fa-user"></i></div>
+        <div class="stat-value" id="oldDebtDetailsCustomerName">-</div>
+        <div class="stat-label">اسم العميل</div>
+       </div>
+       <div class="stat-card">
+        <div class="stat-icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);"><i class="fas fa-money-bill-wave"></i></div>
+        <div class="stat-value" id="oldDebtDetailsTotalAmount">0 د</div>
+        <div class="stat-label">المبلغ الإجمالي</div>
+       </div>
+       <div class="stat-card">
+        <div class="stat-icon success-icon" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);"><i class="fas fa-check-circle"></i></div>
+        <div class="stat-value" id="oldDebtDetailsPaidAmount">0 د</div>
+        <div class="stat-label">المبلغ المدفوع</div>
+       </div>
+       <div class="stat-card">
+        <div class="stat-icon warning-icon" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);"><i class="fas fa-hourglass-half"></i></div>
+        <div class="stat-value" id="oldDebtDetailsRemainingAmount">0 د</div>
+        <div class="stat-label">المبلغ المتبقي</div>
+       </div>
+       <div class="stat-card">
+        <div class="stat-icon" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);"><i class="fas fa-calendar-alt"></i></div>
+        <div class="stat-value" id="oldDebtDetailsRemainingMonths">0</div>
+        <div class="stat-label">الأشهر المتبقية</div>
+       </div>
+       <div class="stat-card">
+        <div class="stat-icon" style="background: linear-gradient(135deg, #ee0979 0%, #ff6a00 100%);"><i class="fas fa-money-check-alt"></i></div>
+        <div class="stat-value" id="oldDebtDetailsMonthlyAmount">0 د</div>
+        <div class="stat-label">القسط الشهري</div>
+       </div>
+      </div>
+      
+      <!-- جدول المنتجات المباعة -->
+      <div id="oldDebtProductsSection" class="card" style="margin-bottom: 1.5rem; display: none;">
+       <h3 style="margin-bottom: 1rem; color: var(--primary-color);"><i class="fas fa-shopping-cart"></i> المنتجات المباعة</h3>
+       <div class="table-responsive">
+        <table class="table">
+         <thead>
+          <tr>
+           <th>#</th>
+           <th>اسم المنتج</th>
+           <th>السعر</th>
+           <th>الكمية</th>
+           <th>الإجمالي</th>
+          </tr>
+         </thead>
+         <tbody id="oldDebtDetailsProductsTable">
+         </tbody>
+        </table>
+       </div>
+      </div>
+      
+      <!-- جدول الأقساط الشهرية -->
+      <div class="card" style="margin-bottom: 1.5rem;">
+       <h3 style="margin-bottom: 1rem; color: var(--primary-color);"><i class="fas fa-calendar-check"></i> الأقساط الشهرية</h3>
+       <div class="table-responsive">
+        <table class="table">
+         <thead>
+          <tr>
+           <th>الشهر</th>
+           <th>المبلغ المستحق</th>
+           <th>تاريخ الاستحقاق</th>
+           <th>المبلغ المدفوع</th>
+           <th>الحالة</th>
+           <th>الإجراءات</th>
+          </tr>
+         </thead>
+         <tbody id="oldDebtInstallmentsTable">
+         </tbody>
+        </table>
+       </div>
+      </div>
+      
+      <!-- سجل التسديدات -->
+      <div class="card">
+       <h3 style="margin-bottom: 1rem; color: var(--primary-color);"><i class="fas fa-history"></i> سجل التسديدات</h3>
+       <div id="oldDebtPaymentsHistoryEmpty" style="text-align: center; padding: 2rem; color: var(--theme-text-tertiary); display: none;">
+        <i class="fas fa-inbox" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+        <p>لا توجد تسديدات حتى الآن</p>
+       </div>
+       <div class="table-responsive" id="oldDebtPaymentsHistoryTable" style="display: none;">
+        <table class="table">
+         <thead>
+          <tr>
+           <th>#</th>
+           <th>التاريخ</th>
+           <th>المبلغ المدفوع</th>
+           <th>الشهر المسدد</th>
+           <th>ملاحظات</th>
+          </tr>
+         </thead>
+         <tbody id="oldDebtPaymentsHistoryBody">
+         </tbody>
+        </table>
+       </div>
+      </div>
+     </div>
+     
      <!-- 💵 صفحة إدارة التسديدات الشاملة -->
      <div id="payments" class="page">
       <div class="section-header" style="margin-bottom: 1.5rem;">
@@ -18069,7 +18158,7 @@ console.log(`
 
   <!-- 📜 نافذة منبثقة لإضافة دين قديم -->
   <div id="addOldDebtModal" class="modal">
-   <div class="modal-content" style="max-width: 950px; max-height: 90vh; overflow-y: auto;">
+   <div class="modal-content" style="max-width: 900px;">
     <div class="modal-header">
      <h3 class="modal-title"><i class="fas fa-history"></i> إضافة دين قديم (ما قبل البرنامج)</h3>
      <button class="close-btn" onclick="closeAddOldDebtModal()"> <i class="fas fa-times"></i> </button>
@@ -18097,41 +18186,48 @@ console.log(`
        </div>
       </div>
      </div>
-     
-     <!-- المنتجات -->
+
+     <!-- قسم المنتجات -->
      <div style="background: var(--theme-bg-secondary); padding: 1.5rem; border-radius: var(--border-radius); margin-bottom: 1.5rem;">
-      <h4 style="margin-bottom: 1rem; color: var(--primary-color);"><i class="fas fa-shopping-cart"></i> المنتجات</h4>
-      <div style="overflow-x: auto;">
-       <table class="table" style="margin-bottom: 1rem;">
-        <thead>
-         <tr>
-          <th style="width: 35%;">اسم المنتج</th>
-          <th style="width: 15%; text-align: center;">الكمية</th>
-          <th style="width: 20%; text-align: center;">السعر</th>
-          <th style="width: 20%; text-align: center;">الإجمالي</th>
-          <th style="width: 10%; text-align: center;"></th>
-         </tr>
-        </thead>
-        <tbody id="oldDebtProductsTableBody">
-         <!-- المنتجات ستضاف هنا -->
-        </tbody>
-       </table>
-      </div>
-      <button type="button" class="btn btn-success" onclick="addOldDebtProduct()">
-       <i class="fas fa-plus"></i> إضافة منتج
-      </button>
+      <h4 style="margin-bottom: 1rem; color: var(--primary-color);"><i class="fas fa-shopping-cart"></i> المنتجات المباعة</h4>
       
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem;">
-       <div class="form-group">
-        <label>إجمالي المنتجات</label>
-        <input type="text" id="oldDebtProductsTotal" class="form-control" 
-               readonly style="background: #e8f5e9; font-weight: bold; text-align: center;">
+      <!-- إضافة منتج يدوياً -->
+      <div class="form-row" style="display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 1rem; align-items: end; margin-bottom: 1rem;">
+       <div class="form-group" style="margin: 0;">
+        <label><i class="fas fa-box"></i> اسم المنتج</label>
+        <input type="text" id="oldDebtProductName" class="form-control" placeholder="اسم المنتج">
        </div>
-       <div class="form-group">
-        <label for="oldDebtDownPayment">المقدمة المدفوعة</label>
-        <input type="number" id="oldDebtDownPayment" class="form-control" 
-               min="0" step="0.01" value="0"
-               onchange="calculateOldDebtTotals()">
+       <div class="form-group" style="margin: 0;">
+        <label><i class="fas fa-tag"></i> السعر</label>
+        <input type="number" id="oldDebtProductPrice" class="form-control" placeholder="السعر" min="0" step="0.01">
+       </div>
+       <div class="form-group" style="margin: 0;">
+        <label><i class="fas fa-sort-numeric-up"></i> الكمية</label>
+        <input type="number" id="oldDebtProductQty" class="form-control" placeholder="الكمية" min="1" value="1">
+       </div>
+       <button type="button" class="btn btn-success" onclick="addOldDebtProduct()" style="padding: 0.75rem 1.5rem;">
+        <i class="fas fa-plus"></i> إضافة
+       </button>
+      </div>
+      
+      <!-- جدول المنتجات المضافة -->
+      <div id="oldDebtProductsContainer" style="display: none; margin-top: 1rem;">
+       <h5 style="margin-bottom: 0.75rem; color: var(--theme-text-secondary);"><i class="fas fa-list"></i> المنتجات المضافة</h5>
+       <div class="table-container" style="max-height: 300px; overflow-y: auto;">
+        <table class="table">
+         <thead>
+          <tr>
+           <th>#</th>
+           <th>المنتج</th>
+           <th>السعر</th>
+           <th>الكمية</th>
+           <th>الإجمالي</th>
+           <th>إجراءات</th>
+          </tr>
+         </thead>
+         <tbody id="oldDebtProductsTable">
+         </tbody>
+        </table>
        </div>
       </div>
      </div>
@@ -18142,32 +18238,43 @@ console.log(`
       <div class="form-row" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
        <div class="form-group">
         <label><i class="fas fa-money-bill"></i> المبلغ الإجمالي (دينار)</label>
-        <input type="number" id="oldDebtTotalAmount" class="form-control" placeholder="يُحسب تلقائياً" readonly style="background: #f0f0f0; font-weight: bold;">
+        <input type="number" id="oldDebtTotalAmount" class="form-control" placeholder="المبلغ الإجمالي" min="0" onchange="calculateOldDebtInstallments()" required>
        </div>
        <div class="form-group">
-        <label><i class="fas fa-hand-holding-usd"></i> المبلغ المتبقي (دينار)</label>
-        <input type="number" id="oldDebtRemainingAmount" class="form-control" placeholder="يُحسب تلقائياً" readonly style="background: #fff3e0; font-weight: bold;">
+        <label><i class="fas fa-hand-holding-usd"></i> المبلغ المدفوع مسبقاً (دينار)</label>
+        <input type="number" id="oldDebtPaidAmount" class="form-control" placeholder="0" min="0" value="0" onchange="calculateOldDebtInstallments()">
        </div>
        <div class="form-group">
-        <label><i class="fas fa-calendar-alt"></i> عدد الأشهر</label>
-        <input type="number" id="oldDebtMonths" class="form-control" placeholder="عدد الأشهر" min="1" max="60" value="1" onchange="calculateOldDebtTotals()" required>
-       </div>
-       <div class="form-group">
-        <label><i class="fas fa-money-bill-wave"></i> القسط الشهري</label>
-        <input type="number" id="oldDebtMonthlyAmount" class="form-control" placeholder="يُحسب تلقائياً" readonly style="background: #e3f2fd; font-weight: bold;">
+        <label><i class="fas fa-calendar-alt"></i> عدد الأشهر المتبقية</label>
+        <input type="number" id="oldDebtMonths" class="form-control" placeholder="عدد الأشهر" min="1" max="60" value="12" onchange="calculateOldDebtInstallments()" required>
        </div>
        <div class="form-group">
         <label><i class="fas fa-calendar"></i> تاريخ بداية الأقساط</label>
         <input type="date" id="oldDebtStartDate" class="form-control">
        </div>
-       <div class="form-group">
-        <label><i class="fas fa-plus-circle"></i> مبلغ إضافي (فوق الدين)</label>
-        <input type="number" id="oldDebtExtraAmount" class="form-control" placeholder="0" min="0" value="0" onchange="calculateOldDebtTotals()">
-       </div>
       </div>
       <div class="form-group">
        <label><i class="fas fa-sticky-note"></i> ملاحظات (اختياري)</label>
        <textarea id="oldDebtNotes" class="form-control" rows="2" placeholder="أي ملاحظات عن الدين القديم"></textarea>
+      </div>
+     </div>
+
+     <!-- ملخص الحسابات -->
+     <div style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1)); padding: 1.5rem; border-radius: var(--border-radius); border: 2px solid rgba(99, 102, 241, 0.3);">
+      <h4 style="margin-bottom: 1rem; color: var(--primary-color);"><i class="fas fa-calculator"></i> ملخص الحسابات</h4>
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem;">
+       <div style="text-align: center;">
+        <div style="font-size: 0.9rem; color: var(--theme-text-tertiary); margin-bottom: 0.5rem;">المبلغ المتبقي</div>
+        <div id="oldDebtRemainingAmount" style="font-size: 1.5rem; font-weight: bold; color: var(--danger-color);">0 دينار</div>
+       </div>
+       <div style="text-align: center;">
+        <div style="font-size: 0.9rem; color: var(--theme-text-tertiary); margin-bottom: 0.5rem;">القسط الشهري</div>
+        <div id="oldDebtMonthlyAmount" style="font-size: 1.5rem; font-weight: bold; color: var(--primary-color);">0 دينار</div>
+       </div>
+       <div style="text-align: center;">
+        <div style="font-size: 0.9rem; color: var(--theme-text-tertiary); margin-bottom: 0.5rem;">المجموع النهائي</div>
+        <div id="oldDebtFinalTotal" style="font-size: 1.5rem; font-weight: bold; color: var(--success-color);">0 دينار</div>
+       </div>
       </div>
      </div>
 
@@ -18179,257 +18286,72 @@ console.log(`
    </div>
   </div>
 
-  <!-- نافذة تفاصيل الدين القديم الكاملة -->
-  <div id="oldDebtDetailsModal" class="modal">
-   <div class="modal-content" style="max-width: 1200px; max-height: 95vh; overflow-y: auto;">
-    <div class="modal-header">
-     <h3 class="modal-title"><i class="fas fa-file-invoice-dollar"></i> تفاصيل الدين القديم</h3>
-     <button class="close-btn" onclick="closeOldDebtDetailsModal()"> <i class="fas fa-times"></i> </button>
-    </div>
-    <div class="modal-body">
-     
-     <!-- معلومات العميل والدين -->
-     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
-      <!-- بطاقة معلومات العميل -->
-      <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 1.5rem; border-radius: 12px; color: white;">
-       <h4 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
-        <i class="fas fa-user-circle" style="font-size: 1.5rem;"></i>
-        معلومات العميل
-       </h4>
-       <div style="display: grid; gap: 0.8rem;">
-        <div style="display: flex; align-items: center; gap: 0.5rem;">
-         <i class="fas fa-user"></i>
-         <strong>الاسم:</strong>
-         <span id="detailCustomerName"></span>
-        </div>
-        <div style="display: flex; align-items: center; gap: 0.5rem;">
-         <i class="fas fa-phone"></i>
-         <strong>الهاتف:</strong>
-         <span id="detailCustomerPhone"></span>
-        </div>
-        <div style="display: flex; align-items: center; gap: 0.5rem;">
-         <i class="fas fa-map-marker-alt"></i>
-         <strong>العنوان:</strong>
-         <span id="detailCustomerAddress"></span>
-        </div>
-       </div>
-      </div>
-      
-      <!-- بطاقة ملخص الدين -->
-      <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); padding: 1.5rem; border-radius: 12px; color: white;">
-       <h4 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
-        <i class="fas fa-chart-pie" style="font-size: 1.5rem;"></i>
-        ملخص الدين
-       </h4>
-       <div style="display: grid; gap: 0.8rem;">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-         <span><i class="fas fa-money-bill-wave"></i> المبلغ الإجمالي:</span>
-         <strong id="detailTotalAmount" style="font-size: 1.1rem;"></strong>
-        </div>
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-         <span><i class="fas fa-check-circle"></i> المبلغ المدفوع:</span>
-         <strong id="detailPaidAmount" style="font-size: 1.1rem;"></strong>
-        </div>
-        <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 0.5rem; border-top: 1px solid rgba(255,255,255,0.3);">
-         <span><i class="fas fa-hourglass-half"></i> المبلغ المتبقي:</span>
-         <strong id="detailRemainingAmount" style="font-size: 1.2rem;"></strong>
-        </div>
-       </div>
-      </div>
-     </div>
-
-     <!-- فلاتر سريعة -->
-     <div style="background: var(--theme-bg-secondary); padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
-      <div style="display: flex; gap: 0.5rem; align-items: center;">
-       <i class="fas fa-filter" style="color: var(--primary-color);"></i>
-       <strong>عرض:</strong>
-      </div>
-      <button class="btn btn-sm btn-primary" onclick="filterOldDebtInstallments('all')" style="min-width: 100px;">
-       <i class="fas fa-list"></i> الكل
-      </button>
-      <button class="btn btn-sm btn-success" onclick="filterOldDebtInstallments('paid')" style="min-width: 100px;">
-       <i class="fas fa-check-circle"></i> المدفوع
-      </button>
-      <button class="btn btn-sm btn-warning" onclick="filterOldDebtInstallments('pending')" style="min-width: 100px;">
-       <i class="fas fa-clock"></i> المعلق
-      </button>
-      <button class="btn btn-sm btn-danger" onclick="filterOldDebtInstallments('overdue')" style="min-width: 100px;">
-       <i class="fas fa-exclamation-triangle"></i> المتأخر
-      </button>
-     </div>
-
-     <!-- جدول الأقساط -->
-     <div style="background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 1.5rem;">
-      <h4 style="margin-bottom: 1rem; color: var(--primary-color); display: flex; align-items: center; gap: 0.5rem;">
-       <i class="fas fa-calendar-check"></i>
-       جدول الأقساط
-      </h4>
-      <div style="overflow-x: auto;">
-       <table class="data-table">
-        <thead>
-         <tr>
-          <th style="text-align: center;">#</th>
-          <th>تاريخ الاستحقاق</th>
-          <th style="text-align: center;">المبلغ المستحق</th>
-          <th style="text-align: center;">المبلغ المدفوع</th>
-          <th style="text-align: center;">المتبقي</th>
-          <th style="text-align: center;">الحالة</th>
-          <th style="text-align: center;">الإجراءات</th>
-         </tr>
-        </thead>
-        <tbody id="oldDebtInstallmentsTable">
-         <!-- سيتم ملؤها ديناميكياً -->
-        </tbody>
-       </table>
-      </div>
-     </div>
-
-     <!-- المنتجات -->
-     <div id="oldDebtProductsSection" style="background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 1.5rem; display: none;">
-      <h4 style="margin-bottom: 1rem; color: var(--primary-color); display: flex; align-items: center; gap: 0.5rem;">
-       <i class="fas fa-shopping-cart"></i>
-       المنتجات
-      </h4>
-      <div style="overflow-x: auto;">
-       <table class="data-table">
-        <thead>
-         <tr>
-          <th>#</th>
-          <th>المنتج</th>
-          <th style="text-align: center;">الكمية</th>
-          <th style="text-align: center;">السعر</th>
-          <th style="text-align: center;">الإجمالي</th>
-         </tr>
-        </thead>
-        <tbody id="oldDebtProductsList">
-         <!-- سيتم ملؤها ديناميكياً -->
-        </tbody>
-       </table>
-      </div>
-     </div>
-
-     <!-- سجل التسديدات -->
-     <div style="background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-      <h4 style="margin-bottom: 1rem; color: var(--primary-color); display: flex; align-items: center; gap: 0.5rem;">
-       <i class="fas fa-history"></i>
-       سجل التسديدات
-      </h4>
-      <div style="overflow-x: auto;">
-       <table class="data-table">
-        <thead>
-         <tr>
-          <th style="text-align: center;">#</th>
-          <th>التاريخ</th>
-          <th style="text-align: center;">القسط</th>
-          <th style="text-align: center;">المبلغ المدفوع</th>
-          <th>الملاحظات</th>
-          <th style="text-align: center;">الإيصال</th>
-         </tr>
-        </thead>
-        <tbody id="oldDebtPaymentsHistory">
-         <tr>
-          <td colspan="6" style="text-align: center; padding: 2rem; color: #999;">
-           لا توجد تسديدات بعد
-          </td>
-         </tr>
-        </tbody>
-       </table>
-      </div>
-     </div>
-
-    </div>
-    <div class="modal-footer">
-     <button class="btn btn-secondary" onclick="closeOldDebtDetailsModal()">
-      <i class="fas fa-times"></i> إغلاق
-     </button>
-     <button class="btn btn-primary" onclick="printOldDebtDetails()">
-      <i class="fas fa-print"></i> طباعة التفاصيل
-     </button>
-    </div>
-   </div>
-  </div>
-
-  <!-- نافذة تسديد قسط -->
+  <!-- نافذة تسديد قسط الدين القديم -->
   <div id="payOldDebtInstallmentModal" class="modal">
    <div class="modal-content" style="max-width: 600px;">
     <div class="modal-header">
-     <h3 class="modal-title"><i class="fas fa-money-bill-wave"></i> تسديد القسط</h3>
-     <button class="close-btn" onclick="closePayOldDebtInstallmentModal()"> <i class="fas fa-times"></i> </button>
+     <h3 class="modal-title"><i class="fas fa-hand-holding-usd"></i> تسديد قسط</h3>
+     <button class="close-btn" onclick="closePayOldDebtInstallmentModal()"><i class="fas fa-times"></i></button>
     </div>
     <div class="modal-body">
-     
      <!-- معلومات القسط -->
-     <div style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); padding: 1.5rem; border-radius: 12px; color: white; margin-bottom: 1.5rem;">
-      <div style="display: grid; gap: 0.8rem;">
-       <div style="display: flex; justify-content: space-between;">
-        <span><i class="fas fa-calendar"></i> تاريخ الاستحقاق:</span>
-        <strong id="payInstallmentDueDate"></strong>
+     <div style="background: var(--theme-bg-secondary); padding: 1.5rem; border-radius: var(--border-radius); margin-bottom: 1.5rem;">
+      <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
+       <div>
+        <div style="font-size: 0.9rem; color: var(--theme-text-tertiary); margin-bottom: 0.5rem;">رقم القسط</div>
+        <div id="payOldInstallmentMonth" style="font-size: 1.2rem; font-weight: bold;">-</div>
        </div>
-       <div style="display: flex; justify-content: space-between;">
-        <span><i class="fas fa-money-bill"></i> المبلغ المستحق:</span>
-        <strong id="payInstallmentAmount" style="font-size: 1.2rem;"></strong>
+       <div>
+        <div style="font-size: 0.9rem; color: var(--theme-text-tertiary); margin-bottom: 0.5rem;">المبلغ المستحق</div>
+        <div id="payOldInstallmentDueAmount" style="font-size: 1.2rem; font-weight: bold; color: var(--danger-color);">0 د</div>
        </div>
-       <div style="display: flex; justify-content: space-between;">
-        <span><i class="fas fa-check-circle"></i> المبلغ المدفوع سابقاً:</span>
-        <strong id="payInstallmentPaid"></strong>
+       <div>
+        <div style="font-size: 0.9rem; color: var(--theme-text-tertiary); margin-bottom: 0.5rem;">المبلغ المدفوع سابقاً</div>
+        <div id="payOldInstallmentPaidAmount" style="font-size: 1.2rem; font-weight: bold; color: var(--success-color);">0 د</div>
        </div>
-       <div style="display: flex; justify-content: space-between; padding-top: 0.5rem; border-top: 1px solid rgba(255,255,255,0.3);">
-        <span><i class="fas fa-hourglass-half"></i> المتبقي:</span>
-        <strong id="payInstallmentRemaining" style="font-size: 1.2rem;"></strong>
+       <div>
+        <div style="font-size: 0.9rem; color: var(--theme-text-tertiary); margin-bottom: 0.5rem;">المبلغ المتبقي</div>
+        <div id="payOldInstallmentRemainingAmount" style="font-size: 1.2rem; font-weight: bold; color: var(--warning-color);">0 د</div>
        </div>
       </div>
      </div>
-
-     <!-- نموذج التسديد -->
+     
+     <!-- حقل إدخال المبلغ المدفوع -->
      <div class="form-group">
-      <label><i class="fas fa-money-bill-wave"></i> المبلغ المدفوع الآن (IQD) *</label>
-      <input type="number" id="payInstallmentAmountInput" class="form-control" 
-             min="0" step="1000" placeholder="أدخل المبلغ المدفوع" required
-             onchange="updatePayInstallmentRemaining()" style="font-size: 1.1rem; font-weight: bold;">
-      <small style="color: #666; display: block; margin-top: 0.5rem;">
-       <i class="fas fa-info-circle"></i> يمكنك دفع جزء من القسط، والباقي سينتقل للشهر التالي تلقائياً
-      </small>
+      <label><i class="fas fa-money-bill"></i> المبلغ المدفوع الآن (دينار)</label>
+      <input type="number" id="payOldInstallmentAmount" class="form-control" placeholder="أدخل المبلغ المدفوع" min="0" step="0.01" oninput="updateOldInstallmentPaymentPreview()">
      </div>
-
-     <div class="form-group">
-      <label><i class="fas fa-calendar"></i> تاريخ الدفع</label>
-      <input type="date" id="payInstallmentDate" class="form-control" required>
+     
+     <!-- معاينة التسديد -->
+     <div id="payOldInstallmentPreview" style="background: linear-gradient(135deg, rgba(17, 153, 142, 0.1), rgba(56, 239, 125, 0.1)); padding: 1rem; border-radius: var(--border-radius); border: 2px solid rgba(17, 153, 142, 0.3); display: none;">
+      <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
+       <div>
+        <div style="font-size: 0.85rem; color: var(--theme-text-tertiary);">المبلغ المتبقي بعد الدفع</div>
+        <div id="payOldInstallmentNewRemaining" style="font-size: 1.1rem; font-weight: bold; color: var(--primary-color);">0 د</div>
+       </div>
+       <div>
+        <div style="font-size: 0.85rem; color: var(--theme-text-tertiary);">حالة القسط</div>
+        <div id="payOldInstallmentNewStatus" style="font-size: 1.1rem; font-weight: bold;">-</div>
+       </div>
+      </div>
+      <div id="payOldInstallmentCarryNote" style="margin-top: 1rem; padding: 0.75rem; background: rgba(250, 112, 154, 0.1); border-radius: var(--border-radius); border: 1px solid rgba(250, 112, 154, 0.3); display: none;">
+       <i class="fas fa-info-circle" style="color: var(--warning-color);"></i>
+       <span id="payOldInstallmentCarryText" style="margin-right: 0.5rem; color: var(--theme-text-secondary);"></span>
+      </div>
      </div>
-
+     
+     <!-- ملاحظات -->
      <div class="form-group">
       <label><i class="fas fa-sticky-note"></i> ملاحظات (اختياري)</label>
-      <textarea id="payInstallmentNotes" class="form-control" rows="3" 
-                placeholder="أي ملاحظات عن هذا التسديد..."></textarea>
+      <textarea id="payOldInstallmentNotes" class="form-control" rows="2" placeholder="أي ملاحظات إضافية"></textarea>
      </div>
-
-     <!-- معاينة التسديد -->
-     <div id="payInstallmentPreview" style="background: #e8f5e9; padding: 1rem; border-radius: 8px; border: 2px solid #4caf50; display: none;">
-      <h5 style="margin-bottom: 0.5rem; color: #2e7d32;">
-       <i class="fas fa-check-circle"></i> معاينة التسديد:
-      </h5>
-      <div style="display: grid; gap: 0.5rem; font-size: 0.95rem;">
-       <div style="display: flex; justify-content: space-between;">
-        <span>المبلغ المدفوع:</span>
-        <strong id="previewPaidAmount"></strong>
-       </div>
-       <div style="display: flex; justify-content: space-between;">
-        <span>المتبقي من القسط:</span>
-        <strong id="previewRemainingAmount"></strong>
-       </div>
-       <div id="previewNextMonth" style="display: none; padding-top: 0.5rem; border-top: 1px dashed #4caf50;">
-        <span style="color: #f57c00;">
-         <i class="fas fa-arrow-right"></i> سيُضاف <strong id="previewTransferAmount"></strong> للقسط التالي
-        </span>
-       </div>
-      </div>
+     
+     <div class="modal-footer" style="margin-top: 1.5rem;">
+      <button class="btn btn-secondary" onclick="closePayOldDebtInstallmentModal()">إلغاء</button>
+      <button class="btn btn-success" onclick="saveOldDebtInstallmentPayment()">
+       <i class="fas fa-check"></i> تسجيل التسديد وطباعة الإيصال
+      </button>
      </div>
-
-    </div>
-    <div class="modal-footer">
-     <button class="btn btn-secondary" onclick="closePayOldDebtInstallmentModal()">إلغاء</button>
-     <button class="btn btn-success" onclick="confirmPayOldDebtInstallment()">
-      <i class="fas fa-check"></i> تسديد وطباعة الإيصال
-     </button>
     </div>
    </div>
   </div>
@@ -23297,13 +23219,8 @@ console.log(`
             console.log('Rendering debts:', debtsData);
             console.log('Current filter:', currentDebtFilter);
             
-            // 🔥 فلترة الديون - استبعاد الديون القديمة تماماً
-            // صفحة الديون تعرض فقط الديون من نقطة البيع (وليس الديون القديمة)
-            const regularDebts = debtsData.filter(debt => !debt.is_old_debt);
-            console.log('📊 الديون العادية (بدون الديون القديمة):', regularDebts.length);
-            
             // ترتيب البيانات - الأحدث أولاً
-            const sortedDebts = [...regularDebts].sort((a, b) => {
+            const sortedDebts = [...debtsData].sort((a, b) => {
                 const dateA = new Date(a.timestamp || a.date || a.created_at || 0);
                 const dateB = new Date(b.timestamp || b.date || b.created_at || 0);
                 return dateB.getTime() - dateA.getTime();
@@ -23511,10 +23428,6 @@ console.log(`
         function updateDebtsStats() {
             console.log('🔄 تحديث إحصائيات الديون...');
             
-            // 🔥 فلترة الديون - استبعاد الديون القديمة تماماً
-            const regularDebts = debtsData.filter(debt => !debt.is_old_debt);
-            console.log('📊 حساب إحصائيات الديون العادية فقط (بدون الديون القديمة)');
-            
             // حساب الإحصائيات
             let totalDebtsAmount = 0;
             let uniqueCustomers = new Set();
@@ -23522,8 +23435,8 @@ console.log(`
             let paidCount = 0;
             let activeCount = 0;
             
-            // إضافة العملاء من الديون العادية فقط
-            regularDebts.forEach(debt => {
+            // إضافة العملاء من debtsData (الديون اليدوية والتقسيط من التطبيق)
+            debtsData.forEach(debt => {
                 // حساب الإجمالي
                 const debtTotal = debt.total_amount || debt.final_total || 0;
                 totalDebtsAmount += debtTotal;
@@ -37330,40 +37243,18 @@ body {
     }
     
     // ============================================
-    // 📜 دوال إدارة الديون القديمة - نظام مستقل تماماً
-    // ============================================
-    // 
-    // ⚠️ هام: هذا النظام مستقل تماماً عن نظام الديون العادي
-    // 
-    // 🎯 الهدف: إدارة الديون التي كانت موجودة قبل استخدام البرنامج
-    // 
-    // 📊 المصفوفة: oldDebtsData (مستقلة - لا تُضاف إلى debtsData)
-    // 📁 التخزين: localStorage.oldDebtsData + Firebase.old_debts
-    // 🔄 العرض: صفحة مستقلة تماماً مع جدول وإحصائيات خاصة
-    // 
-    // 🚫 الفصل التام:
-    //    - لا تظهر الديون القديمة في صفحة الديون العادية
-    //    - لا تظهر الديون العادية في صفحة الديون القديمة
-    //    - كل نظام له دوال وواجهة مستقلة
-    // 
+    // 📜 دوال إدارة الديون القديمة
     // ============================================
     
-    // مصفوفة الديون القديمة - مستقلة تماماً عن debtsData
+    // مصفوفة الديون القديمة
     let oldDebtsData = [];
     
-    // تحميل الديون القديمة عند تهيئة المتغير
-    (function initOldDebtsData() {
-        try {
-            const saved = localStorage.getItem('oldDebtsData');
-            if (saved) {
-                oldDebtsData = JSON.parse(saved);
-                console.log('✅ تم تحميل الديون القديمة من localStorage:', oldDebtsData.length);
-            }
-        } catch (error) {
-            console.error('❌ خطأ في تحميل الديون القديمة:', error);
-            oldDebtsData = [];
-        }
-    })();
+    // متغيرات لإدارة المنتجات في الديون القديمة
+    let oldDebtProducts = [];
+    
+    // متغيرات لإدارة القسط الحالي
+    let currentOldDebtId = null;
+    let currentOldInstallmentIndex = null;
     
     // فتح نافذة إضافة دين قديم
     function showAddOldDebtModal() {
@@ -37377,7 +37268,10 @@ body {
         document.getElementById('oldDebtMonths').value = 12;
         document.getElementById('oldDebtStartDate').valueAsDate = new Date();
         document.getElementById('oldDebtNotes').value = '';
-        document.getElementById('oldDebtProductDesc').value = '';
+        
+        // مسح المنتجات
+        oldDebtProducts = [];
+        updateOldDebtProductsTable();
         
         calculateOldDebtInstallments();
         showModal('addOldDebtModal');
@@ -37385,32 +37279,91 @@ body {
     
     // إغلاق نافذة إضافة دين قديم
     function closeAddOldDebtModal() {
-        // تنظيف المنتجات والمتغيرات
-        oldDebtProducts = [];
-        window.editingOldDebtId = null;
+        closeModal('addOldDebtModal');
+    }
+    
+    // إضافة منتج للدين القديم
+    function addOldDebtProduct() {
+        const productName = document.getElementById('oldDebtProductName').value.trim();
+        const productPrice = parseFloat(document.getElementById('oldDebtProductPrice').value) || 0;
+        const productQty = parseInt(document.getElementById('oldDebtProductQty').value) || 1;
         
-        // إعادة تعيين الحقول
-        document.getElementById('oldDebtCustomerName').value = '';
-        document.getElementById('oldDebtCustomerPhone').value = '';
-        document.getElementById('oldDebtCustomerAddress').value = '';
-        document.getElementById('oldDebtDate').value = '';
-        document.getElementById('oldDebtDownPayment').value = '0';
-        document.getElementById('oldDebtExtraAmount').value = '0';
-        document.getElementById('oldDebtMonths').value = '1';
-        document.getElementById('oldDebtStartDate').value = '';
-        document.getElementById('oldDebtNotes').value = '';
-        document.getElementById('oldDebtProductsTotal').value = '';
-        document.getElementById('oldDebtTotalAmount').value = '';
-        document.getElementById('oldDebtRemainingAmount').value = '';
-        document.getElementById('oldDebtMonthlyAmount').value = '';
-        
-        // تنظيف جدول المنتجات
-        const tbody = document.getElementById('oldDebtProductsTableBody');
-        if (tbody) {
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 1rem; color: #999;">لا توجد منتجات. اضغط "إضافة منتج" لبدء الإضافة</td></tr>';
+        if (!productName) {
+            alert('⚠️ يرجى إدخال اسم المنتج');
+            return;
         }
         
-        closeModal('addOldDebtModal');
+        if (productPrice <= 0) {
+            alert('⚠️ يرجى إدخال سعر صحيح');
+            return;
+        }
+        
+        // إضافة المنتج للمصفوفة
+        oldDebtProducts.push({
+            name: productName,
+            price: productPrice,
+            qty: productQty,
+            total: productPrice * productQty
+        });
+        
+        // مسح الحقول
+        document.getElementById('oldDebtProductName').value = '';
+        document.getElementById('oldDebtProductPrice').value = '';
+        document.getElementById('oldDebtProductQty').value = 1;
+        
+        // تحديث الجدول والمبلغ الإجمالي
+        updateOldDebtProductsTable();
+        updateOldDebtTotalFromProducts();
+    }
+    
+    // حذف منتج من الدين القديم
+    function removeOldDebtProduct(index) {
+        if (confirm('هل تريد حذف هذا المنتج؟')) {
+            oldDebtProducts.splice(index, 1);
+            updateOldDebtProductsTable();
+            updateOldDebtTotalFromProducts();
+        }
+    }
+    
+    // تحديث جدول المنتجات
+    function updateOldDebtProductsTable() {
+        const container = document.getElementById('oldDebtProductsContainer');
+        const tbody = document.getElementById('oldDebtProductsTable');
+        
+        if (oldDebtProducts.length === 0) {
+            container.style.display = 'none';
+            return;
+        }
+        
+        container.style.display = 'block';
+        tbody.innerHTML = '';
+        
+        oldDebtProducts.forEach((product, index) => {
+            const row = `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td>${product.name}</td>
+                    <td>${formatCurrency(product.price)}</td>
+                    <td>${product.qty}</td>
+                    <td>${formatCurrency(product.total)}</td>
+                    <td>
+                        <button class="btn btn-sm btn-danger" onclick="removeOldDebtProduct(${index})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+            tbody.innerHTML += row;
+        });
+    }
+    
+    // تحديث المبلغ الإجمالي من المنتجات
+    function updateOldDebtTotalFromProducts() {
+        const total = oldDebtProducts.reduce((sum, product) => sum + product.total, 0);
+        if (total > 0) {
+            document.getElementById('oldDebtTotalAmount').value = total;
+            calculateOldDebtInstallments();
+        }
     }
     
     // حساب أقساط الدين القديم
@@ -37433,8 +37386,8 @@ body {
         const customerPhone = document.getElementById('oldDebtCustomerPhone').value.trim();
         const customerAddress = document.getElementById('oldDebtCustomerAddress').value.trim();
         const debtDate = document.getElementById('oldDebtDate').value;
-        const downPayment = parseFloat(document.getElementById('oldDebtDownPayment').value) || 0;
-        const extraAmount = parseFloat(document.getElementById('oldDebtExtraAmount').value) || 0;
+        const totalAmount = parseFloat(document.getElementById('oldDebtTotalAmount').value) || 0;
+        const paidAmount = parseFloat(document.getElementById('oldDebtPaidAmount').value) || 0;
         const months = parseInt(document.getElementById('oldDebtMonths').value) || 1;
         const startDate = document.getElementById('oldDebtStartDate').value;
         const notes = document.getElementById('oldDebtNotes').value.trim();
@@ -37445,34 +37398,19 @@ body {
             return;
         }
         
-        // التحقق من وجود منتجات
-        if (oldDebtProducts.length === 0) {
-            alert('⚠️ يرجى إضافة منتج واحد على الأقل');
+        if (totalAmount <= 0) {
+            alert('⚠️ يرجى إدخال المبلغ الإجمالي');
             return;
         }
         
-        // التحقق من اكتمال بيانات المنتجات
-        const incompleteProduct = oldDebtProducts.find(p => !p.name || p.quantity <= 0 || p.price < 0);
-        if (incompleteProduct) {
-            alert('⚠️ يرجى إكمال بيانات جميع المنتجات');
+        if (paidAmount < 0 || paidAmount > totalAmount) {
+            alert('⚠️ المبلغ المدفوع غير صحيح');
             return;
         }
         
-        // حساب إجمالي المنتجات
-        let productsTotal = 0;
-        oldDebtProducts.forEach(product => {
-            productsTotal += (product.quantity * product.price);
-        });
-        
-        // الحسابات
-        const totalAmount = productsTotal + extraAmount;
-        const remainingAmount = totalAmount - downPayment;
+        // حساب المتبقي والقسط الشهري
+        const remainingAmount = totalAmount - paidAmount;
         const monthlyAmount = remainingAmount / months;
-        
-        if (downPayment < 0 || downPayment > totalAmount) {
-            alert('⚠️ المقدمة المدفوعة غير صحيحة');
-            return;
-        }
         
         // إنشاء الأقساط
         const installments = [];
@@ -37488,22 +37426,16 @@ body {
                 due_date: dueDate.toISOString(),
                 status: 'pending',
                 paid_date: null,
-                paid_amount: 0,
-                payment_notes: ''
+                paid_amount: 0
             });
         }
         
         const currentDate = new Date().toISOString();
+        const debtId = 'old_debt_' + Date.now();
+        const invoiceId = 'OLD-INV-' + Date.now();
         
-        // تحديد إذا كان تعديل أو إضافة جديدة
-        const isEditing = window.editingOldDebtId;
-        const debtId = isEditing || ('old_debt_' + Date.now());
-        const invoiceId = isEditing ? 
-            (oldDebtsData.find(d => d.id === isEditing)?.invoice_id || 'OLD-INV-' + Date.now()) : 
-            ('OLD-INV-' + Date.now());
-        
-        // إنشاء/تحديث الدين القديم
-        const debtData = {
+        // إنشاء الدين القديم
+        const newOldDebt = {
             type: 'old_debt',
             id: debtId,
             debt_id: debtId,
@@ -37513,95 +37445,57 @@ body {
             customer_address: customerAddress,
             date: debtDate || new Date().toISOString().split('T')[0],
             
-            // المنتجات
-            products: [...oldDebtProducts],
-            products_total: productsTotal,
-            
-            // المالية
-            down_payment: downPayment,
-            extra_amount: extraAmount,
             total_amount: totalAmount,
-            paid_amount: downPayment,
+            paid_amount: paidAmount,
             remaining_amount: remainingAmount,
             installment_months: months,
             monthly_amount: monthlyAmount,
             start_date: startDate || new Date().toISOString().split('T')[0],
             
             notes: notes,
+            products: oldDebtProducts.length > 0 ? oldDebtProducts : [],
             installments: installments,
+            payments_history: [], // سجل التسديدات
             
             payment_type: 'أقساط',
             payment_method: 'أقساط قديمة',
-            status: downPayment >= totalAmount ? 'مسدد' : 'نشط',
+            status: paidAmount >= totalAmount ? 'مسدد' : 'نشط',
             is_old_debt: true,
             
-            created_at: isEditing ? (oldDebtsData.find(d => d.id === isEditing)?.created_at || currentDate) : currentDate,
+            created_at: currentDate,
             updated_at: currentDate,
             timestamp: currentDate
         };
         
-        console.log('💾 حفظ الدين القديم:', debtData);
+        console.log('💾 حفظ الدين القديم:', newOldDebt);
         
         try {
-            if (isEditing) {
-                // تحديث دين موجود
-                const index = oldDebtsData.findIndex(d => d.id === debtId);
-                if (index !== -1) {
-                    oldDebtsData[index] = debtData;
-                    console.log('✅ تم تحديث الدين القديم');
-                }
-            } else {
-                // إضافة دين جديد
-                oldDebtsData.push(debtData);
-                console.log('✅ تمت إضافة دين قديم جديد');
-            }
+            // إضافة إلى oldDebtsData فقط
+            oldDebtsData.push(newOldDebt);
+            console.log('✅ تمت الإضافة إلى oldDebtsData');
             
             // حفظ في localStorage
             await saveToLocalStorage('oldDebtsData', oldDebtsData);
-            localStorage.setItem('cached_old_debts', JSON.stringify(oldDebtsData));
             console.log('✅ تم حفظ في localStorage');
-            
-            // محاولة الحفظ في dataSdk (اختياري)
-            if (window.dataSdk) {
-                try {
-                    await window.dataSdk.create(debtData);
-                    console.log('✅ تم حفظ في dataSdk');
-                } catch (sdkError) {
-                    console.warn('⚠️ فشل الحفظ في dataSdk:', sdkError);
-                }
-            }
             
             // محاولة الحفظ في Firebase (اختياري)
             if (window.database) {
                 try {
                     const uid = localStorage.getItem('app_uid');
                     if (uid) {
-                        // حفظ في مسار منفصل للديون القديمة فقط
-                        await window.database.ref(`users/${uid}/old_debts/${debtId}`).set(debtData);
-                        console.log('✅ تم حفظ في Firebase (مسار الديون القديمة)');
+                        await window.database.ref(`users/${uid}/old_debts/${debtId}`).set(newOldDebt);
+                        console.log('✅ تم حفظ في Firebase');
                     }
                 } catch (fbError) {
                     console.warn('⚠️ فشل الحفظ في Firebase:', fbError);
                 }
             }
             
-            // إعادة تعيين المتغيرات
-            oldDebtProducts = [];
-            window.editingOldDebtId = null;
-            
             // إغلاق النافذة وتحديث الجدول
             closeAddOldDebtModal();
+            renderOldDebtsTable();
             
-            console.log('📊 تحديث جدول الديون القديمة فقط');
-            console.log('📊 إجمالي الديون القديمة:', oldDebtsData.length);
-            
-            // التأكد من تحديث جدول الديون القديمة فقط
-            setTimeout(() => {
-                renderOldDebtsTable();
-                // لا نقوم بتحديث renderDebtsTable() لأن الديون القديمة مستقلة
-            }, 200);
-            
-            alert(`✅ تم ${isEditing ? 'تحديث' : 'حفظ'} الدين القديم بنجاح!`);
+            alert('✅ تم حفظ الدين القديم بنجاح!');
             
             console.log('✅ تمت عملية الحفظ بنجاح');
             
@@ -37613,31 +37507,20 @@ body {
     
     // عرض جدول الديون القديمة
     function renderOldDebtsTable() {
-        console.log('🔄 renderOldDebtsTable - بدء التحديث');
-        
         const tbody = document.getElementById('oldDebtsTableBody');
-        if (!tbody) {
-            console.error('❌ لم يتم العثور على oldDebtsTableBody');
-            return;
-        }
+        if (!tbody) return;
         
         tbody.innerHTML = '';
         
-        console.log('📊 إجمالي oldDebtsData:', oldDebtsData.length);
-        
-        // استخدام oldDebtsData مباشرة - مصفوفة مستقلة تماماً
+        // استخدام oldDebtsData مباشرة
         const oldDebts = oldDebtsData;
         
-        console.log('📊 الديون القديمة للعرض:', oldDebts.length);
+        console.log('📊 الديون القديمة:', oldDebts.length);
         
         if (oldDebts.length === 0) {
-            console.log('ℹ️ لا توجد ديون قديمة للعرض');
             tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; padding: 2rem;">لا توجد ديون قديمة</td></tr>';
-            updateOldDebtsStats();
             return;
         }
-        
-        console.log('✅ عرض', oldDebts.length, 'دين قديم');
         
         oldDebts.forEach((debt, index) => {
             const totalAmount = debt.total_amount || 0;
@@ -37670,9 +37553,6 @@ body {
                         <button class="btn btn-sm btn-primary" onclick="viewOldDebtDetails('${debt.id}')" title="عرض التفاصيل">
                             <i class="fas fa-eye"></i>
                         </button>
-                        <button class="btn btn-sm btn-info" onclick="editOldDebt('${debt.id}')" title="تعديل">
-                            <i class="fas fa-edit"></i>
-                        </button>
                         <button class="btn btn-sm btn-danger" onclick="deleteOldDebt('${debt.id}')" title="حذف">
                             <i class="fas fa-trash"></i>
                         </button>
@@ -37684,15 +37564,10 @@ body {
         
         // تحديث الإحصائيات
         updateOldDebtsStats();
-        
-        console.log('✅ renderOldDebtsTable - اكتمل التحديث');
     }
     
     // تحديث إحصائيات الديون القديمة
     function updateOldDebtsStats() {
-        console.log('📊 updateOldDebtsStats - بدء التحديث');
-        
-        // استخدام oldDebtsData مباشرة - مصفوفة مستقلة تماماً
         const oldDebts = oldDebtsData;
         
         let totalDebts = 0;
@@ -37715,65 +37590,30 @@ body {
             }
         });
         
-        console.log('📊 الإحصائيات:', {
-            totalDebts,
-            unpaidDebts,
-            paidDebts,
-            partialDebts
-        });
-        
-        const totalDebtsElem = document.getElementById('totalOldDebts');
-        const unpaidDebtsElem = document.getElementById('totalOldUnpaidDebts');
-        const paidDebtsElem = document.getElementById('totalOldPaidDebts');
-        const partialDebtsElem = document.getElementById('totalOldPartialDebts');
-        
-        if (totalDebtsElem) totalDebtsElem.textContent = formatCurrency(totalDebts);
-        if (unpaidDebtsElem) unpaidDebtsElem.textContent = unpaidDebts;
-        if (paidDebtsElem) paidDebtsElem.textContent = paidDebts;
-        if (partialDebtsElem) partialDebtsElem.textContent = partialDebts;
-        
-        console.log('✅ updateOldDebtsStats - اكتمل التحديث');
+        document.getElementById('totalOldDebts').textContent = formatCurrency(totalDebts);
+        document.getElementById('totalOldUnpaidDebts').textContent = unpaidDebts;
+        document.getElementById('totalOldPaidDebts').textContent = paidDebts;
+        document.getElementById('totalOldPartialDebts').textContent = partialDebts;
     }
     
-    // فلترة الديون القديمة بالبحث
+    // فلترة الديون القديمة
     function filterOldDebts() {
         const searchTerm = document.getElementById('oldDebtsSearchInput').value.toLowerCase();
         const rows = document.querySelectorAll('#oldDebtsTableBody tr');
         
-        console.log('🔍 البحث في الديون القديمة:', searchTerm);
-        
-        let visibleCount = 0;
         rows.forEach(row => {
-            // تخطي صف "لا توجد ديون"
-            if (row.cells.length === 1) return;
-            
             const text = row.textContent.toLowerCase();
-            const isVisible = text.includes(searchTerm);
-            row.style.display = isVisible ? '' : 'none';
-            
-            if (isVisible) visibleCount++;
+            row.style.display = text.includes(searchTerm) ? '' : 'none';
         });
-        
-        console.log(`✅ عدد النتائج: ${visibleCount} من ${rows.length}`);
     }
     
     // فلترة الديون القديمة حسب الحالة
     function filterOldDebtsByStatus(status) {
-        console.log('🔍 فلترة الديون القديمة حسب الحالة:', status);
-        
         const rows = document.querySelectorAll('#oldDebtsTableBody tr');
         
-        let visibleCount = 0;
         rows.forEach(row => {
-            // تخطي صف "لا توجد ديون"
-            if (row.cells.length === 1) {
-                row.style.display = '';
-                return;
-            }
-            
             if (status === 'all') {
                 row.style.display = '';
-                visibleCount++;
             } else {
                 const statusBadge = row.querySelector('.status-badge');
                 if (!statusBadge) return;
@@ -37788,361 +37628,67 @@ body {
                 }
                 
                 row.style.display = shouldShow ? '' : 'none';
-                if (shouldShow) visibleCount++;
             }
         });
-        
-        console.log(`✅ عدد النتائج المفلترة: ${visibleCount}`);
     }
     
     // عرض تفاصيل دين قديم
     function viewOldDebtDetails(debtId) {
-        console.log('👁️ عرض تفاصيل دين قديم:', debtId);
-        
-        // استخدام الصفحة الكاملة للتفاصيل بدلاً من alert
-        showOldDebtDetailsPage(debtId);
-    }
-        // TODO: يمكن فتح صفحة تسديد خاصة بالديون القديمة
-        // showOldDebtPaymentModal(debtId);
-    }
-    
-    // تسديد قسط من دين قديم
-    async function payOldDebtInstallment(debtId, installmentIndex) {
-        console.log('💰 تسديد قسط من دين قديم:', debtId, 'قسط:', installmentIndex);
-        
         const debt = oldDebtsData.find(d => d.id === debtId);
         if (!debt) {
-            alert('⚠️ لم يتم العثور على الدين القديم');
-            return;
-        }
-        
-        if (!debt.installments || !debt.installments[installmentIndex]) {
-            alert('⚠️ القسط غير موجود');
-            return;
-        }
-        
-        const installment = debt.installments[installmentIndex];
-        
-        if (installment.status === 'paid') {
-            alert('⚠️ هذا القسط مدفوع بالفعل');
-            return;
-        }
-        
-        const amount = parseFloat(prompt(`💰 أدخل المبلغ المدفوع (القسط: ${formatCurrency(installment.amount)}):`, installment.amount));
-        
-        if (!amount || amount <= 0) {
-            alert('⚠️ المبلغ غير صحيح');
-            return;
-        }
-        
-        try {
-            // تحديث القسط
-            installment.status = 'paid';
-            installment.paid_amount = amount;
-            installment.paid_date = new Date().toISOString();
-            
-            // تحديث المبلغ المدفوع الإجمالي
-            debt.paid_amount = (debt.paid_amount || 0) + amount;
-            debt.remaining_amount = debt.total_amount - debt.paid_amount;
-            
-            // تحديث الحالة
-            const allPaid = debt.installments.every(inst => inst.status === 'paid');
-            if (allPaid) {
-                debt.status = 'مسدد';
-            }
-            
-            // حفظ التغييرات
-            await saveToLocalStorage('oldDebtsData', oldDebtsData);
-            localStorage.setItem('cached_old_debts', JSON.stringify(oldDebtsData));
-            
-            // حفظ في Firebase
-            if (window.database) {
-                try {
-                    const uid = localStorage.getItem('app_uid');
-                    if (uid) {
-                        await window.database.ref(`users/${uid}/old_debts/${debtId}`).set(debt);
-                    }
-                } catch (fbError) {
-                    console.warn('⚠️ فشل الحفظ في Firebase:', fbError);
-                }
-            }
-            
-            renderOldDebtsTable();
-            alert('✅ تم تسديد القسط بنجاح!');
-            
-        } catch (error) {
-            console.error('❌ خطأ في تسديد القسط:', error);
-            alert('❌ حدث خطأ في تسديد القسط');
-        }
-    }
-    
-    // حذف دين قديم
-    async function deleteOldDebt(debtId) {
-        if (!confirm('هل أنت متأكد من حذف هذا الدين القديم؟')) {
-            return;
-        }
-        
-        try {
-            console.log('🗑️ حذف دين قديم:', debtId);
-            
-            // حذف من oldDebtsData فقط - مصفوفة مستقلة تماماً
-            const oldDebtIndex = oldDebtsData.findIndex(d => d.id === debtId);
-            if (oldDebtIndex !== -1) {
-                oldDebtsData.splice(oldDebtIndex, 1);
-                console.log('✅ تم الحذف من oldDebtsData');
-            } else {
-                console.warn('⚠️ لم يتم العثور على الدين في oldDebtsData');
-            }
-            
-            // حفظ التغييرات
-            await saveToLocalStorage('oldDebtsData', oldDebtsData);
-            localStorage.setItem('cached_old_debts', JSON.stringify(oldDebtsData));
-            console.log('✅ تم حفظ التغييرات');
-            
-            // حذف من Firebase إن وجد
-            if (window.database) {
-                try {
-                    const uid = localStorage.getItem('app_uid');
-                    if (uid) {
-                        await window.database.ref(`users/${uid}/old_debts/${debtId}`).remove();
-                        console.log('✅ تم الحذف من Firebase');
-                    }
-                } catch (fbError) {
-                    console.warn('⚠️ فشل الحذف من Firebase:', fbError);
-                }
-            }
-            
-            // تحديث جدول الديون القديمة فقط
-            renderOldDebtsTable();
-            alert('✅ تم حذف الدين القديم بنجاح');
-            
-        } catch (error) {
-            console.error('❌ خطأ في حذف الدين القديم:', error);
-            alert('❌ حدث خطأ في حذف الدين القديم');
-        }
-    }
-    
-    // تحميل الديون القديمة عند تحميل الصفحة
-    async function loadOldDebtsData() {
-        console.log('🔄 loadOldDebtsData - بدء التحميل');
-        
-        try {
-            // تحميل من localStorage
-            const saved = localStorage.getItem('oldDebtsData');
-            if (saved) {
-                const parsed = JSON.parse(saved);
-                if (Array.isArray(parsed)) {
-                    oldDebtsData = parsed;
-                    console.log('✅ تم تحميل الديون القديمة من localStorage:', oldDebtsData.length);
-                }
-            }
-            
-            // ⚠️ تنظيف: إزالة أي ديون قديمة من debtsData (في حال وجودها بالخطأ)
-            const oldDebtsInDebtsData = debtsData.filter(d => d.is_old_debt === true);
-            if (oldDebtsInDebtsData.length > 0) {
-                console.warn('⚠️ تم العثور على', oldDebtsInDebtsData.length, 'دين قديم في debtsData - سيتم إزالتهم');
-                debtsData = debtsData.filter(d => !d.is_old_debt);
-                await saveToLocalStorage('debtsData', debtsData);
-                console.log('✅ تم تنظيف debtsData من الديون القديمة');
-            }
-            
-            console.log('✅ تم تحميل الديون القديمة بنجاح - الإجمالي:', oldDebtsData.length);
-            console.log('📊 الديون القديمة مستقلة تماماً عن debtsData');
-            console.log('📊 debtsData الحالي:', debtsData.length, 'دين');
-        } catch (error) {
-            console.error('❌ خطأ في تحميل الديون القديمة:', error);
-            oldDebtsData = [];
-        }
-    }
-    
-    // تهيئة صفحة الديون القديمة عند عرضها
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('📄 DOMContentLoaded - تحميل الديون القديمة');
-            loadOldDebtsData().then(() => {
-                console.log('✅ تم الانتهاء من تحميل الديون القديمة');
-            });
-        });
-    } else {
-        // إذا كان DOM محملاً بالفعل
-        console.log('📄 DOM محمل مسبقاً - تحميل الديون القديمة فوراً');
-        loadOldDebtsData();
-    }
-    
-    // ============================================
-    // 📦 دوال إدارة المنتجات في الديون القديمة
-    // ============================================
-    
-    // مصفوفة لتخزين المنتجات المضافة مؤقتاً
-    let oldDebtProducts = [];
-    
-    // إضافة منتج جديد إلى جدول المنتجات
-    function addOldDebtProduct() {
-        // فتح prompt لإدخال تفاصيل المنتج
-        const name = prompt('اسم المنتج:');
-        if (!name) return;
-        
-        const quantity = parseInt(prompt('الكمية:', '1')) || 1;
-        const price = parseFloat(prompt('السعر:', '0')) || 0;
-        
-        if (price <= 0) {
-            alert('⚠️ يرجى إدخال سعر صحيح');
-            return;
-        }
-        
-        // إضافة المنتج إلى المصفوفة
-        const product = {
-            id: Date.now(),
-            name: name,
-            quantity: quantity,
-            price: price,
-            total: quantity * price
-        };
-        
-        oldDebtProducts.push(product);
-        
-        // تحديث جدول المنتجات
-        renderOldDebtProductsTableAdd();
-        
-        // تحديث المجاميع
-        calculateOldDebtTotals();
-    }
-    
-    // عرض جدول المنتجات
-    function renderOldDebtProductsTableAdd() {
-        const tbody = document.getElementById('oldDebtProductsTableBody');
-        if (!tbody) return;
-        
-        tbody.innerHTML = '';
-        
-        if (oldDebtProducts.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 1rem; color: #999;">لم يتم إضافة منتجات بعد</td></tr>';
-            return;
-        }
-        
-        oldDebtProducts.forEach((product, index) => {
-            const row = `
-                <tr>
-                    <td style="width: 35%;">${product.name}</td>
-                    <td style="width: 15%; text-align: center;">${product.quantity}</td>
-                    <td style="width: 20%; text-align: center;">${formatCurrency(product.price)}</td>
-                    <td style="width: 20%; text-align: center; font-weight: bold;">${formatCurrency(product.total)}</td>
-                    <td style="width: 10%; text-align: center;">
-                        <button type="button" class="btn btn-sm btn-danger" onclick="removeOldDebtProduct(${product.id})">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </td>
-                </tr>
-            `;
-            tbody.innerHTML += row;
-        });
-    }
-    
-    // حذف منتج من الجدول
-    function removeOldDebtProduct(productId) {
-        oldDebtProducts = oldDebtProducts.filter(p => p.id !== productId);
-        renderOldDebtProductsTableAdd();
-        calculateOldDebtTotals();
-    }
-    
-    // حساب المجاميع
-    function calculateOldDebtTotals() {
-        // حساب إجمالي المنتجات
-        const productsTotal = oldDebtProducts.reduce((sum, p) => sum + p.total, 0);
-        
-        // المبلغ الإضافي
-        const extraAmount = parseFloat(document.getElementById('oldDebtExtraAmount')?.value) || 0;
-        
-        // المبلغ الإجمالي للدين
-        const totalAmount = productsTotal + extraAmount;
-        
-        // المقدم المدفوع
-        const downPayment = parseFloat(document.getElementById('oldDebtDownPayment')?.value) || 0;
-        
-        // المبلغ المتبقي
-        const remainingAmount = totalAmount - downPayment;
-        
-        // تحديث الحقول
-        const productsTotalElem = document.getElementById('oldDebtProductsTotal');
-        const totalAmountElem = document.getElementById('oldDebtTotalAmount');
-        const remainingAmountElem = document.getElementById('oldDebtRemainingAmount');
-        
-        if (productsTotalElem) productsTotalElem.value = formatCurrency(productsTotal);
-        if (totalAmountElem) totalAmountElem.value = totalAmount;
-        if (remainingAmountElem) remainingAmountElem.value = remainingAmount;
-        
-        // حساب القسط الشهري
-        calculateOldDebtMonthly();
-    }
-    
-    // حساب القسط الشهري
-    function calculateOldDebtMonthly() {
-        const remainingAmount = parseFloat(document.getElementById('oldDebtRemainingAmount')?.value) || 0;
-        const months = parseInt(document.getElementById('oldDebtMonths')?.value) || 1;
-        
-        const monthlyAmount = remainingAmount / months;
-        
-        const monthlyAmountElem = document.getElementById('oldDebtMonthlyAmount');
-        if (monthlyAmountElem) {
-            monthlyAmountElem.value = monthlyAmount;
-        }
-    }
-    
-    // حساب المتبقي عند تغيير المقدم
-    function calculateOldDebtRemaining() {
-        calculateOldDebtTotals();
-    }
-    
-    // ============================================
-    // 📄 دوال عرض تفاصيل الدين الكاملة
-    // ============================================
-    
-    // عرض صفحة تفاصيل الدين
-    function showOldDebtDetailsPage(debtId) {
-        console.log('📄 عرض صفحة تفاصيل الدين:', debtId);
-        
-        const debt = oldDebtsData.find(d => d.id === debtId);
-        if (!debt) {
-            alert('⚠️ لم يتم العثور على الدين القديم');
+            alert('⚠️ لم يتم العثور على الدين');
             return;
         }
         
         // حفظ معرف الدين الحالي
-        window.currentOldDebtId = debtId;
+        currentOldDebtId = debtId;
         
-        // تعبئة معلومات العميل
-        document.getElementById('detailCustomerName').textContent = debt.customer_name || 'غير محدد';
-        document.getElementById('detailCustomerPhone').textContent = debt.customer_phone || 'غير محدد';
-        document.getElementById('detailCustomerAddress').textContent = debt.customer_address || 'غير محدد';
+        // تحديث معلومات العميل والإحصائيات
+        document.getElementById('oldDebtDetailsCustomerName').textContent = debt.customer_name || '-';
+        document.getElementById('oldDebtDetailsTotalAmount').textContent = formatCurrency(debt.total_amount || 0);
+        document.getElementById('oldDebtDetailsPaidAmount').textContent = formatCurrency(debt.paid_amount || 0);
+        document.getElementById('oldDebtDetailsRemainingAmount').textContent = formatCurrency(debt.remaining_amount || 0);
         
-        // تعبئة ملخص الدين
-        const totalAmount = debt.total_amount || 0;
-        const paidAmount = debt.paid_amount || 0;
-        const remainingAmount = totalAmount - paidAmount;
+        // حساب الأشهر المتبقية
+        const pendingInstallments = debt.installments ? debt.installments.filter(i => i.status === 'pending' || i.paid_amount < i.amount).length : 0;
+        document.getElementById('oldDebtDetailsRemainingMonths').textContent = pendingInstallments;
+        document.getElementById('oldDebtDetailsMonthlyAmount').textContent = formatCurrency(debt.monthly_amount || 0);
         
-        document.getElementById('detailTotalAmount').textContent = formatCurrency(totalAmount);
-        document.getElementById('detailPaidAmount').textContent = formatCurrency(paidAmount);
-        document.getElementById('detailRemainingAmount').textContent = formatCurrency(remainingAmount);
+        // عرض المنتجات إن وجدت
+        const productsSection = document.getElementById('oldDebtProductsSection');
+        const productsTable = document.getElementById('oldDebtDetailsProductsTable');
+        
+        if (debt.products && debt.products.length > 0) {
+            productsSection.style.display = 'block';
+            productsTable.innerHTML = '';
+            
+            debt.products.forEach((product, index) => {
+                const row = `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>${product.name}</td>
+                        <td>${formatCurrency(product.price)}</td>
+                        <td>${product.qty}</td>
+                        <td>${formatCurrency(product.total)}</td>
+                    </tr>
+                `;
+                productsTable.innerHTML += row;
+            });
+        } else {
+            productsSection.style.display = 'none';
+        }
         
         // عرض جدول الأقساط
         renderOldDebtInstallmentsTable(debt);
         
-        // عرض المنتجات إن وجدت
-        if (debt.products && debt.products.length > 0) {
-            document.getElementById('oldDebtProductsSection').style.display = 'block';
-            renderOldDebtProductsList(debt.products);
-        } else {
-            document.getElementById('oldDebtProductsSection').style.display = 'none';
-        }
-        
         // عرض سجل التسديدات
         renderOldDebtPaymentsHistory(debt);
         
-        // فتح النافذة
-        showModal('oldDebtDetailsModal');
+        // عرض الصفحة
+        showPage('oldDebtDetails');
     }
     
-    // عرض جدول الأقساط
+    // عرض جدول الأقساط الشهرية للدين القديم
     function renderOldDebtInstallmentsTable(debt) {
         const tbody = document.getElementById('oldDebtInstallmentsTable');
         if (!tbody) return;
@@ -38150,75 +37696,42 @@ body {
         tbody.innerHTML = '';
         
         if (!debt.installments || debt.installments.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 2rem; color: #999;">لا توجد أقساط</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2rem;">لا توجد أقساط</td></tr>';
             return;
         }
         
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        
         debt.installments.forEach((installment, index) => {
-            const dueDate = new Date(installment.due_date);
-            const isPaid = installment.status === 'paid';
-            const paidAmount = installment.paid_amount || 0;
-            const installmentAmount = installment.amount || 0;
-            const remaining = installmentAmount - paidAmount;
-            const isOverdue = !isPaid && dueDate < today;
-            
+            const remaining = installment.amount - (installment.paid_amount || 0);
             let statusBadge = '';
-            let statusClass = '';
+            let actionBtn = '';
             
-            if (isPaid) {
-                statusBadge = '<span class="status-badge status-paid"><i class="fas fa-check-circle"></i> مدفوع</span>';
-                statusClass = 'installment-paid';
-            } else if (isOverdue) {
-                statusBadge = '<span class="status-badge status-overdue"><i class="fas fa-exclamation-triangle"></i> متأخر</span>';
-                statusClass = 'installment-overdue';
+            if (installment.status === 'paid' || installment.paid_amount >= installment.amount) {
+                statusBadge = '<span class="status-badge status-paid"><i class="fas fa-check-circle"></i> مسدد</span>';
+                actionBtn = '<span style="color: var(--success-color);"><i class="fas fa-check"></i> مكتمل</span>';
+            } else if (installment.paid_amount > 0) {
+                statusBadge = '<span class="status-badge status-partial"><i class="fas fa-hourglass-half"></i> جزئي</span>';
+                actionBtn = `
+                    <button class="btn btn-sm btn-success" onclick="showPayOldDebtInstallmentModal('${debt.id}', ${index})">
+                        <i class="fas fa-hand-holding-usd"></i> تسديد
+                    </button>
+                `;
             } else {
                 statusBadge = '<span class="status-badge status-pending"><i class="fas fa-clock"></i> معلق</span>';
-                statusClass = 'installment-pending';
+                actionBtn = `
+                    <button class="btn btn-sm btn-success" onclick="showPayOldDebtInstallmentModal('${debt.id}', ${index})">
+                        <i class="fas fa-hand-holding-usd"></i> تسديد
+                    </button>
+                `;
             }
             
             const row = `
-                <tr class="${statusClass}" data-status="${isPaid ? 'paid' : (isOverdue ? 'overdue' : 'pending')}">
-                    <td style="text-align: center; font-weight: bold;">${index + 1}</td>
-                    <td>${formatDate(installment.due_date)}</td>
-                    <td style="text-align: center; font-weight: bold;">${formatCurrency(installmentAmount)}</td>
-                    <td style="text-align: center; color: #2e7d32; font-weight: bold;">${formatCurrency(paidAmount)}</td>
-                    <td style="text-align: center; ${remaining > 0 ? 'color: #d32f2f; font-weight: bold;' : ''}">${formatCurrency(remaining)}</td>
-                    <td style="text-align: center;">${statusBadge}</td>
-                    <td style="text-align: center;">
-                        ${!isPaid ? `
-                            <button class="btn btn-sm btn-success" onclick="openPayOldDebtInstallmentModal('${debt.id}', ${index})" title="تسديد">
-                                <i class="fas fa-money-bill-wave"></i> تسديد
-                            </button>
-                        ` : `
-                            <button class="btn btn-sm btn-info" onclick="printOldDebtInstallmentReceipt('${debt.id}', ${index})" title="طباعة الإيصال">
-                                <i class="fas fa-print"></i>
-                            </button>
-                        `}
-                    </td>
-                </tr>
-            `;
-            tbody.innerHTML += row;
-        });
-    }
-    
-    // عرض قائمة المنتجات
-    function renderOldDebtProductsList(products) {
-        const tbody = document.getElementById('oldDebtProductsList');
-        if (!tbody) return;
-        
-        tbody.innerHTML = '';
-        
-        products.forEach((product, index) => {
-            const row = `
                 <tr>
-                    <td style="text-align: center;">${index + 1}</td>
-                    <td>${product.name}</td>
-                    <td style="text-align: center;">${product.quantity}</td>
-                    <td style="text-align: center;">${formatCurrency(product.price)}</td>
-                    <td style="text-align: center; font-weight: bold; color: #2e7d32;">${formatCurrency(product.total)}</td>
+                    <td>القسط ${installment.month}</td>
+                    <td class="expense-amount-negative">${formatCurrency(installment.amount)}</td>
+                    <td>${formatDate(installment.due_date)}</td>
+                    <td class="expense-paid-cell">${formatCurrency(installment.paid_amount || 0)}</td>
+                    <td>${statusBadge}</td>
+                    <td>${actionBtn}</td>
                 </tr>
             `;
             tbody.innerHTML += row;
@@ -38227,287 +37740,242 @@ body {
     
     // عرض سجل التسديدات
     function renderOldDebtPaymentsHistory(debt) {
-        const tbody = document.getElementById('oldDebtPaymentsHistory');
-        if (!tbody) return;
-        
-        tbody.innerHTML = '';
+        const emptyDiv = document.getElementById('oldDebtPaymentsHistoryEmpty');
+        const tableDiv = document.getElementById('oldDebtPaymentsHistoryTable');
+        const tbody = document.getElementById('oldDebtPaymentsHistoryBody');
         
         if (!debt.payments_history || debt.payments_history.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2rem; color: #999;">لا توجد تسديدات بعد</td></tr>';
+            emptyDiv.style.display = 'block';
+            tableDiv.style.display = 'none';
             return;
         }
+        
+        emptyDiv.style.display = 'none';
+        tableDiv.style.display = 'block';
+        tbody.innerHTML = '';
         
         debt.payments_history.forEach((payment, index) => {
             const row = `
                 <tr>
-                    <td style="text-align: center;">${index + 1}</td>
-                    <td>${formatDate(payment.date)}</td>
-                    <td style="text-align: center;">القسط ${payment.installment_number}</td>
-                    <td style="text-align: center; font-weight: bold; color: #2e7d32;">${formatCurrency(payment.amount)}</td>
+                    <td>${index + 1}</td>
+                    <td>${formatDateTime(payment.date)}</td>
+                    <td class="expense-paid-cell">${formatCurrency(payment.amount)}</td>
+                    <td>القسط ${payment.month}</td>
                     <td>${payment.notes || '-'}</td>
-                    <td style="text-align: center;">
-                        <button class="btn btn-sm btn-info" onclick="printOldDebtPaymentReceipt('${debt.id}', ${index})" title="طباعة">
-                            <i class="fas fa-print"></i>
-                        </button>
-                    </td>
                 </tr>
             `;
             tbody.innerHTML += row;
         });
     }
     
-    // فلترة الأقساط حسب الحالة
-    function filterOldDebtInstallments(status) {
-        const rows = document.querySelectorAll('#oldDebtInstallmentsTable tr');
-        
-        rows.forEach(row => {
-            if (row.cells.length === 1) {
-                row.style.display = '';
-                return;
-            }
-            
-            if (status === 'all') {
-                row.style.display = '';
-            } else {
-                const rowStatus = row.getAttribute('data-status');
-                row.style.display = rowStatus === status ? '' : 'none';
-            }
-        });
-    }
-    
-    // إغلاق نافذة التفاصيل
-    function closeOldDebtDetailsModal() {
-        closeModal('oldDebtDetailsModal');
-        window.currentOldDebtId = null;
-    }
-    
-    // ============================================
-    // 💰 دوال التسديد المحسّنة
-    // ============================================
-    
-    // فتح نافذة تسديد قسط
-    function openPayOldDebtInstallmentModal(debtId, installmentIndex) {
-        console.log('💰 فتح نافذة تسديد قسط:', debtId, 'قسط:', installmentIndex);
-        
+    // عرض نافذة تسديد قسط الدين القديم
+    function showPayOldDebtInstallmentModal(debtId, installmentIndex) {
         const debt = oldDebtsData.find(d => d.id === debtId);
         if (!debt || !debt.installments || !debt.installments[installmentIndex]) {
-            alert('⚠️ القسط غير موجود');
+            alert('⚠️ خطأ في تحميل بيانات القسط');
             return;
         }
         
         const installment = debt.installments[installmentIndex];
         
-        if (installment.status === 'paid') {
-            alert('⚠️ هذا القسط مدفوع بالفعل');
-            return;
-        }
+        // حفظ المعرفات
+        currentOldDebtId = debtId;
+        currentOldInstallmentIndex = installmentIndex;
         
-        // حفظ معلومات القسط
-        window.currentPaymentDebtId = debtId;
-        window.currentPaymentInstallmentIndex = installmentIndex;
+        // تحديث معلومات القسط
+        document.getElementById('payOldInstallmentMonth').textContent = `القسط ${installment.month}`;
+        document.getElementById('payOldInstallmentDueAmount').textContent = formatCurrency(installment.amount);
+        document.getElementById('payOldInstallmentPaidAmount').textContent = formatCurrency(installment.paid_amount || 0);
         
-        // تعبئة معلومات القسط
-        const installmentAmount = installment.amount || 0;
-        const paidAmount = installment.paid_amount || 0;
-        const remaining = installmentAmount - paidAmount;
+        const remaining = installment.amount - (installment.paid_amount || 0);
+        document.getElementById('payOldInstallmentRemainingAmount').textContent = formatCurrency(remaining);
         
-        document.getElementById('payInstallmentDueDate').textContent = formatDate(installment.due_date);
-        document.getElementById('payInstallmentAmount').textContent = formatCurrency(installmentAmount);
-        document.getElementById('payInstallmentPaid').textContent = formatCurrency(paidAmount);
-        document.getElementById('payInstallmentRemaining').textContent = formatCurrency(remaining);
-        
-        // تعيين المبلغ المتبقي كقيمة افتراضية
-        const amountInput = document.getElementById('payInstallmentAmountInput');
-        if (amountInput) {
-            amountInput.value = remaining;
-            amountInput.max = remaining;
-        }
-        
-        // تعيين تاريخ اليوم
-        const dateInput = document.getElementById('payInstallmentDate');
-        if (dateInput) {
-            dateInput.value = new Date().toISOString().split('T')[0];
-        }
-        
-        // تفريغ الملاحظات
-        const notesInput = document.getElementById('payInstallmentNotes');
-        if (notesInput) notesInput.value = '';
+        // مسح الحقول
+        document.getElementById('payOldInstallmentAmount').value = remaining;
+        document.getElementById('payOldInstallmentNotes').value = '';
         
         // إخفاء المعاينة
-        const previewElem = document.getElementById('payInstallmentPreview');
-        if (previewElem) previewElem.style.display = 'none';
+        document.getElementById('payOldInstallmentPreview').style.display = 'none';
         
-        // فتح النافذة
+        // عرض النافذة
         showModal('payOldDebtInstallmentModal');
+        
+        // تحديث المعاينة
+        updateOldInstallmentPaymentPreview();
     }
     
-    // تحديث معاينة المتبقي عند تغيير المبلغ المدفوع
-    function updatePayInstallmentRemaining() {
-        const debt = oldDebtsData.find(d => d.id === window.currentPaymentDebtId);
-        if (!debt) return;
+    // إغلاق نافذة تسديد القسط
+    function closePayOldDebtInstallmentModal() {
+        closeModal('payOldDebtInstallmentModal');
+        currentOldDebtId = null;
+        currentOldInstallmentIndex = null;
+    }
+    
+    // تحديث معاينة التسديد
+    function updateOldInstallmentPaymentPreview() {
+        const debt = oldDebtsData.find(d => d.id === currentOldDebtId);
+        if (!debt || currentOldInstallmentIndex === null) return;
         
-        const installment = debt.installments[window.currentPaymentInstallmentIndex];
-        if (!installment) return;
+        const installment = debt.installments[currentOldInstallmentIndex];
+        const paymentAmount = parseFloat(document.getElementById('payOldInstallmentAmount').value) || 0;
+        const currentPaid = installment.paid_amount || 0;
+        const dueAmount = installment.amount;
+        const remaining = dueAmount - currentPaid;
         
-        const installmentAmount = installment.amount || 0;
-        const previouslyPaid = installment.paid_amount || 0;
-        const remainingBefore = installmentAmount - previouslyPaid;
+        if (paymentAmount <= 0) {
+            document.getElementById('payOldInstallmentPreview').style.display = 'none';
+            return;
+        }
         
-        const paidNow = parseFloat(document.getElementById('payInstallmentAmountInput')?.value) || 0;
-        const remainingAfter = remainingBefore - paidNow;
+        document.getElementById('payOldInstallmentPreview').style.display = 'block';
         
-        // عرض المعاينة
-        const previewElem = document.getElementById('payInstallmentPreview');
-        if (previewElem && paidNow > 0) {
-            previewElem.style.display = 'block';
+        const newRemaining = remaining - paymentAmount;
+        document.getElementById('payOldInstallmentNewRemaining').textContent = formatCurrency(Math.max(0, newRemaining));
+        
+        const carryNote = document.getElementById('payOldInstallmentCarryNote');
+        const carryText = document.getElementById('payOldInstallmentCarryText');
+        
+        if (paymentAmount >= remaining) {
+            // تسديد كامل
+            document.getElementById('payOldInstallmentNewStatus').innerHTML = '<span style="color: var(--success-color);"><i class="fas fa-check-circle"></i> مسدد بالكامل</span>';
+            carryNote.style.display = 'none';
+        } else {
+            // تسديد جزئي
+            document.getElementById('payOldInstallmentNewStatus').innerHTML = '<span style="color: var(--warning-color);"><i class="fas fa-hourglass-half"></i> تسديد جزئي</span>';
             
-            document.getElementById('previewPaidAmount').textContent = formatCurrency(paidNow);
-            document.getElementById('previewRemainingAmount').textContent = formatCurrency(Math.max(0, remainingAfter));
-            
-            // إذا كان هناك متبقي، سيُنقل للقسط التالي
-            if (remainingAfter > 0 && window.currentPaymentInstallmentIndex < debt.installments.length - 1) {
-                document.getElementById('previewNextMonth').style.display = 'block';
-                document.getElementById('previewTransferAmount').textContent = formatCurrency(remainingAfter);
+            // عرض ملاحظة نقل المتبقي
+            if (currentOldInstallmentIndex < debt.installments.length - 1) {
+                carryNote.style.display = 'block';
+                carryText.textContent = `سيتم نقل المبلغ المتبقي ${formatCurrency(newRemaining)} إلى القسط التالي (القسط ${installment.month + 1})`;
             } else {
-                document.getElementById('previewNextMonth').style.display = 'none';
+                carryNote.style.display = 'block';
+                carryText.textContent = `هذا هو القسط الأخير. المبلغ المتبقي ${formatCurrency(newRemaining)} سيبقى مسجلاً في هذا القسط`;
             }
-        } else if (previewElem) {
-            previewElem.style.display = 'none';
         }
     }
     
-    // تأكيد التسديد
-    async function confirmPayOldDebtInstallment() {
-        const debtId = window.currentPaymentDebtId;
-        const installmentIndex = window.currentPaymentInstallmentIndex;
-        
-        const debt = oldDebtsData.find(d => d.id === debtId);
-        if (!debt) {
-            alert('⚠️ لم يتم العثور على الدين');
+    // حفظ التسديد وطباعة الإيصال
+    async function saveOldDebtInstallmentPayment() {
+        const debt = oldDebtsData.find(d => d.id === currentOldDebtId);
+        if (!debt || currentOldInstallmentIndex === null) {
+            alert('⚠️ خطأ في تحميل بيانات الدين');
             return;
         }
         
-        const installment = debt.installments[installmentIndex];
-        if (!installment) {
-            alert('⚠️ القسط غير موجود');
-            return;
-        }
+        const installment = debt.installments[currentOldInstallmentIndex];
+        const paymentAmount = parseFloat(document.getElementById('payOldInstallmentAmount').value) || 0;
+        const paymentNotes = document.getElementById('payOldInstallmentNotes').value.trim();
         
-        const paidAmount = parseFloat(document.getElementById('payInstallmentAmountInput')?.value) || 0;
-        const paymentDate = document.getElementById('payInstallmentDate')?.value;
-        const notes = document.getElementById('payInstallmentNotes')?.value || '';
-        
-        if (!paidAmount || paidAmount <= 0) {
+        if (paymentAmount <= 0) {
             alert('⚠️ يرجى إدخال مبلغ صحيح');
             return;
         }
         
-        const installmentAmount = installment.amount || 0;
-        const previouslyPaid = installment.paid_amount || 0;
-        const remaining = installmentAmount - previouslyPaid;
+        const currentPaid = installment.paid_amount || 0;
+        const remaining = installment.amount - currentPaid;
         
-        if (paidAmount > remaining) {
-            alert('⚠️ المبلغ المدفوع أكبر من المتبقي');
-            return;
+        if (paymentAmount > remaining) {
+            if (!confirm(`⚠️ المبلغ المدخل ${formatCurrency(paymentAmount)} أكبر من المبلغ المتبقي ${formatCurrency(remaining)}. هل تريد المتابعة؟`)) {
+                return;
+            }
         }
         
         try {
             // تحديث القسط الحالي
-            installment.paid_amount = previouslyPaid + paidAmount;
+            const actualPayment = Math.min(paymentAmount, remaining);
+            installment.paid_amount = currentPaid + actualPayment;
             
-            // إذا تم دفع كامل القسط، تحديث الحالة
-            if (installment.paid_amount >= installmentAmount) {
+            // تحديد الحالة والملاحظة
+            let paymentNote = '';
+            if (installment.paid_amount >= installment.amount) {
                 installment.status = 'paid';
-                installment.paid_date = paymentDate || new Date().toISOString();
+                installment.paid_date = new Date().toISOString();
+                paymentNote = 'تم التسديد الكامل';
+            } else {
+                installment.status = 'partially_paid';
+                paymentNote = `تسديد جزئي - المتبقي: ${formatCurrency(installment.amount - installment.paid_amount)}`;
             }
             
-            // إذا كان هناك متبقي، نقله للقسط التالي
-            const remainingAfter = remaining - paidAmount;
-            if (remainingAfter > 0 && installmentIndex < debt.installments.length - 1) {
-                debt.installments[installmentIndex + 1].amount += remainingAfter;
-                console.log(`📤 تم نقل ${formatCurrency(remainingAfter)} للقسط التالي`);
+            // إذا كان المبلغ أكبر من المتبقي، نقل المتبقي للقسط التالي
+            const carryOver = paymentAmount - actualPayment;
+            if (carryOver > 0 && currentOldInstallmentIndex < debt.installments.length - 1) {
+                const nextInstallment = debt.installments[currentOldInstallmentIndex + 1];
+                nextInstallment.paid_amount = (nextInstallment.paid_amount || 0) + carryOver;
+                
+                if (nextInstallment.paid_amount >= nextInstallment.amount) {
+                    nextInstallment.status = 'paid';
+                    nextInstallment.paid_date = new Date().toISOString();
+                }
+                
+                paymentNote += ` - تم نقل ${formatCurrency(carryOver)} للقسط التالي`;
             }
             
-            // تحديث المبلغ المدفوع الإجمالي
-            debt.paid_amount = (debt.paid_amount || 0) + paidAmount;
-            debt.remaining_amount = debt.total_amount - debt.paid_amount;
+            // إضافة ملاحظات المستخدم
+            if (paymentNotes) {
+                paymentNote += ` - ${paymentNotes}`;
+            }
             
-            // إضافة السجل إلى سجل التسديدات
+            // إضافة إلى سجل التسديدات
             if (!debt.payments_history) {
                 debt.payments_history = [];
             }
             
             debt.payments_history.push({
-                id: Date.now(),
-                date: paymentDate || new Date().toISOString(),
-                installment_number: installmentIndex + 1,
-                amount: paidAmount,
-                notes: notes,
-                remaining_transferred: remainingAfter > 0 ? remainingAfter : 0
+                date: new Date().toISOString(),
+                amount: paymentAmount,
+                month: installment.month,
+                notes: paymentNote
             });
             
-            // التحقق من تسديد جميع الأقساط
-            const allPaid = debt.installments.every(inst => inst.status === 'paid');
-            if (allPaid) {
+            // تحديث المبلغ المدفوع الإجمالي
+            debt.paid_amount = (debt.paid_amount || 0) + paymentAmount;
+            debt.remaining_amount = debt.total_amount - debt.paid_amount;
+            
+            // تحديث الحالة
+            if (debt.paid_amount >= debt.total_amount) {
                 debt.status = 'مسدد';
+            } else {
+                debt.status = 'نشط';
             }
             
-            // حفظ التغييرات
+            debt.updated_at = new Date().toISOString();
+            
+            // حفظ في localStorage
             await saveToLocalStorage('oldDebtsData', oldDebtsData);
-            localStorage.setItem('cached_old_debts', JSON.stringify(oldDebtsData));
             
             // حفظ في Firebase
             if (window.database) {
                 try {
                     const uid = localStorage.getItem('app_uid');
                     if (uid) {
-                        await window.database.ref(`users/${uid}/old_debts/${debtId}`).set(debt);
+                        await window.database.ref(`users/${uid}/old_debts/${debt.id}`).set(debt);
                     }
                 } catch (fbError) {
                     console.warn('⚠️ فشل الحفظ في Firebase:', fbError);
                 }
             }
             
-            // إغلاق نافذة التسديد
-            closePayOldDebtInstallmentModal();
+            // طباعة الإيصال
+            printOldDebtPaymentReceipt(debt, installment, paymentAmount, paymentNote);
             
-            // تحديث العرض
-            showOldDebtDetailsPage(debtId);
+            // إغلاق النافذة وتحديث الصفحة
+            closePayOldDebtInstallmentModal();
+            viewOldDebtDetails(debt.id);
             renderOldDebtsTable();
             
-            // طباعة الإيصال
-            printOldDebtPaymentReceipt(debtId, debt.payments_history.length - 1);
-            
-            alert('✅ تم تسديد القسط بنجاح!');
+            alert('✅ تم تسجيل التسديد بنجاح!');
             
         } catch (error) {
-            console.error('❌ خطأ في تسديد القسط:', error);
-            alert('❌ حدث خطأ في تسديد القسط');
+            console.error('❌ خطأ في تسجيل التسديد:', error);
+            alert('❌ حدث خطأ في تسجيل التسديد: ' + error.message);
         }
     }
     
-    // إغلاق نافذة التسديد
-    function closePayOldDebtInstallmentModal() {
-        closeModal('payOldDebtInstallmentModal');
-        window.currentPaymentDebtId = null;
-        window.currentPaymentInstallmentIndex = null;
-    }
-    
-    // ============================================
-    // 🖨️ دوال الطباعة
-    // ============================================
-    
-    // طباعة إيصال تسديد
-    function printOldDebtPaymentReceipt(debtId, paymentIndex) {
-        const debt = oldDebtsData.find(d => d.id === debtId);
-        if (!debt || !debt.payments_history || !debt.payments_history[paymentIndex]) {
-            alert('⚠️ لم يتم العثور على بيانات التسديد');
-            return;
-        }
+    // طباعة إيصال تسديد الدين القديم
+    function printOldDebtPaymentReceipt(debt, installment, paymentAmount, paymentNote) {
+        const printWindow = window.open('', '_blank');
         
-        const payment = debt.payments_history[paymentIndex];
-        
-        const receiptContent = `
+        const receiptHTML = `
             <!DOCTYPE html>
             <html dir="rtl" lang="ar">
             <head>
@@ -38515,68 +37983,125 @@ body {
                 <title>إيصال تسديد - ${debt.customer_name}</title>
                 <style>
                     * { margin: 0; padding: 0; box-sizing: border-box; }
-                    body { font-family: 'Arial', sans-serif; padding: 20px; }
-                    .receipt { max-width: 80mm; margin: 0 auto; border: 2px solid #000; padding: 15px; }
-                    .header { text-align: center; border-bottom: 2px dashed #000; padding-bottom: 10px; margin-bottom: 15px; }
-                    .header h1 { font-size: 20px; margin-bottom: 5px; }
+                    body { 
+                        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+                        padding: 20px;
+                        direction: rtl;
+                        font-size: 14px;
+                    }
+                    .receipt { 
+                        max-width: 300px; 
+                        margin: 0 auto;
+                        border: 2px dashed #333;
+                        padding: 20px;
+                    }
+                    .header { 
+                        text-align: center; 
+                        margin-bottom: 20px;
+                        padding-bottom: 15px;
+                        border-bottom: 2px solid #333;
+                    }
+                    .header h1 { font-size: 24px; margin-bottom: 5px; }
                     .header p { font-size: 12px; color: #666; }
                     .section { margin-bottom: 15px; }
-                    .section h3 { font-size: 14px; margin-bottom: 8px; color: #333; border-bottom: 1px solid #ddd; padding-bottom: 5px; }
-                    .row { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 12px; }
-                    .row strong { font-weight: bold; }
-                    .amount-box { background: #f5f5f5; padding: 10px; text-align: center; border: 1px solid #ddd; margin: 15px 0; }
-                    .amount-box .label { font-size: 12px; color: #666; margin-bottom: 5px; }
-                    .amount-box .value { font-size: 18px; font-weight: bold; color: #2e7d32; }
-                    .footer { text-align: center; border-top: 2px dashed #000; padding-top: 10px; margin-top: 15px; font-size: 10px; color: #666; }
+                    .section h3 { 
+                        font-size: 14px; 
+                        margin-bottom: 8px;
+                        border-bottom: 1px solid #ddd;
+                        padding-bottom: 5px;
+                    }
+                    .row { 
+                        display: flex; 
+                        justify-content: space-between; 
+                        margin-bottom: 5px;
+                        font-size: 13px;
+                    }
+                    .row.total { 
+                        font-weight: bold; 
+                        font-size: 16px;
+                        margin-top: 10px;
+                        padding-top: 10px;
+                        border-top: 2px solid #333;
+                    }
+                    .footer { 
+                        text-align: center; 
+                        margin-top: 20px;
+                        padding-top: 15px;
+                        border-top: 2px dashed #333;
+                        font-size: 12px;
+                        color: #666;
+                    }
+                    @media print {
+                        body { padding: 0; }
+                        .receipt { border: none; max-width: 100%; }
+                    }
                 </style>
             </head>
             <body>
                 <div class="receipt">
                     <div class="header">
-                        <h1>إيصال تسديد قسط</h1>
-                        <p>${new Date().toLocaleString('ar-IQ')}</p>
+                        <h1>إيصال تسديد دين قديم</h1>
+                        <p>شركة الإبداع الرقمي</p>
                     </div>
                     
                     <div class="section">
                         <h3>معلومات العميل</h3>
-                        <div class="row"><span>الاسم:</span> <strong>${debt.customer_name}</strong></div>
-                        <div class="row"><span>الهاتف:</span> <strong>${debt.customer_phone}</strong></div>
+                        <div class="row">
+                            <span>الاسم:</span>
+                            <span>${debt.customer_name}</span>
+                        </div>
+                        <div class="row">
+                            <span>الهاتف:</span>
+                            <span>${debt.customer_phone}</span>
+                        </div>
                     </div>
                     
                     <div class="section">
                         <h3>تفاصيل التسديد</h3>
-                        <div class="row"><span>رقم القسط:</span> <strong>القسط ${payment.installment_number}</strong></div>
-                        <div class="row"><span>تاريخ الدفع:</span> <strong>${formatDate(payment.date)}</strong></div>
-                    </div>
-                    
-                    <div class="amount-box">
-                        <div class="label">المبلغ المدفوع</div>
-                        <div class="value">${formatCurrency(payment.amount)}</div>
-                    </div>
-                    
-                    ${payment.notes ? `
-                        <div class="section">
-                            <h3>ملاحظات</h3>
-                            <p style="font-size: 11px;">${payment.notes}</p>
+                        <div class="row">
+                            <span>رقم القسط:</span>
+                            <span>القسط ${installment.month}</span>
                         </div>
-                    ` : ''}
-                    
-                    ${payment.remaining_transferred && payment.remaining_transferred > 0 ? `
-                        <div class="section">
-                            <div class="row"><span>المبلغ المنقول للقسط التالي:</span> <strong style="color: #f57c00;">${formatCurrency(payment.remaining_transferred)}</strong></div>
+                        <div class="row">
+                            <span>المبلغ المستحق:</span>
+                            <span>${formatCurrency(installment.amount)}</span>
                         </div>
-                    ` : ''}
+                        <div class="row">
+                            <span>المبلغ المدفوع:</span>
+                            <span>${formatCurrency(paymentAmount)}</span>
+                        </div>
+                        <div class="row">
+                            <span>التاريخ:</span>
+                            <span>${formatDateTime(new Date().toISOString())}</span>
+                        </div>
+                    </div>
                     
                     <div class="section">
                         <h3>ملخص الدين</h3>
-                        <div class="row"><span>إجمالي الدين:</span> <strong>${formatCurrency(debt.total_amount)}</strong></div>
-                        <div class="row"><span>المبلغ المدفوع:</span> <strong style="color: #2e7d32;">${formatCurrency(debt.paid_amount)}</strong></div>
-                        <div class="row"><span>المتبقي:</span> <strong style="color: #d32f2f;">${formatCurrency(debt.remaining_amount)}</strong></div>
+                        <div class="row">
+                            <span>المبلغ الإجمالي:</span>
+                            <span>${formatCurrency(debt.total_amount)}</span>
+                        </div>
+                        <div class="row">
+                            <span>المبلغ المدفوع:</span>
+                            <span>${formatCurrency(debt.paid_amount)}</span>
+                        </div>
+                        <div class="row">
+                            <span>المبلغ المتبقي:</span>
+                            <span>${formatCurrency(debt.remaining_amount)}</span>
+                        </div>
                     </div>
+                    
+                    ${paymentNote ? `
+                    <div class="section">
+                        <h3>ملاحظات</h3>
+                        <p style="font-size: 12px; line-height: 1.6;">${paymentNote}</p>
+                    </div>
+                    ` : ''}
                     
                     <div class="footer">
                         <p>شكراً لثقتكم بنا</p>
-                        <p>رقم الإيصال: ${payment.id}</p>
+                        <p style="margin-top: 5px;">نظام يعقوب - شركة الإبداع الرقمي</p>
                     </div>
                 </div>
                 <script>
@@ -38589,187 +38114,80 @@ body {
             </html>
         `;
         
-        // فتح نافذة طباعة
-        const printWindow = window.open('', '_blank', 'width=300,height=600');
-        if (printWindow) {
-            printWindow.document.write(receiptContent);
-            printWindow.document.close();
-        }
+        printWindow.document.write(receiptHTML);
+        printWindow.document.close();
     }
     
-    // طباعة تفاصيل الدين
-    function printOldDebtDetails() {
-        const debtId = window.currentOldDebtId;
-        if (!debtId) return;
-        
-        const debt = oldDebtsData.find(d => d.id === debtId);
-        if (!debt) return;
-        
-        // محتوى الطباعة
-        let productsHTML = '';
-        if (debt.products && debt.products.length > 0) {
-            productsHTML = `
-                <div class="section">
-                    <h3>المنتجات</h3>
-                    <table style="width: 100%; font-size: 11px; border-collapse: collapse;">
-                        <thead>
-                            <tr style="background: #f5f5f5;">
-                                <th style="padding: 5px; border: 1px solid #ddd;">#</th>
-                                <th style="padding: 5px; border: 1px solid #ddd;">المنتج</th>
-                                <th style="padding: 5px; border: 1px solid #ddd;">الكمية</th>
-                                <th style="padding: 5px; border: 1px solid #ddd;">السعر</th>
-                                <th style="padding: 5px; border: 1px solid #ddd;">الإجمالي</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${debt.products.map((p, i) => `
-                                <tr>
-                                    <td style="padding: 5px; border: 1px solid #ddd; text-align: center;">${i + 1}</td>
-                                    <td style="padding: 5px; border: 1px solid #ddd;">${p.name}</td>
-                                    <td style="padding: 5px; border: 1px solid #ddd; text-align: center;">${p.quantity}</td>
-                                    <td style="padding: 5px; border: 1px solid #ddd; text-align: center;">${formatCurrency(p.price)}</td>
-                                    <td style="padding: 5px; border: 1px solid #ddd; text-align: center; font-weight: bold;">${formatCurrency(p.total)}</td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-                </div>
-            `;
-        }
-        
-        let installmentsHTML = '';
-        if (debt.installments && debt.installments.length > 0) {
-            installmentsHTML = `
-                <div class="section">
-                    <h3>جدول الأقساط</h3>
-                    <table style="width: 100%; font-size: 11px; border-collapse: collapse;">
-                        <thead>
-                            <tr style="background: #f5f5f5;">
-                                <th style="padding: 5px; border: 1px solid #ddd;">#</th>
-                                <th style="padding: 5px; border: 1px solid #ddd;">تاريخ الاستحقاق</th>
-                                <th style="padding: 5px; border: 1px solid #ddd;">المبلغ</th>
-                                <th style="padding: 5px; border: 1px solid #ddd;">المدفوع</th>
-                                <th style="padding: 5px; border: 1px solid #ddd;">الحالة</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${debt.installments.map((inst, i) => `
-                                <tr>
-                                    <td style="padding: 5px; border: 1px solid #ddd; text-align: center;">${i + 1}</td>
-                                    <td style="padding: 5px; border: 1px solid #ddd; text-align: center;">${formatDate(inst.due_date)}</td>
-                                    <td style="padding: 5px; border: 1px solid #ddd; text-align: center;">${formatCurrency(inst.amount)}</td>
-                                    <td style="padding: 5px; border: 1px solid #ddd; text-align: center;">${formatCurrency(inst.paid_amount || 0)}</td>
-                                    <td style="padding: 5px; border: 1px solid #ddd; text-align: center;">${inst.status === 'paid' ? '✓ مدفوع' : '⏱ معلق'}</td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-                </div>
-            `;
-        }
-        
-        const printContent = `
-            <!DOCTYPE html>
-            <html dir="rtl" lang="ar">
-            <head>
-                <meta charset="UTF-8">
-                <title>تفاصيل الدين - ${debt.customer_name}</title>
-                <style>
-                    * { margin: 0; padding: 0; box-sizing: border-box; }
-                    body { font-family: 'Arial', sans-serif; padding: 30px; }
-                    .document { max-width: 210mm; margin: 0 auto; }
-                    .header { text-align: center; border-bottom: 3px solid #000; padding-bottom: 20px; margin-bottom: 30px; }
-                    .header h1 { font-size: 28px; margin-bottom: 10px; }
-                    .section { margin-bottom: 25px; }
-                    .section h3 { font-size: 16px; margin-bottom: 12px; color: #333; border-bottom: 2px solid #ddd; padding-bottom: 8px; }
-                    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-                    .info-item { display: flex; justify-content: space-between; padding: 8px; background: #f9f9f9; border-left: 3px solid #667eea; }
-                    .info-item .label { color: #666; font-size: 14px; }
-                    .info-item .value { font-weight: bold; font-size: 14px; }
-                    .summary-box { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 8px; margin: 20px 0; }
-                    .summary-row { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 16px; }
-                    .summary-row:last-child { margin-bottom: 0; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.3); font-size: 18px; font-weight: bold; }
-                    .footer { text-align: center; margin-top: 40px; padding-top: 20px; border-top: 2px solid #ddd; color: #666; font-size: 12px; }
-                </style>
-            </head>
-            <body>
-                <div class="document">
-                    <div class="header">
-                        <h1>تفاصيل الدين القديم</h1>
-                        <p style="color: #666; margin-top: 10px;">تاريخ الطباعة: ${new Date().toLocaleString('ar-IQ')}</p>
-                    </div>
-                    
-                    <div class="section">
-                        <h3>معلومات العميل</h3>
-                        <div class="info-grid">
-                            <div class="info-item"><span class="label">الاسم:</span> <span class="value">${debt.customer_name}</span></div>
-                            <div class="info-item"><span class="label">الهاتف:</span> <span class="value">${debt.customer_phone}</span></div>
-                            <div class="info-item"><span class="label">العنوان:</span> <span class="value">${debt.customer_address || 'غير محدد'}</span></div>
-                            <div class="info-item"><span class="label">تاريخ الدين:</span> <span class="value">${formatDate(debt.date)}</span></div>
-                        </div>
-                    </div>
-                    
-                    <div class="summary-box">
-                        <div class="summary-row"><span>إجمالي الدين:</span> <strong>${formatCurrency(debt.total_amount)}</strong></div>
-                        <div class="summary-row"><span>المبلغ المدفوع:</span> <strong>${formatCurrency(debt.paid_amount)}</strong></div>
-                        <div class="summary-row"><span>المبلغ المتبقي:</span> <strong>${formatCurrency(debt.remaining_amount)}</strong></div>
-                    </div>
-                    
-                    ${productsHTML}
-                    ${installmentsHTML}
-                    
-                    ${debt.notes ? `
-                        <div class="section">
-                            <h3>ملاحظات</h3>
-                            <p style="padding: 10px; background: #fff3cd; border-left: 3px solid #ffc107; font-size: 14px;">${debt.notes}</p>
-                        </div>
-                    ` : ''}
-                    
-                    <div class="footer">
-                        <p>شكراً لثقتكم بنا</p>
-                        <p>رقم الدين: ${debt.id}</p>
-                    </div>
-                </div>
-                <script>
-                    window.onload = function() {
-                        window.print();
-                    };
-                </script>
-            </body>
-            </html>
-        `;
-        
-        // فتح نافذة طباعة
-        const printWindow = window.open('', '_blank', 'width=800,height=600');
-        if (printWindow) {
-            printWindow.document.write(printContent);
-            printWindow.document.close();
-        }
-    }
-    
-    // طباعة إيصال قسط محدد
-    function printOldDebtInstallmentReceipt(debtId, installmentIndex) {
-        const debt = oldDebtsData.find(d => d.id === debtId);
-        if (!debt || !debt.installments || !debt.installments[installmentIndex]) {
-            alert('⚠️ لم يتم العثور على القسط');
+    // حذف دين قديم
+    async function deleteOldDebt(debtId) {
+        if (!confirm('هل أنت متأكد من حذف هذا الدين القديم؟')) {
             return;
         }
         
-        const installment = debt.installments[installmentIndex];
-        
-        // استخدام آخر دفعة لهذا القسط
-        const relatedPayment = debt.payments_history 
-            ? debt.payments_history.find(p => p.installment_number === installmentIndex + 1)
-            : null;
-        
-        if (relatedPayment) {
-            // طباعة باستخدام بيانات الدفعة
-            const paymentIndex = debt.payments_history.indexOf(relatedPayment);
-            printOldDebtPaymentReceipt(debtId, paymentIndex);
-        } else {
-            alert('⚠️ لم يتم العثور على بيانات الدفع لهذا القسط');
+        try {
+            // حذف من oldDebtsData فقط
+            const oldDebtIndex = oldDebtsData.findIndex(d => d.id === debtId);
+            if (oldDebtIndex !== -1) {
+                oldDebtsData.splice(oldDebtIndex, 1);
+            }
+            
+            // حفظ التغييرات
+            await saveToLocalStorage('oldDebtsData', oldDebtsData);
+            
+            // حذف من Firebase إن وجد
+            if (window.database) {
+                try {
+                    const uid = localStorage.getItem('app_uid');
+                    if (uid) {
+                        await window.database.ref(`users/${uid}/old_debts/${debtId}`).remove();
+                    }
+                } catch (fbError) {
+                    console.warn('⚠️ فشل الحذف من Firebase:', fbError);
+                }
+            }
+            
+            renderOldDebtsTable();
+            alert('✅ تم حذف الدين القديم بنجاح');
+            
+        } catch (error) {
+            console.error('❌ خطأ في حذف الدين القديم:', error);
+            alert('❌ حدث خطأ في حذف الدين القديم');
         }
     }
+    
+    // تحميل الديون القديمة عند تحميل الصفحة
+    async function loadOldDebtsData() {
+        try {
+            // تحميل من localStorage
+            const saved = localStorage.getItem('oldDebtsData');
+            if (saved) {
+                oldDebtsData = JSON.parse(saved);
+            }
+            
+            // التأكد من أن payments_history موجود في كل دين قديم
+            oldDebtsData.forEach(debt => {
+                if (!debt.payments_history) {
+                    debt.payments_history = [];
+                }
+                
+                // التأكد من أن products موجود
+                if (!debt.products) {
+                    debt.products = [];
+                }
+            });
+            
+            console.log('✅ تم تحميل الديون القديمة:', oldDebtsData.length);
+        } catch (error) {
+            console.error('❌ خطأ في تحميل الديون القديمة:', error);
+        }
+    }
+    
+    // تهيئة صفحة الديون القديمة عند عرضها
+    document.addEventListener('DOMContentLoaded', function() {
+        loadOldDebtsData().then(() => {
+            // سيتم استدعاء renderOldDebtsTable عند عرض الصفحة
+        });
+    });
     
     // ============================================
     // دوال إدارة المخزون المحسّنة
@@ -44338,839 +43756,4 @@ window.restoreOldDebtsFromBackup(backupData);
  
 
 </body>
-</html>// ============================================
-// 📜 نظام إدارة الديون القديمة المحسّن
-// ============================================
-
-// مصفوفة المنتجات المؤقتة لنافذة إضافة/تعديل الدين
-let oldDebtProducts = [];
-
-// دالة إضافة منتج إلى قائمة المنتجات
-function addOldDebtProduct() {
-    const product = {
-        id: 'prod_' + Date.now(),
-        name: '',
-        quantity: 1,
-        price: 0
-    };
-    
-    oldDebtProducts.push(product);
-    renderOldDebtProductsTable();
-}
-
-// دالة عرض جدول المنتجات في نافذة الإضافة
-function renderOldDebtProductsTable() {
-    const tbody = document.getElementById('oldDebtProductsTableBody');
-    if (!tbody) return;
-    
-    tbody.innerHTML = '';
-    
-    if (oldDebtProducts.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 1rem; color: #999;">لا توجد منتجات. اضغط "إضافة منتج" لبدء الإضافة</td></tr>';
-        calculateOldDebtTotals();
-        return;
-    }
-    
-    oldDebtProducts.forEach((product, index) => {
-        const total = product.quantity * product.price;
-        const row = `
-            <tr>
-                <td>
-                    <input type="text" class="form-control" 
-                           value="${product.name}" 
-                           onchange="updateOldDebtProduct(${index}, 'name', this.value)"
-                           placeholder="اسم المنتج">
-                </td>
-                <td>
-                    <input type="number" class="form-control" 
-                           value="${product.quantity}" 
-                           min="1"
-                           onchange="updateOldDebtProduct(${index}, 'quantity', this.value)"
-                           style="text-align: center;">
-                </td>
-                <td>
-                    <input type="number" class="form-control" 
-                           value="${product.price}" 
-                           min="0" step="0.01"
-                           onchange="updateOldDebtProduct(${index}, 'price', this.value)"
-                           style="text-align: center;">
-                </td>
-                <td style="text-align: center; font-weight: bold; color: var(--success-color);">
-                    ${formatCurrency(total)}
-                </td>
-                <td style="text-align: center;">
-                    <button class="btn btn-sm btn-danger" onclick="removeOldDebtProduct(${index})" title="حذف">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </td>
-            </tr>
-        `;
-        tbody.innerHTML += row;
-    });
-    
-    calculateOldDebtTotals();
-}
-
-// دالة تحديث منتج
-function updateOldDebtProduct(index, field, value) {
-    if (oldDebtProducts[index]) {
-        if (field === 'quantity' || field === 'price') {
-            oldDebtProducts[index][field] = parseFloat(value) || 0;
-        } else {
-            oldDebtProducts[index][field] = value;
-        }
-        renderOldDebtProductsTable();
-    }
-}
-
-// دالة حذف منتج
-function removeOldDebtProduct(index) {
-    oldDebtProducts.splice(index, 1);
-    renderOldDebtProductsTable();
-}
-
-// دالة حساب الإجماليات
-function calculateOldDebtTotals() {
-    // حساب إجمالي المنتجات
-    let productsTotal = 0;
-    oldDebtProducts.forEach(product => {
-        productsTotal += (product.quantity * product.price);
-    });
-    
-    // الحصول على القيم
-    const downPayment = parseFloat(document.getElementById('oldDebtDownPayment')?.value) || 0;
-    const extraAmount = parseFloat(document.getElementById('oldDebtExtraAmount')?.value) || 0;
-    const months = parseInt(document.getElementById('oldDebtMonths')?.value) || 1;
-    
-    // الحسابات
-    const totalAmount = productsTotal + extraAmount;
-    const remainingAmount = totalAmount - downPayment;
-    const monthlyAmount = remainingAmount / months;
-    
-    // تحديث الحقول
-    document.getElementById('oldDebtProductsTotal').value = formatCurrency(productsTotal);
-    document.getElementById('oldDebtTotalAmount').value = totalAmount.toFixed(2);
-    document.getElementById('oldDebtRemainingAmount').value = remainingAmount.toFixed(2);
-    document.getElementById('oldDebtMonthlyAmount').value = monthlyAmount.toFixed(2);
-}
-
-// دالة فتح نافذة تفاصيل الدين
-function showOldDebtDetailsPage(debtId) {
-    console.log('📄 عرض تفاصيل الدين:', debtId);
-    
-    const debt = oldDebtsData.find(d => d.id === debtId);
-    if (!debt) {
-        alert('⚠️ لم يتم العثور على الدين');
-        return;
-    }
-    
-    // تخزين ID الدين الحالي
-    window.currentOldDebtId = debtId;
-    
-    // إنشاء صفحة التفاصيل ديناميكياً
-    const oldDebtsPage = document.getElementById('oldDebts');
-    if (!oldDebtsPage) return;
-    
-    // إخفاء الجدول الرئيسي
-    oldDebtsPage.querySelector('.page-content').style.display = 'none';
-    
-    // إنشاء صفحة التفاصيل
-    let detailsPage = document.getElementById('oldDebtDetailsPage');
-    if (!detailsPage) {
-        detailsPage = document.createElement('div');
-        detailsPage.id = 'oldDebtDetailsPage';
-        oldDebtsPage.appendChild(detailsPage);
-    }
-    
-    detailsPage.style.display = 'block';
-    detailsPage.innerHTML = generateOldDebtDetailsHTML(debt);
-}
-
-// دالة إنشاء HTML لصفحة تفاصيل الدين
-function generateOldDebtDetailsHTML(debt) {
-    const totalAmount = debt.total_amount || 0;
-    const paidAmount = debt.paid_amount || 0;
-    const remainingAmount = totalAmount - paidAmount;
-    const installments = debt.installments || [];
-    
-    // حساب الإحصائيات
-    const paidInstallments = installments.filter(i => i.status === 'paid').length;
-    const pendingInstallments = installments.filter(i => i.status === 'pending').length;
-    
-    return `
-        <div class="debt-details-container" style="padding: 2rem;">
-            <!-- رأس الصفحة -->
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-                <div>
-                    <button class="btn btn-secondary" onclick="hideOldDebtDetailsPage()">
-                        <i class="fas fa-arrow-right"></i> رجوع
-                    </button>
-                    <h2 style="display: inline-block; margin-right: 1rem;">
-                        <i class="fas fa-file-invoice"></i> تفاصيل الدين
-                    </h2>
-                </div>
-                <div>
-                    <button class="btn btn-primary" onclick="editOldDebt('${debt.id}')">
-                        <i class="fas fa-edit"></i> تعديل
-                    </button>
-                    <button class="btn btn-success" onclick="printOldDebtInvoice('${debt.id}')">
-                        <i class="fas fa-print"></i> طباعة الفاتورة
-                    </button>
-                </div>
-            </div>
-            
-            <!-- معلومات العميل -->
-            <div class="info-card" style="background: var(--theme-bg-secondary); padding: 1.5rem; border-radius: 8px; margin-bottom: 1.5rem;">
-                <h3><i class="fas fa-user"></i> معلومات العميل</h3>
-                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 1rem;">
-                    <div>
-                        <strong>الاسم:</strong> ${debt.customer_name}
-                    </div>
-                    <div>
-                        <strong>الهاتف:</strong> ${debt.customer_phone}
-                    </div>
-                    <div>
-                        <strong>العنوان:</strong> ${debt.customer_address || 'غير محدد'}
-                    </div>
-                </div>
-            </div>
-            
-            <!-- الإحصائيات -->
-            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 2rem;">
-                <div class="stat-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 1.5rem; border-radius: 8px; text-align: center;">
-                    <div style="font-size: 2rem; font-weight: bold;">${formatCurrency(totalAmount)}</div>
-                    <div style="margin-top: 0.5rem; opacity: 0.9;">المبلغ الإجمالي</div>
-                </div>
-                <div class="stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 1.5rem; border-radius: 8px; text-align: center;">
-                    <div style="font-size: 2rem; font-weight: bold;">${formatCurrency(remainingAmount)}</div>
-                    <div style="margin-top: 0.5rem; opacity: 0.9;">المبلغ المتبقي</div>
-                </div>
-                <div class="stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; padding: 1.5rem; border-radius: 8px; text-align: center;">
-                    <div style="font-size: 2rem; font-weight: bold;">${paidInstallments}</div>
-                    <div style="margin-top: 0.5rem; opacity: 0.9;">أقساط مسددة</div>
-                </div>
-                <div class="stat-card" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); color: white; padding: 1.5rem; border-radius: 8px; text-align: center;">
-                    <div style="font-size: 2rem; font-weight: bold;">${pendingInstallments}</div>
-                    <div style="margin-top: 0.5rem; opacity: 0.9;">أقساط معلقة</div>
-                </div>
-            </div>
-            
-            <!-- المنتجات -->
-            ${debt.products && debt.products.length > 0 ? `
-                <div class="products-section" style="background: var(--theme-bg-secondary); padding: 1.5rem; border-radius: 8px; margin-bottom: 1.5rem;">
-                    <h3><i class="fas fa-shopping-cart"></i> المنتجات</h3>
-                    <table class="table" style="margin-top: 1rem;">
-                        <thead>
-                            <tr>
-                                <th>المنتج</th>
-                                <th>الكمية</th>
-                                <th>السعر</th>
-                                <th>الإجمالي</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${debt.products.map(p => `
-                                <tr>
-                                    <td>${p.name}</td>
-                                    <td>${p.quantity}</td>
-                                    <td>${formatCurrency(p.price)}</td>
-                                    <td>${formatCurrency(p.quantity * p.price)}</td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-                </div>
-            ` : ''}
-            
-            <!-- جدول الأقساط -->
-            <div class="installments-section">
-                <h3><i class="fas fa-calendar-alt"></i> الأقساط الشهرية</h3>
-                <div style="overflow-x: auto; margin-top: 1rem;">
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>تاريخ الاستحقاق</th>
-                                <th>المبلغ المطلوب</th>
-                                <th>المبلغ المدفوع</th>
-                                <th>المتبقي</th>
-                                <th>الحالة</th>
-                                <th>الإجراءات</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${installments.map((inst, idx) => {
-                                const instRemaining = inst.amount - (inst.paid_amount || 0);
-                                const isPaid = inst.status === 'paid';
-                                const isOverdue = !isPaid && new Date(inst.due_date) < new Date();
-                                
-                                return `
-                                    <tr style="${isPaid ? 'background: #e8f5e9;' : isOverdue ? 'background: #ffebee;' : ''}">
-                                        <td>${idx + 1}</td>
-                                        <td>${formatDate(inst.due_date)}</td>
-                                        <td>${formatCurrency(inst.amount)}</td>
-                                        <td>${formatCurrency(inst.paid_amount || 0)}</td>
-                                        <td style="font-weight: bold; color: ${instRemaining > 0 ? 'var(--danger-color)' : 'var(--success-color)'};">
-                                            ${formatCurrency(instRemaining)}
-                                        </td>
-                                        <td>
-                                            ${isPaid ? 
-                                                '<span class="status-badge status-paid">مسدد</span>' : 
-                                                isOverdue ?
-                                                '<span class="status-badge status-overdue">متأخر</span>' :
-                                                '<span class="status-badge status-pending">معلق</span>'
-                                            }
-                                        </td>
-                                        <td>
-                                            ${!isPaid ? `
-                                                <button class="btn btn-sm btn-success" onclick="payOldDebtInstallment('${debt.id}', ${idx})">
-                                                    <i class="fas fa-money-bill"></i> تسديد
-                                                </button>
-                                            ` : `
-                                                <span style="color: var(--success-color);">
-                                                    <i class="fas fa-check-circle"></i> تم التسديد
-                                                </span>
-                                            `}
-                                        </td>
-                                    </tr>
-                                `;
-                            }).join('')}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-            
-            <!-- سجل التسديدات -->
-            <div class="payments-history" style="margin-top: 2rem; background: var(--theme-bg-secondary); padding: 1.5rem; border-radius: 8px;">
-                <h3><i class="fas fa-history"></i> سجل التسديدات</h3>
-                <div id="paymentsHistoryList" style="margin-top: 1rem;">
-                    ${generatePaymentsHistoryHTML(debt)}
-                </div>
-            </div>
-        </div>
-    `;
-}
-
-// دالة إنشاء سجل التسديدات
-function generatePaymentsHistoryHTML(debt) {
-    const payments = [];
-    
-    if (debt.installments) {
-        debt.installments.forEach((inst, idx) => {
-            if (inst.status === 'paid' && inst.paid_date) {
-                payments.push({
-                    date: inst.paid_date,
-                    amount: inst.paid_amount || inst.amount,
-                    installment: idx + 1,
-                    notes: inst.payment_notes || ''
-                });
-            }
-        });
-    }
-    
-    if (payments.length === 0) {
-        return '<p style="text-align: center; color: #999; padding: 2rem;">لا توجد تسديدات بعد</p>';
-    }
-    
-    // ترتيب حسب التاريخ (الأحدث أولاً)
-    payments.sort((a, b) => new Date(b.date) - new Date(a.date));
-    
-    return `
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>التاريخ</th>
-                    <th>القسط</th>
-                    <th>المبلغ</th>
-                    <th>ملاحظات</th>
-                </tr>
-            </thead>
-            <tbody>
-                ${payments.map(payment => `
-                    <tr>
-                        <td>${formatDateTime(payment.date)}</td>
-                        <td>القسط ${payment.installment}</td>
-                        <td style="color: var(--success-color); font-weight: bold;">
-                            ${formatCurrency(payment.amount)}
-                        </td>
-                        <td>${payment.notes || '-'}</td>
-                    </tr>
-                `).join('')}
-            </tbody>
-        </table>
-    `;
-}
-
-// دالة إخفاء صفحة التفاصيل
-function hideOldDebtDetailsPage() {
-    const detailsPage = document.getElementById('oldDebtDetailsPage');
-    const mainContent = document.querySelector('#oldDebts .page-content');
-    
-    if (detailsPage) detailsPage.style.display = 'none';
-    if (mainContent) mainContent.style.display = 'block';
-    
-    window.currentOldDebtId = null;
-}
-
-// دالة تسديد قسط محسّنة
-async function payOldDebtInstallment(debtId, installmentIndex) {
-    const debt = oldDebtsData.find(d => d.id === debtId);
-    if (!debt || !debt.installments || !debt.installments[installmentIndex]) {
-        alert('⚠️ القسط غير موجود');
-        return;
-    }
-    
-    const installment = debt.installments[installmentIndex];
-    
-    if (installment.status === 'paid') {
-        alert('⚠️ هذا القسط مدفوع بالفعل');
-        return;
-    }
-    
-    const remainingAmount = installment.amount - (installment.paid_amount || 0);
-    
-    // نافذة التسديد
-    const paymentHTML = `
-        <div style="padding: 1rem;">
-            <h3>تسديد القسط ${installmentIndex + 1}</h3>
-            <div style="margin: 1rem 0;">
-                <p><strong>المبلغ المطلوب:</strong> ${formatCurrency(installment.amount)}</p>
-                <p><strong>المدفوع مسبقاً:</strong> ${formatCurrency(installment.paid_amount || 0)}</p>
-                <p><strong>المتبقي:</strong> <span style="color: var(--danger-color); font-weight: bold;">${formatCurrency(remainingAmount)}</span></p>
-            </div>
-            <div class="form-group">
-                <label>المبلغ المدفوع</label>
-                <input type="number" id="paymentAmount" class="form-control" 
-                       value="${remainingAmount}" min="0.01" max="${remainingAmount}" step="0.01">
-            </div>
-            <div class="form-group">
-                <label>ملاحظات</label>
-                <textarea id="paymentNotes" class="form-control" rows="2"></textarea>
-            </div>
-        </div>
-    `;
-    
-    // يمكن استخدام modal هنا بدلاً من prompt
-    const amount = parseFloat(prompt(`المبلغ المدفوع (المتبقي: ${formatCurrency(remainingAmount)}):`, remainingAmount));
-    
-    if (!amount || amount <= 0) {
-        return;
-    }
-    
-    const notes = prompt('ملاحظات (اختياري):') || '';
-    
-    try {
-        const currentPaid = installment.paid_amount || 0;
-        const newPaid = currentPaid + amount;
-        
-        if (newPaid >= installment.amount) {
-            // تسديد كامل
-            installment.status = 'paid';
-            installment.paid_amount = installment.amount;
-            installment.paid_date = new Date().toISOString();
-            installment.payment_notes = notes;
-        } else {
-            // تسديد جزئي - نقل الباقي للشهر التالي
-            installment.paid_amount = newPaid;
-            
-            const remaining = installment.amount - newPaid;
-            
-            // إضافة المبلغ المتبقي للقسط التالي
-            if (debt.installments[installmentIndex + 1]) {
-                debt.installments[installmentIndex + 1].amount += remaining;
-                alert(`✅ تم تسديد ${formatCurrency(amount)}\nتم نقل ${formatCurrency(remaining)} للقسط التالي`);
-            }
-            
-            // تحديث حالة القسط الحالي كمسدد
-            installment.status = 'paid';
-            installment.paid_date = new Date().toISOString();
-            installment.payment_notes = notes + ` (تسديد جزئي - نُقل ${formatCurrency(remaining)} للقسط التالي)`;
-        }
-        
-        // تحديث المبلغ المدفوع الإجمالي
-        debt.paid_amount = (debt.paid_amount || 0) + amount;
-        debt.remaining_amount = debt.total_amount - debt.paid_amount;
-        
-        // تحديث الحالة
-        const allPaid = debt.installments.every(inst => inst.status === 'paid');
-        if (allPaid) {
-            debt.status = 'مسدد';
-        }
-        
-        // حفظ
-        await saveToLocalStorage('oldDebtsData', oldDebtsData);
-        
-        // حفظ في Firebase
-        if (window.database) {
-            try {
-                const uid = localStorage.getItem('app_uid');
-                if (uid) {
-                    await window.database.ref(`users/${uid}/old_debts/${debtId}`).set(debt);
-                }
-            } catch (e) {
-                console.error('Firebase error:', e);
-            }
-        }
-        
-        // طباعة الإيصال
-        printPaymentReceipt(debt, installmentIndex, amount, notes);
-        
-        // تحديث العرض
-        showOldDebtDetailsPage(debtId);
-        renderOldDebtsTable();
-        
-    } catch (error) {
-        console.error('خطأ في التسديد:', error);
-        alert('❌ حدث خطأ في التسديد');
-    }
-}
-
-// دالة طباعة إيصال التسديد
-function printPaymentReceipt(debt, installmentIndex, amount, notes) {
-    const installment = debt.installments[installmentIndex];
-    const receiptHTML = `
-        <!DOCTYPE html>
-        <html dir="rtl" lang="ar">
-        <head>
-            <meta charset="UTF-8">
-            <title>إيصال تسديد قسط</title>
-            <style>
-                body {
-                    font-family: 'Arial', sans-serif;
-                    max-width: 80mm;
-                    margin: 0 auto;
-                    padding: 10px;
-                    direction: rtl;
-                }
-                .header {
-                    text-align: center;
-                    border-bottom: 2px solid #000;
-                    padding-bottom: 10px;
-                    margin-bottom: 15px;
-                }
-                .title {
-                    font-size: 20px;
-                    font-weight: bold;
-                    margin: 10px 0;
-                }
-                .info-row {
-                    display: flex;
-                    justify-content: space-between;
-                    margin: 8px 0;
-                    font-size: 14px;
-                }
-                .label {
-                    font-weight: bold;
-                }
-                .divider {
-                    border-top: 1px dashed #000;
-                    margin: 15px 0;
-                }
-                .amount-box {
-                    text-align: center;
-                    font-size: 24px;
-                    font-weight: bold;
-                    padding: 15px;
-                    border: 2px solid #000;
-                    margin: 15px 0;
-                }
-                .footer {
-                    text-align: center;
-                    margin-top: 20px;
-                    font-size: 12px;
-                }
-                .products-table {
-                    width: 100%;
-                    border-collapse: collapse;
-                    margin: 10px 0;
-                }
-                .products-table td {
-                    padding: 5px;
-                    border-bottom: 1px solid #ddd;
-                }
-            </style>
-        </head>
-        <body>
-            <div class="header">
-                <div class="title">إيصال تسديد قسط</div>
-                <div>${new Date().toLocaleString('ar-IQ')}</div>
-            </div>
-            
-            <div class="info-row">
-                <span class="label">رقم الإيصال:</span>
-                <span>PAY-${Date.now()}</span>
-            </div>
-            
-            <div class="divider"></div>
-            
-            <div class="info-row">
-                <span class="label">العميل:</span>
-                <span>${debt.customer_name}</span>
-            </div>
-            
-            <div class="info-row">
-                <span class="label">الهاتف:</span>
-                <span>${debt.customer_phone}</span>
-            </div>
-            
-            <div class="divider"></div>
-            
-            <div class="info-row">
-                <span class="label">رقم القسط:</span>
-                <span>${installmentIndex + 1} من ${debt.installments.length}</span>
-            </div>
-            
-            <div class="info-row">
-                <span class="label">تاريخ الاستحقاق:</span>
-                <span>${formatDate(installment.due_date)}</span>
-            </div>
-            
-            <div class="amount-box">
-                ${formatCurrency(amount)}
-            </div>
-            
-            ${debt.products && debt.products.length > 0 ? `
-                <div class="divider"></div>
-                <div style="font-weight: bold; margin-bottom: 10px;">المنتجات:</div>
-                <table class="products-table">
-                    ${debt.products.map(p => `
-                        <tr>
-                            <td>${p.name}</td>
-                            <td>x${p.quantity}</td>
-                        </tr>
-                    `).join('')}
-                </table>
-            ` : ''}
-            
-            ${notes ? `
-                <div class="divider"></div>
-                <div class="info-row">
-                    <span class="label">ملاحظات:</span>
-                </div>
-                <div style="font-size: 12px; margin-top: 5px;">${notes}</div>
-            ` : ''}
-            
-            <div class="divider"></div>
-            
-            <div class="info-row">
-                <span class="label">الإجمالي المتبقي:</span>
-                <span>${formatCurrency(debt.remaining_amount)}</span>
-            </div>
-            
-            <div class="footer">
-                <div>شكراً لثقتكم</div>
-                <div style="margin-top: 10px;">تم الإنشاء بواسطة نظام Cash Pro</div>
-            </div>
-        </body>
-        </html>
-    `;
-    
-    const printWindow = window.open('', '_blank');
-    printWindow.document.write(receiptHTML);
-    printWindow.document.close();
-    printWindow.print();
-}
-
-// دالة طباعة فاتورة الدين الكاملة
-function printOldDebtInvoice(debtId) {
-    const debt = oldDebtsData.find(d => d.id === debtId);
-    if (!debt) return;
-    
-    const invoiceHTML = `
-        <!DOCTYPE html>
-        <html dir="rtl" lang="ar">
-        <head>
-            <meta charset="UTF-8">
-            <title>فاتورة دين - ${debt.customer_name}</title>
-            <style>
-                body {
-                    font-family: 'Arial', sans-serif;
-                    max-width: 210mm;
-                    margin: 0 auto;
-                    padding: 20px;
-                    direction: rtl;
-                }
-                .header {
-                    text-align: center;
-                    border-bottom: 3px solid #000;
-                    padding-bottom: 20px;
-                    margin-bottom: 30px;
-                }
-                .title {
-                    font-size: 28px;
-                    font-weight: bold;
-                    margin: 15px 0;
-                }
-                .info-section {
-                    margin: 20px 0;
-                }
-                .info-row {
-                    display: flex;
-                    justify-content: space-between;
-                    margin: 10px 0;
-                    font-size: 16px;
-                }
-                .table {
-                    width: 100%;
-                    border-collapse: collapse;
-                    margin: 20px 0;
-                }
-                .table th, .table td {
-                    border: 1px solid #ddd;
-                    padding: 12px;
-                    text-align: center;
-                }
-                .table th {
-                    background: #f5f5f5;
-                    font-weight: bold;
-                }
-                .total-box {
-                    text-align: left;
-                    font-size: 20px;
-                    font-weight: bold;
-                    padding: 20px;
-                    border: 2px solid #000;
-                    margin: 20px 0;
-                }
-            </style>
-        </head>
-        <body>
-            <div class="header">
-                <div class="title">فاتورة دين</div>
-                <div>رقم الفاتورة: ${debt.invoice_id}</div>
-                <div>${formatDate(debt.date)}</div>
-            </div>
-            
-            <div class="info-section">
-                <h3>معلومات العميل</h3>
-                <div class="info-row">
-                    <span><strong>الاسم:</strong> ${debt.customer_name}</span>
-                    <span><strong>الهاتف:</strong> ${debt.customer_phone}</span>
-                </div>
-                ${debt.customer_address ? `
-                    <div class="info-row">
-                        <span><strong>العنوان:</strong> ${debt.customer_address}</span>
-                    </div>
-                ` : ''}
-            </div>
-            
-            ${debt.products && debt.products.length > 0 ? `
-                <div class="info-section">
-                    <h3>المنتجات</h3>
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>المنتج</th>
-                                <th>الكمية</th>
-                                <th>السعر</th>
-                                <th>الإجمالي</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${debt.products.map((p, idx) => `
-                                <tr>
-                                    <td>${idx + 1}</td>
-                                    <td>${p.name}</td>
-                                    <td>${p.quantity}</td>
-                                    <td>${formatCurrency(p.price)}</td>
-                                    <td>${formatCurrency(p.quantity * p.price)}</td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-                </div>
-            ` : ''}
-            
-            <div class="total-box">
-                <div>المبلغ الإجمالي: ${formatCurrency(debt.total_amount)}</div>
-                <div>المبلغ المدفوع: ${formatCurrency(debt.paid_amount || 0)}</div>
-                <div style="color: red;">المبلغ المتبقي: ${formatCurrency(debt.remaining_amount)}</div>
-            </div>
-            
-            <div class="info-section">
-                <h3>جدول الأقساط (${debt.installments.length} شهر)</h3>
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>القسط</th>
-                            <th>تاريخ الاستحقاق</th>
-                            <th>المبلغ</th>
-                            <th>الحالة</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${debt.installments.map((inst, idx) => `
-                            <tr>
-                                <td>${idx + 1}</td>
-                                <td>${formatDate(inst.due_date)}</td>
-                                <td>${formatCurrency(inst.amount)}</td>
-                                <td>${inst.status === 'paid' ? '✓ مسدد' : 'معلق'}</td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-            </div>
-            
-            ${debt.notes ? `
-                <div class="info-section">
-                    <h3>ملاحظات</h3>
-                    <p>${debt.notes}</p>
-                </div>
-            ` : ''}
-            
-            <div style="text-align: center; margin-top: 50px; font-size: 14px; color: #666;">
-                تم الإنشاء بواسطة نظام Cash Pro
-            </div>
-        </body>
-        </html>
-    `;
-    
-    const printWindow = window.open('', '_blank');
-    printWindow.document.write(invoiceHTML);
-    printWindow.document.close();
-    printWindow.print();
-}
-
-// دالة تعديل دين قديم
-function editOldDebt(debtId) {
-    const debt = oldDebtsData.find(d => d.id === debtId);
-    if (!debt) {
-        alert('⚠️ لم يتم العثور على الدين');
-        return;
-    }
-    
-    // تحميل البيانات في النافذة
-    document.getElementById('oldDebtCustomerName').value = debt.customer_name;
-    document.getElementById('oldDebtCustomerPhone').value = debt.customer_phone;
-    document.getElementById('oldDebtCustomerAddress').value = debt.customer_address || '';
-    document.getElementById('oldDebtDate').value = debt.date;
-    document.getElementById('oldDebtDownPayment').value = debt.paid_amount || 0;
-    document.getElementById('oldDebtExtraAmount').value = debt.extra_amount || 0;
-    document.getElementById('oldDebtMonths').value = debt.installment_months;
-    document.getElementById('oldDebtStartDate').value = debt.start_date;
-    document.getElementById('oldDebtNotes').value = debt.notes || '';
-    
-    // تحميل المنتجات
-    oldDebtProducts = debt.products || [];
-    renderOldDebtProductsTable();
-    
-    // تخزين ID للتعديل
-    window.editingOldDebtId = debtId;
-    
-    // فتح النافذة
-    showModal('addOldDebtModal');
-}
-
-// دالة تنسيق التاريخ والوقت
-function formatDateTime(dateString) {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    return date.toLocaleString('ar-IQ', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit'
-    });
-}
+</html>

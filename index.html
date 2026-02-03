@@ -142,15 +142,14 @@ function generateInstallmentPaymentReceipt({debt, paidInstallment, storeSettings
     // معلومات إضافية
     const invoiceId = debt.invoice_id || debt.debt_id || 'غير محدد';
     const receiptNumber = `${invoiceId}-${paidMonth}`;
-
     let html = `<!DOCTYPE html>
 <html dir="rtl" lang="ar">
 <head>
 <meta charset="UTF-8">
 <title>إيصال تسديد قسط</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
 <style>
-/* متغيرات ألوان الوضع الفاتح */
 :root {
     --color-bg: #fff;
     --color-text: #111;
@@ -162,7 +161,6 @@ function generateInstallmentPaymentReceipt({debt, paidInstallment, storeSettings
     --color-badge-bg: #fff;
     --color-badge-text: #000;
 }
-/* متغيرات ألوان الوضع الداكن */
 [data-theme="dark"] {
     --color-bg: #000;
     --color-text: #fff;
@@ -176,74 +174,56 @@ function generateInstallmentPaymentReceipt({debt, paidInstallment, storeSettings
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
-        font-family: 'Cairo', sans-serif;
-        background: var(--color-bg);
-        color: var(--color-text);
-        padding: 20px;
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
+    font-family: 'Cairo', sans-serif;
+    background: var(--color-bg);
+    color: var(--color-text);
+    padding: 8px;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    min-height: 100vh;
 }
-/* ألوان ديناميكية حسب الثيم */
-.info-label, .stat-label, .table th, .table td {
-    color: var(--color-panel-text) !important;
-}
-.info-value, .stat-value {
-    color: var(--color-success) !important;
-}
-.info-value strong, .stat-value strong, .highlight, .selected, .active, .highlighted {
-    color: var(--color-text) !important;
-    background: var(--color-bg) !important;
-}
-
 .receipt-container {
-    max-width: 210mm;
+    max-width: 430px;
     margin: 0 auto;
     background: var(--color-bg);
-    border: 3px solid var(--color-text);
-    padding: 15px;
+    border: 2px solid var(--color-text);
+    border-radius: 16px;
+    padding: 10px 8px 16px 8px;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.08);
 }
-
 .receipt-header {
     text-align: center;
-    padding: 6px 0 6px 0;
-    border-bottom: 3px double #000;
+    padding: 4px 0 8px 0;
+    border-bottom: 2px solid #eee;
     margin-bottom: 8px;
 }
-
 .store-name {
-    font-size: 26px;
+    font-size: 22px;
     font-weight: 700;
     color: #000;
-    margin-bottom: 8px;
-    letter-spacing: 1px;
+    margin-bottom: 6px;
+    letter-spacing: 0.5px;
 }
-
 .store-info {
-    font-size: 14px;
+    font-size: 13px;
     color: #333;
-    margin-bottom: 15px;
+    margin-bottom: 10px;
 }
-
 .devices-bar {
     display: flex;
-    flex-direction: row;
     flex-wrap: wrap;
     justify-content: center;
-    align-items: center;
-    gap: 4px;
+    gap: 3px;
     padding: 2px 0;
-    border: 1px solid #bbb;
+    border: 1px solid #eee;
     border-radius: 6px;
     margin-top: 2px;
     background: #fafafa;
-    min-height: 32px;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+    min-height: 28px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.03);
 }
-
-/* أيقونات الأجهزة في صف واحد وحجم أصغر */
 .device-icon {
     display: flex;
-    flex-direction: row;
     align-items: center;
     gap: 2px;
     font-size: 9px;
@@ -251,264 +231,220 @@ body {
     padding: 2px 6px;
     border-radius: 4px;
     background: #f3f3f3;
-    min-width: 60px;
-    min-height: 22px;
+    min-width: 54px;
+    min-height: 18px;
 }
 .device-icon span:first-child {
-    font-size: 15px;
+    font-size: 13px;
     margin-left: 2px;
 }
-
 .receipt-title {
-    font-size: 20px;
+    font-size: 17px;
     font-weight: 700;
     margin: 2px 0 2px 0;
-    padding: 0;
-    border: none;
-    border-radius: 0;
     text-align: center;
     color: #000;
 }
-
 .receipt-info {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
+    display: flex;
+    justify-content: space-between;
+    gap: 6px;
     padding: 6px 0;
-    border-bottom: 2px solid #ddd;
+    border-bottom: 1px solid #eee;
 }
-
 .info-box {
-    border: 2px solid #ddd;
+    border: 1px solid #eee;
     border-radius: 5px;
-    padding: 10px;
-    background: white;
+    padding: 7px 5px;
+    background: #fff;
+    width: 48%;
 }
-
 .info-label {
-    font-size: 12px;
+    font-size: 11px;
     color: #666;
     font-weight: 600;
-    margin-bottom: 5px;
+    margin-bottom: 2px;
 }
-
 .info-value {
-    font-size: 16px;
-    font-weight: 700;
-    color: #000;
-}
-
-.customer-section {
-    padding: 6px 0;
-    border-bottom: 2px dashed #ccc;
-}
-
-.section-title {
-    font-size: 16px;
-    font-weight: 700;
-    color: #000;
-    margin-bottom: 12px;
-    padding-bottom: 8px;
-    border-bottom: 2px solid #000;
-}
-
-.customer-info {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-}
-
-.info-item {
     font-size: 14px;
+    font-weight: 700;
+    color: #000;
+}
+.customer-section {
+    padding: 6px 0 0 0;
+    border-bottom: 1px dashed #ccc;
+}
+.section-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #000;
+    margin-bottom: 7px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid #000;
+}
+.customer-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.info-item {
+    font-size: 13px;
     color: #333;
 }
-
 .info-item strong {
     color: #000;
 }
-
 .paid-installments {
-    padding: 6px 0;
-    border-bottom: 2px dashed #ccc;
+    padding: 6px 0 0 0;
+    border-bottom: 1px dashed #ccc;
 }
-
 .installment-card {
     border: 1px solid #000;
     border-radius: 5px;
-    padding: 6px 10px;
-    background: white;
-    margin-bottom: 4px;
+    padding: 6px 8px;
+    background: #fff;
+    margin-bottom: 2px;
 }
-
 .installment-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 4px;
-    padding-bottom: 4px;
+    margin-bottom: 2px;
+    padding-bottom: 2px;
     border-bottom: 1px solid #eee;
 }
-
 .installment-number {
+    font-size: 12px;
+    font-weight: 700;
+    color: #000;
+}
+.installment-amount {
     font-size: 13px;
     font-weight: 700;
     color: #000;
 }
-
-.installment-amount {
-    font-size: 15px;
-    font-weight: 700;
-    color: #000;
-}
-
 .installment-details {
-    font-size: 12px;
+    font-size: 11px;
     color: #333;
     line-height: 1.5;
     margin-bottom: 2px;
 }
-
 .payment-status {
     display: inline-block;
-    padding: 2px 10px;
-    border-radius: 12px;
-    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 10px;
     font-weight: 600;
     margin-top: 2px;
     border: 1px solid #000;
 }
-
 .status-full {
-    background: white;
+    background: #fff;
     color: #000;
 }
-
 .status-partial {
     background: #f5f5f5;
     color: #000;
 }
-
 .debt-summary {
-    padding: 4px 0 2px 0;
+    padding: 4px 0 0 0;
     border-bottom: none;
     margin-bottom: 0;
 }
-
 .summary-grid {
     display: flex;
-    flex-direction: row;
+    flex-wrap: wrap;
     justify-content: space-between;
-    align-items: center;
-    gap: 8px;
+    gap: 6px;
     border: none;
 }
-
 .summary-item {
     border: none;
     border-radius: 0;
-    padding: 2px 8px;
+    padding: 2px 4px;
     text-align: center;
     background: none;
-    font-size: 13px;
-    min-width: 90px;
+    font-size: 12px;
+    min-width: 80px;
+    flex: 1 1 40%;
 }
-
 .summary-label {
-    font-size: 11px;
+    font-size: 10px;
     color: #666;
     margin-bottom: 0;
 }
-
 .summary-value {
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 700;
     color: #000;
 }
-
 .notes-section {
-    padding: 6px 0;
+    padding: 6px 0 0 0;
 }
-
 .note-text {
-    font-size: 13px;
-    color: #333;
-    line-height: 1.8;
-    border: 2px solid #ddd;
-    padding: 12px;
-    border-radius: 5px;
-    background: white;
-}
-
-.receipt-footer {
-    text-align: center;
-    padding: 6px 0;
-    margin-top: 8px;
-    border-top: 3px double #000;
     font-size: 12px;
     color: #333;
+    line-height: 1.7;
+    border: 1px solid #eee;
+    padding: 8px;
+    border-radius: 5px;
+    background: #fff;
 }
-
+.receipt-footer {
+    text-align: center;
+    padding: 6px 0 0 0;
+    margin-top: 8px;
+    border-top: 2px solid #eee;
+    font-size: 11px;
+    color: #333;
+}
+@media (max-width: 480px) {
+    .receipt-container {
+        max-width: 100vw;
+        border-radius: 0;
+        padding: 4px 2px 10px 2px;
+    }
+    .devices-bar { font-size: 8px; }
+    .store-name { font-size: 18px; }
+    .receipt-title { font-size: 15px; }
+    .section-title { font-size: 12px; }
+}
 @media print {
     body { padding: 0; }
-    .receipt-container { border: 2px solid #000; }
+    .receipt-container { border: 1px solid #000; box-shadow: none; }
 }
 </style>
 </head>
 <body>
 <div class="receipt-container">
     <div class="receipt-header">
-        <!-- اللوجو في أعلى الورقة بمساحة عريضة -->
-        <div style="text-align: center; margin-bottom: 14px;">
-            <img src="${logoBase64}" alt="Logo" style="max-width: 160px; max-height: 70px; display: inline-block; vertical-align: middle; border-radius: 12px; box-shadow: 0 3px 12px rgba(0,0,0,0.15); margin-bottom: 10px; object-fit: contain;" onerror="this.style.display='none'" />
+        <div style="text-align: center; margin-bottom: 10px;">
+            <img src="${logoBase64}" alt="Logo" style="max-width: 110px; max-height: 45px; display: inline-block; vertical-align: middle; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.10); margin-bottom: 6px; object-fit: contain;" onerror="this.style.display='none'" />
         </div>
         <div class="store-name">${storeName}</div>
-        <div class="receipt-header-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
-            <div style="font-size:13px; color:#333; font-weight:600;">${storeAddress} • ${storePhone}</div>
-            <div style="display:flex; gap:16px;">
-                <span style="font-size:13px; color:#333; font-weight:600;">رقم الإيصال: ${toEnglishDigits(receiptNumber)}</span>
-                <span style="font-size:13px; color:#333; font-weight:600;">رقم الفاتورة: ${toEnglishDigits(invoiceId)}</span>
-            </div>
+        <div class="receipt-header-row" style="font-size:12px; color:#333; font-weight:600; margin-bottom:2px;">
+            ${storeAddress} • ${storePhone}
+        </div>
+        <div style="display:flex; justify-content:center; gap:10px; margin-bottom:2px;">
+            <span style="font-size:12px;">رقم الإيصال: ${toEnglishDigits(receiptNumber)}</span>
+            <span style="font-size:12px;">رقم الفاتورة: ${toEnglishDigits(invoiceId)}</span>
         </div>
         <div class="devices-bar">
-            <div class="device-icon">
-                <span>🧊</span>
-                <span>ثلاجات</span>
-            </div>
-            <div class="device-icon">
-                <span>❄️</span>
-                <span>مبردات</span>
-            </div>
-            <div class="device-icon">
-                <span>👔</span>
-                <span>غسالات</span>
-            </div>
-            <div class="device-icon">
-                <span>🔥</span>
-                <span>مدافئ</span>
-            </div>
-            <div class="device-icon">
-                <span>💨</span>
-                <span>مراوح</span>
-            </div>
-            <div class="device-icon">
-                <span>📺</span>
-                <span>شاشات</span>
-            </div>
-            <div class="device-icon">
-                <span>📱</span>
-                <span>هواتف</span>
-            </div>
-            <div class="device-icon">
-                <span>⚡</span>
-                <span>أجهزة كهربائية</span>
-            </div>
+            <div class="device-icon"><span>🧊</span><span>ثلاجات</span></div>
+            <div class="device-icon"><span>❄️</span><span>مبردات</span></div>
+            <div class="device-icon"><span>👔</span><span>غسالات</span></div>
+            <div class="device-icon"><span>🔥</span><span>مدافئ</span></div>
+            <div class="device-icon"><span>💨</span><span>مراوح</span></div>
+            <div class="device-icon"><span>📺</span><span>شاشات</span></div>
+            <div class="device-icon"><span>📱</span><span>هواتف</span></div>
+            <div class="device-icon"><span>⚡</span><span>أجهزة كهربائية</span></div>
         </div>
         <div class="receipt-title">إيصال تسديد قسط</div>
     </div>
     <div class="receipt-info">
         <div class="info-box">
             <div class="info-label">التاريخ</div>
-            <div class="info-value" style="font-size: 13px;">${dateStr}</div>
+            <div class="info-value" style="font-size: 12px;">${dateStr}</div>
         </div>
         <div class="info-box">
             <div class="info-label">الوقت</div>
@@ -567,7 +503,7 @@ body {
         </div>
     </div>
     <div class="receipt-footer">
-        <div style="font-weight:700;margin-bottom:5px;">شكراً لثقتكم 🙏</div>
+        <div style="font-weight:700;margin-bottom:3px;">شكراً لثقتكم 🙏</div>
         <div>نظام كاش برو - Digital Creativity © ${new Date().getFullYear()}</div>
     </div>
 </div>
@@ -576,6 +512,7 @@ body {
     
     return html;
 }
+    
 </script>
 <!doctype html>
 <html lang="ar" dir="rtl">
@@ -15085,6 +15022,52 @@ console.log(`
             </div>
           </div>
 
+          <!-- إعدادات الطباعة -->
+          <div class="settings-section">
+            <h3 style="margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 2px solid rgba(255,255,255,0.1);">
+              <i class="fas fa-print"></i> إعدادات الطباعة
+            </h3>
+
+            <div style="background: rgba(59, 130, 246, 0.1); border-right: 4px solid #3b82f6; padding: 1.5rem; border-radius: 8px; margin-bottom: 1.5rem;">
+              <h4 style="color: #3b82f6; margin-bottom: 0.5rem;">
+                <i class="fas fa-info-circle"></i> معلومة
+              </h4>
+              <p style="color: var(--theme-text-secondary); line-height: 1.6; margin: 0;">
+                يمكنك التحكم في طباعة الإيصالات بشكل منفصل لكل نوع من أنواع العمليات
+              </p>
+            </div>
+
+            <div class="form-group">
+              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" id="printCashReceipts" checked style="width: auto;">
+                <span>طباعة إيصالات المبيعات النقدية</span>
+              </label>
+              <small style="color: var(--theme-text-secondary); margin-top: 0.5rem; display: block; margin-right: 1.75rem;">
+                طباعة الفاتورة بعد إتمام عملية بيع نقدية
+              </small>
+            </div>
+
+            <div class="form-group">
+              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" id="printInstallmentReceipts" checked style="width: auto;">
+                <span>طباعة فواتير البيع بالأقساط</span>
+              </label>
+              <small style="color: var(--theme-text-secondary); margin-top: 0.5rem; display: block; margin-right: 1.75rem;">
+                طباعة فاتورة التقسيط عند إتمام عملية بيع بالأقساط
+              </small>
+            </div>
+
+            <div class="form-group">
+              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" id="printPaymentReceipts" checked style="width: auto;">
+                <span>طباعة إيصالات تسديد الأقساط</span>
+              </label>
+              <small style="color: var(--theme-text-secondary); margin-top: 0.5rem; display: block; margin-right: 1.75rem;">
+                طباعة إيصال عند تسديد قسط شهري
+              </small>
+            </div>
+          </div>
+
           <!-- إعدادات نقطة البيع -->
           <div class="settings-section">
             <h3 style="margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 2px solid rgba(255,255,255,0.1);">
@@ -18578,7 +18561,7 @@ console.log(`
         // إعدادات افتراضية
         const defaultConfig = {
             store_name: 'متجر التقنية الحديثة',
-            store_address: 'بغداد - المنصور',
+            store_address: 'باب الهاشمية قرب مدرسة الكرار',
             store_phone: '07803092185',
             tax_rate: '0'
         };
@@ -19365,6 +19348,14 @@ console.log(`
             });
             
             console.log('✅ تم حفظ الدين:', key);
+            
+            // 🔄 إعادة حساب الأقساط الشهرية للعميل
+            if (debtObj.customer_name && typeof recalculateCustomerTotalMonthlyInstallment === 'function') {
+                setTimeout(() => {
+                    recalculateCustomerTotalMonthlyInstallment(debtObj.customer_name);
+                }, 500);
+            }
+            
             return key;
         }
 
@@ -24655,13 +24646,28 @@ console.log(`
                 return;
             }
             
-            // البحث عن دين موجود لهذا العميل
-            const existingDebt = debtsData.find(debt => 
-                debt.customer_phone === customerPhone && 
-                debt.status === 'نشط'
-            );
+            // البحث عن دين موجود لهذا العميل - مع التحقق من المبلغ المتبقي
+            console.log('🔍 البحث عن ديون موجودة للعميل:', customerPhone);
+            console.log('📊 إجمالي الديون في النظام:', debtsData.length);
             
-            if (existingDebt) {
+            let existingDebt = null;
+            
+            // التحقق من وجود رقم هاتف صالح ووجود بيانات
+            if (customerPhone && customerPhone.trim() !== '' && Array.isArray(debtsData) && debtsData.length > 0) {
+                existingDebt = debtsData.find(debt => {
+                    const samePhone = debt.customer_phone === customerPhone;
+                    const isActive = debt.status === 'نشط';
+                    const hasRemaining = parseFloat(debt.remaining_amount || 0) > 0;
+                    
+                    console.log(`   📋 فحص الدين ${debt.id}: هاتف=${samePhone}, نشط=${isActive}, متبقي=${debt.remaining_amount}`);
+                    
+                    return samePhone && isActive && hasRemaining;
+                });
+            }
+            
+            console.log('✅ نتيجة البحث:', existingDebt ? 'تم العثور على دين موجود' : 'لا يوجد دين موجود');
+            
+            if (existingDebt && parseFloat(existingDebt.remaining_amount || 0) > 0) {
                 console.log('📋 تم العثور على دين موجود للعميل - سيتم الدمج');
                 console.log('الدين الحالي:', existingDebt);
                 // تأكيد الدمج
@@ -24673,7 +24679,7 @@ console.log(`
                     `(سيتم دمج الديون في سجل واحد)`
                 );
                 if (!confirmMerge) {
-                    // تم إزالة الإشعار
+                    console.log('❌ المستخدم رفض دمج الديون');
                     return;
                 }
                 // دمج الدين الجديد مع الدين الموجود
@@ -24766,6 +24772,17 @@ console.log(`
             }
 // طباعة فاتورة تقسيط مفصلة (نطاق عام)
 function printInstallmentInvoice(invoiceId, silent = false, extraData = {}) {
+    console.log('🖨️ محاولة طباعة فاتورة الأقساط:', invoiceId);
+    
+    // ✅ فحص إعدادات الطباعة قبل الطباعة
+    const systemSettings = JSON.parse(localStorage.getItem('systemSettings') || '{}');
+    if (systemSettings.printInstallmentReceipts === false) {
+        console.log('⏸️ طباعة فواتير الأقساط معطلة في الإعدادات');
+        return;
+    }
+    
+    console.log('✅ الطباعة مسموحة - المتابعة...');
+    
     window.printInstallmentInvoice = printInstallmentInvoice;
     (async () => {
         const settings = JSON.parse(localStorage.getItem('printerSettings') || '{}');
@@ -24869,311 +24886,299 @@ if (typeof window !== 'undefined') {
         function generateInstallmentInvoiceReceipt(sale, settings) {
             // استخراج التاريخ والساعة - عربي مع أرقام إنجليزية
             const saleDate = new Date(sale.timestamp || sale.created_at || Date.now());
-            
-            const dateOptions = { 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric',
-                weekday: 'long'
-            };
+            const dateOptions = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
             const dateStrArabic = saleDate.toLocaleDateString('ar-IQ', dateOptions);
             const dateStr = toEnglishDigits(dateStrArabic);
-            
-            const timeOptions = { 
-                hour: '2-digit', 
-                minute: '2-digit',
-                hour12: true
-            };
+            const timeOptions = { hour: '2-digit', minute: '2-digit', hour12: true };
             const timeStrArabic = saleDate.toLocaleTimeString('ar-IQ', timeOptions);
             const timeStr = toEnglishDigits(timeStrArabic);
-            
-            // استخراج تفاصيل الأقساط من installment_details أو من مستوى الفاتورة
+
+            // تفاصيل الأقساط
             const installmentDetails = sale.installment_details || {};
             const originalSubtotal = installmentDetails.original_subtotal || sale.subtotal || 0;
             const additionalAmount = installmentDetails.additional_amount || sale.additional_amount || 0;
             const downPayment = installmentDetails.down_payment || sale.down_payment || 0;
-            
-            // حساب المبالغ بالترتيب الصحيح
-            const totalAmount = originalSubtotal + additionalAmount; // المبلغ الإجمالي الكلي
-            const remainingAmount = totalAmount - downPayment; // المبلغ المتبقي
-            const finalTotal = remainingAmount; // المبلغ النهائي = المتبقي
+            const totalAmount = originalSubtotal + additionalAmount;
+            const remainingAmount = totalAmount - downPayment;
+            const finalTotal = remainingAmount;
             const monthlyAmount = installmentDetails.monthly_amount || sale.monthly_amount || (remainingAmount / (installmentDetails.installment_months || sale.installment_months || 1));
             const installmentMonths = installmentDetails.installment_months || sale.installment_months || 0;
             const startDate = installmentDetails.start_date || sale.start_date || null;
             const advancedControlUsed = installmentDetails.advanced_control_used || installmentDetails.custom_values_used || false;
-            
+
             // شريط أيقونات الأجهزة الكهربائية
             const devices = [
-                { icon: '❄️', name: 'مبردة' },
-                { icon: '🧺', name: 'غسالة' },
-                { icon: '📺', name: 'شاشة' },
-                { icon: '🔥', name: 'دفاية' },
-                { icon: '🪔', name: 'صوبة' },
-                { icon: '🌀', name: 'مروحة' },
-                { icon: '📱', name: 'هاتف' }
+            { icon: '❄️', name: 'مبردة' },
+            { icon: '🧺', name: 'غسالة' },
+            { icon: '📺', name: 'شاشة' },
+            { icon: '🔥', name: 'دفاية' },
+            { icon: '🪔', name: 'صوبة' },
+            { icon: '🌀', name: 'مروحة' },
+            { icon: '📱', name: 'هاتف' }
             ];
-            let html = `<div style="width:210mm;min-height:297mm;margin:0 auto;padding:10mm 8mm;font-family:'Cairo',sans-serif;background:#fff;color:#222;line-height:1.4;font-size:11px;box-sizing:border-box;">
+
+            // تصغير جميع العناصر لتناسب ورقة واحدة
+            let html = `<div style="width:210mm;min-height:297mm;margin:0 auto;padding:6mm 4mm;font-family:'Cairo',sans-serif;background:#fff;color:#222;line-height:1.25;font-size:9px;box-sizing:border-box;">
             
-            <!-- اللوجو في أعلى الورقة بمساحة عريضة -->
-            <div style="text-align:center;margin-bottom:12px;padding-bottom:10px;border-bottom:2px solid #6366f1;">
-                ${logoBase64 && logoBase64.startsWith('data:image') ? `<img src="${logoBase64}" alt="Logo" style="max-width:160px;max-height:70px;display:inline-block;border-radius:12px;box-shadow:0 3px 12px rgba(99,102,241,0.2);margin-bottom:10px;object-fit:contain;" onerror="this.style.display='none'" />` : ''}
-                <h1 style="margin:6px 0 4px 0;font-size:1.5rem;font-weight:bold;color:#1e293b;letter-spacing:0.5px;">${settings?.store_name || 'معرض يعقوب للأجهزة الكهربائية'}</h1>
-                <div style="font-size:0.95rem;color:#475569;font-weight:600;margin-bottom:4px;">${settings?.store_address || 'باب الهاشمية قرب مدرسة الكرار'}</div>
-                <div style="font-size:0.9rem;color:#6366f1;font-weight:700;padding:3px 10px;background:#f0f4ff;border-radius:12px;display:inline-block;margin-bottom:8px;">
-                    📞 ${settings?.store_phone || '07803092185'}
+            <!-- اللوجو في أعلى الورقة من جهة اليمين -->
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid #6366f1;">
+            <div style="flex:1;text-align:left;">
+                ${logoBase64 && logoBase64.startsWith('data:image') ? `<img src="${logoBase64}" alt="Logo" style="max-width:90px;max-height:40px;display:inline-block;border-radius:8px;box-shadow:0 2px 8px rgba(99,102,241,0.12);object-fit:contain;" onerror="this.style.display='none'" />` : ''}
+            </div>
+            <div style="flex:2;text-align:right;">
+                <h1 style="margin:2px 0 2px 0;font-size:1.05rem;font-weight:bold;color:#1e293b;letter-spacing:0.5px;">${settings?.store_name || 'معرض يعقوب للأجهزة الكهربائية'}</h1>
+                <div style="font-size:0.85rem;color:#475569;font-weight:600;margin-bottom:2px;">${settings?.store_address || 'باب الهاشمية قرب مدرسة الكرار'}</div>
+                <div style="font-size:0.8rem;color:#6366f1;font-weight:700;padding:2px 8px;background:#f0f4ff;border-radius:8px;display:inline-block;">
+                📞 ${settings?.store_phone || '07803092185'}
                 </div>
-                
-                <!-- شريط أفقي للأجهزة الكهربائية - تحت رقم الهاتف -->
-                <div style="display:flex;flex-direction:row;flex-wrap:wrap;justify-content:center;align-items:center;gap:4px;padding:4px 8px;border:1px solid #bbb;border-radius:6px;margin-top:8px;background:#fafafa;box-shadow:0 1px 2px rgba(0,0,0,0.04);">
-                    ${devices.map(d => `
-                        <div style="display:flex;flex-direction:row;align-items:center;gap:3px;font-size:9px;color:#333;padding:2px 6px;border-radius:4px;background:#f3f3f3;min-width:60px;min-height:22px;">
-                            <span style="font-size:15px;margin-left:2px;">${d.icon}</span>
-                            <span style="font-weight:600;">${d.name}</span>
-                        </div>
-                    `).join('')}
+            </div>
+            </div>
+            
+            <!-- شريط أفقي للأجهزة الكهربائية -->
+            <div style="display:flex;flex-direction:row;flex-wrap:wrap;justify-content:center;align-items:center;gap:2px;padding:2px 4px;border:1px solid #bbb;border-radius:4px;margin-top:4px;background:#fafafa;box-shadow:0 1px 2px rgba(0,0,0,0.03);font-size:8px;">
+            ${devices.map(d => `
+                <div style="display:flex;align-items:center;gap:2px;font-size:8px;color:#333;padding:1px 4px;border-radius:3px;background:#f3f3f3;min-width:40px;min-height:16px;">
+                <span style="font-size:12px;margin-left:1px;">${d.icon}</span>
+                <span style="font-weight:600;">${d.name}</span>
                 </div>
+            `).join('')}
             </div>
             
             <!-- عنوان الفاتورة ومعلوماتها -->
-            <div style="background:linear-gradient(135deg,#6366f1 0%,#8b5cf6 100%);border-radius:8px;padding:8px 12px;margin-bottom:10px;color:#fff;box-shadow:0 3px 10px rgba(99,102,241,0.2);">
-                <div style="display:flex;justify-content:space-between;align-items:center;">
-                    <div>
-                        <div style="font-size:1.15rem;font-weight:bold;">📋 فاتورة تقسيط</div>
-                        <div style="font-size:0.85rem;opacity:0.95;margin-top:3px;">رقم الفاتورة: ${toEnglishDigits(sale.invoice_id || '')}</div>
-                    </div>
-                    <div style="text-align:left;font-size:0.85rem;line-height:1.5;">
-                        <div style="background:rgba(255,255,255,0.2);padding:3px 8px;border-radius:5px;margin-bottom:3px;">📅 ${dateStr}</div>
-                        <div style="background:rgba(255,255,255,0.2);padding:3px 8px;border-radius:5px;">🕐 ${timeStr}</div>
-                    </div>
+            <div style="background:linear-gradient(135deg,#6366f1 0%,#8b5cf6 100%);border-radius:6px;padding:5px 8px;margin-bottom:6px;color:#fff;box-shadow:0 2px 6px rgba(99,102,241,0.12);font-size:9px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+                <div>
+                <div style="font-size:1rem;font-weight:bold;">📋 فاتورة تقسيط</div>
+                <div style="font-size:0.75rem;opacity:0.95;margin-top:2px;">رقم الفاتورة: ${toEnglishDigits(sale.invoice_id || '')}</div>
+                </div>
+                <div style="text-align:left;font-size:0.75rem;line-height:1.3;">
+                <div style="background:rgba(255,255,255,0.2);padding:2px 6px;border-radius:4px;margin-bottom:2px;">📅 ${dateStr}</div>
+                <div style="background:rgba(255,255,255,0.2);padding:2px 6px;border-radius:4px;">🕐 ${timeStr}</div>
                 </div>
             </div>
-            
-            <!-- معلومات العميل - صف واحد -->
-            <div style="background:#f8fafc;border-radius:6px;padding:6px 8px;margin-bottom:8px;border:1px solid #e2e8f0;">
-                <div style="font-weight:bold;color:#1e293b;margin-bottom:4px;font-size:0.95rem;">👤 معلومات العميل</div>
-                <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;font-size:0.9rem;">
-                    <div><strong>الاسم:</strong> ${sale.customer_name || ''}</div>
-                    <div><strong>الهاتف:</strong> ${sale.customer_phone || ''}</div>
-                    <div><strong>العنوان:</strong> ${sale.customer_address || ''}</div>
-                </div>
             </div>
             
-            <!-- تفاصيل الأقساط - مضغوط -->
-            <div style="background:#f0f9ff;border-radius:6px;padding:6px 8px;margin-bottom:8px;border:1px solid #bae6fd;">
-                <div style="font-weight:bold;color:#0c4a6e;margin-bottom:4px;font-size:0.95rem;">💳 تفاصيل الأقساط</div>
-                <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;font-size:0.85rem;">
-                    <div style="background:#dbeafe;padding:4px;border-radius:4px;text-align:center;">
-                        <div style="font-weight:600;color:#1e40af;font-size:0.8rem;">المبلغ الأصلي</div>
-                        <div style="font-weight:bold;color:#1e3a8a;">${toEnglishDigits(originalSubtotal.toLocaleString('en'))}</div>
-                    </div>
-                    ${additionalAmount > 0 ? `<div style="background:#fce7f3;padding:4px;border-radius:4px;text-align:center;">
-                        <div style="font-weight:600;color:#9f1239;font-size:0.8rem;">مبلغ إضافي</div>
-                        <div style="font-weight:bold;color:#be123c;">+${toEnglishDigits(additionalAmount.toLocaleString('en'))}</div>
-                    </div>` : ''}
-                    <div style="background:#e0e7ff;padding:4px;border-radius:4px;text-align:center;">
-                        <div style="font-weight:600;color:#3730a3;font-size:0.8rem;">المبلغ الإجمالي الكلي</div>
-                        <div style="font-weight:bold;color:#4338ca;">${toEnglishDigits(totalAmount.toLocaleString('en'))}</div>
-                    </div>
-                    ${downPayment > 0 ? `<div style="background:#d1fae5;padding:4px;border-radius:4px;text-align:center;">
-                        <div style="font-weight:600;color:#065f46;font-size:0.8rem;">دفعة مقدمة</div>
-                        <div style="font-weight:bold;color:#047857;">-${toEnglishDigits(downPayment.toLocaleString('en'))}</div>
-                    </div>` : ''}
-                    <div style="background:#fee2e2;padding:4px;border-radius:4px;text-align:center;grid-column:span 2;">
-                        <div style="font-weight:600;color:#7f1d1d;font-size:0.9rem;">💰 المبلغ النهائي المتبقي</div>
-                        <div style="font-weight:bold;color:#991b1b;font-size:1.1rem;">${toEnglishDigits(finalTotal.toLocaleString('en'))} دينار</div>
-                    </div>
-                    <div style="background:#fef3c7;padding:4px;border-radius:4px;text-align:center;">
-                        <div style="font-weight:600;color:#78350f;font-size:0.8rem;">عدد الأشهر</div>
-                        <div style="font-weight:bold;color:#92400e;">${toEnglishDigits(installmentMonths)}</div>
-                    </div>
-                    <div style="background:#ffedd5;padding:4px;border-radius:4px;text-align:center;">
-                        <div style="font-weight:600;color:#7c2d12;font-size:0.8rem;">القسط الشهري</div>
-                        <div style="font-weight:bold;color:#9a3412;">${toEnglishDigits(monthlyAmount.toLocaleString('en'))}</div>
-                    </div>
-                    ${startDate ? `<div style="background:#e0e7ff;padding:4px;border-radius:4px;text-align:center;">
-                        <div style="font-weight:600;color:#3730a3;font-size:0.8rem;">تاريخ البداية</div>
-                        <div style="font-weight:bold;color:#4338ca;font-size:0.8rem;">${toEnglishDigits(new Date(startDate).toLocaleDateString('ar-IQ', { day: 'numeric', month: 'long', year: 'numeric' }))}</div>
-                    </div>` : ''}
-                    ${advancedControlUsed ? `<div style="background:#ede9fe;padding:4px;border-radius:4px;text-align:center;grid-column:1/-1;">
-                        <div style="font-weight:600;color:#5b21b6;font-size:0.8rem;">⚙️ تحكم متقدم</div>
-                    </div>` : ''}
-                </div>
+            <!-- معلومات العميل -->
+            <div style="background:#f8fafc;border-radius:4px;padding:4px 6px;margin-bottom:5px;border:1px solid #e2e8f0;font-size:8.5px;">
+            <div style="font-weight:bold;color:#1e293b;margin-bottom:2px;font-size:0.85rem;">👤 معلومات العميل</div>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;font-size:0.8rem;">
+                <div><strong>الاسم:</strong> ${sale.customer_name || ''}</div>
+                <div><strong>الهاتف:</strong> ${sale.customer_phone || ''}</div>
+                <div><strong>العنوان:</strong> ${sale.customer_address || ''}</div>
+            </div>
             </div>
             
-            <!-- جدول المنتجات - مضغوط -->
-            <div style="margin-bottom:8px;">
-                <table style="width:100%;border-collapse:collapse;font-size:0.9rem;border:1px solid #e5e7eb;">
-                <thead>
-                    <tr style="background:#6366f1;color:#fff;">
-                        <th style="padding:4px 6px;width:6%;text-align:center;border:1px solid rgba(255,255,255,0.2);">#</th>
-                        <th style="padding:4px 6px;width:44%;text-align:right;border:1px solid rgba(255,255,255,0.2);">المنتج</th>
-                        <th style="padding:4px 6px;width:12%;text-align:center;border:1px solid rgba(255,255,255,0.2);">الكمية</th>
-                        <th style="padding:4px 6px;width:18%;text-align:center;border:1px solid rgba(255,255,255,0.2);">السعر</th>
-                        <th style="padding:4px 6px;width:20%;text-align:center;border:1px solid rgba(255,255,255,0.2);">الإجمالي</th>
-                    </tr>
-                </thead>
-                <tbody>`;
+            <!-- تفاصيل الأقساط -->
+            <div style="background:#f0f9ff;border-radius:4px;padding:4px 6px;margin-bottom:5px;border:1px solid #bae6fd;font-size:8.5px;">
+            <div style="font-weight:bold;color:#0c4a6e;margin-bottom:2px;font-size:0.85rem;">💳 تفاصيل الأقساط</div>
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:2px;font-size:0.75rem;">
+                <div style="background:#dbeafe;padding:2px;border-radius:3px;text-align:center;">
+                <div style="font-weight:600;color:#1e40af;font-size:0.7rem;">المبلغ الأصلي</div>
+                <div style="font-weight:bold;color:#1e3a8a;">${toEnglishDigits(originalSubtotal.toLocaleString('en'))}</div>
+                </div>
+                ${additionalAmount > 0 ? `<div style="background:#fce7f3;padding:2px;border-radius:3px;text-align:center;">
+                <div style="font-weight:600;color:#9f1239;font-size:0.7rem;">مبلغ إضافي</div>
+                <div style="font-weight:bold;color:#be123c;">+${toEnglishDigits(additionalAmount.toLocaleString('en'))}</div>
+                </div>` : ''}
+                <div style="background:#e0e7ff;padding:2px;border-radius:3px;text-align:center;">
+                <div style="font-weight:600;color:#3730a3;font-size:0.7rem;">المبلغ الإجمالي الكلي</div>
+                <div style="font-weight:bold;color:#4338ca;">${toEnglishDigits(totalAmount.toLocaleString('en'))}</div>
+                </div>
+                ${downPayment > 0 ? `<div style="background:#d1fae5;padding:2px;border-radius:3px;text-align:center;">
+                <div style="font-weight:600;color:#065f46;font-size:0.7rem;">دفعة مقدمة</div>
+                <div style="font-weight:bold;color:#047857;">-${toEnglishDigits(downPayment.toLocaleString('en'))}</div>
+                </div>` : ''}
+                <div style="background:#fee2e2;padding:2px;border-radius:3px;text-align:center;grid-column:span 2;">
+                <div style="font-weight:600;color:#7f1d1d;font-size:0.8rem;">💰 المبلغ النهائي المتبقي</div>
+                <div style="font-weight:bold;color:#991b1b;font-size:0.95rem;">${toEnglishDigits(finalTotal.toLocaleString('en'))} دينار</div>
+                </div>
+                <div style="background:#fef3c7;padding:2px;border-radius:3px;text-align:center;">
+                <div style="font-weight:600;color:#78350f;font-size:0.7rem;">عدد الأشهر</div>
+                <div style="font-weight:bold;color:#92400e;">${toEnglishDigits(installmentMonths)}</div>
+                </div>
+                <div style="background:#ffedd5;padding:2px;border-radius:3px;text-align:center;">
+                <div style="font-weight:600;color:#7c2d12;font-size:0.7rem;">القسط الشهري</div>
+                <div style="font-weight:bold;color:#9a3412;">${toEnglishDigits(monthlyAmount.toLocaleString('en'))}</div>
+                </div>
+                ${startDate ? `<div style="background:#e0e7ff;padding:2px;border-radius:3px;text-align:center;">
+                <div style="font-weight:600;color:#3730a3;font-size:0.7rem;">تاريخ البداية</div>
+                <div style="font-weight:bold;color:#4338ca;font-size:0.7rem;">${toEnglishDigits(new Date(startDate).toLocaleDateString('ar-IQ', { day: 'numeric', month: 'long', year: 'numeric' }))}</div>
+                </div>` : ''}
+                ${advancedControlUsed ? `<div style="background:#ede9fe;padding:2px;border-radius:3px;text-align:center;grid-column:1/-1;">
+                <div style="font-weight:600;color:#5b21b6;font-size:0.7rem;">⚙️ تحكم متقدم</div>
+                </div>` : ''}
+            </div>
+            </div>
             
+            <!-- جدول المنتجات -->
+            <div style="margin-bottom:5px;">
+            <table style="width:100%;border-collapse:collapse;font-size:0.8rem;border:1px solid #e5e7eb;">
+            <thead>
+                <tr style="background:#6366f1;color:#fff;">
+                <th style="padding:2px 4px;width:6%;text-align:center;border:1px solid rgba(255,255,255,0.2);">#</th>
+                <th style="padding:2px 4px;width:44%;text-align:right;border:1px solid rgba(255,255,255,0.2);">المنتج</th>
+                <th style="padding:2px 4px;width:12%;text-align:center;border:1px solid rgba(255,255,255,0.2);">الكمية</th>
+                <th style="padding:2px 4px;width:18%;text-align:center;border:1px solid rgba(255,255,255,0.2);">السعر</th>
+                <th style="padding:2px 4px;width:20%;text-align:center;border:1px solid rgba(255,255,255,0.2);">الإجمالي</th>
+                </tr>
+            </thead>
+            <tbody>`;
             let items = sale.items;
             if (typeof items === 'string') {
-                try { items = JSON.parse(items); } catch { items = []; }
+            try { items = JSON.parse(items); } catch { items = []; }
             }
-            
             items.forEach((item, index) => {
-                const name = item.product_name || item.name || '—';
-                const price = item.product_price || item.price || 0;
-                const qty = item.quantity || 1;
-                const total = price * qty;
-                html += `<tr style="background:${index%2===0?'#fff':'#f9fafb'};">
-                    <td style="padding:4px 6px;text-align:center;border:1px solid #e5e7eb;font-weight:600;">${toEnglishDigits(index+1)}</td>
-                    <td style="padding:4px 6px;text-align:right;border:1px solid #e5e7eb;">${name}</td>
-                    <td style="padding:4px 6px;text-align:center;border:1px solid #e5e7eb;font-weight:600;">${toEnglishDigits(qty)}</td>
-                    <td style="padding:4px 6px;text-align:center;border:1px solid #e5e7eb;font-weight:600;">${toEnglishDigits(price.toLocaleString('en'))}</td>
-                    <td style="padding:4px 6px;text-align:center;border:1px solid #e5e7eb;font-weight:bold;color:#10b981;">${toEnglishDigits(total.toLocaleString('en'))}</td>
-                </tr>`;
+            const name = item.product_name || item.name || '—';
+            const price = item.product_price || item.price || 0;
+            const qty = item.quantity || 1;
+            const total = price * qty;
+            html += `<tr style="background:${index%2===0?'#fff':'#f9fafb'};">
+                <td style="padding:2px 4px;text-align:center;border:1px solid #e5e7eb;font-weight:600;">${toEnglishDigits(index+1)}</td>
+                <td style="padding:2px 4px;text-align:right;border:1px solid #e5e7eb;">${name}</td>
+                <td style="padding:2px 4px;text-align:center;border:1px solid #e5e7eb;font-weight:600;">${toEnglishDigits(qty)}</td>
+                <td style="padding:2px 4px;text-align:center;border:1px solid #e5e7eb;font-weight:600;">${toEnglishDigits(price.toLocaleString('en'))}</td>
+                <td style="padding:2px 4px;text-align:center;border:1px solid #e5e7eb;font-weight:bold;color:#10b981;">${toEnglishDigits(total.toLocaleString('en'))}</td>
+            </tr>`;
             });
-            
             html += `</tbody></table></div>
             
-                        <!-- سجل التسديدات - مطبوع -->
-                        <div style="background:#f3f4f6;border-radius:6px;padding:6px 8px;margin-bottom:8px;border:1px solid #d1d5db;">
-                            <div style="font-weight:bold;color:#6366f1;margin-bottom:4px;font-size:0.95rem;"><i class="fas fa-history"></i> سجل التسديدات</div>
-                            <table style="width:100%;border-collapse:collapse;font-size:0.9rem;border:1px solid #e5e7eb;">
-                                <thead>
-                                    <tr style="background:#6366f1;color:#fff;">
-                                        <th style="padding:4px 6px;text-align:center;">التاريخ</th>
-                                        <th style="padding:4px 6px;text-align:center;">المبلغ</th>
-                                        <th style="padding:4px 6px;text-align:center;"># الشهر</th>
-                                        <th style="padding:4px 6px;text-align:center;">ملاحظات</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    ${(Array.isArray(sale.payments) && sale.payments.length > 0) ? sale.payments.map(payment => {
-                                        // ابحث عن القسط المطابق لهذا التسديد
-                                        let inst = Array.isArray(sale.installments) ? sale.installments.find(inst => inst.month === payment.month) : null;
-                                        let autoNote = '';
-                                        // أولوية: ملاحظة التسديد من payment.notes، ثم من القسط، ثم توليد تلقائي
-                                        if (payment.notes && payment.notes.trim() !== '') {
-                                            autoNote = payment.notes;
-                                        } else if (inst && inst.notes && inst.notes.trim() !== '') {
-                                            autoNote = inst.notes;
-                                        } else if (payment.payment_type === 'partial' && (payment.difference > 0 || (inst && inst.status === 'partially_paid'))) {
-                                            // استخدم بيانات القسط إذا لم توجد difference في payment
-                                            let paidAmount = payment.amount;
-                                            let difference = payment.difference;
-                                            if ((!difference || difference === 0) && inst) {
-                                                difference = (inst.amount || 0) - (inst.paid_amount || 0);
-                                                paidAmount = inst.paid_amount || payment.amount;
-                                            }
-                                            autoNote = `تم دفع جزء من القسط (${typeof formatCurrency === 'function' ? formatCurrency(paidAmount) : toEnglishDigits((paidAmount||0).toLocaleString('en'))})، المتبقي (${typeof formatCurrency === 'function' ? formatCurrency(difference) : toEnglishDigits((difference||0).toLocaleString('en'))}) تم ترحيله إلى الشهر القادم.`;
-                                        } else if ((payment.payment_type === 'full' || (inst && inst.status === 'paid')) && (!payment.difference || payment.difference === 0)) {
-                                            autoNote = 'تسديد كامل';
-                                        } else {
-                                            autoNote = '-';
-                                        }
-                                        // إضافة ملاحظات الترحيل إذا وجدت
-                                        if (inst && inst.carryforward_received && inst.carryforward_received > 0 && inst.carryforward_from_month) {
-                                            autoNote += `<br><span style='color:#f59e0b;'>← مرحل من الشهر ${toEnglishDigits(inst.carryforward_from_month)}: ${toEnglishDigits(inst.carryforward_received.toLocaleString('en'))} د.ع</span>`;
-                                        }
-                                        const dateStr = payment.date ? new Date(payment.date).toLocaleString('en-US') : '-';
-                                        const amountStr = typeof formatCurrency === 'function' ? formatCurrency(payment.amount) : toEnglishDigits((payment.amount||0).toLocaleString('en'));
-                                        return `<tr><td style="padding:4px 6px;text-align:center;">${dateStr}</td><td style="padding:4px 6px;text-align:center;color:#059669;font-weight:bold;">${amountStr}</td><td style="padding:4px 6px;text-align:center;">${toEnglishDigits(payment.month)}</td><td style="padding:4px 6px;text-align:right;">${autoNote}</td></tr>`;
-                                    }).join('') : `<tr><td colspan="4" style="text-align:center;color:#aaa;">لا توجد تسديدات</td></tr>`}
-                                </tbody>
-                            </table>
-                        </div>
+            <!-- سجل التسديدات -->
+            <div style="background:#f3f4f6;border-radius:4px;padding:4px 6px;margin-bottom:5px;border:1px solid #d1d5db;font-size:8px;">
+            <div style="font-weight:bold;color:#6366f1;margin-bottom:2px;font-size:0.85rem;"><i class="fas fa-history"></i> سجل التسديدات</div>
+            <table style="width:100%;border-collapse:collapse;font-size:0.8rem;border:1px solid #e5e7eb;">
+                <thead>
+                <tr style="background:#6366f1;color:#fff;">
+                    <th style="padding:2px 4px;text-align:center;">التاريخ</th>
+                    <th style="padding:2px 4px;text-align:center;">المبلغ</th>
+                    <th style="padding:2px 4px;text-align:center;"># الشهر</th>
+                    <th style="padding:2px 4px;text-align:center;">ملاحظات</th>
+                </tr>
+                </thead>
+                <tbody>
+                ${(Array.isArray(sale.payments) && sale.payments.length > 0) ? sale.payments.map(payment => {
+                    let inst = Array.isArray(sale.installments) ? sale.installments.find(inst => inst.month === payment.month) : null;
+                    let autoNote = '';
+                    if (payment.notes && payment.notes.trim() !== '') {
+                    autoNote = payment.notes;
+                    } else if (inst && inst.notes && inst.notes.trim() !== '') {
+                    autoNote = inst.notes;
+                    } else if (payment.payment_type === 'partial' && (payment.difference > 0 || (inst && inst.status === 'partially_paid'))) {
+                    let paidAmount = payment.amount;
+                    let difference = payment.difference;
+                    if ((!difference || difference === 0) && inst) {
+                        difference = (inst.amount || 0) - (inst.paid_amount || 0);
+                        paidAmount = inst.paid_amount || payment.amount;
+                    }
+                    autoNote = `تم دفع جزء من القسط (${typeof formatCurrency === 'function' ? formatCurrency(paidAmount) : toEnglishDigits((paidAmount||0).toLocaleString('en'))})، المتبقي (${typeof formatCurrency === 'function' ? formatCurrency(difference) : toEnglishDigits((difference||0).toLocaleString('en'))}) تم ترحيله إلى الشهر القادم.`;
+                    } else if ((payment.payment_type === 'full' || (inst && inst.status === 'paid')) && (!payment.difference || payment.difference === 0)) {
+                    autoNote = 'تسديد كامل';
+                    } else {
+                    autoNote = '-';
+                    }
+                    if (inst && inst.carryforward_received && inst.carryforward_received > 0 && inst.carryforward_from_month) {
+                    autoNote += `<br><span style='color:#f59e0b;'>← مرحل من الشهر ${toEnglishDigits(inst.carryforward_from_month)}: ${toEnglishDigits(inst.carryforward_received.toLocaleString('en'))} د.ع</span>`;
+                    }
+                    const dateStr = payment.date ? new Date(payment.date).toLocaleString('en-US') : '-';
+                    const amountStr = typeof formatCurrency === 'function' ? formatCurrency(payment.amount) : toEnglishDigits((payment.amount||0).toLocaleString('en'));
+                    return `<tr><td style="padding:2px 4px;text-align:center;">${dateStr}</td><td style="padding:2px 4px;text-align:center;color:#059669;font-weight:bold;">${amountStr}</td><td style="padding:2px 4px;text-align:center;">${toEnglishDigits(payment.month)}</td><td style="padding:2px 4px;text-align:right;">${autoNote}</td></tr>`;
+                }).join('') : `<tr><td colspan="4" style="text-align:center;color:#aaa;">لا توجد تسديدات</td></tr>`}
+                </tbody>
+            </table>
+            </div>
 
-                        <!-- سجل التجديدات - مطبوع -->
-                        ${(Array.isArray(sale.renewals) && sale.renewals.length > 0) || (Array.isArray(sale.installment_renewals) && sale.installment_renewals.length > 0) ? `
-                        <div style="background:#fef9c3;border-radius:6px;padding:6px 8px;margin-bottom:8px;border:1px solid #fde68a;">
-                            <div style="font-weight:bold;color:#eab308;margin-bottom:4px;font-size:0.95rem;"><i class='fas fa-redo'></i> سجل تجديد الأقساط</div>
-                            <table style="width:100%;border-collapse:collapse;font-size:0.9rem;border:1px solid #e5e7eb;">
-                                <thead>
-                                    <tr style="background:#eab308;color:#fff;">
-                                        <th style="padding:4px 6px;text-align:center;">التاريخ</th>
-                                        <th style="padding:4px 6px;text-align:center;">المبلغ</th>
-                                        <th style="padding:4px 6px;text-align:center;">نوع التجديد</th>
-                                        <th style="padding:4px 6px;text-align:center;">ملاحظات التجديد</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    ${((sale.renewals || sale.installment_renewals) || []).map(renewal => {
-                                        const dateStr = renewal.date ? new Date(renewal.date).toLocaleString('en-US') : '-';
-                                        const amountStr = typeof formatCurrency === 'function' ? formatCurrency(renewal.amount) : toEnglishDigits((renewal.amount||0).toLocaleString('en'));
-                                        const typeStr = renewal.type || renewal.renewal_type || '-';
-                                        const noteStr = renewal.notes || renewal.renewal_notes || '-';
-                                        return `<tr><td style="padding:4px 6px;text-align:center;">${dateStr}</td><td style="padding:4px 6px;text-align:center;color:#b45309;font-weight:bold;">${amountStr}</td><td style="padding:4px 6px;text-align:center;">${typeStr}</td><td style="padding:4px 6px;text-align:right;">${noteStr}</td></tr>`;
-                                    }).join('')}
-                                </tbody>
-                            </table>
-                        </div>
-                        ` : ''}
+            <!-- سجل التجديدات -->
+            ${(Array.isArray(sale.renewals) && sale.renewals.length > 0) || (Array.isArray(sale.installment_renewals) && sale.installment_renewals.length > 0) ? `
+            <div style="background:#fef9c3;border-radius:4px;padding:4px 6px;margin-bottom:5px;border:1px solid #fde68a;font-size:8px;">
+            <div style="font-weight:bold;color:#eab308;margin-bottom:2px;font-size:0.85rem;"><i class='fas fa-redo'></i> سجل تجديد الأقساط</div>
+            <table style="width:100%;border-collapse:collapse;font-size:0.8rem;border:1px solid #e5e7eb;">
+                <thead>
+                <tr style="background:#eab308;color:#fff;">
+                    <th style="padding:2px 4px;text-align:center;">التاريخ</th>
+                    <th style="padding:2px 4px;text-align:center;">المبلغ</th>
+                    <th style="padding:2px 4px;text-align:center;">نوع التجديد</th>
+                    <th style="padding:2px 4px;text-align:center;">ملاحظات التجديد</th>
+                </tr>
+                </thead>
+                <tbody>
+                ${((sale.renewals || sale.installment_renewals) || []).map(renewal => {
+                    const dateStr = renewal.date ? new Date(renewal.date).toLocaleString('en-US') : '-';
+                    const amountStr = typeof formatCurrency === 'function' ? formatCurrency(renewal.amount) : toEnglishDigits((renewal.amount||0).toLocaleString('en'));
+                    const typeStr = renewal.type || renewal.renewal_type || '-';
+                    const noteStr = renewal.notes || renewal.renewal_notes || '-';
+                    return `<tr><td style="padding:2px 4px;text-align:center;">${dateStr}</td><td style="padding:2px 4px;text-align:center;color:#b45309;font-weight:bold;">${amountStr}</td><td style="padding:2px 4px;text-align:center;">${typeStr}</td><td style="padding:2px 4px;text-align:right;">${noteStr}</td></tr>`;
+                }).join('')}
+                </tbody>
+            </table>
+            </div>
+            ` : ''}
 
-                        <!-- ملخص المبالغ - مضغوط -->
-            <div style="background:#fef3c7;border-radius:6px;padding:6px 8px;margin-bottom:8px;border:1px solid #fde68a;">
-                <div style="font-weight:bold;color:#78350f;margin-bottom:4px;font-size:0.95rem;">💰 ملخص المبالغ</div>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:0.9rem;">
-                    <div style="display:flex;justify-content:space-between;padding:3px 6px;background:#e0f2fe;border-radius:4px;">
-                        <span>المجموع الجزئي:</span>
-                        <strong>${toEnglishDigits(originalSubtotal.toLocaleString('en'))}</strong>
-                    </div>
-                    ${additionalAmount > 0 ? `<div style="display:flex;justify-content:space-between;padding:3px 6px;background:#fce7f3;border-radius:4px;">
-                        <span>مبلغ إضافي:</span>
-                        <strong style="color:#be123c;">+${toEnglishDigits(additionalAmount.toLocaleString('en'))}</strong>
-                    </div>` : ''}
-                    ${downPayment > 0 ? `<div style="display:flex;justify-content:space-between;padding:3px 6px;background:#d1fae5;border-radius:4px;">
-                        <span>دفعة مقدمة:</span>
-                        <strong style="color:#047857;">-${toEnglishDigits(downPayment.toLocaleString('en'))}</strong>
-                    </div>` : ''}
-                    <div style="grid-column:1/-1;display:flex;justify-content:space-between;padding:6px;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);border-radius:4px;color:#fff;">
-                        <span style="font-size:1rem;font-weight:bold;">💵 الإجمالي النهائي:</span>
-                        <strong style="font-size:1.1rem;">${toEnglishDigits(finalTotal.toLocaleString('en'))} دينار</strong>
-                    </div>
+            <!-- ملخص المبالغ -->
+            <div style="background:#fef3c7;border-radius:4px;padding:4px 6px;margin-bottom:5px;border:1px solid #fde68a;font-size:8.5px;">
+            <div style="font-weight:bold;color:#78350f;margin-bottom:2px;font-size:0.85rem;">💰 ملخص المبالغ</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:2px;font-size:0.8rem;">
+                <div style="display:flex;justify-content:space-between;padding:2px 4px;background:#e0f2fe;border-radius:3px;">
+                <span>المجموع الجزئي:</span>
+                <strong>${toEnglishDigits(originalSubtotal.toLocaleString('en'))}</strong>
+                </div>
+                ${additionalAmount > 0 ? `<div style="display:flex;justify-content:space-between;padding:2px 4px;background:#fce7f3;border-radius:3px;">
+                <span>مبلغ إضافي:</span>
+                <strong style="color:#be123c;">+${toEnglishDigits(additionalAmount.toLocaleString('en'))}</strong>
+                </div>` : ''}
+                ${downPayment > 0 ? `<div style="display:flex;justify-content:space-between;padding:2px 4px;background:#d1fae5;border-radius:3px;">
+                <span>دفعة مقدمة:</span>
+                <strong style="color:#047857;">-${toEnglishDigits(downPayment.toLocaleString('en'))}</strong>
+                </div>` : ''}
+                <div style="grid-column:1/-1;display:flex;justify-content:space-between;padding:4px;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);border-radius:3px;color:#fff;">
+                <span style="font-size:0.9rem;font-weight:bold;">💵 الإجمالي النهائي:</span>
+                <strong style="font-size:1rem;">${toEnglishDigits(finalTotal.toLocaleString('en'))} دينار</strong>
                 </div>
             </div>
+            </div>
             
-            <!-- ملاحظات مضغوطة -->
-            <div style="background:#fffbeb;border-radius:6px;padding:6px 8px;margin-bottom:8px;border:1px solid #fbbf24;">
-                <div style="font-weight:bold;color:#b91c1c;margin-bottom:4px;font-size:0.9rem;">⚠️ ملاحظات هامة</div>
-                <ol style="font-size:0.8rem;padding-right:18px;margin:0;line-height:1.5;">
-                    <li>المبلغ الموجود هو وصل أمانة</li>
-                    <li>السعر محمي 24 ساعة</li>
-                    <li>المباع لا يرجع ولا يبدل</li>
-                    <li>الخطأ والسهو مرجوع للطرفين</li>
-                    <li>الشركة المصنعة مسؤولة عن الضمان</li>
-                    <li>كسر الشاشة غير داخل بالضمان</li>
-                    <li style="margin-top:4px;">
-                        <div style="background:#e0f2fe;padding:4px 6px;border-radius:4px;border:1px solid #bae6fd;">
-                            <strong style="color:#0c4a6e;">👨‍🔧 الصيانة:</strong> حمزه ابو حوراء - صيانة السبالت
-                            <div style="direction:ltr;text-align:left;font-weight:bold;color:#0c4a6e;margin-top:2px;">
-                                📱 <span style="letter-spacing:1px;">+964 785 570 6118</span>
-                            </div>
-                        </div>
-                    </li>
-                </ol>
+            <!-- ملاحظات -->
+            <div style="background:#fffbeb;border-radius:4px;padding:4px 6px;margin-bottom:5px;border:1px solid #fbbf24;font-size:8px;">
+            <div style="font-weight:bold;color:#b91c1c;margin-bottom:2px;font-size:0.8rem;">⚠️ ملاحظات هامة</div>
+            <ol style="font-size:0.7rem;padding-right:12px;margin:0;line-height:1.3;">
+                <li>المبلغ الموجود هو وصل أمانة</li>
+                <li>السعر محمي 24 ساعة</li>
+                <li>المباع لا يرجع ولا يبدل</li>
+                <li>الخطأ والسهو مرجوع للطرفين</li>
+                <li>الشركة المصنعة مسؤولة عن الضمان</li>
+                <li>كسر الشاشة غير داخل بالضمان</li>
+                <li style="margin-top:2px;">
+                <div style="background:#e0f2fe;padding:2px 4px;border-radius:3px;border:1px solid #bae6fd;">
+                    <strong style="color:#0c4a6e;">👨‍🔧 الصيانة:</strong> حمزه ابو حوراء - صيانة السبالت
+                    <div style="direction:ltr;text-align:left;font-weight:bold;color:#0c4a6e;margin-top:1px;">
+                    📱 <span style="letter-spacing:1px;">+964 785 570 6118</span>
+                    </div>
+                </div>
+                </li>
+            </ol>
             </div>
             
             <!-- التوقيعات -->
-            <div style="display:flex;justify-content:space-between;gap:30px;margin-top:10px;">
-                <div style="flex:1;text-align:center;">
-                    <div style="font-size:0.9rem;font-weight:bold;margin-bottom:15px;">✍️ توقيع البائع</div>
-                    <div style="border-bottom:1px dashed #9ca3af;"></div>
-                </div>
-                <div style="flex:1;text-align:center;">
-                    <div style="font-size:0.9rem;font-weight:bold;margin-bottom:15px;">✍️ توقيع العميل</div>
-                    <div style="border-bottom:1px dashed #9ca3af;"></div>
-                </div>
+            <div style="display:flex;justify-content:space-between;gap:18px;margin-top:6px;">
+            <div style="flex:1;text-align:center;">
+                <div style="font-size:0.8rem;font-weight:bold;margin-bottom:10px;">✍️ توقيع البائع</div>
+                <div style="border-bottom:1px dashed #9ca3af;"></div>
+            </div>
+            <div style="flex:1;text-align:center;">
+                <div style="font-size:0.8rem;font-weight:bold;margin-bottom:10px;">✍️ توقيع العميل</div>
+                <div style="border-bottom:1px dashed #9ca3af;"></div>
+            </div>
             </div>
             
             <!-- الختام -->
-            <div style="text-align:center;margin-top:10px;padding-top:6px;border-top:2px solid #e5e7eb;">
-                <p style="margin:2px 0;font-size:0.95rem;font-weight:bold;color:#6366f1;">🌟 شكراً لتعاملكم معنا 🌟</p>
-                <p style="margin:2px 0;font-size:0.85rem;color:#6b7280;">نتطلع لخدمتكم مرة أخرى</p>
+            <div style="text-align:center;margin-top:6px;padding-top:3px;border-top:1px solid #e5e7eb;">
+            <p style="margin:1px 0;font-size:0.85rem;font-weight:bold;color:#6366f1;">🌟 شكراً لتعاملكم معنا 🌟</p>
+            <p style="margin:1px 0;font-size:0.75rem;color:#6b7280;">نتطلع لخدمتكم مرة أخرى</p>
             </div>
             </div>`;
             return html;
         }
          }
+
+        
         
         // دمج الدين الجديد مع الدين الموجود
         async function mergeDebtToExisting(existingDebt, newDebtData) {
@@ -26590,6 +26595,89 @@ if (typeof window !== 'undefined') {
          * - تحذف الفاتورة من سجل المبيعات
          * - تحدث جميع الإحصائيات
          */
+        
+        /**
+         * 🔄 إعادة حساب القسط الشهري الإجمالي لجميع ديون العميل النشطة
+         * @param {string} customerName - اسم العميل
+         */
+        async function recalculateCustomerTotalMonthlyInstallment(customerName) {
+            console.log('🔄 إعادة حساب الأقساط الشهرية للعميل:', customerName);
+            
+            try {
+                // جلب جميع الديون للعميل (النشطة فقط - غير المسترجعة)
+                const customerDebts = debtsData.filter(d => 
+                    d.customer_name === customerName && 
+                    !d.returned
+                );
+                
+                console.log(`📊 عدد الديون النشطة للعميل: ${customerDebts.length}`);
+                
+                if (customerDebts.length === 0) {
+                    console.log('✅ لا توجد ديون نشطة للعميل');
+                    return 0;
+                }
+                
+                // حساب مجموع الأقساط الشهرية
+                let totalMonthlyInstallment = 0;
+                
+                customerDebts.forEach((debt, index) => {
+                    let monthlyAmount = 0;
+                    
+                    // طريقة 1: من حقل monthly_amount
+                    if (debt.monthly_amount) {
+                        monthlyAmount = parseFloat(debt.monthly_amount);
+                    }
+                    // طريقة 2: حساب من الأقساط
+                    else if (debt.installments && Array.isArray(debt.installments)) {
+                        const unpaidInstallments = debt.installments.filter(inst => inst.status !== 'paid');
+                        if (unpaidInstallments.length > 0) {
+                            monthlyAmount = unpaidInstallments.reduce((sum, inst) => 
+                                sum + (parseFloat(inst.amount) || 0), 0) / unpaidInstallments.length;
+                        }
+                    }
+                    // طريقة 3: حساب من المبلغ الكلي وعدد الأشهر
+                    else if (debt.total_amount && debt.installment_months) {
+                        monthlyAmount = parseFloat(debt.total_amount) / parseInt(debt.installment_months);
+                    }
+                    
+                    totalMonthlyInstallment += monthlyAmount;
+                    console.log(`  📄 دين ${index + 1} (ID: ${debt.id || debt.__backendId}): قسط شهري = ${monthlyAmount.toFixed(0)}`);
+                });
+                
+                console.log(`💰 مجموع الأقساط الشهرية للعميل ${customerName}: ${totalMonthlyInstallment.toFixed(0)} دينار`);
+                
+                // تحديث كل دين بالقسط الشهري الإجمالي للعميل
+                for (const debt of customerDebts) {
+                    if (window.dataSdk && (debt.id || debt.__backendId)) {
+                        const updateId = debt.id || debt.__backendId;
+                        try {
+                            await window.dataSdk.update(updateId, {
+                                customer_total_monthly: totalMonthlyInstallment
+                            });
+                            debt.customer_total_monthly = totalMonthlyInstallment;
+                            console.log(`  ✅ تم تحديث الدين ${updateId} بالقسط الكلي`);
+                        } catch (error) {
+                            console.error(`  ❌ فشل تحديث الدين ${updateId}:`, error);
+                        }
+                    }
+                }
+                
+                // تحديث الواجهة إذا كانت صفحة الديون مفتوحة
+                const debtsPage = document.getElementById('debts-page');
+                if (debtsPage && debtsPage.style.display !== 'none') {
+                    if (typeof loadDebtsPage === 'function') {
+                        setTimeout(() => loadDebtsPage(), 300);
+                    }
+                }
+                
+                return totalMonthlyInstallment;
+                
+            } catch (error) {
+                console.error('❌ خطأ في إعادة حساب الأقساط الشهرية:', error);
+                return 0;
+            }
+        }
+        
         async function returnInvoice(invoiceId) {
             try {
                 // البحث عن الفاتورة
@@ -26689,43 +26777,35 @@ ${sale.payment_type === 'أقساط' ? '• حذف الفاتورة من سجل 
                 // 2️⃣ حذف من سجل الديون (إذا كانت فاتورة أقساط)
                 // ========================================
                 if (sale.payment_type === 'أقساط' && sale.customer_name) {
-                    console.log('2️⃣ حذف من سجل الديون...');
-                    
+                    console.log('2️⃣ تحديث سجل الديون...');
                     // البحث عن الدين المرتبط بالفاتورة
                     const relatedDebt = debtsData.find(d => 
                         d.invoice_id === invoiceId || 
                         (d.customer_name === sale.customer_name && 
                          d.total_debt === sale.final_total &&
-                         Math.abs(new Date(d.debt_date).getTime() - new Date(sale.timestamp).getTime()) < 60000) // نفس الوقت تقريباً
+                         Math.abs(new Date(d.debt_date).getTime() - new Date(sale.timestamp).getTime()) < 60000)
                     );
-                    
                     if (relatedDebt) {
                         try {
-                            console.log('🗑️ تم العثور على الدين المرتبط:', relatedDebt);
-                            
-                            // حذف من قاعدة البيانات
+                            // وضع علامة على أن هذا الدين تم استرجاعه
                             if (window.dataSdk && (relatedDebt.id || relatedDebt.__backendId)) {
-                                const deleteId = relatedDebt.id || relatedDebt.__backendId;
-                                const deleteResult = await window.dataSdk.delete(deleteId);
-                                
-                                if (deleteResult.isOk) {
-                                    console.log('✅ تم حذف الدين من قاعدة البيانات');
-                                    
-                                    // إزالة من المصفوفة المحلية
-                                    const debtIndex = debtsData.findIndex(d => 
-                                        d.id === deleteId || d.__backendId === deleteId
-                                    );
-                                    
-                                    if (debtIndex !== -1) {
-                                        debtsData.splice(debtIndex, 1);
-                                        console.log('✅ تم حذف الدين من المصفوفة المحلية');
-                                    }
-                                } else {
-                                    console.error('❌ فشل حذف الدين من قاعدة البيانات');
+                                const updateId = relatedDebt.id || relatedDebt.__backendId;
+                                const updateResult = await window.dataSdk.update(updateId, {
+                                    returned: true,
+                                    return_date: new Date().toISOString()
+                                });
+                                if (updateResult.isOk) {
+                                    relatedDebt.returned = true;
+                                    relatedDebt.return_date = new Date().toISOString();
+                                    console.log('✅ تم وضع علامة استرجاع على الدين:', relatedDebt.id);
                                 }
                             }
+                            
+                            // 🔥 الآن إعادة حساب الأقساط الشهرية لجميع ديون العميل النشطة
+                            await recalculateCustomerTotalMonthlyInstallment(sale.customer_name);
+                            
                         } catch (error) {
-                            console.error('❌ خطأ في حذف الدين:', error);
+                            console.error('❌ خطأ في تحديث الدين بعد الاسترجاع:', error);
                         }
                     } else {
                         console.warn('⚠️ لم يتم العثور على دين مرتبط بالفاتورة');
@@ -27031,7 +27111,7 @@ ${sale.payment_type === 'أقساط' ? '💳 تم حذف الفاتورة من �
             
             // الحصول على معلومات المتجر
             const storeName = localStorage.getItem('storeName') || 'متجر التقنية الحديثة';
-            const storeAddress = localStorage.getItem('storeAddress') || 'بغداد - المنصور';
+            const storeAddress = localStorage.getItem('storeAddress') || 'باب الهاشمية قرب مدرسة الكرار';
             const storePhone = localStorage.getItem('storePhone') || '07803092185';
             
             // تاريخ ووقت الفاتورة
@@ -27219,6 +27299,11 @@ ${sale.payment_type === 'أقساط' ? '💳 تم حذف الفاتورة من �
 
         // طباعة فاتورة فعلية
         function printInvoice(invoiceId, silent = false) {
+            console.log('🖨️ محاولة طباعة الفاتورة:', invoiceId);
+            
+            // ✅ فحص إعدادات الطباعة قبل الطباعة
+            const systemSettings = JSON.parse(localStorage.getItem('systemSettings') || '{}');
+            
             const settings = JSON.parse(localStorage.getItem('printerSettings') || '{}');
             // ابحث عن الفاتورة في قاعدة البيانات أو من salesData
             let sale = null;
@@ -27233,9 +27318,26 @@ ${sale.payment_type === 'أقساط' ? '💳 تم حذف الفاتورة من �
                 if (found) sale = found;
             }
             if (!sale) {
-                // تم إزالة الإشعار
+                console.log('❌ الفاتورة غير موجودة');
                 return;
             }
+            
+            // ✅ التحقق من نوع الفاتورة وإعدادات الطباعة
+            const paymentMethod = sale.payment_method || sale.payment_type || '';
+            const isInstallment = paymentMethod === 'أقساط' || paymentMethod === 'تقسيط' || sale.installment_months > 0;
+            
+            if (isInstallment && systemSettings.printInstallmentReceipts === false) {
+                console.log('⏸️ طباعة فواتير الأقساط معطلة في الإعدادات');
+                return;
+            }
+            
+            if (!isInstallment && systemSettings.printCashReceipts === false) {
+                console.log('⏸️ طباعة الفواتير النقدية معطلة في الإعدادات');
+                return;
+            }
+            
+            console.log('✅ الطباعة مسموحة - المتابعة...');
+            
             // Always parse items to ensure latest products are shown
             if (typeof sale.items === 'string') {
                 try { sale.items = JSON.parse(sale.items); } catch { sale.items = []; }
@@ -27243,8 +27345,6 @@ ${sale.payment_type === 'أقساط' ? '💳 تم حذف الفاتورة من �
             
             // استخدام القوالب الجديدة حسب نوع البيع
             let receiptContent;
-            const paymentMethod = sale.payment_method || sale.payment_type || '';
-            const isInstallment = paymentMethod === 'أقساط' || paymentMethod === 'تقسيط' || sale.installment_months > 0;
             
             // استخدام القوالب الجديدة من ملف yaqoub-invoice-templates.js
             if (isInstallment) {
@@ -27715,7 +27815,7 @@ ${sale.payment_type === 'أقساط' ? '💳 تم حذف الفاتورة من �
                 timestamp: new Date().toISOString(),
                 customer_name: templateType === 'installment' ? 'محمد أحمد علي' : 'عميل نقدي',
                 customer_phone: templateType === 'installment' ? '07803092185' : '',
-                customer_address: templateType === 'installment' ? 'بغداد - المنصور' : '',
+                customer_address: templateType === 'installment' ? 'باب الهاشمية قرب مدرسة الكرار' : '',
                 items: [
                     { product_name: 'ثلاجة سامسونج', quantity: 1, price: 800000, total: 800000 },
                     { product_name: 'غسالة LG', quantity: 1, price: 600000, total: 600000 }
@@ -28544,9 +28644,21 @@ ${sale.payment_type === 'أقساط' ? '💳 تم حذف الفاتورة من �
             console.log('  - installments:', debt.installments);
             console.log('  - invoice_id:', debt.invoice_id);
             
+            // 🔄 حساب القسط الشهري الكلي للعميل
+            const customerDebts = debtsData.filter(d => 
+                d.customer_name === debt.customer_name && 
+                !d.returned
+            );
+            let customerTotalMonthly = 0;
+            customerDebts.forEach(d => {
+                customerTotalMonthly += parseFloat(d.monthly_amount || 0);
+            });
+            console.log(`💰 مجموع الأقساط الشهرية للعميل: ${customerTotalMonthly.toFixed(0)} دينار (عدد الديون: ${customerDebts.length})`);
+            
             // حفظ معرف الدين الحالي
             window.currentDebtId = debtId;
             window.currentDebt = debt;
+            window.customerTotalMonthly = customerTotalMonthly;
             
             // الانتقال إلى صفحة تفاصيل الدين
             navigateTo('debtDetailsPage');
@@ -28612,6 +28724,12 @@ ${sale.payment_type === 'أقساط' ? '💳 تم حذف الفاتورة من �
                 statusIcon = 'exclamation-triangle';
             }
             
+            // حساب القسط الشهري الكلي للعميل
+            const customerTotalMonthly = window.customerTotalMonthly || 0;
+            const customerDebtsCount = debtsData.filter(d => 
+                d.customer_name === debt.customer_name && !d.returned
+            ).length;
+            
             container.innerHTML = `
                 <div class="stat-card">
                     <div class="stat-icon"><i class="fas fa-user"></i></div>
@@ -28628,6 +28746,16 @@ ${sale.payment_type === 'أقساط' ? '💳 تم حذف الفاتورة من �
                     <div class="stat-label">الحالة</div>
                     <div class="stat-value">${statusText}</div>
                 </div>
+                ${customerDebtsCount > 1 ? `
+                <div class="stat-card" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white;">
+                    <div class="stat-icon"><i class="fas fa-calculator"></i></div>
+                    <div class="stat-label">إجمالي الأقساط الشهرية</div>
+                    <div class="stat-value" style="font-size: 1.3rem;">${formatCurrency(customerTotalMonthly)}</div>
+                    <div style="font-size: 0.85rem; margin-top: 5px; opacity: 0.9;">
+                        <i class="fas fa-file-invoice"></i> ${customerDebtsCount} فاتورة نشطة
+                    </div>
+                </div>
+                ` : ''}
             `;
         }
         
@@ -29829,30 +29957,40 @@ ${sale.payment_type === 'أقساط' ? '💳 تم حذف الفاتورة من �
             
             // طباعة إيصال تسديد القسط
             try {
-                let storeSettings = {};
-                try {
-                    storeSettings = JSON.parse(localStorage.getItem('storeSettings') || '{}');
-                } catch {}
+                console.log('🖨️ محاولة طباعة إيصال التسديد');
                 
-                const receiptHtml = generateInstallmentPaymentReceipt({
-                    debt,
-                    paidInstallment: installment,
-                    storeSettings
-                });
-                
-                const printHtml = `<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8"><title>إيصال تسديد قسط</title><link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet"><style>@media print { body { margin: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; } }</style></head><body>${receiptHtml}</body></html>`;
-                
-                if (window.electronAPI && window.electronAPI.printInvoiceHtml) {
-                    await window.electronAPI.printInvoiceHtml(printHtml, {
-                        silent: true, 
-                        pageSize: 'A4', 
-                        printBackground: true, 
-                        margins: { top: 10, bottom: 10, left: 10, right: 10 }
-                    });
+                // ✅ فحص إعدادات الطباعة قبل الطباعة
+                const systemSettings = JSON.parse(localStorage.getItem('systemSettings') || '{}');
+                if (systemSettings.printPaymentReceipts === false) {
+                    console.log('⏸️ طباعة إيصالات التسديد معطلة في الإعدادات');
                 } else {
-                    const win = window.open('', '_blank');
-                    win.document.write(printHtml);
-                    win.print();
+                    console.log('✅ الطباعة مسموحة - المتابعة...');
+                    
+                    let storeSettings = {};
+                    try {
+                        storeSettings = JSON.parse(localStorage.getItem('storeSettings') || '{}');
+                    } catch {}
+                    
+                    const receiptHtml = generateInstallmentPaymentReceipt({
+                        debt,
+                        paidInstallment: installment,
+                        storeSettings
+                    });
+                    
+                    const printHtml = `<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8"><title>إيصال تسديد قسط</title><link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet"><style>@media print { body { margin: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; } }</style></head><body>${receiptHtml}</body></html>`;
+                    
+                    if (window.electronAPI && window.electronAPI.printInvoiceHtml) {
+                        await window.electronAPI.printInvoiceHtml(printHtml, {
+                            silent: true, 
+                            pageSize: 'A4', 
+                            printBackground: true, 
+                            margins: { top: 10, bottom: 10, left: 10, right: 10 }
+                        });
+                    } else {
+                        const win = window.open('', '_blank');
+                        win.document.write(printHtml);
+                        win.print();
+                    }
                 }
             } catch (err) {
                 console.error('خطأ في طباعة إيصال التسديد:', err);
@@ -30463,7 +30601,11 @@ body {
                 autosave: document.getElementById('autosaveCheck')?.checked !== false,
                 barcodeSound: document.getElementById('barcodeSound')?.checked !== false,
                 autoPrint: document.getElementById('autoPrint')?.checked || false,
-                clearCartAfterSale: document.getElementById('clearCartAfterSale')?.checked !== false
+                clearCartAfterSale: document.getElementById('clearCartAfterSale')?.checked !== false,
+                // ✅ إعدادات الطباعة الجديدة
+                printCashReceipts: document.getElementById('printCashReceipts')?.checked !== false,
+                printInstallmentReceipts: document.getElementById('printInstallmentReceipts')?.checked !== false,
+                printPaymentReceipts: document.getElementById('printPaymentReceipts')?.checked !== false
             };
 
             localStorage.setItem('systemSettings', JSON.stringify(systemSettings));
@@ -30471,7 +30613,8 @@ body {
             // تطبيق الإعدادات فوراً
             applySystemSettings(systemSettings);
             
-            // تم إزالة الإشعار
+            console.log('✅ تم حفظ إعدادات النظام بنجاح:', systemSettings);
+            alert('✅ تم حفظ الإعدادات بنجاح!');
         }
 
         // تطبيق إعدادات النظام
@@ -31846,9 +31989,15 @@ body {
                 if (document.getElementById('barcodeSound')) document.getElementById('barcodeSound').checked = settings.barcodeSound !== false;
                 if (document.getElementById('autoPrint')) document.getElementById('autoPrint').checked = settings.autoPrint || false;
                 if (document.getElementById('clearCartAfterSale')) document.getElementById('clearCartAfterSale').checked = settings.clearCartAfterSale !== false;
+                // ✅ تحميل إعدادات الطباعة الجديدة
+                if (document.getElementById('printCashReceipts')) document.getElementById('printCashReceipts').checked = settings.printCashReceipts !== false;
+                if (document.getElementById('printInstallmentReceipts')) document.getElementById('printInstallmentReceipts').checked = settings.printInstallmentReceipts !== false;
+                if (document.getElementById('printPaymentReceipts')) document.getElementById('printPaymentReceipts').checked = settings.printPaymentReceipts !== false;
                 
                 // تطبيق الإعدادات على التطبيق
                 applySystemSettings(settings);
+                
+                console.log('✅ تم تحميل إعدادات النظام:', settings);
             }
         }
 
@@ -35352,13 +35501,11 @@ body {
             </form>
             
             <div style="text-align: center; margin-top: 20px; font-size: 12px; color: var(--theme-text-tertiary);">
-                الحساب الافتراضي: admin / admin123
+               
             </div>
             
             <div style="text-align: center; margin-top: 15px;">
-                <button type="button" onclick="window.resetSecuritySystem()" style="padding: 8px 16px; background: #ef4444; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 13px;">
-                    <i class="fas fa-sync-alt"></i> إعادة تعيين النظام
-                </button>
+               
                 <p style="font-size: 11px; color: var(--theme-text-tertiary); margin-top: 8px;">اضغط هنا إذا واجهت مشكلة في تسجيل الدخول</p>
             </div>
         </div>
@@ -39978,6 +40125,17 @@ body {
          */
         window.printPaymentReceipt = async function(debtId, month) {
             try {
+                console.log('🖨️ محاولة طباعة إيصال تسديد');
+                
+                // ✅ فحص إعدادات الطباعة قبل الطباعة
+                const systemSettings = JSON.parse(localStorage.getItem('systemSettings') || '{}');
+                if (systemSettings.printPaymentReceipts === false) {
+                    console.log('⏸️ طباعة إيصالات التسديد معطلة في الإعدادات');
+                    return;
+                }
+                
+                console.log('✅ الطباعة مسموحة - المتابعة...');
+                
                 // الحصول على بيانات الدين
                 const debt = window.dataSdk.getById(parseInt(debtId));
                 if (!debt) {
@@ -40237,6 +40395,17 @@ body {
         // طباعة إيصال التسديد من صفحة التسديدات
         window.printPaymentReceiptFromPaymentsPage = async function(debtId, month) {
             try {
+                console.log('🖨️ محاولة طباعة إيصال تسديد من صفحة التسديدات');
+                
+                // ✅ فحص إعدادات الطباعة قبل الطباعة
+                const systemSettings = JSON.parse(localStorage.getItem('systemSettings') || '{}');
+                if (systemSettings.printPaymentReceipts === false) {
+                    console.log('⏸️ طباعة إيصالات التسديد معطلة في الإعدادات');
+                    return;
+                }
+                
+                console.log('✅ الطباعة مسموحة - المتابعة...');
+                
                 const debt = window.dataSdk.getById(parseInt(debtId));
                 if (!debt) {
                     // تم إزالة الإشعار
@@ -44531,6 +44700,66 @@ body {
 
 // في دالة restoreFromBackup()
 window.restoreOldDebtsFromBackup(backupData);
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 🔄 نظام إعادة حساب الأقساط الشهرية - تم التحديث والدمج مع الكود الأصلي
+// ═══════════════════════════════════════════════════════════════════════════════
+// ✅ التحديثات المضافة:
+// 
+// 1. دالة recalculateCustomerTotalMonthlyInstallment() - تقوم بحساب مجموع جميع الأقساط
+//    الشهرية لكل عميل بناءً على جميع فواتيره النشطة (غير المسترجعة)
+// 
+// 2. تعديل دالة returnInvoice() - عند استرجاع أي فاتورة، يتم تلقائياً:
+//    - وضع علامة returned = true على الدين المرتبط بالفاتورة
+//    - إعادة حساب مجموع الأقساط الشهرية لجميع ديون العميل النشطة
+//    - تحديث قاعدة البيانات
+// 
+// 3. تعديل دالة showDebtDetails() - تعرض:
+//    - معلومات الدين الحالي
+//    - مجموع الأقساط الشهرية الكلي للعميل (إذا كان لديه أكثر من دين)
+//    - عدد الفواتير النشطة للعميل
+// 
+// 4. تعديل دالة renderDebtCustomerInfo() - تعرض بطاقة إضافية إذا كان للعميل
+//    أكثر من فاتورة نشطة تحتوي على:
+//    - إجمالي الأقساط الشهرية لجميع ديون العميل
+//    - عدد الفواتير النشطة
+// 
+// 5. تعديل دالة saveDebtForCurrentUser() - عند حفظ دين جديد يتم تلقائياً
+//    إعادة حساب مجموع الأقساط للعميل
+// 
+// 📊 مثال على الاستخدام:
+// - العميل "أحمد" لديه فاتورتين:
+//   * الفاتورة 1: قسط شهري 10,000 دينار
+//   * الفاتورة 2: قسط شهري 15,000 دينار
+//   * المجموع الكلي: 25,000 دينار (يظهر تلقائياً في تفاصيل أي دين)
+// 
+// - عند استرجاع الفاتورة 2:
+//   * تصبح الفاتورة 2 returned = true
+//   * يتم إعادة حساب المجموع تلقائياً
+//   * المجموع الجديد: 10,000 دينار (الفاتورة 1 فقط)
+// 
+// 🎯 الميزات:
+// ✓ إعادة حساب تلقائية عند كل عملية استرجاع
+// ✓ عرض مجموع الأقساط في واجهة تفاصيل الدين
+// ✓ دعم Firebase وLocalStorage
+// ✓ تحديث فوري للواجهة
+// ✓ معالجة آمنة للأخطاء
+// 
+// ═══════════════════════════════════════════════════════════════════════════════
+
+console.log(`
+╔════════════════════════════════════════════════════════════╗
+║  🔄 نظام إعادة حساب الأقساط الشهرية - تم التفعيل        ║
+║  ✅ متكامل بالكامل مع الكود الأصلي                       ║
+║  📝 الدوال المحدثة:                                      ║
+║     - returnInvoice()                                    ║
+║     - showDebtDetails()                                  ║
+║     - renderDebtCustomerInfo()                           ║
+║     - saveDebtForCurrentUser()                           ║
+║     - recalculateCustomerTotalMonthlyInstallment()       ║
+║  🎯 يعمل تلقائياً دون الحاجة لأي إجراء إضافي            ║
+╚════════════════════════════════════════════════════════════╝
+`);
 
 </script>
 </body>

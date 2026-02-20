@@ -516,15 +516,40 @@ body {
 </script>
 <!doctype html>
 <html lang="ar" dir="rtl">
-<!-- إصلاح الطباعة الصامتة - Digital Creativity -->
+<!-- نظام نقاط البيع المتكامل - Digital Creativity Company -->
 <script>
-// دالة عرض صفحة التقارير عند النقر على زر "التقارير" في الشريط الجانبي
+// ════════════════════════════════════════════════════════
+// نظام Debug للتحكم في console.log - لتحسين الأداء
+// ════════════════════════════════════════════════════════
+window.DEBUG_MODE = false; // اضبط على true عند التطوير فقط
+window._debugLog = function() {
+    if (window.DEBUG_MODE) console.log.apply(console, arguments);
+};
+
+// منع تراكم الأخطاء من الملفات الخارجية المفقودة
+window.addEventListener('error', function(e) {
+    if (e.filename && (
+        e.filename.includes('firebase-config-fixed.js') ||
+        e.filename.includes('inventory-management-system.js') ||
+        e.filename.includes('unified-buttons-filters-fix.js') ||
+        e.filename.includes('reports-compatibility-fix.js') ||
+        e.filename.includes('universal-theme-manager.js')
+    )) {
+        console.warn('⚠️ ملف خارجي غير موجود:', e.filename, '- النظام يعمل بدونه');
+        e.preventDefault();
+    }
+});
+
+// دالة showPage - مُعرَّفة في الكود الرئيسي أدناه
+// هذه الدالة تعمل كـ proxy لضمان التوافق مع جميع الاستدعاءات
 function showPage(page) {
-    console.log('📄 عرض الصفحة:', page);
+    // سيتم تجاوز هذه الدالة بالدالة الرئيسية الأشمل عند تحميل الكود الرئيسي
+    console.log('📄 عرض الصفحة (proxy):', page);
     
     // إخفاء جميع الأقسام
-    document.querySelectorAll('.section').forEach(section => {
+    document.querySelectorAll('.section, .page').forEach(section => {
         section.style.display = 'none';
+        section.classList.remove('active');
     });
 
     // إزالة الكلاس النشط من جميع عناصر القائمة
@@ -532,52 +557,36 @@ function showPage(page) {
         item.classList.remove('active');
     });
 
-    // عرض قسم التقارير إذا كان page هو 'reports'
+    // معالجة خاصة لصفحة التقارير
     if (page === 'reports') {
         const reportsSection = document.getElementById('reportsSection');
         if (reportsSection) {
             reportsSection.style.display = 'block';
-            // إضافة الكلاس النشط لزر التقارير
             const reportsNavBtn = document.querySelector('.nav-item .nav-link .fa-chart-bar')?.parentElement?.parentElement;
-            if (reportsNavBtn) {
-                reportsNavBtn.classList.add('active');
-            }
+            if (reportsNavBtn) reportsNavBtn.classList.add('active');
         }
     } else if (page === 'oldDebts') {
-        // معالجة خاصة لصفحة الديون القديمة
         const oldDebtsPage = document.getElementById('oldDebts');
         if (oldDebtsPage) {
             oldDebtsPage.classList.add('active');
             oldDebtsPage.style.display = 'block';
-            
-            // تحميل وعرض جدول الديون القديمة
-            console.log('📋 عرض صفحة الديون القديمة...');
-            loadOldDebtsData().then(() => {
-                if (typeof renderOldDebtsTable === 'function') {
-                    renderOldDebtsTable();
-                    updateOldDebtsStats();
-                }
+            loadOldDebtsData && loadOldDebtsData().then(() => {
+                renderOldDebtsTable && renderOldDebtsTable();
+                updateOldDebtsStats && updateOldDebtsStats();
             });
-            
-            // إضافة الكلاس النشط للزر
             const oldDebtsNavItem = document.getElementById('oldDebtsNavItem');
-            if (oldDebtsNavItem) {
-                oldDebtsNavItem.classList.add('active');
-            }
+            if (oldDebtsNavItem) oldDebtsNavItem.classList.add('active');
         }
     } else {
-        // منطق عرض الصفحات الأخرى
-        const pageSection = document.getElementById(page + 'Section');
-        if (pageSection) {
-            pageSection.style.display = 'block';
+        const targetPage = document.getElementById(page) || document.getElementById(page + 'Section');
+        if (targetPage) {
+            targetPage.style.display = 'block';
+            targetPage.classList.add('active');
         }
     }
     
-    // تطبيق الصلاحيات على العناصر في الصفحة
     if (window.securityManager) {
-        setTimeout(() => {
-            window.securityManager.applyPermissionsToElements();
-        }, 100);
+        setTimeout(() => window.securityManager.applyPermissionsToElements(), 100);
     }
 }
 
@@ -2088,11 +2097,11 @@ function hideCloudLoginForm() {
 }
 
 /**
- * معالجة طلب التسجيل الجديد من صفحة إدارة السحابة
+ * معالجة طلب التسجيل الجديد من صفحة إدارة السحابة (النسخة القديمة - للتوافق)
  */
-async function handleCloudRegisterSubmit(event) {
+async function handleCloudRegisterSubmit_v1(event) {
     event.preventDefault();
-    console.log('📝 handleCloudRegisterSubmit...');
+    console.log('📝 handleCloudRegisterSubmit_v1...');
     
     try {
         const fullName = document.getElementById('cloudRegFullName').value.trim();
@@ -2237,9 +2246,9 @@ async function handleCloudLoginSubmit(event) {
 }
 
 /**
- * تسجيل الخروج
+ * تسجيل الخروج (النسخة المبسطة - للتوافق مع صفحة إدارة السحابة القديمة)
  */
-function handleCloudLogout() {
+function handleCloudLogout_legacy() {
     if (confirm('هل أنت متأكد من تسجيل الخروج؟')) {
         localStorage.removeItem('currentUser');
         localStorage.removeItem('userStatus');
@@ -2247,8 +2256,8 @@ function handleCloudLogout() {
         showNotification('✅ تم تسجيل الخروج بنجاح', 'success');
         
         // تحديث الواجهة
-        updateCloudTabContent('login');
-        updateCloudManagementSummary();
+        if(typeof updateCloudTabContent === 'function') updateCloudTabContent('login');
+        if(typeof updateCloudManagementSummary === 'function') updateCloudManagementSummary();
     }
 }
 
@@ -4820,17 +4829,11 @@ console.log(`
 
 
 
-<!-- سكريبت إصلاح الأزرار والفلاتر -->
-<script src="unified-buttons-filters-fix.js"></script>
-<script src="reports-compatibility-fix.js"></script>  ← مباشرة بعد ملف التقارير
-
 <!-- ملفات JavaScript الأساسية -->
 <script src="firebase-config-fixed.js"></script>
 <script src="inventory-management-system.js"></script>
 <script src="unified-buttons-filters-fix.js"></script>
 <script src="reports-compatibility-fix.js"></script>
-
-<!-- ✅ مدير الثيمات الشامل (أضف هنا!) -->
 <script src="universal-theme-manager.js"></script>
 
   <!-- Firebase Initialization Check - نسخة محسّنة أكثر صبراً -->
@@ -18528,7 +18531,9 @@ console.log(`
   </div>
 
   <script>
-        // متغيرات التطبيق
+        // ════════════════════════════════════════════════════════════
+        // متغيرات التطبيق الرئيسية
+        // ════════════════════════════════════════════════════════════
         let cart = [];
         let products = [];
         let categories = [];
@@ -18540,6 +18545,73 @@ console.log(`
         let currentTheme = 'dark';
         let sidebarCollapsed = false;
         
+        // ════════════════════════════════════════════════════════════
+        // أدوات الأداء - Debounce و Throttle
+        // ════════════════════════════════════════════════════════════
+        
+        /**
+         * Debounce - تأخير تنفيذ الدالة حتى ينتهي المستخدم من الكتابة
+         * مثال: debounce(renderDebtsTable, 300) - لتجنب إعادة الرسم في كل ضغطة مفتاح
+         */
+        function debounce(fn, delay = 300) {
+            let timer;
+            return function(...args) {
+                clearTimeout(timer);
+                timer = setTimeout(() => fn.apply(this, args), delay);
+            };
+        }
+        
+        /**
+         * Throttle - تحديد عدد مرات تنفيذ الدالة في الثانية
+         * مثال: للأحداث المتكررة مثل scroll و resize
+         */
+        function throttle(fn, limit = 200) {
+            let lastRun = 0;
+            return function(...args) {
+                const now = Date.now();
+                if (now - lastRun >= limit) {
+                    lastRun = now;
+                    fn.apply(this, args);
+                }
+            };
+        }
+        
+        /**
+         * safeGet - استخراج قيمة بأمان من كائن متداخل
+         * مثال: safeGet(sale, 'payment_method', 'غير محدد')
+         */
+        function safeGet(obj, path, defaultVal = '') {
+            try {
+                return path.split('.').reduce((o, k) => (o && o[k] !== undefined) ? o[k] : undefined, obj) ?? defaultVal;
+            } catch { return defaultVal; }
+        }
+        
+        /**
+         * safeParseFloat - تحويل آمن للأرقام
+         */
+        function safeParseFloat(val, def = 0) {
+            const n = parseFloat(val);
+            return isNaN(n) ? def : n;
+        }
+        
+        /**
+         * safeParseInt - تحويل آمن للأعداد الصحيحة
+         */
+        function safeParseInt(val, def = 0) {
+            const n = parseInt(val);
+            return isNaN(n) ? def : n;
+        }
+        
+        // ════════════════════════════════════════════════════════════
+        // نظام الإشعارات الداخلي - للاستخدام عند غياب showNotification
+        // ════════════════════════════════════════════════════════════
+        if (typeof showNotification === 'undefined') {
+            window.showNotification = function(msg, type = 'info') {
+                console.log(`[${type.toUpperCase()}] ${msg}`);
+            };
+        }
+
+
         // 💰 متغيرات المصاريف
         let expensesData = [];
         let purchasesData = [];
@@ -19691,21 +19763,20 @@ console.log(`
         }
 
         // حفظ نسخة احتياطية كاملة
-        async function createFullBackup() {
+        // دالة createFullBackup الأساسية (النسخة الشاملة مُعرَّفة لاحقاً في الكود)
+        // هذه النسخة الخفيفة تستخدم dataSDK المحلي فقط
+        async function createFullBackupLegacy() {
             try {
-                // تم إزالة الإشعار
-
                 const userId = getUserId();
                 const backupId = 'backup_' + new Date().toISOString().replace(/[:.]/g, '-');
 
-                // جمع جميع البيانات
                 const backupData = {
                     version: '1.0',
                     timestamp: new Date().toISOString(),
                     userId: userId,
                     data: {
-                        products: await dataSDK.queryByField('type', 'product'),
-                        categories: await dataSDK.queryByField('type', 'category'),
+                        products: typeof dataSDK !== 'undefined' ? await dataSDK.queryByField('type', 'product') : (products || []),
+                        categories: typeof dataSDK !== 'undefined' ? await dataSDK.queryByField('type', 'category') : (categories || []),
                         sales: salesData || [],
                         debts: debtsData || [],
                         settings: {
@@ -19718,21 +19789,15 @@ console.log(`
                     }
                 };
 
-                // حفظ في Firestore
-                await window.firestore
-                    .collection('users')
-                    .doc(userId)
-                    .collection('backups')
-                    .doc(backupId)
-                    .set(backupData);
+                if (window.firestore) {
+                    await window.firestore.collection('users').doc(userId)
+                        .collection('backups').doc(backupId).set(backupData);
+                }
 
                 console.log('✅ تم إنشاء النسخة الاحتياطية:', backupId);
-                // تم إزالة الإشعار
-                
                 return { success: true, backupId };
             } catch (error) {
                 console.error('❌ خطأ في إنشاء النسخة الاحتياطية:', error);
-                // تم إزالة الإشعار
                 return { success: false, error: error.message };
             }
         }
@@ -23334,7 +23399,6 @@ console.log(`
             console.log('Filtered debts:', filteredDebts.length);
             
             tbody.innerHTML = filteredDebts.map(debt => {
-                console.log('Debt data:', debt);
                 
                 // الحصول على المبلغ الإجمالي
                 const totalAmount = debt.total_amount || debt.final_total || 0;
@@ -23393,8 +23457,6 @@ console.log(`
                     }
                 }
                 
-                console.log('Debt:', debt.customer_name, '- Total:', totalAmount, 'Paid:', paidAmount, 'Remaining:', remainingAmount, 'Monthly:', monthlyAmount);
-                console.log('Paid months:', paidMonths, '/', totalMonths, 'isPaid:', isPaid, 'isOverdue:', isOverdue);
                 
                 let status = `${paidMonths}/${totalMonths} شهر`;
                 let statusClass = 'debt-status active';
@@ -25903,30 +25965,7 @@ if (typeof window !== 'undefined') {
         }
 
         // Helper functions
-        function copyToClipboard(text) {
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(text).then(() => {
-                    // تم إزالة الإشعار
-                }).catch(err => {
-                    console.error('فشل النسخ:', err);
-                });
-            } else {
-                // طريقة بديلة للمتصفحات القديمة
-                const textarea = document.createElement('textarea');
-                textarea.value = text;
-                textarea.style.position = 'fixed';
-                textarea.style.opacity = '0';
-                document.body.appendChild(textarea);
-                textarea.select();
-                try {
-                    document.execCommand('copy');
-                    // تم إزالة الإشعار
-                } catch (err) {
-                    console.error('فشل النسخ:', err);
-                }
-                document.body.removeChild(textarea);
-            }
-        }
+        // دالة copyToClipboard معرّفة في الكود الأعلى
 
         function formatCurrency(amount) {
             // التعامل مع القيم غير الصحيحة
@@ -26613,7 +26652,7 @@ if (typeof window !== 'undefined') {
                 console.log(`📊 عدد الديون النشطة للعميل: ${customerDebts.length}`);
                 
                 if (customerDebts.length === 0) {
-                    console.log('✅ لا توجد ديون نشطة للعميل');
+                    console.log('✅ لا توجد ديون نشطة للعميل - لا يوجد ما يتم تحديثه');
                     return 0;
                 }
                 
@@ -26639,6 +26678,9 @@ if (typeof window !== 'undefined') {
                     else if (debt.total_amount && debt.installment_months) {
                         monthlyAmount = parseFloat(debt.total_amount) / parseInt(debt.installment_months);
                     }
+                    else if (debt.final_total && debt.installment_months) {
+                        monthlyAmount = parseFloat(debt.final_total) / parseInt(debt.installment_months);
+                    }
                     
                     totalMonthlyInstallment += monthlyAmount;
                     console.log(`  📄 دين ${index + 1} (ID: ${debt.id || debt.__backendId}): قسط شهري = ${monthlyAmount.toFixed(0)}`);
@@ -26663,10 +26705,10 @@ if (typeof window !== 'undefined') {
                 }
                 
                 // تحديث الواجهة إذا كانت صفحة الديون مفتوحة
-                const debtsPage = document.getElementById('debts-page');
-                if (debtsPage && debtsPage.style.display !== 'none') {
-                    if (typeof loadDebtsPage === 'function') {
-                        setTimeout(() => loadDebtsPage(), 300);
+                const debtsPageElem = document.getElementById('debts-page');
+                if (debtsPageElem && debtsPageElem.style.display !== 'none') {
+                    if (typeof renderDebtsTable === 'function') {
+                        setTimeout(() => renderDebtsTable(), 300);
                     }
                 }
                 
@@ -26778,31 +26820,173 @@ ${sale.payment_type === 'أقساط' ? '• حذف الفاتورة من سجل 
                 // ========================================
                 if (sale.payment_type === 'أقساط' && sale.customer_name) {
                     console.log('2️⃣ تحديث سجل الديون...');
-                    // البحث عن الدين المرتبط بالفاتورة
-                    const relatedDebt = debtsData.find(d => 
+                    
+                    // ═══════════════════════════════════════════════════════
+                    // 🔥 البحث المحسّن - يدعم الفواتير المدمجة (linked_invoices)
+                    // ═══════════════════════════════════════════════════════
+                    
+                    // البحث الأول: invoice_id مباشر أو تطابق التوقيت
+                    let relatedDebt = debtsData.find(d => 
                         d.invoice_id === invoiceId || 
                         (d.customer_name === sale.customer_name && 
                          d.total_debt === sale.final_total &&
                          Math.abs(new Date(d.debt_date).getTime() - new Date(sale.timestamp).getTime()) < 60000)
                     );
+                    
+                    let isLinkedInvoice = false;
+                    
+                    // البحث الثاني: في linked_invoices للفواتير المدمجة
+                    if (!relatedDebt) {
+                        relatedDebt = debtsData.find(d => 
+                            Array.isArray(d.linked_invoices) && 
+                            d.linked_invoices.includes(invoiceId)
+                        );
+                        if (relatedDebt) {
+                            isLinkedInvoice = true;
+                            console.log('🔍 وجدت الدين في linked_invoices:', relatedDebt.id || relatedDebt.__backendId);
+                        }
+                    }
+                    
                     if (relatedDebt) {
                         try {
-                            // وضع علامة على أن هذا الدين تم استرجاعه
                             if (window.dataSdk && (relatedDebt.id || relatedDebt.__backendId)) {
-                                const updateId = relatedDebt.id || relatedDebt.__backendId;
-                                const updateResult = await window.dataSdk.update(updateId, {
-                                    returned: true,
-                                    return_date: new Date().toISOString()
-                                });
-                                if (updateResult.isOk) {
-                                    relatedDebt.returned = true;
-                                    relatedDebt.return_date = new Date().toISOString();
-                                    console.log('✅ تم وضع علامة استرجاع على الدين:', relatedDebt.id);
+                                const debtId = relatedDebt.id || relatedDebt.__backendId;
+                                
+                                // ══════════════════════════════════════════════════════
+                                // 🔥 المعالجة الشاملة للأربع حالات (مدمج / بسيط × وحيد / مع آخرين)
+                                // ══════════════════════════════════════════════════════
+                                
+                                const isMergedDebt = Array.isArray(relatedDebt.linked_invoices) && relatedDebt.linked_invoices.length > 0;
+                                
+                                if (isMergedDebt || isLinkedInvoice) {
+                                    // ═══════════════════════════════════════════════
+                                    // 🔀 الحالة: دين مدمج (يحتوي على أكثر من فاتورة)
+                                    // ═══════════════════════════════════════════════
+                                    
+                                    // الفواتير الأخرى في هذا الدين المدمج (غير الفاتورة المسترجعة)
+                                    const remainingLinkedInvoices = (relatedDebt.linked_invoices || []).filter(id => id !== invoiceId);
+                                    const isLastInvoiceInMergedDebt = remainingLinkedInvoices.length === 0 && relatedDebt.invoice_id === invoiceId;
+                                    
+                                    if (isLastInvoiceInMergedDebt || (remainingLinkedInvoices.length === 0 && relatedDebt.invoice_id !== invoiceId && !Array.isArray(relatedDebt.linked_invoices))) {
+                                        // الحالة 2: آخر فاتورة في الدين المدمج → حذف الدين بالكامل
+                                        console.log('🗑️ [الحالة 2] آخر فاتورة في الدين المدمج → حذف الدين');
+                                        const deleteResult = await window.dataSdk.delete(debtId);
+                                        if (deleteResult.isOk) {
+                                            const idx = debtsData.findIndex(d => d.id === debtId || d.__backendId === debtId);
+                                            if (idx !== -1) debtsData.splice(idx, 1);
+                                        }
+                                    } else {
+                                        // الحالة 1: دين مدمج مع فواتير أخرى → تعديل الأقساط وطرح قسط الفاتورة المسترجعة
+                                        console.log('✂️ [الحالة 1] تعديل الدين المدمج - إزالة مساهمة الفاتورة:', invoiceId);
+                                        
+                                        // الحصول على القسط الشهري للفاتورة المسترجعة
+                                        const returnedSale = salesData.find(s => s.invoice_id === invoiceId) || sale;
+                                        const returnedMonthly = parseFloat(
+                                            isLinkedInvoice 
+                                            ? (returnedSale.monthly_amount || relatedDebt.new_monthly_amount || 0)
+                                            : (relatedDebt.monthly_amount || returnedSale.monthly_amount || 0)
+                                        );
+                                        
+                                        // تحديث linked_invoices وإزالة الفاتورة المسترجعة
+                                        const newLinkedInvoices = remainingLinkedInvoices;
+                                        
+                                        // تحديث الأقساط: طرح مساهمة الفاتورة المسترجعة
+                                        let updatedInstallments = null;
+                                        if (relatedDebt.installments && Array.isArray(relatedDebt.installments)) {
+                                            updatedInstallments = relatedDebt.installments.map(inst => {
+                                                if (inst.status === 'paid') return inst; // لا تعدّل المسددة
+                                                
+                                                if (inst.installment_type === 'merged' && returnedMonthly > 0) {
+                                                    // قسط مدمج: اطرح مساهمة الفاتورة المسترجعة
+                                                    const newAmount = Math.max(0, (parseFloat(inst.amount) || 0) - returnedMonthly);
+                                                    return { ...inst, amount: newAmount, original_amount: inst.original_amount || inst.amount };
+                                                } else if (inst.invoice_id === invoiceId || inst.installment_type === 'new_only') {
+                                                    // قسط خاص بالفاتورة المسترجعة: احذفه
+                                                    return null;
+                                                }
+                                                return inst;
+                                            }).filter(Boolean);
+                                        }
+                                        
+                                        // حساب المبالغ الجديدة
+                                        const newTotalAmount = Math.max(0, (parseFloat(relatedDebt.total_amount) || 0) - (parseFloat(sale.final_total) || 0));
+                                        const newRemainingAmount = updatedInstallments 
+                                            ? updatedInstallments.filter(i => i.status !== 'paid')
+                                                .reduce((sum, i) => sum + (parseFloat(i.amount) || 0), 0)
+                                            : Math.max(0, (parseFloat(relatedDebt.remaining_amount) || 0) - (parseFloat(sale.final_total) || 0));
+                                        const newMonthly = Math.max(0, (parseFloat(relatedDebt.monthly_amount) || 0) - returnedMonthly);
+                                        
+                                        const updatePayload = {
+                                            linked_invoices: newLinkedInvoices,
+                                            total_amount: newTotalAmount,
+                                            remaining_amount: Math.round(newRemainingAmount),
+                                            monthly_amount: newMonthly,
+                                            ...(updatedInstallments ? { installments: updatedInstallments } : {})
+                                        };
+                                        
+                                        const updateResult = await window.dataSdk.update(debtId, updatePayload);
+                                        if (updateResult.isOk) {
+                                            Object.assign(relatedDebt, updatePayload);
+                                            console.log('✅ [الحالة 1] تم تحديث الدين المدمج بنجاح');
+                                        }
+                                    }
+                                } else {
+                                    // ═══════════════════════════════════════════════
+                                    // 📄 الحالة: دين بسيط (فاتورة واحدة)
+                                    // ═══════════════════════════════════════════════
+                                    
+                                    // هل هناك ديون أخرى مستقلة للعميل؟
+                                    const otherActiveDebts = debtsData.filter(d => 
+                                        d.customer_name === sale.customer_name && 
+                                        !d.returned &&
+                                        d.id !== relatedDebt.id &&
+                                        d.__backendId !== relatedDebt.__backendId
+                                    );
+                                    
+                                    if (otherActiveDebts.length === 0) {
+                                        // الحالة 4: الدين الوحيد البسيط → حذف بالكامل
+                                        console.log('🗑️ [الحالة 4] الدين الوحيد → حذف الدين بالكامل');
+                                        const deleteResult = await window.dataSdk.delete(debtId);
+                                        if (deleteResult.isOk) {
+                                            const idx = debtsData.findIndex(d => d.id === debtId || d.__backendId === debtId);
+                                            if (idx !== -1) debtsData.splice(idx, 1);
+                                        }
+                                    } else {
+                                        // الحالة 3: دين بسيط مع ديون أخرى → وضع علامة returned
+                                        console.log('🏷️ [الحالة 3] دين بسيط مع ديون أخرى → علامة returned');
+                                        const updateResult = await window.dataSdk.update(debtId, {
+                                            returned: true,
+                                            return_date: new Date().toISOString()
+                                        });
+                                        if (updateResult.isOk) {
+                                            relatedDebt.returned = true;
+                                            relatedDebt.return_date = new Date().toISOString();
+                                            // إعادة حساب الأقساط الشهرية
+                                            await recalculateCustomerTotalMonthlyInstallment(sale.customer_name);
+                                        }
+                                    }
                                 }
+                            } // end if (window.dataSdk && debtId)
+                            
+                            // 🔄 تحديث صفحة الديون إذا كانت مفتوحة
+                            if (typeof loadDebtsPage === 'function') {
+                                setTimeout(() => loadDebtsPage(), 500);
                             }
                             
-                            // 🔥 الآن إعادة حساب الأقساط الشهرية لجميع ديون العميل النشطة
-                            await recalculateCustomerTotalMonthlyInstallment(sale.customer_name);
+                            // 🔄 تحديث صفحة تفاصيل الدين إذا كانت مفتوحة
+                            if (window.currentDebt && window.currentDebt.customer_name === sale.customer_name) {
+                                console.log('🔄 إغلاق صفحة تفاصيل الدين...');
+                                setTimeout(() => {
+                                    const debtDetailsPage = document.getElementById('debtDetailsPage');
+                                    if (debtDetailsPage) {
+                                        debtDetailsPage.style.display = 'none';
+                                    }
+                                    const debtsPageElem = document.getElementById('debts-page');
+                                    if (debtsPageElem) {
+                                        debtsPageElem.style.display = 'block';
+                                    }
+                                }, 300);
+                            }
                             
                         } catch (error) {
                             console.error('❌ خطأ في تحديث الدين بعد الاسترجاع:', error);
@@ -26880,12 +27064,28 @@ ${sale.payment_type === 'أقساط' ? '• حذف الفاتورة من سجل 
                 closeModal('invoiceDetailsModal');
                 
                 // إشعار النجاح
-                const successMessage = `
+                let debtMessage = '';
+                if (sale.payment_type === 'أقساط') {
+                    const relatedDebt = debtsData.find(d => d.invoice_id === invoiceId);
+                    const otherDebts = debtsData.filter(d => 
+                        d.customer_name === sale.customer_name && 
+                        !d.returned &&
+                        d.invoice_id !== invoiceId
+                    );
+                    
+                    if (otherDebts.length === 0) {
+                        debtMessage = '🗑️ تم حذف الدين بالكامل (لا توجد فواتير أخرى)';
+                    } else {
+                        debtMessage = `💳 تم تحديث سجل الديون\n💰 تم إعادة حساب الأقساط الشهرية (${otherDebts.length} فاتورة متبقية)`;
+                    }
+                }
+                
+                let successMessage = `
 ✅ تم استرجاع الفاتورة بنجاح!
 
 📋 رقم الفاتورة: ${invoiceId}
 📦 المنتجات المسترجعة: ${productsUpdated}/${items.length}
-${sale.payment_type === 'أقساط' ? '💳 تم حذف الفاتورة من سجل الديون' : ''}
+${debtMessage}
 
 تم تحديث جميع السجلات والإحصائيات.
                 `.trim();
@@ -26950,106 +27150,151 @@ ${sale.payment_type === 'أقساط' ? '💳 تم حذف الفاتورة من �
 
         // تحميل إعدادات الطابعة عند بدء التطبيق
         function loadPrinterSettings() {
-            const saved = localStorage.getItem('printerSettings');
-            const settings = saved ? JSON.parse(saved) : defaultPrinterSettings;
-            
-            // تطبيق الإعدادات على العناصر
-            if (document.getElementById('printerType')) {
-                document.getElementById('printerType').value = settings.printerType || 'default';
-                document.getElementById('paperSize').value = settings.paperSize || '80mm';
+            try {
+                const saved = localStorage.getItem('printerSettings');
+                const settings = saved ? JSON.parse(saved) : (typeof defaultPrinterSettings !== 'undefined' ? defaultPrinterSettings : {});
                 
-                // إعدادات الخطوط
-                document.getElementById('storeTitleSize').value = settings.storeTitleSize || 24;
-                document.getElementById('storeTitleSizeValue').textContent = settings.storeTitleSize || 24;
+                const setVal = (id, val) => { const el = document.getElementById(id); if(el) el.value = val; };
+                const setChk = (id, val) => { const el = document.getElementById(id); if(el) el.checked = val; };
+                const setTxt = (id, val) => { const el = document.getElementById(id); if(el) el.textContent = val; };
                 
-                document.getElementById('storeInfoSize').value = settings.storeInfoSize || 14;
-                document.getElementById('storeInfoSizeValue').textContent = settings.storeInfoSize || 14;
-                
-                document.getElementById('invoiceTextSize').value = settings.invoiceTextSize || 13;
-                document.getElementById('invoiceTextSizeValue').textContent = settings.invoiceTextSize || 13;
-                
-                document.getElementById('tableTextSize').value = settings.tableTextSize || 12;
-                document.getElementById('tableTextSizeValue').textContent = settings.tableTextSize || 12;
-                
-                document.getElementById('totalTextSize').value = settings.totalTextSize || 16;
-                document.getElementById('totalTextSizeValue').textContent = settings.totalTextSize || 16;
-                
-                document.getElementById('footerTextSize').value = settings.footerTextSize || 11;
-                document.getElementById('footerTextSizeValue').textContent = settings.footerTextSize || 11;
-                
-                // إعدادات التنسيق
-                document.getElementById('lineHeight').value = settings.lineHeight || 1.4;
-                document.getElementById('lineHeightValue').textContent = settings.lineHeight || 1.4;
-                
-                document.getElementById('sidePadding').value = settings.sidePadding || 15;
-                document.getElementById('sidePaddingValue').textContent = settings.sidePadding || 15;
-                
-                document.getElementById('topBottomPadding').value = settings.topBottomPadding || 15;
-                document.getElementById('topBottomPaddingValue').textContent = settings.topBottomPadding || 15;
-                
-                document.getElementById('borderStyle').value = settings.borderStyle || 'dashed';
-                document.getElementById('borderWidth').value = settings.borderWidth || 1;
-                document.getElementById('borderWidthValue').textContent = settings.borderWidth || 1;
-                
-                document.getElementById('titleAlign').value = settings.titleAlign || 'center';
-                
-                // الخيارات الإضافية
-                document.getElementById('showLogo').checked = settings.showLogo || false;
-                document.getElementById('showDateTime').checked = settings.showDateTime !== false;
-                document.getElementById('showInvoiceNumber').checked = settings.showInvoiceNumber !== false;
-                document.getElementById('showProductsTable').checked = settings.showProductsTable !== false;
-                document.getElementById('showFooter').checked = settings.showFooter !== false;
-                document.getElementById('customFooter').value = settings.customFooter || '';
-                
+                setVal('printerType', settings.printerType || 'a4');
+                setVal('paperSize', settings.paperSize || '80mm');
+                setVal('storeTitleSize', settings.storeTitleSize || 24);
+                setTxt('storeTitleSizeValue', settings.storeTitleSize || 24);
+                setVal('storeInfoSize', settings.storeInfoSize || 14);
+                setTxt('storeInfoSizeValue', settings.storeInfoSize || 14);
+                setVal('invoiceTextSize', settings.invoiceTextSize || 13);
+                setTxt('invoiceTextSizeValue', settings.invoiceTextSize || 13);
+                setVal('tableTextSize', settings.tableTextSize || 12);
+                setTxt('tableTextSizeValue', settings.tableTextSize || 12);
+                setVal('totalTextSize', settings.totalTextSize || 16);
+                setTxt('totalTextSizeValue', settings.totalTextSize || 16);
+                setVal('footerTextSize', settings.footerTextSize || 11);
+                setTxt('footerTextSizeValue', settings.footerTextSize || 11);
+                setVal('lineHeight', settings.lineHeight || 1.4);
+                setTxt('lineHeightValue', settings.lineHeight || 1.4);
+                setVal('sidePadding', settings.sidePadding || 15);
+                setTxt('sidePaddingValue', settings.sidePadding || 15);
+                setVal('topBottomPadding', settings.topBottomPadding || 15);
+                setTxt('topBottomPaddingValue', settings.topBottomPadding || 15);
+                setVal('borderStyle', settings.borderStyle || 'dashed');
+                setVal('borderWidth', settings.borderWidth || 1);
+                setTxt('borderWidthValue', settings.borderWidth || 1);
+                setVal('titleAlign', settings.titleAlign || 'center');
+                setChk('showLogo', settings.showLogo !== false);
+                setChk('showDateTime', settings.showDateTime !== false);
+                setChk('showInvoiceNumber', settings.showInvoiceNumber !== false);
+                setChk('showProductsTable', settings.showProductsTable !== false);
+                setChk('showFooter', settings.showFooter !== false);
+                setVal('customFooter', settings.customFooter || '');
+                setVal('receiptTemplate', settings.receiptTemplate || 'cash');
+                setVal('selectedPrinter', settings.selectedPrinter || '');
+                // معلومات المتجر
+                setVal('storeName', settings.store_name || '');
+                setVal('storeAddress', settings.store_address || '');
+                setVal('storePhone', settings.store_phone || '');
+                setVal('storeLogo', settings.store_logo || '');
+                // الملاحظات
+                ['note1','note2','note3','note4','note5','note6'].forEach((id, i) => setVal(id, settings[id] || ''));
+                // الصيانة
+                setVal('maintenanceName', settings.maintenance_name || '');
+                setVal('maintenanceService', settings.maintenance_service || '');
+                setVal('maintenancePhone', settings.maintenance_phone || '');
+                setChk('showMaintenance', settings.show_maintenance !== false);
                 // وضع الطباعة
                 const printMode = settings.printMode || 'preview';
-                document.querySelector(`input[name="printMode"][value="${printMode}"]`).checked = true;
+                const printModeEl = document.querySelector(`input[name="printMode"][value="${printMode}"]`);
+                if (printModeEl) printModeEl.checked = true;
                 
-                // تحديث إحصائيات الطابعة
-                updatePrinterStats();
+                if (typeof updatePrinterStats === 'function') updatePrinterStats();
+                return settings;
+            } catch(error) {
+                console.error('❌ خطأ في تحميل إعدادات الطابعة:', error);
+                return {};
             }
-            
-            return settings;
         }
 
-        // حفظ إعدادات الطابعة
+        // حفظ إعدادات الطابعة (النسخة الأساسية - موحدة)
         function savePrinterSettings() {
-            const settings = {
-                printerType: document.getElementById('printerType').value,
-                printMode: document.querySelector('input[name="printMode"]:checked').value,
-                paperSize: document.getElementById('paperSize').value,
-                storeTitleSize: parseInt(document.getElementById('storeTitleSize').value),
-                storeInfoSize: parseInt(document.getElementById('storeInfoSize').value),
-                invoiceTextSize: parseInt(document.getElementById('invoiceTextSize').value),
-                tableTextSize: parseInt(document.getElementById('tableTextSize').value),
-                totalTextSize: parseInt(document.getElementById('totalTextSize').value),
-                footerTextSize: parseInt(document.getElementById('footerTextSize').value),
-                lineHeight: parseFloat(document.getElementById('lineHeight').value),
-                sidePadding: parseInt(document.getElementById('sidePadding').value),
-                topBottomPadding: parseInt(document.getElementById('topBottomPadding').value),
-                borderStyle: document.getElementById('borderStyle').value,
-                borderWidth: parseInt(document.getElementById('borderWidth').value),
-                titleAlign: document.getElementById('titleAlign').value,
-                showLogo: document.getElementById('showLogo').checked,
-                showDateTime: document.getElementById('showDateTime').checked,
-                showInvoiceNumber: document.getElementById('showInvoiceNumber').checked,
-                showProductsTable: document.getElementById('showProductsTable').checked,
-                showFooter: document.getElementById('showFooter').checked,
-                customFooter: document.getElementById('customFooter').value
-            };
-            
-            localStorage.setItem('printerSettings', JSON.stringify(settings));
-            // تم إزالة الإشعار
-            updatePrinterStats();
+            try {
+                const getVal = (id, def) => document.getElementById(id)?.value ?? def;
+                const getInt = (id, def) => parseInt(document.getElementById(id)?.value ?? def) || def;
+                const getFl = (id, def) => parseFloat(document.getElementById(id)?.value ?? def) || def;
+                const getChk = (id, def) => document.getElementById(id) ? document.getElementById(id).checked : def;
+                
+                const settings = {
+                    receiptTemplate: getVal('receiptTemplate', 'cash'),
+                    selectedPrinter: getVal('selectedPrinter', ''),
+                    printerType: getVal('printerType', 'a4'),
+                    printMode: document.querySelector('input[name="printMode"]:checked')?.value || 'silent',
+                    paperSize: getVal('paperSize', '80mm'),
+                    storeTitleSize: getInt('storeTitleSize', 24),
+                    storeInfoSize: getInt('storeInfoSize', 14),
+                    invoiceTextSize: getInt('invoiceTextSize', 13),
+                    tableTextSize: getInt('tableTextSize', 12),
+                    totalTextSize: getInt('totalTextSize', 16),
+                    footerTextSize: getInt('footerTextSize', 11),
+                    lineHeight: getFl('lineHeight', 1.4),
+                    sidePadding: getInt('sidePadding', 15),
+                    topBottomPadding: getInt('topBottomPadding', 15),
+                    borderStyle: getVal('borderStyle', 'dashed'),
+                    borderWidth: getInt('borderWidth', 1),
+                    titleAlign: getVal('titleAlign', 'center'),
+                    showLogo: getChk('showLogo', true),
+                    showDateTime: getChk('showDateTime', true),
+                    showInvoiceNumber: getChk('showInvoiceNumber', true),
+                    showProductsTable: getChk('showProductsTable', true),
+                    showFooter: getChk('showFooter', true),
+                    customFooter: getVal('customFooter', ''),
+                    // معلومات المتجر
+                    store_name: getVal('storeName', ''),
+                    store_address: getVal('storeAddress', ''),
+                    store_phone: getVal('storePhone', ''),
+                    store_logo: getVal('storeLogo', ''),
+                    show_logo: getChk('showLogo', true),
+                    // الملاحظات
+                    note1: getVal('note1', ''),
+                    note2: getVal('note2', ''),
+                    note3: getVal('note3', ''),
+                    note4: getVal('note4', ''),
+                    note5: getVal('note5', ''),
+                    note6: getVal('note6', ''),
+                    // معلومات الصيانة
+                    maintenance_name: getVal('maintenanceName', ''),
+                    maintenance_service: getVal('maintenanceService', ''),
+                    maintenance_phone: getVal('maintenancePhone', ''),
+                    show_maintenance: getChk('showMaintenance', true)
+                };
+                
+                localStorage.setItem('printerSettings', JSON.stringify(settings));
+                if (settings.store_name) localStorage.setItem('storeName', settings.store_name);
+                if (settings.store_address) localStorage.setItem('storeAddress', settings.store_address);
+                if (settings.store_phone) localStorage.setItem('storePhone', settings.store_phone);
+                
+                if (typeof updatePrinterStats === 'function') updatePrinterStats();
+                if (typeof updatePreview === 'function') updatePreview();
+                if (typeof updateReceiptPreview === 'function') updateReceiptPreview();
+                
+                console.log('✅ تم حفظ إعدادات الطابعة');
+            } catch (error) {
+                console.error('❌ خطأ في حفظ إعدادات الطابعة:', error);
+            }
         }
 
         // استعادة الإعدادات الافتراضية
         function resetPrinterSettings() {
             if (confirm('هل أنت متأكد من استعادة الإعدادات الافتراضية؟')) {
-                localStorage.setItem('printerSettings', JSON.stringify(defaultPrinterSettings));
+                const defaults = typeof defaultPrinterSettings !== 'undefined' ? defaultPrinterSettings : {
+                    receiptTemplate: 'cash', printerType: 'a4', storeTitleSize: 24,
+                    storeInfoSize: 14, invoiceTextSize: 13, tableTextSize: 12,
+                    totalTextSize: 16, lineHeight: 1.4, sidePadding: 15,
+                    showDateTime: true, showInvoiceNumber: true, customFooter: ''
+                };
+                localStorage.setItem('printerSettings', JSON.stringify(defaults));
                 loadPrinterSettings();
-                updatePreview();
-                // تم إزالة الإشعار
+                if (typeof updatePreview === 'function') updatePreview();
+                if (typeof updateReceiptPreview === 'function') updateReceiptPreview();
             }
         }
 
@@ -28237,137 +28482,8 @@ ${sale.payment_type === 'أقساط' ? '💳 تم حذف الفاتورة من �
             `;
         }
 
-        // حفظ إعدادات الطابعة
-        function savePrinterSettings() {
-            const settings = {
-                receiptTemplate: document.getElementById('receiptTemplate')?.value || 'cash',
-                selectedPrinter: document.getElementById('selectedPrinter')?.value || '',
-                printerType: document.getElementById('printerType')?.value || 'a4',
-                storeTitleSize: parseInt(document.getElementById('storeTitleSize')?.value || 24),
-                storeInfoSize: parseInt(document.getElementById('storeInfoSize')?.value || 14),
-                invoiceTextSize: parseInt(document.getElementById('invoiceTextSize')?.value || 13),
-                tableTextSize: parseInt(document.getElementById('tableTextSize')?.value || 12),
-                totalTextSize: parseInt(document.getElementById('totalTextSize')?.value || 16),
-                lineHeight: parseFloat(document.getElementById('lineHeight')?.value || 1.4),
-                sidePadding: parseInt(document.getElementById('sidePadding')?.value || 15),
-                showDateTime: document.getElementById('showDateTime')?.checked !== false,
-                showInvoiceNumber: document.getElementById('showInvoiceNumber')?.checked !== false,
-                customFooter: document.getElementById('customFooter')?.value || '',
-                // معلومات المتجر
-                store_name: document.getElementById('storeName')?.value || 'معرض يعقوب للأجهزة الكهربائية',
-                store_address: document.getElementById('storeAddress')?.value || 'باب الهاشمية قرب مدرسة الكرار',
-                store_phone: document.getElementById('storePhone')?.value || '07803092185',
-                store_logo: document.getElementById('storeLogo')?.value || 'yaqoub_logo.png',
-                show_logo: document.getElementById('showLogo')?.checked !== false,
-                // الملاحظات
-                note1: document.getElementById('note1')?.value || '',
-                note2: document.getElementById('note2')?.value || '',
-                note3: document.getElementById('note3')?.value || '',
-                note4: document.getElementById('note4')?.value || '',
-                note5: document.getElementById('note5')?.value || '',
-                note6: document.getElementById('note6')?.value || '',
-                // معلومات الصيانة
-                maintenance_name: document.getElementById('maintenanceName')?.value || 'حمزه ابو حوراء',
-                maintenance_service: document.getElementById('maintenanceService')?.value || 'صيانة السبالت',
-                maintenance_phone: document.getElementById('maintenancePhone')?.value || '+964 785 570 6118',
-                show_maintenance: document.getElementById('showMaintenance')?.checked !== false
-            };
-            
-            localStorage.setItem('printerSettings', JSON.stringify(settings));
-            // حفظ في localStorage للوصول السريع
-            localStorage.setItem('storeName', settings.store_name);
-            localStorage.setItem('storeAddress', settings.store_address);
-            localStorage.setItem('storePhone', settings.store_phone);
-
-            // تحديث المعاينة مباشرة بعد الحفظ
-            updateReceiptPreview();
-
-            // تحديث اللوجو في جميع القوالب
-            window.logoBase64 = settings.store_logo || 'yaqoub_logo.png';
-
-            console.log('✅ تم حفظ إعدادات الطابعة:', settings);
-        }
-
-        // تحميل إعدادات الطابعة
-        function loadPrinterSettings() {
-            try {
-                const settings = JSON.parse(localStorage.getItem('printerSettings') || '{}');
-                
-                if (document.getElementById('receiptTemplate')) document.getElementById('receiptTemplate').value = settings.receiptTemplate || 'cash';
-                if (document.getElementById('selectedPrinter')) document.getElementById('selectedPrinter').value = settings.selectedPrinter || '';
-                if (document.getElementById('printerType')) document.getElementById('printerType').value = settings.printerType || 'a4';
-                if (document.getElementById('storeTitleSize')) document.getElementById('storeTitleSize').value = settings.storeTitleSize || 24;
-                if (document.getElementById('storeInfoSize')) document.getElementById('storeInfoSize').value = settings.storeInfoSize || 14;
-                if (document.getElementById('invoiceTextSize')) document.getElementById('invoiceTextSize').value = settings.invoiceTextSize || 13;
-                if (document.getElementById('tableTextSize')) document.getElementById('tableTextSize').value = settings.tableTextSize || 12;
-                if (document.getElementById('totalTextSize')) document.getElementById('totalTextSize').value = settings.totalTextSize || 16;
-                if (document.getElementById('lineHeight')) document.getElementById('lineHeight').value = settings.lineHeight || 1.4;
-                if (document.getElementById('sidePadding')) document.getElementById('sidePadding').value = settings.sidePadding || 15;
-                if (document.getElementById('showDateTime')) document.getElementById('showDateTime').checked = settings.showDateTime !== false;
-                if (document.getElementById('showInvoiceNumber')) document.getElementById('showInvoiceNumber').checked = settings.showInvoiceNumber !== false;
-                if (document.getElementById('customFooter')) document.getElementById('customFooter').value = settings.customFooter || '';
-                
-                // تحميل معلومات المتجر
-                if (document.getElementById('storeName')) document.getElementById('storeName').value = settings.store_name || 'معرض يعقوب للأجهزة الكهربائية';
-                if (document.getElementById('storeAddress')) document.getElementById('storeAddress').value = settings.store_address || 'باب الهاشمية قرب مدرسة الكرار';
-                if (document.getElementById('storePhone')) document.getElementById('storePhone').value = settings.store_phone || '07803092185';
-                if (document.getElementById('storeLogo')) document.getElementById('storeLogo').value = settings.store_logo || 'yaqoub_logo.png';
-                if (document.getElementById('showLogo')) document.getElementById('showLogo').checked = settings.show_logo !== false;
-                
-                // تحميل الملاحظات
-                if (document.getElementById('note1')) document.getElementById('note1').value = settings.note1 || 'المبلغ الموجود هو وصل أمانة';
-                if (document.getElementById('note2')) document.getElementById('note2').value = settings.note2 || 'السعر محمي 24 ساعة';
-                if (document.getElementById('note3')) document.getElementById('note3').value = settings.note3 || 'المباع لا يرجع ولا يبدل';
-                if (document.getElementById('note4')) document.getElementById('note4').value = settings.note4 || 'الخطأ والسهو مرجوع للطرفين';
-                if (document.getElementById('note5')) document.getElementById('note5').value = settings.note5 || 'الشركة المصنعة مسؤولة عن الضمان';
-                if (document.getElementById('note6')) document.getElementById('note6').value = settings.note6 || 'كسر الشاشة غير داخل بالضمان';
-                
-                // تحميل معلومات الصيانة
-                if (document.getElementById('maintenanceName')) document.getElementById('maintenanceName').value = settings.maintenance_name || 'حمزه ابو حوراء';
-                if (document.getElementById('maintenanceService')) document.getElementById('maintenanceService').value = settings.maintenance_service || 'صيانة السبالت';
-                if (document.getElementById('maintenancePhone')) document.getElementById('maintenancePhone').value = settings.maintenance_phone || '+964 785 570 6118';
-                if (document.getElementById('showMaintenance')) document.getElementById('showMaintenance').checked = settings.show_maintenance !== false;
-                
-                // تحديث القيم المعروضة
-                if (document.getElementById('storeTitleSizeValue')) document.getElementById('storeTitleSizeValue').textContent = settings.storeTitleSize || 24;
-                if (document.getElementById('storeInfoSizeValue')) document.getElementById('storeInfoSizeValue').textContent = settings.storeInfoSize || 14;
-                if (document.getElementById('invoiceTextSizeValue')) document.getElementById('invoiceTextSizeValue').textContent = settings.invoiceTextSize || 13;
-                if (document.getElementById('tableTextSizeValue')) document.getElementById('tableTextSizeValue').textContent = settings.tableTextSize || 12;
-                if (document.getElementById('totalTextSizeValue')) document.getElementById('totalTextSizeValue').textContent = settings.totalTextSize || 16;
-                if (document.getElementById('lineHeightValue')) document.getElementById('lineHeightValue').textContent = settings.lineHeight || 1.4;
-                if (document.getElementById('sidePaddingValue')) document.getElementById('sidePaddingValue').textContent = settings.sidePadding || 15;
-                
-                console.log('✅ تم تحميل إعدادات الطابعة');
-            } catch (error) {
-                console.error('❌ خطأ في تحميل إعدادات الطابعة:', error);
-            }
-        }
-
-        // استعادة الإعدادات الافتراضية
-        function resetPrinterSettings() {
-            if (confirm('هل أنت متأكد من استعادة الإعدادات الافتراضية؟')) {
-                const defaultSettings = {
-                    receiptTemplate: 'cash',
-                    selectedPrinter: '',
-                    printerType: 'a4',
-                    storeTitleSize: 24,
-                    storeInfoSize: 14,
-                    invoiceTextSize: 13,
-                    tableTextSize: 12,
-                    totalTextSize: 16,
-                    lineHeight: 1.4,
-                    sidePadding: 15,
-                    showDateTime: true,
-                    showInvoiceNumber: true,
-                    customFooter: ''
-                };
-                
-                localStorage.setItem('printerSettings', JSON.stringify(defaultSettings));
-                loadPrinterSettings();
-                updateReceiptPreview();
-                // تم إزالة الإشعار
-            }
-        }
+        // ملاحظة: دوال savePrinterSettings و loadPrinterSettings و resetPrinterSettings
+        // معرّفة في الكود الأعلى - هذه النسخ محذوفة لتجنب التكرار
 
         // طباعة تجريبية
         function testPrintReceipt() {
@@ -28611,9 +28727,6 @@ ${sale.payment_type === 'أقساط' ? '💳 تم حذف الفاتورة من �
         }
 
         function showDebtDetails(debtId) {
-            console.log('=== Show Debt Details ===');
-            console.log('Looking for debt ID:', debtId);
-            console.log('Available debts:', debtsData);
             
             const debt = debtsData.find(d => 
                 d.id == debtId || 
@@ -28623,42 +28736,40 @@ ${sale.payment_type === 'أقساط' ? '💳 تم حذف الفاتورة من �
             
             if (!debt) {
                 console.log('❌ Debt not found!');
-                console.log('Searched ID:', debtId);
-                console.log('Available debt IDs:', debtsData.map(d => ({
-                    id: d.id,
-                    __backendId: d.__backendId,
-                    debt_id: d.debt_id
-                })));
-                // تم إزالة الإشعار
+                        // تم إزالة الإشعار
                 return;
             }
             
-            console.log('✅ Found debt:', debt);
-            console.log('Debt properties:');
-            console.log('  - total_amount:', debt.total_amount);
-            console.log('  - final_total:', debt.final_total);
-            console.log('  - remaining_amount:', debt.remaining_amount);
-            console.log('  - paid_amount:', debt.paid_amount);
-            console.log('  - monthly_amount:', debt.monthly_amount);
-            console.log('  - installment_months:', debt.installment_months);
-            console.log('  - installments:', debt.installments);
-            console.log('  - invoice_id:', debt.invoice_id);
             
-            // 🔄 حساب القسط الشهري الكلي للعميل
+            // 🔄 حساب القسط الشهري الكلي للعميل من جميع الديون النشطة
             const customerDebts = debtsData.filter(d => 
                 d.customer_name === debt.customer_name && 
                 !d.returned
             );
             let customerTotalMonthly = 0;
-            customerDebts.forEach(d => {
-                customerTotalMonthly += parseFloat(d.monthly_amount || 0);
+            let customerDebtsDetails = [];
+            
+            customerDebts.forEach((d, index) => {
+                const monthlyAmt = parseFloat(d.monthly_amount || 0);
+                customerTotalMonthly += monthlyAmt;
+                customerDebtsDetails.push({
+                    id: d.id || d.__backendId || d.invoice_id,
+                    invoice_id: d.invoice_id,
+                    monthly_amount: monthlyAmt,
+                    remaining_amount: d.remaining_amount || 0,
+                    index: index + 1
+                });
             });
+            
             console.log(`💰 مجموع الأقساط الشهرية للعميل: ${customerTotalMonthly.toFixed(0)} دينار (عدد الديون: ${customerDebts.length})`);
+            console.log('📊 تفاصيل ديون العميل:', customerDebtsDetails);
             
             // حفظ معرف الدين الحالي
             window.currentDebtId = debtId;
             window.currentDebt = debt;
             window.customerTotalMonthly = customerTotalMonthly;
+            window.customerDebtsDetails = customerDebtsDetails;
+            window.customerDebtsCount = customerDebts.length;
             
             // الانتقال إلى صفحة تفاصيل الدين
             navigateTo('debtDetailsPage');
@@ -28666,6 +28777,9 @@ ${sale.payment_type === 'أقساط' ? '💳 تم حذف الفاتورة من �
             // البحث عن الفاتورة المرتبطة
             const relatedSale = salesData.find(s => s.invoice_id === debt.invoice_id);
             console.log('Related sale:', relatedSale);
+            
+            // 🔥 عرض ملخص الأقساط الشهرية للعميل (قبل أي شيء آخر)
+            renderCustomerTotalMonthlyCard(debt, customerDebtsDetails, customerTotalMonthly);
             
             // عرض معلومات العميل
             renderDebtCustomerInfo(debt);
@@ -28683,6 +28797,90 @@ ${sale.payment_type === 'أقساط' ? '💳 تم حذف الفاتورة من �
             renderPaymentsHistory(debt);
             
             console.log('======================');
+        }
+        
+        /**
+         * عرض بطاقة مجموع الأقساط الشهرية للعميل
+         */
+        function renderCustomerTotalMonthlyCard(debt, debtsDetails, totalMonthly) {
+            // البحث عن الحاوية المناسبة - سنضع البطاقة قبل معلومات العميل
+            const customerInfoContainer = document.getElementById('debtCustomerInfo');
+            if (!customerInfoContainer) return;
+            
+            // إزالة البطاقة القديمة إن وجدت
+            const oldCard = document.getElementById('customerTotalMonthlyCard');
+            if (oldCard) oldCard.remove();
+            
+            // إنشاء البطاقة الجديدة
+            const card = document.createElement('div');
+            card.id = 'customerTotalMonthlyCard';
+            card.style.cssText = `
+                background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+                color: white;
+                padding: 25px;
+                border-radius: 15px;
+                margin-bottom: 25px;
+                box-shadow: 0 10px 30px rgba(245, 158, 11, 0.3);
+                border: 2px solid rgba(255, 255, 255, 0.2);
+            `;
+            
+            let detailsHTML = '';
+            if (debtsDetails.length > 1) {
+                detailsHTML = `
+                    <div style="background: rgba(255, 255, 255, 0.15); padding: 15px; border-radius: 10px; margin-top: 15px;">
+                        <div style="font-size: 0.95rem; font-weight: 600; margin-bottom: 10px; opacity: 0.95;">
+                            <i class="fas fa-list"></i> تفاصيل الديون النشطة:
+                        </div>
+                        ${debtsDetails.map(d => `
+                            <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+                                <span style="opacity: 0.9;">
+                                    <i class="fas fa-file-invoice"></i> فاتورة ${d.invoice_id}
+                                </span>
+                                <span style="font-weight: bold;">
+                                    ${formatCurrency(d.monthly_amount)}
+                                </span>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+            
+            card.innerHTML = `
+                <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px;">
+                    <div style="flex: 1; min-width: 250px;">
+                        <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px;">
+                            <div style="background: rgba(255, 255, 255, 0.2); width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-calculator" style="font-size: 1.8rem;"></i>
+                            </div>
+                            <div>
+                                <div style="font-size: 0.95rem; opacity: 0.9; margin-bottom: 5px;">
+                                    إجمالي الأقساط الشهرية للعميل
+                                </div>
+                                <div style="font-size: 2.2rem; font-weight: bold; line-height: 1;">
+                                    ${formatCurrency(totalMonthly)}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="background: rgba(255, 255, 255, 0.2); padding: 15px 25px; border-radius: 10px;">
+                            <div style="font-size: 0.9rem; opacity: 0.9; margin-bottom: 5px;">
+                                عدد الفواتير النشطة
+                            </div>
+                            <div style="font-size: 2rem; font-weight: bold;">
+                                ${debtsDetails.length}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                ${detailsHTML}
+                <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255, 255, 255, 0.2); font-size: 0.85rem; opacity: 0.85;">
+                    <i class="fas fa-info-circle"></i> هذا المبلغ يمثل مجموع جميع الأقساط الشهرية من جميع الفواتير النشطة للعميل "${debt.customer_name}"
+                </div>
+            `;
+            
+            // إضافة البطاقة قبل معلومات العميل
+            customerInfoContainer.parentNode.insertBefore(card, customerInfoContainer);
         }
         
         // عرض معلومات العميل
@@ -28724,12 +28922,6 @@ ${sale.payment_type === 'أقساط' ? '💳 تم حذف الفاتورة من �
                 statusIcon = 'exclamation-triangle';
             }
             
-            // حساب القسط الشهري الكلي للعميل
-            const customerTotalMonthly = window.customerTotalMonthly || 0;
-            const customerDebtsCount = debtsData.filter(d => 
-                d.customer_name === debt.customer_name && !d.returned
-            ).length;
-            
             container.innerHTML = `
                 <div class="stat-card">
                     <div class="stat-icon"><i class="fas fa-user"></i></div>
@@ -28743,19 +28935,9 @@ ${sale.payment_type === 'أقساط' ? '💳 تم حذف الفاتورة من �
                 </div>
                 <div class="stat-card" style="background: ${statusColor}; color: white;">
                     <div class="stat-icon"><i class="fas fa-${statusIcon}"></i></div>
-                    <div class="stat-label">الحالة</div>
+                    <div class="stat-label">حالة هذا الدين</div>
                     <div class="stat-value">${statusText}</div>
                 </div>
-                ${customerDebtsCount > 1 ? `
-                <div class="stat-card" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white;">
-                    <div class="stat-icon"><i class="fas fa-calculator"></i></div>
-                    <div class="stat-label">إجمالي الأقساط الشهرية</div>
-                    <div class="stat-value" style="font-size: 1.3rem;">${formatCurrency(customerTotalMonthly)}</div>
-                    <div style="font-size: 0.85rem; margin-top: 5px; opacity: 0.9;">
-                        <i class="fas fa-file-invoice"></i> ${customerDebtsCount} فاتورة نشطة
-                    </div>
-                </div>
-                ` : ''}
             `;
         }
         
@@ -29587,11 +29769,11 @@ ${sale.payment_type === 'أقساط' ? '💳 تم حذف الفاتورة من �
                                 <i class="fas fa-check-circle"></i> مسدد
                                </button>`
                             : inst.status === 'partially_paid'
-                            ? `<button class="action-btn" style="background: var(--warning-color);" onclick="payInstallment('${debt.id}', ${inst.month})" 
+                            ? `<button class="action-btn" style="background: var(--warning-color);" onclick="payInstallment('${debt.id || debt.__backendId || debt.debt_id}', ${inst.month})" 
                                 title="تسديد المتبقي">
                                 <i class="fas fa-money-bill-wave"></i> تسديد المتبقي
                                </button>`
-                            : `<button class="action-btn" onclick="payInstallment('${debt.id}', ${inst.month})" 
+                            : `<button class="action-btn" onclick="payInstallment('${debt.id || debt.__backendId || debt.debt_id}', ${inst.month})" 
                                 title="تسديد القسط">
                                 <i class="fas fa-money-bill-wave"></i> تسديد
                                </button>`
@@ -29767,10 +29949,6 @@ ${sale.payment_type === 'أقساط' ? '💳 تم حذف الفاتورة من �
                 return;
             }
             
-            console.log('=== Processing Installment Payment (FIXED) ===');
-            console.log('Month:', currentInstallmentMonth);
-            console.log('Original installment amount:', installment.amount);
-            console.log('Paid amount:', paidAmount);
             
             // 🔥 إصلاح: حساب المبلغ الأصلي للقسط بشكل صحيح
             const originalAmount = parseFloat(installment.original_amount || installment.amount) || 0;
@@ -29779,10 +29957,6 @@ ${sale.payment_type === 'أقساط' ? '💳 تم حذف الفاتورة من �
             const previouslyPaid = parseFloat(installment.paid_amount) || 0;
             const totalPaidForThisInstallment = previouslyPaid + paidAmount;
             
-            console.log('Original amount:', originalAmount);
-            console.log('Previously paid:', previouslyPaid);
-            console.log('Current payment:', paidAmount);
-            console.log('Total paid for installment:', totalPaidForThisInstallment);
             
             // تحديث القسط الحالي بالمبلغ المدفوع
             installment.paid_date = new Date().toISOString();
@@ -29802,12 +29976,10 @@ ${sale.payment_type === 'أقساط' ? '💳 تم حذف الفاتورة من �
                 installment.status = 'paid';
                 // تأكد من أن المبلغ المدفوع لا يزيد عن الأصلي
                 installment.paid_amount = originalAmount;
-                console.log('✅ Full payment - status: paid');
-            } else {
+                } else {
                 // دفع جزئي
                 installment.status = 'partially_paid';
-                console.log('⚠️ Partial payment - status: partially_paid');
-            }
+                }
             
             // 🔥 إصلاح: إضافة السجل للتسديدات بشكل صحيح
             if (!debt.payments) {
@@ -29883,7 +30055,6 @@ ${sale.payment_type === 'أقساط' ? '💳 تم حذف الفاتورة من �
             };
             
             debt.payments.push(paymentRecord);
-            console.log('Payment record added:', paymentRecord);
             
             // 🔥 إصلاح: تحديث المبلغ المتبقي والمبلغ المدفوع بشكل صحيح
             const totalAmount = debt.total_amount || debt.final_total || 0;
@@ -29929,7 +30100,8 @@ ${sale.payment_type === 'أقساط' ? '💳 تم حذف الفاتورة من �
             console.log('  - Debt Status:', debt.status);
             
             // حفظ في قاعدة البيانات
-            if (window.dataSdk && debt.id) {
+            const debtSaveId = debt.id || debt.__backendId || debt.debt_id;
+            if (window.dataSdk && debtSaveId) {
                 const updateData = {
                     installments: debt.installments,
                     payments: debt.payments,
@@ -29939,21 +30111,34 @@ ${sale.payment_type === 'أقساط' ? '💳 تم حذف الفاتورة من �
                     status: debt.status
                 };
                 
-                console.log('=== Saving to database ===');
-                console.log('Debt ID:', debt.id);
-                console.log('Update data:', JSON.stringify(updateData, null, 2));
-                
-                await window.dataSdk.update(debt.id, updateData);
-                console.log('✅ Successfully saved to database');
-                
-                // إعادة تحميل البيانات
-                const allData = await window.dataSdk.query();
-                if (allData.isOk) {
-                    debtsData = allData.data.filter(item => item.type === 'debt');
-                    updateStatistics();
-                    updateQuickStats();
+                try {
+                    const saveResult = await window.dataSdk.update(debtSaveId, updateData);
+                    if (saveResult && saveResult.isOk) {
+                        console.log('✅ تم حفظ تسديد القسط في قاعدة البيانات');
+                        // تحديث المصفوفة المحلية
+                        const localIdx = debtsData.findIndex(d => 
+                            d.id == debtSaveId || d.__backendId == debtSaveId || d.debt_id == debtSaveId
+                        );
+                        if (localIdx !== -1) {
+                            debtsData[localIdx] = { ...debtsData[localIdx], ...updateData };
+                        }
+                    } else {
+                        console.error('❌ فشل حفظ التسديد - النتيجة:', saveResult);
+                    }
+                } catch(saveErr) {
+                    console.error('❌ خطأ في حفظ التسديد:', saveErr);
                 }
+                
+                // تحديث الإحصائيات
+                updateStatistics();
+                updateQuickStats();
+            } else {
+                console.warn('⚠️ لا يمكن حفظ التسديد - معرف الدين غير موجود. الدين:', debt);
+                // تحديث محلي فقط
+                updateStatistics();
+                updateQuickStats();
             }
+
             
             // طباعة إيصال تسديد القسط
             try {
@@ -30247,23 +30432,29 @@ ${sale.payment_type === 'أقساط' ? '💳 تم حذف الفاتورة من �
         }
         
         // دالة البحث في الفواتير
+        // دوال البحث مع debounce لتحسين الأداء
+        const _debouncedRenderInvoices = debounce(() => renderInvoicesTable(), 250);
+        const _debouncedRenderProducts = debounce(() => { if(typeof renderProductsTable === 'function') renderProductsTable(); }, 250);
+        const _debouncedRenderDebts = debounce(() => renderDebtsTable(), 250);
+        const _debouncedRenderInventory = debounce(() => { if(typeof renderInventoryTable === 'function') renderInventoryTable(); }, 250);
+        
         function filterInvoices() {
-            renderInvoicesTable();
+            _debouncedRenderInvoices();
         }
         
         // دالة البحث في المنتجات
         function filterProducts() {
-            renderProductsTable();
+            _debouncedRenderProducts();
         }
         
         // دالة البحث في المخزون
         function filterInventory() {
-            renderInventoryTable();
+            _debouncedRenderInventory();
         }
         
         // دالة البحث في الديون
         function filterDebts() {
-            renderDebtsTable();
+            _debouncedRenderDebts();
         }
         
         // ✅ دالة عرض إيصال مبيعات اليوم
@@ -44415,12 +44606,12 @@ body {
         setTimeout(() => document.getElementById('cloudSubscriptionModal').classList.add('active'), 10);
     }
     
-    function closeModal() {
+    function closeCloudModal() {
         const m = document.getElementById('cloudSubscriptionModal');
         if (m) m.classList.remove('active');
     }
     
-    window.closeCloudSubscriptionModal = closeModal;
+    window.closeCloudSubscriptionModal = closeCloudModal;
     
     function updateModalContent() {
         const modal = document.getElementById('cloudSubscriptionModal')?.querySelector('.cloud-subscription-modal');
@@ -44698,9 +44889,7 @@ body {
     
 })();
 
-// في دالة restoreFromBackup()
-window.restoreOldDebtsFromBackup(backupData);
-
+// ملاحظة: window.restoreOldDebtsFromBackup(backupData) يجب استدعاؤه فقط من داخل دالة restoreFromBackup()
 // ═══════════════════════════════════════════════════════════════════════════════
 // 🔄 نظام إعادة حساب الأقساط الشهرية - تم التحديث والدمج مع الكود الأصلي
 // ═══════════════════════════════════════════════════════════════════════════════
